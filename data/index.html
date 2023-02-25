@@ -1,35 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" class="js-focus-visible">
+
 
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="author" content="Stéphane Calderoni">
-  <meta name="description" content="ESP32 Remote Control with WebSocket">
+  <meta name="author" content="Alexminator">
+  <meta name="description" content="Smart Music Lamp">
   <title>SML</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="stylesheet" href="index.css">
+  <link rel="stylesheet" type="text/css" href="font-awesome.css" />
   <script src="index.js"></script>
 </head>
 
-<body>
-  <div class="panel">
-    <h1>SML</h1>
-    <div id="led" class="%STATE%"></div>
-    <h3>Power</h3>
-    <div id="toggle" class="%STATE%">
-      <span class="button">
-        <span class="slide"></span>
-      </span>
-    </div>
-    <h3>Rainbow</h3>
-    <div id="Rainbowbutton" class="%RAINBOW_STATE%">
-      <span class="button">
-        <span class="slide"></span>
-      </span>
-    </div>
-  </div>
-</body>
+  <body>
+  <center>    
+  <header>
+      <div class="navbar">
+        <div class="glowing">
+            <span>S</span>
+            <span>M</span>
+            <span>L</span>
+        </div>
+          
+      </div>    
+  </header>
+      <h1></h1>
+  <main>
+        <label class="power">
+          <input type="checkbox" checked/>
+          <span class="btn"></span>
+          <i class="icon-off"></i>
+        </label>
+       <h2>Power Lamp</h2>
+      
+        <label class="stripled">
+          <input type="checkbox">
+          <div>
+            <span class="on">On</span>
+            <span class="off">Off</span>
+          </div> 
+          <i></i>
+        </label>
+      <h2>Power Stripled</h2>
+      
+      <label class="stripled">
+          <input type="checkbox">
+          <div>
+            <span class="on">On</span>
+            <span class="off">Off</span>
+          </div> 
+          <i></i>
+        </label>
+      <h2>Rainbow</h2>
+        
+  </main>
+     
+    
+  <footer div class="foot" id = "temp" >ESP32 Web Page Creation and Data Update Demo</div></footer>
+  </center>
+   
+    
+    
+    
+  </body>
+
+
+  
 
 </html>
