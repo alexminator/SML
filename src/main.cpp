@@ -24,6 +24,7 @@
 // Effects ID
 #define SIMPLE_COLOR 0
 #define RAINBOW 1
+#define CANDYCHASE 2
 
 // ----------------------------------------------------------------------------
 // Definition of global constants
@@ -81,6 +82,33 @@ struct StripLed
         }
         strip.show();
     }
+
+    void candyChase(uint8_t wait)
+    {
+        for (int j = 0; j < 10; j++)
+        { // do 10 cycles of chasing
+            for (int q = 0; q < 3; q++)
+            {
+                for (uint16_t i = 0; i < strip.numPixels(); i++)
+                {
+                    strip.setPixelColor(i + q, 255, 255, 255); // turn every pixel white
+                }
+                for (uint16_t i = 0; i < strip.numPixels(); i = i + 3)
+                {
+                    strip.setPixelColor(i + q, 255, 0, 0); // turn every third pixel red
+                }
+                strip.show();
+
+                delay(wait);
+
+                for (uint16_t i = 0; i < strip.numPixels(); i = i + 3)
+                {
+                    strip.setPixelColor(i + q, 0); // turn every third pixel off
+                }
+            }
+        }
+    }
+
     void update()
     {
         switch (effectId)
@@ -90,6 +118,9 @@ struct StripLed
             break;
         case 1:
             rainbowcolor();
+            break;
+        case 2:
+            candyChase(100);
             break;
         default:
             break;
@@ -168,6 +199,10 @@ String processor(const String &var)
     {
         return String("off");
     }
+    else if (var == "CANDYCHASE_STATE")
+    {
+        return String("off");
+    }
     else if (var == "STATE")
     {
         return String(var == "STATE" && stripLed.powerState ? "on" : "off");
@@ -198,6 +233,7 @@ void notifyClients()
     json["status"] = stripLed.powerState ? "on" : "off";
     Serial.println("RanibowStatus: " + String(stripLed.stripLed.effectId == 1 && stripLed.powerState));
     json["rainbowStatus"] = stripLed.stripLed.effectId == 1 && stripLed.powerState ? "on" : "off";
+    json["candychaseStatus"] = stripLed.stripLed.effectId == 2 && stripLed.powerState ? "on" : "off";
 
     char buffer[50];
     size_t len = serializeJson(json, buffer);
@@ -242,7 +278,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
                 stripLed.stripLed.update();
             }
         }
-
+        
         notifyClients();
     }
 }
@@ -286,7 +322,7 @@ void setup()
 {
     pinMode(onboard_led.pin, OUTPUT);
     pinMode(LED_PIN, OUTPUT);
-    
+
     Serial.begin(115200);
     delay(500);
 
@@ -309,10 +345,21 @@ void loop()
 {
     ws.cleanupClients();
 
-    if (stripLed.powerState && stripLed.stripLed.effectId == 1)
+    if (stripLed.powerState)
     {
-        stripLed.stripLed.update();
-        delay(5);
+        switch (stripLed.stripLed.effectId)
+        {
+        case 1:
+            stripLed.stripLed.update();
+            delay(5);
+            break;
+        case 2:
+            stripLed.stripLed.update();
+            delay(5);
+            break;
+        default:
+            break;
+        }
     }
 
     onboard_led.on = millis() % 1000 < 50;

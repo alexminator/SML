@@ -46,6 +46,7 @@ function onMessage(event) {
     document.getElementById('led').className = data.status;
     document.getElementById("toggle").className = data.status;
     document.getElementById('Rainbowbutton').className = data.rainbowStatus;
+    document.getElementById('Candychasebutton').className = data.candychaseStatus;
 }
 
 // ----------------------------------------------------------------------------
@@ -55,6 +56,7 @@ function onMessage(event) {
 function initButton() {
     document.getElementById('toggle').addEventListener('click', onToggle);
     document.getElementById('Rainbowbutton').addEventListener('click', onToggleRainbowEffect);
+    document.getElementById('Candychasebutton').addEventListener('click', onToggleCandychaseEffect);
 }
 
 function onToggle(event) {
@@ -98,6 +100,25 @@ function onToggleRainbowEffect(event) {
         toggle.className = "off";
     } else {
         isOn = 1;
+        toggle.className = "on";
+    }
+    const json = JSON.stringify({
+        'action': 'animation',
+        'effectId': isOn,
+        'color': "r=255,g=0,b=0"
+    });
+    console.log(json);
+    websocket.send(json);
+}
+
+function onToggleCandychaseEffect(event) {
+    const toggle = document.getElementById("Candychasebutton");
+    var isOn;
+    if (toggle.className == "on") {
+        isOn = 0;
+        toggle.className = "off";
+    } else {
+        isOn = 2;
         toggle.className = "on";
     }
     const json = JSON.stringify({
