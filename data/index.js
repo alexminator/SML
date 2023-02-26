@@ -126,6 +126,7 @@ function onToggleCandychaseEffect(event) {
         'effectId': isOn,
         'color': "r=255,g=0,b=0"
     });
+    console.log(toggle.className);
     console.log(json);
     websocket.send(json);
 }

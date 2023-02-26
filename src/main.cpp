@@ -89,11 +89,11 @@ struct StripLed
         { // do 10 cycles of chasing
             for (int q = 0; q < 3; q++)
             {
-                for (uint16_t i = 0; i < strip.numPixels(); i++)
+                for (uint16_t i = 0; i < STRIP_NUMBER_LEDS; i++)
                 {
                     strip.setPixelColor(i + q, 255, 255, 255); // turn every pixel white
                 }
-                for (uint16_t i = 0; i < strip.numPixels(); i = i + 3)
+                for (uint16_t i = 0; i < STRIP_NUMBER_LEDS; i = i + 3)
                 {
                     strip.setPixelColor(i + q, 255, 0, 0); // turn every third pixel red
                 }
@@ -101,7 +101,7 @@ struct StripLed
 
                 delay(wait);
 
-                for (uint16_t i = 0; i < strip.numPixels(); i = i + 3)
+                for (uint16_t i = 0; i < STRIP_NUMBER_LEDS; i = i + 3)
                 {
                     strip.setPixelColor(i + q, 0); // turn every third pixel off
                 }
@@ -114,12 +114,16 @@ struct StripLed
         switch (effectId)
         {
         case 0:
+            strip.clear();
             simpleColor(colorNow);
             break;
         case 1:
+            strip.clear();
             rainbowcolor();
             break;
         case 2:
+            strip.clear();
+            strip.show();
             candyChase(100);
             break;
         default:
@@ -148,6 +152,7 @@ struct Strip
 
 StripLed simple = {SIMPLE_COLOR};
 StripLed rainbow = {RAINBOW};
+StripLed candychase = {CANDYCHASE};
 
 Led onboard_led = {LED_BUILTIN, false};
 Strip stripLed = {simple, false};
@@ -231,9 +236,11 @@ void notifyClients()
     const uint8_t size = JSON_OBJECT_SIZE(2);
     StaticJsonDocument<size> json;
     json["status"] = stripLed.powerState ? "on" : "off";
-    Serial.println("RanibowStatus: " + String(stripLed.stripLed.effectId == 1 && stripLed.powerState));
     json["rainbowStatus"] = stripLed.stripLed.effectId == 1 && stripLed.powerState ? "on" : "off";
     json["candychaseStatus"] = stripLed.stripLed.effectId == 2 && stripLed.powerState ? "on" : "off";
+    
+    Serial.println("RanibowStatus: " + String(stripLed.stripLed.effectId == 1 && stripLed.powerState));
+    Serial.println("CandychaseStatus: " + String(stripLed.stripLed.effectId == 2 && stripLed.powerState));
 
     char buffer[50];
     size_t len = serializeJson(json, buffer);
@@ -349,13 +356,19 @@ void loop()
     {
         switch (stripLed.stripLed.effectId)
         {
+        //case 0:
+        //    stripLed.stripLed.update();
+        //    delay(10);
+        //    break;  
         case 1:
             stripLed.stripLed.update();
             delay(5);
+            //Serial.println("rainbowwwwwwwwwwwwwwwwww");
             break;
         case 2:
             stripLed.stripLed.update();
-            delay(5);
+            //delay(5);
+            //Serial.println("Candyyyyyyyyyyyyyyyyyyy");
             break;
         default:
             break;
