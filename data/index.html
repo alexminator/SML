@@ -15,57 +15,37 @@
   <script src="index.js"></script>
 </head>
 
-  <body>
-  <center>    
-  <header>
-      <div class="navbar">
-        <div class="glowing">
-            <span>S</span>
-            <span>M</span>
-            <span>L</span>
-        </div>
-          
-      </div>    
-  </header>
-      <h1></h1>
-  <main>
-        <label class="power">
-          <input type="checkbox" checked/>
-          <span class="btn"></span>
-          <i class="icon-off"></i>
-        </label>
-       <h2>Power Lamp</h2>
-      
-        <label class="stripled">
-          <input type="checkbox">
-          <div>
-            <span class="on">On</span>
-            <span class="off">Off</span>
-          </div> 
-          <i></i>
-        </label>
-      <h2>Power Stripled</h2>
-      
-      <label class="stripled">
-          <input type="checkbox">
-          <div>
-            <span class="on">On</span>
-            <span class="off">Off</span>
-          </div> 
-          <i></i>
-        </label>
-      <h2>Rainbow</h2>
+<body>
+  <center>  
+    <header>
+    <div class="navbar">
+      <div class="glowing">
+          <span>S</span>
+          <span>M</span>
+          <span>L</span>
+      </div>
         
+    </div>    
+    </header>
+  <main>
+    <div id="led" class="%STATE%"></div>
+    <h2>Power Stripled</h2>
+    <div id="toggle" class="%STATE%">
+      <span class="button">
+        <span class="slide"></span>
+      </span>
+    </div>
+    <h3>Rainbow</h3>
+    <div id="Rainbowbutton" class="%RAINBOW_STATE%">
+      <span class="button">
+        <span class="slide"></span>
+      </span>
+    </div>
   </main>
-     
-    
-  <footer div class="foot" id = "temp" >ESP32 Web Page Creation and Data Update Demo</div></footer>
-  </center>
-   
-    
-    
-    
-  </body>
+     <footer div class="foot" id = "temp" >Smart Music Lamp 2023</div></footer>   
+    </center>
+  
+</body>
 
 
   

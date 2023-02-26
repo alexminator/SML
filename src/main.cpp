@@ -65,8 +65,10 @@ struct StripLed
         for (int i = 0; i < strip.numPixels(); i++)
         {
             strip.setPixelColor(i, ColorNow);
+            delay(20);
         }
         strip.show();
+        Serial.println("Color rojo ON");
     }
 
     void rainbowcolor()
@@ -310,7 +312,7 @@ void loop()
     if (stripLed.powerState && stripLed.stripLed.effectId == 1)
     {
         stripLed.stripLed.update();
-        delay(10);
+        delay(5);
     }
 
     onboard_led.on = millis() % 1000 < 50;

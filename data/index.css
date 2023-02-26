@@ -21,127 +21,71 @@ header {
  }
 
 body {
-    background-color: #0c0c0c;
-    
-   }
+  background-color: #0c0c0c;
+}
+
+header {
+  font-family: "Impact", "Arial", sans-serif;
+  height: 180px;
+  padding-top: 20px;
+  background-color: #0c0c0c;
+  width: 100%;
+}
+
+.navbar {
+  width: 100%;
+  margin: 0;
+  background-color: #0c0c0c;
+  
+}
+
 main {
     justify-content: center;
     align-items: center;
+    display: grid;
     
+    justify-items: center;
 }
 
- .navbar {
-      width: 100%;
-      margin: 0;
-      background-color: #0c0c0c;
-      
-    }
-
-h1, h2, h3 {
-        
+footer, h1, h2, h3 {
         color:darkgray;
         padding: 10px;
         font-family: Arial, Helvetica, sans-serif
+        font-size: 1.5rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);    
       }
 
-
-/* Glowing SML header text*/
-.glowing span {
-    color: #fff;
-    font-size: 6em;
-    color: #fff;
-    display: inline-block;
-    letter-spacing: 15px;
-    -webkit-box-reflect: below 1px linear-gradient(transparent,#0004);
-    line-height: 0.8em;
-    animation: animate 2s linear infinite;
-    
+#led {
+  position: relative;
+  width: 5em;
+  height: 5em;
+  border: 2px solid #000;
+  border-radius: 2.5em;
+  background-image: radial-gradient(farthest-corner at 50% 20%, #b30000 0%, #330000 100%);
+  box-shadow: 0 0.5em 1em rgba(102, 0, 0, 0.3);
 }
-
-@keyframes animate
-{
-    0%
-    {
-        color: #f00;
-        text-shadow: 0 0 10px rgba(255,0,0,1);
-    }
-    33.3%
-    {
-        color: #ff0;
-        text-shadow: 0 0 20px rgba(255,255,0,1);
-        
-    }
-    66.6%
-    {
-        color: #0f0;
-        text-shadow: 0 0 40px rgba(0,255,0,1);
-    }
-    100%
-    {
-        color: #f00;
-        text-shadow: 0 0 80px rgba(255,0,0,1);
-    }
+#led.on {
+  background-image: radial-gradient(farthest-corner at 50% 75%, red 0%, #990000 100%);
+  box-shadow: 0 1em 1.5em rgba(255, 0, 0, 0.5);
 }
-.glowing span:nth-child(1)
-{
-    animation-delay: 0s;
+#led:after {
+  content: '';
+  position: absolute;
+  top: .3em;
+  left: 1em;
+  width: 60%;
+  height: 40%;
+  border-radius: 60%;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.1));
 }
-.glowing span:nth-child(2)
-{
-    animation-delay: 0.1s;
-}
-.glowing span:nth-child(3)
-{
-    animation-delay: 0.2s;
-}
-.glowing span:nth-child(4)
-{
-    animation-delay: 0.3s;
-}
-.glowing span:nth-child(5)
-{
-    animation-delay: 0.4s;
-}
-.glowing span:nth-child(6)
-{
-    animation-delay: 0.5s;
-}
-.glowing span:nth-child(7)
-{
-    animation-delay: 0.6s;
-}
-/* END Glowing SML header text*/
-
-/* Switch power lamp */
-
-.power{
-    position: relative;
-    width: 100px;
-    height: 100px;
-    cursor: pointer;
-    border-radius: 50%;
-    display: flex;
-}
-
-.power .btn {
-    position: absolute;
-    top: 0;
-    left: 0;
-    display: block;
-    width: 100%;
-    height: 100%;
-    background: #1b1b1b;
-    border-radius: 50%;
-    box-shadow: 0 6px 6px rgba(0, 0, 0, 1),
-        inset 0 -4px 10px rgba(0, 0, 0, 1),
-        inset 0 4px 4px rgba(255, 255, 155, 0.5),
-        0 0 0 4px #000,
-        0 0 0 10px #0c0c0c,
-        0 0 0 10px #080808;
-}
-
-.power input[type="checkbox"]{
-    -webkit-appearance: none;
+/*  Toogle button*/
+.button {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+  background-color: #ccc;
+  border-radius: 34px;
 }
 
 .power .icon-off {
@@ -304,3 +248,78 @@ h1, h2, h3 {
 
 
 
+<<<<<<< Updated upstream
+=======
+.on .slide {
+  left: 28px;
+}
+
+/* Glowing SML header text*/
+
+.glowing span {
+  color: #fff;
+  font-size: 6em;
+  color: #fff;
+  display: inline-block;
+  letter-spacing: 15px;
+  -webkit-box-reflect: below 1px linear-gradient(transparent,#0004);
+  line-height: 0.8em;
+  animation: animate 2s linear infinite;
+  
+}
+
+@keyframes animate
+{
+  0%
+  {
+      color: #f00;
+      text-shadow: 0 0 10px rgba(255,0,0,1);
+  }
+  33.3%
+  {
+      color: #ff0;
+      text-shadow: 0 0 20px rgba(255,255,0,1);
+      
+  }
+  66.6%
+  {
+      color: #0f0;
+      text-shadow: 0 0 40px rgba(0,255,0,1);
+  }
+  100%
+  {
+      color: #f00;
+      text-shadow: 0 0 80px rgba(255,0,0,1);
+  }
+}
+.glowing span:nth-child(1)
+{
+  animation-delay: 0s;
+}
+.glowing span:nth-child(2)
+{
+  animation-delay: 0.1s;
+}
+.glowing span:nth-child(3)
+{
+  animation-delay: 0.2s;
+}
+.glowing span:nth-child(4)
+{
+  animation-delay: 0.3s;
+}
+.glowing span:nth-child(5)
+{
+  animation-delay: 0.4s;
+}
+.glowing span:nth-child(6)
+{
+  animation-delay: 0.5s;
+}
+.glowing span:nth-child(7)
+{
+  animation-delay: 0.6s;
+}
+
+/* END Glowing SML header text*/
+>>>>>>> Stashed changes
