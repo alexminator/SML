@@ -46,7 +46,7 @@ function onMessage(event) {
     document.getElementById('led').className = data.stripledStatus;
     document.getElementById("Stripledtoggle").className = data.stripledStatus;
     document.getElementById('Rainbowtoggle').className = data.rainbowStatus;
-    document.getElementById('Theatertoogle').className = data.theaterStatus;
+    document.getElementById('Theatertoggle').className = data.theaterStatus;
 }
 
 // ----------------------------------------------------------------------------
@@ -56,7 +56,7 @@ function onMessage(event) {
 function initButton() {
     document.getElementById('Stripledtoggle').addEventListener('click', onToggleStripled);
     document.getElementById('Rainbowtoggle').addEventListener('click', onToggleRainbow);
-    document.getElementById('Theatertoogle').addEventListener('click', onToggleTheater);
+    document.getElementById('Theatertoggle').addEventListener('click', onToggleTheater);
 }
 
 function onToggleStripled(event) {
@@ -67,10 +67,9 @@ function onToggleStripled(event) {
         toggle.className = "on";
     }
     const json = JSON.stringify({
-        'action': 'toggle',
-        'ActivePattern': 'COLOR',
-        'direction': 'dir',
-        'color': "r=255,g=0,b=0"
+        "action": "toggle",
+        "pattern": 0,
+        "color": "r=255,g=0,b=0"
     });
     console.log(json);
     websocket.send(json);
@@ -87,17 +86,16 @@ function onToggleRainbow(event) {
         toggle.className = "on";
     }
     const json = JSON.stringify({
-        'action': 'animation',
-        'ActivePattern': 'RAINBOW_CYCLE',
-        'direction': 'dir',
-        'color': "r=255,g=0,b=0"
+        "action": "animation",
+        "pattern": 1,
+        "color": "r=255,g=0,b=0"
     });
     console.log(json);
     websocket.send(json);
 }
 
 function onToggleTheater(event) {
-    const toggle = document.getElementById("Theatertoogle");
+    const toggle = document.getElementById("Theatertoggle");
     
     if (toggle.className == "on") {
         
@@ -107,10 +105,9 @@ function onToggleTheater(event) {
         toggle.className = "on";
     }
     const json = JSON.stringify({
-        'action': 'animation',
-        'ActivePattern': 'THEATER_CHASE',
-        'direction': 'dir',
-        'color': "r=255,g=0,b=0"
+        "action": "animation",
+        "pattern": 2,
+        "color": "r=255,g=0,b=0"
     });
     console.log(toggle.className);
     console.log(json);

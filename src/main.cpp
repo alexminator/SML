@@ -85,11 +85,12 @@ class NeoPatterns : public Adafruit_NeoPixel
     {
         if((millis() - lastUpdate) > Interval) // time to update
         {
+            Serial.println(ActivePattern);
             lastUpdate = millis();
             switch(ActivePattern) 
             {
                 case COLOR:
-                    ColorSet(Stick.Color(255, 0, 0)); // to do pasarle las variables R G B
+                    ColorSet(Color(255, 0, 0)); // to do pasarle las variables R G B
                     break;
                 case RAINBOW_CYCLE:
                     RainbowCycleUpdate();
@@ -342,6 +343,19 @@ class NeoPatterns : public Adafruit_NeoPixel
     }
 };
 
+void StickComplete();
+
+// Constructor
+Led onboard_led = {LED_BUILTIN, false};
+NeoPatterns Stick(STRIP_NUMBER_LEDS, STRIPLED_PIN, NEO_GRB + NEO_KHZ800, &StickComplete);
+
+void StickComplete()
+{
+    // Random color change for next scan
+    //Stick.Color1 = Stick.Wheel(random(255));
+    //Stick.ColorSet(Stick.Color(255, 0, 0));  // All in RED color
+}
+
 class Strip
 {
     public:
@@ -356,21 +370,12 @@ class Strip
     }
 };
 
-void StickComplete()
-{
-    // Random color change for next scan
-    //Stick.Color1 = Stick.Wheel(random(255));
-    Stick.ColorSet(Stick.Color(255, 0, 0));  // All in RED color
-}
+// Constructor
+Strip stripled = {false};
 
 // ----------------------------------------------------------------------------
 // Definition of global variables
 // ----------------------------------------------------------------------------
-// Constructor
-Led onboard_led = {LED_BUILTIN, false};
-NeoPatterns Stick(STRIP_NUMBER_LEDS, STRIPLED_PIN, NEO_GRB + NEO_KHZ800, &StickComplete);
-Strip stripled = {false};
-
 AsyncWebServer server(HTTP_PORT);
 AsyncWebSocket ws("/ws");
 
@@ -465,7 +470,7 @@ void notifyClients()
     json["rainbowStatus"] = Stick.ActivePattern == RAINBOW_CYCLE && stripled.powerState ? "on" : "off";
     json["theaterStatus"] = Stick.ActivePattern == THEATER_CHASE && stripled.powerState ? "on" : "off";
     
-    char buffer[25]; // I'ts 25 because {"stripledStatus":"off"} has 24 character. Change it if exists a bigger json string
+    char buffer[80]; // I'ts 80 because {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
     size_t len = serializeJson(json, buffer);
     ws.textAll(buffer, len);
 }
@@ -501,7 +506,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         }
         else if (strcmp(action, "animation") == 0)
         {
-            pattern ActivePattern = json["ActivePattern"];
+            pattern ActivePattern = json["pattern"];
             if (stripled.powerState)
             {
                 Stick.ActivePattern = ActivePattern;
@@ -574,7 +579,8 @@ void setup()
 void loop()
 {
     ws.cleanupClients();
-    
+    Stick.Update();
+    //Serial.println("Patron activo lazo: " + String(Stick.ActivePattern));
     onboard_led.on = millis() % 1000 < 50;
     onboard_led.update();
 }
