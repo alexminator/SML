@@ -86,7 +86,7 @@ class NeoPatterns : public Adafruit_NeoPixel
         if((millis() - lastUpdate) > Interval) // time to update
         {
             lastUpdate = millis();
-            switch(ActivePattern)COLOR, RAINBOW_CYCLE, THEATER_CHASE, COLOR_WIPE, SCANNER, FADE 
+            switch(ActivePattern) 
             {
                 case COLOR:
                     ColorSet();
