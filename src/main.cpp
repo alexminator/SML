@@ -574,30 +574,7 @@ void setup()
 void loop()
 {
     ws.cleanupClients();
-
-    if (stripled.powerState)
-    {
-        switch (stripLed.stripLed.effectId)
-        {
-        //case 0:
-        //    stripLed.stripLed.update();
-        //    delay(10);
-        //    break;  
-        case 1:
-            stripLed.stripLed.update();
-            delay(5);
-            //Serial.println("rainbowwwwwwwwwwwwwwwwww");
-            break;
-        case 2:
-            stripLed.stripLed.update();
-            //delay(5);
-            //Serial.println("Candyyyyyyyyyyyyyyyyyyy");
-            break;
-        default:
-            break;
-        }
-    }
-
+    
     onboard_led.on = millis() % 1000 < 50;
     onboard_led.update();
 }
