@@ -63,53 +63,69 @@ function onToggleStripled(event) {
     const toggle = document.getElementById("Stripledtoggle");
     if (toggle.className == "on") {
         toggle.className = "off";
+        const json = JSON.stringify({
+            "action": "toggle",
+            "pattern": 0,
+            "color": "r=255,g=0,b=0"
+        });
+        console.log(json);
+        websocket.send(json);
     } else {
         toggle.className = "on";
+        const json = JSON.stringify({
+            "action": "toggle",
+            "pattern": 1,
+            "color": "r=255,g=0,b=0"
+        });
+        console.log(json);
+        websocket.send(json);
     }
-    const json = JSON.stringify({
-        "action": "toggle",
-        "pattern": 0,
-        "color": "r=255,g=0,b=0"
-    });
-    console.log(json);
-    websocket.send(json);
 }
 
 function onToggleRainbow(event) {
     const toggle = document.getElementById("Rainbowtoggle");
-    
     if (toggle.className == "on") {
-        
         toggle.className = "off";
+        const json = JSON.stringify({
+            "action": "toggle",
+            "pattern": 1,
+            "color": "r=255,g=0,b=0"
+        });
+        console.log(json);
+        websocket.send(json);
     } else {
-        
         toggle.className = "on";
+        const json = JSON.stringify({
+            "action": "animation",
+            "pattern": 2,
+            "color": "r=255,g=0,b=0"
+        });
+        console.log(json);
+        websocket.send(json);
     }
-    const json = JSON.stringify({
-        "action": "animation",
-        "pattern": 1,
-        "color": "r=255,g=0,b=0"
-    });
-    console.log(json);
-    websocket.send(json);
 }
 
 function onToggleTheater(event) {
     const toggle = document.getElementById("Theatertoggle");
-    
     if (toggle.className == "on") {
-        
         toggle.className = "off";
+        const json = JSON.stringify({
+            "action": "toggle",
+            "pattern": 1,
+            "color": "r=255,g=0,b=0"
+        });
+        console.log(json);
+        websocket.send(json);
     } else {
-        
         toggle.className = "on";
+        const json = JSON.stringify({
+            "action": "animation",
+            "pattern": 3,
+            "color": "r=255,g=0,b=0"
+        });
+        console.log(json);
+        websocket.send(json);
     }
-    const json = JSON.stringify({
-        "action": "animation",
-        "pattern": 2,
-        "color": "r=255,g=0,b=0"
-    });
-    console.log(toggle.className);
-    console.log(json);
-    websocket.send(json);
 }
+
+

@@ -20,9 +20,22 @@
 #define STRIPLED_PIN 4
 #define STRIP_NUMBER_LEDS 24
 // Pattern types supported:
-enum  pattern { COLOR, RAINBOW_CYCLE, THEATER_CHASE, COLOR_WIPE, SCANNER, FADE };
+enum pattern
+{
+    NONE,
+    COLOR,
+    RAINBOW_CYCLE,
+    THEATER_CHASE,
+    COLOR_WIPE,
+    SCANNER,
+    FADE
+};
 // Patern directions supported:
-enum  direction { FORWARD, REVERSE };
+enum direction
+{
+    FORWARD,
+    REVERSE
+};
 // WEB
 #define HTTP_PORT 80
 
@@ -34,7 +47,7 @@ enum  direction { FORWARD, REVERSE };
 const char *WIFI_SSID = "MyWiFi";
 const char *WIFI_PASS = "asd369/*";
 // Strip LED
-int ledBrightness = 50;
+int ledBrightness = 80;
 long hueNow = 0;
 
 // ----------------------------------------------------------------------------
@@ -43,8 +56,8 @@ long hueNow = 0;
 
 class Led
 {
-    public:
-     // state variables
+public:
+    // state variables
     uint8_t pin;
     bool on;
 
@@ -58,68 +71,67 @@ class Led
 // NeoPattern Class - derived from the Adafruit_NeoPixel class
 class NeoPatterns : public Adafruit_NeoPixel
 {
-    public:
+public:
+    // Member Variables:
+    pattern ActivePattern; // which pattern is running
+    direction Direction;   // direction to run the pattern
 
-    // Member Variables:  
-    pattern  ActivePattern;  // which pattern is running
-    direction Direction;     // direction to run the pattern
-    
     unsigned long Interval;   // milliseconds between updates
     unsigned long lastUpdate; // last update of position
-    
-    uint32_t Color1, Color2;  // What colors are in use
-    uint16_t TotalSteps;  // total number of steps in the pattern
-    uint16_t Index;  // current step within the pattern
-    
-    void (*OnComplete)();  // Callback on completion of pattern
-    
+
+    uint32_t Color1, Color2; // What colors are in use
+    uint16_t TotalSteps;     // total number of steps in the pattern
+    uint16_t Index;          // current step within the pattern
+
+    void (*OnComplete)(); // Callback on completion of pattern
+
     // Constructor - calls base-class constructor to initialize strip
     NeoPatterns(uint16_t pixels, uint8_t pin, uint8_t type, void (*callback)())
-    :Adafruit_NeoPixel(pixels, pin, type)
+        : Adafruit_NeoPixel(pixels, pin, type)
     {
         OnComplete = callback;
     }
-    
+
     // Update the pattern
     void Update()
     {
-        if((millis() - lastUpdate) > Interval) // time to update
+        if ((millis() - lastUpdate) > Interval) // time to update
         {
-            Serial.println(ActivePattern);
+            // Serial.println(ActivePattern);
             lastUpdate = millis();
-            switch(ActivePattern) 
+            switch (ActivePattern)
             {
-                case COLOR:
-                    ColorSet(Color(255, 0, 0)); // to do pasarle las variables R G B
-                    break;
-                case RAINBOW_CYCLE:
-                    RainbowCycleUpdate();
-                    break;
-                case THEATER_CHASE:
-                    TheaterChaseUpdate();
-                    break;
-                case COLOR_WIPE:
-                    ColorWipeUpdate();
-                    break;
-                case SCANNER:
-                    ScannerUpdate();
-                    break;
-                case FADE:
-                    FadeUpdate();
-                    break;
-                default:
-                    break;
+            case COLOR:
+                ColorSet(Color(255, 0, 0)); // to do pasarle las variables R G B
+                break;
+            case RAINBOW_CYCLE:
+                RainbowCycleUpdate();
+                break;
+            case THEATER_CHASE:
+                TheaterChaseUpdate();
+                break;
+            case COLOR_WIPE:
+                ColorWipeUpdate();
+                break;
+            case SCANNER:
+                ScannerUpdate();
+                break;
+            case FADE:
+                FadeUpdate();
+                break;
+            default:
+                break;
             }
         }
     }
-  
+
     // Increment the Index and reset at the end
     void Increment()
     {
         if (Direction == FORWARD)
         {
-           Index++;
-           if (Index >= TotalSteps)
+            Index++;
+            if (Index >= TotalSteps)
             {
                 Index = 0;
                 if (OnComplete != NULL)
@@ -133,7 +145,7 @@ class NeoPatterns : public Adafruit_NeoPixel
             --Index;
             if (Index <= 0)
             {
-                Index = TotalSteps-1;
+                Index = TotalSteps - 1;
                 if (OnComplete != NULL)
                 {
                     OnComplete(); // call the comlpetion callback
@@ -141,14 +153,14 @@ class NeoPatterns : public Adafruit_NeoPixel
             }
         }
     }
-    
+
     // Reverse pattern direction
     void Reverse()
     {
         if (Direction == FORWARD)
         {
             Direction = REVERSE;
-            Index = TotalSteps-1;
+            Index = TotalSteps - 1;
         }
         else
         {
@@ -156,7 +168,7 @@ class NeoPatterns : public Adafruit_NeoPixel
             Index = 0;
         }
     }
-    
+
     // Initialize for a RainbowCycle
     void RainbowCycle(uint8_t interval, direction dir = FORWARD)
     {
@@ -166,13 +178,15 @@ class NeoPatterns : public Adafruit_NeoPixel
         Index = 0;
         Direction = dir;
     }
-    
+
     // Update the Rainbow Cycle Pattern
     void RainbowCycleUpdate()
     {
-        for(int i=0; i< numPixels(); i++)
+        rainbow(hueNow);
+        hueNow += 256;
+        if (hueNow > 65536)
         {
-            setPixelColor(i, Wheel(((i * 256 / numPixels()) + Index) & 255));
+            hueNow = 0;
         }
         show();
         Increment();
@@ -188,12 +202,12 @@ class NeoPatterns : public Adafruit_NeoPixel
         Color2 = color2;
         Index = 0;
         Direction = dir;
-   }
-    
+    }
+
     // Update the Theater Chase Pattern
     void TheaterChaseUpdate()
     {
-        for(int i=0; i< numPixels(); i++)
+        for (int i = 0; i < numPixels(); i++)
         {
             if ((i + Index) % 3 == 0)
             {
@@ -218,7 +232,7 @@ class NeoPatterns : public Adafruit_NeoPixel
         Index = 0;
         Direction = dir;
     }
-    
+
     // Update the Color Wipe Pattern
     void ColorWipeUpdate()
     {
@@ -226,7 +240,7 @@ class NeoPatterns : public Adafruit_NeoPixel
         show();
         Increment();
     }
-    
+
     // Initialize for a SCANNNER
     void Scanner(uint32_t color1, uint8_t interval)
     {
@@ -239,26 +253,26 @@ class NeoPatterns : public Adafruit_NeoPixel
 
     // Update the Scanner Pattern
     void ScannerUpdate()
-    { 
+    {
         for (int i = 0; i < numPixels(); i++)
         {
-            if (i == Index)  // Scan Pixel to the right
+            if (i == Index) // Scan Pixel to the right
             {
-                 setPixelColor(i, Color1);
+                setPixelColor(i, Color1);
             }
             else if (i == TotalSteps - Index) // Scan Pixel to the left
             {
-                 setPixelColor(i, Color1);
+                setPixelColor(i, Color1);
             }
             else // Fading tail
             {
-                 setPixelColor(i, DimColor(getPixelColor(i)));
+                setPixelColor(i, DimColor(getPixelColor(i)));
             }
         }
         show();
         Increment();
     }
-    
+
     // Initialize for a Fade
     void Fade(uint32_t color1, uint32_t color2, uint16_t steps, uint8_t interval, direction dir = FORWARD)
     {
@@ -270,7 +284,7 @@ class NeoPatterns : public Adafruit_NeoPixel
         Index = 0;
         Direction = dir;
     }
-    
+
     // Update the Fade Pattern
     void FadeUpdate()
     {
@@ -279,12 +293,12 @@ class NeoPatterns : public Adafruit_NeoPixel
         uint8_t red = ((Red(Color1) * (TotalSteps - Index)) + (Red(Color2) * Index)) / TotalSteps;
         uint8_t green = ((Green(Color1) * (TotalSteps - Index)) + (Green(Color2) * Index)) / TotalSteps;
         uint8_t blue = ((Blue(Color1) * (TotalSteps - Index)) + (Blue(Color2) * Index)) / TotalSteps;
-        
+
         ColorSet(Color(red, green, blue));
         show();
         Increment();
     }
-   
+
     // Calculate 50% dimmed version of a color (used by ScannerUpdate)
     uint32_t DimColor(uint32_t color)
     {
@@ -320,17 +334,17 @@ class NeoPatterns : public Adafruit_NeoPixel
     {
         return color & 0xFF;
     }
-    
+
     // Input a value 0 to 255 to get a color value.
     // The colours are a transition r - g - b - back to r.
     uint32_t Wheel(byte WheelPos)
     {
         WheelPos = 255 - WheelPos;
-        if(WheelPos < 85)
+        if (WheelPos < 85)
         {
             return Color(255 - WheelPos * 3, 0, WheelPos * 3);
         }
-        else if(WheelPos < 170)
+        else if (WheelPos < 170)
         {
             WheelPos -= 85;
             return Color(0, WheelPos * 3, 255 - WheelPos * 3);
@@ -352,16 +366,16 @@ NeoPatterns Stick(STRIP_NUMBER_LEDS, STRIPLED_PIN, NEO_GRB + NEO_KHZ800, &StickC
 void StickComplete()
 {
     // Random color change for next scan
-    //Stick.Color1 = Stick.Wheel(random(255));
-    //Stick.ColorSet(Stick.Color(255, 0, 0));  // All in RED color
+    // Stick.Color1 = Stick.Wheel(random(255));
+    Stick.ColorSet(Stick.Color(255, 0, 0));  // All in RED color
 }
 
 class Strip
 {
-    public:
+public:
     // state variables
     bool powerState;
-    
+
     // methods for main poweroff stripled
     void clear()
     {
@@ -417,7 +431,7 @@ void initWiFi()
 // Web server initialization
 // ----------------------------------------------------------------------------
 
-String processor(const String &var) 
+String processor(const String &var)
 {
     if (var == "RAINBOW_STATE")
     {
@@ -464,12 +478,12 @@ void initWebServer()
 
 void notifyClients()
 {
-    const uint8_t size = JSON_OBJECT_SIZE(3);   //Remember change the number of member object
+    const uint8_t size = JSON_OBJECT_SIZE(3); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["stripledStatus"] = stripled.powerState ? "on" : "off";
     json["rainbowStatus"] = Stick.ActivePattern == RAINBOW_CYCLE && stripled.powerState ? "on" : "off";
     json["theaterStatus"] = Stick.ActivePattern == THEATER_CHASE && stripled.powerState ? "on" : "off";
-    
+
     char buffer[80]; // I'ts 80 because {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
     size_t len = serializeJson(json, buffer);
     ws.textAll(buffer, len);
@@ -480,7 +494,6 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
     {
-
         const uint8_t size = JSON_OBJECT_SIZE(3);
         StaticJsonDocument<size> json;
         DeserializationError err = deserializeJson(json, data);
@@ -510,10 +523,10 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             if (stripled.powerState)
             {
                 Stick.ActivePattern = ActivePattern;
-                Stick.Update();
+                // Stick.Update();
             }
         }
-        
+
         notifyClients();
     }
 }
@@ -580,7 +593,7 @@ void loop()
 {
     ws.cleanupClients();
     Stick.Update();
-    //Serial.println("Patron activo lazo: " + String(Stick.ActivePattern));
+    // Serial.println("Patron activo lazo: " + String(Stick.ActivePattern));
     onboard_led.on = millis() % 1000 < 50;
     onboard_led.update();
 }
