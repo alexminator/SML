@@ -46,7 +46,7 @@ function onMessage(event) {
     document.getElementById('led').className = data.status;
     document.getElementById("toggle").className = data.status;
     document.getElementById('Rainbowbutton').className = data.rainbowStatus;
-    document.getElementById('Candychasebutton').className = data.candychaseStatus;
+    document.getElementById('Theaterbutton').className = data.theaterStatus;
 }
 
 // ----------------------------------------------------------------------------
@@ -55,8 +55,8 @@ function onMessage(event) {
 
 function initButton() {
     document.getElementById('toggle').addEventListener('click', onToggle);
-    document.getElementById('Rainbowbutton').addEventListener('click', onToggleRainbowEffect);
-    document.getElementById('Candychasebutton').addEventListener('click', onToggleCandychaseEffect);
+    document.getElementById('Rainbowbutton').addEventListener('click', onToggleRainbow);
+    document.getElementById('Theaterbutton').addEventListener('click', onToggleTheater);
 }
 
 function onToggle(event) {
@@ -92,7 +92,7 @@ function onToggleSimpleColor(event) {
     websocket.send(json);
 }
 
-function onToggleRainbowEffect(event) {
+function onToggleRainbow(event) {
     const toggle = document.getElementById("Rainbowbutton");
     var isOn;
     if (toggle.className == "on") {
@@ -111,8 +111,8 @@ function onToggleRainbowEffect(event) {
     websocket.send(json);
 }
 
-function onToggleCandychaseEffect(event) {
-    const toggle = document.getElementById("Candychasebutton");
+function onToggleTheater(event) {
+    const toggle = document.getElementById("Theaterbutton");
     var isOn;
     if (toggle.className == "on") {
         isOn = 0;

@@ -17,14 +17,14 @@
 // Definition of macros
 // ----------------------------------------------------------------------------
 // Strip LED
-#define LED_PIN 4
+#define STRIPLED_PIN 4
 #define STRIP_NUMBER_LEDS 24
+// Pattern types supported:
+enum  pattern { NONE, RAINBOW_CYCLE, THEATER_CHASE, COLOR_WIPE, SCANNER, FADE };
+// Patern directions supported:
+enum  direction { FORWARD, REVERSE };
 // WEB
 #define HTTP_PORT 80
-// Effects ID
-#define SIMPLE_COLOR 0
-#define RAINBOW 1
-#define CANDYCHASE 2
 
 // ----------------------------------------------------------------------------
 // Definition of global constants
@@ -35,17 +35,16 @@ const char *WIFI_SSID = "MyWiFi";
 const char *WIFI_PASS = "asd369/*";
 // Strip LED
 int ledBrightness = 50;
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(STRIP_NUMBER_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
 long hueNow = 0;
-uint32_t colorNow = strip.Color(255, 0, 0); // Initial color
 
 // ----------------------------------------------------------------------------
 // Definition of the LED component
 // ----------------------------------------------------------------------------
 
-struct Led
+class Led
 {
-    // state variables
+    public:
+     // state variables
     uint8_t pin;
     bool on;
 
@@ -56,106 +55,318 @@ struct Led
     }
 };
 
-struct StripLed
+// NeoPattern Class - derived from the Adafruit_NeoPixel class
+class NeoPatterns : public Adafruit_NeoPixel
 {
-    // state variables
-    int effectId;
-    // methods for different effects on stripled
-    void simpleColor(uint32_t ColorNow)
-    {
-        for (int i = 0; i < strip.numPixels(); i++)
-        {
-            strip.setPixelColor(i, ColorNow);
-            delay(20);
-        }
-        strip.show();
-        Serial.println("Color rojo ON");
-    }
+    public:
 
-    void rainbowcolor()
+    // Member Variables:  
+    pattern  ActivePattern;  // which pattern is running
+    direction Direction;     // direction to run the pattern
+    
+    unsigned long Interval;   // milliseconds between updates
+    unsigned long lastUpdate; // last update of position
+    
+    uint32_t Color1, Color2;  // What colors are in use
+    uint16_t TotalSteps;  // total number of steps in the pattern
+    uint16_t Index;  // current step within the pattern
+    
+    void (*OnComplete)();  // Callback on completion of pattern
+    
+    // Constructor - calls base-class constructor to initialize strip
+    NeoPatterns(uint16_t pixels, uint8_t pin, uint8_t type, void (*callback)())
+    :Adafruit_NeoPixel(pixels, pin, type)
     {
-        strip.rainbow(hueNow);
-        hueNow += 256;
-        if (hueNow > 65536)
-        {
-            hueNow = 0;
-        }
-        strip.show();
+        OnComplete = callback;
     }
-
-    void candyChase(uint8_t wait)
+    
+    // Update the pattern
+    void Update()
     {
-        for (int j = 0; j < 10; j++)
-        { // do 10 cycles of chasing
-            for (int q = 0; q < 3; q++)
+        if((millis() - lastUpdate) > Interval) // time to update
+        {
+            lastUpdate = millis();
+            switch(ActivePattern)
             {
-                for (uint16_t i = 0; i < STRIP_NUMBER_LEDS; i++)
+                case RAINBOW_CYCLE:
+                    RainbowCycleUpdate();
+                    break;
+                case THEATER_CHASE:
+                    TheaterChaseUpdate();
+                    break;
+                case COLOR_WIPE:
+                    ColorWipeUpdate();
+                    break;
+                case SCANNER:
+                    ScannerUpdate();
+                    break;
+                case FADE:
+                    FadeUpdate();
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+  
+    // Increment the Index and reset at the end
+    void Increment()
+    {
+        if (Direction == FORWARD)
+        {
+           Index++;
+           if (Index >= TotalSteps)
+            {
+                Index = 0;
+                if (OnComplete != NULL)
                 {
-                    strip.setPixelColor(i + q, 255, 255, 255); // turn every pixel white
+                    OnComplete(); // call the comlpetion callback
                 }
-                for (uint16_t i = 0; i < STRIP_NUMBER_LEDS; i = i + 3)
+            }
+        }
+        else // Direction == REVERSE
+        {
+            --Index;
+            if (Index <= 0)
+            {
+                Index = TotalSteps-1;
+                if (OnComplete != NULL)
                 {
-                    strip.setPixelColor(i + q, 255, 0, 0); // turn every third pixel red
-                }
-                strip.show();
-
-                delay(wait);
-
-                for (uint16_t i = 0; i < STRIP_NUMBER_LEDS; i = i + 3)
-                {
-                    strip.setPixelColor(i + q, 0); // turn every third pixel off
+                    OnComplete(); // call the comlpetion callback
                 }
             }
         }
     }
-
-    void update()
+    
+    // Reverse pattern direction
+    void Reverse()
     {
-        switch (effectId)
+        if (Direction == FORWARD)
         {
-        case 0:
-            strip.clear();
-            simpleColor(colorNow);
-            break;
-        case 1:
-            strip.clear();
-            rainbowcolor();
-            break;
-        case 2:
-            strip.clear();
-            strip.show();
-            candyChase(100);
-            break;
-        default:
-            break;
+            Direction = REVERSE;
+            Index = TotalSteps-1;
+        }
+        else
+        {
+            Direction = FORWARD;
+            Index = 0;
+        }
+    }
+    
+    // Initialize for a RainbowCycle
+    void RainbowCycle(uint8_t interval, direction dir = FORWARD)
+    {
+        ActivePattern = RAINBOW_CYCLE;
+        Interval = interval;
+        TotalSteps = 255;
+        Index = 0;
+        Direction = dir;
+    }
+    
+    // Update the Rainbow Cycle Pattern
+    void RainbowCycleUpdate()
+    {
+        for(int i=0; i< numPixels(); i++)
+        {
+            setPixelColor(i, Wheel(((i * 256 / numPixels()) + Index) & 255));
+        }
+        show();
+        Increment();
+    }
+
+    // Initialize for a Theater Chase
+    void TheaterChase(uint32_t color1, uint32_t color2, uint8_t interval, direction dir = FORWARD)
+    {
+        ActivePattern = THEATER_CHASE;
+        Interval = interval;
+        TotalSteps = numPixels();
+        Color1 = color1;
+        Color2 = color2;
+        Index = 0;
+        Direction = dir;
+   }
+    
+    // Update the Theater Chase Pattern
+    void TheaterChaseUpdate()
+    {
+        for(int i=0; i< numPixels(); i++)
+        {
+            if ((i + Index) % 3 == 0)
+            {
+                setPixelColor(i, Color1);
+            }
+            else
+            {
+                setPixelColor(i, Color2);
+            }
+        }
+        show();
+        Increment();
+    }
+
+    // Initialize for a ColorWipe
+    void ColorWipe(uint32_t color, uint8_t interval, direction dir = FORWARD)
+    {
+        ActivePattern = COLOR_WIPE;
+        Interval = interval;
+        TotalSteps = numPixels();
+        Color1 = color;
+        Index = 0;
+        Direction = dir;
+    }
+    
+    // Update the Color Wipe Pattern
+    void ColorWipeUpdate()
+    {
+        setPixelColor(Index, Color1);
+        show();
+        Increment();
+    }
+    
+    // Initialize for a SCANNNER
+    void Scanner(uint32_t color1, uint8_t interval)
+    {
+        ActivePattern = SCANNER;
+        Interval = interval;
+        TotalSteps = (numPixels() - 1) * 2;
+        Color1 = color1;
+        Index = 0;
+    }
+
+    // Update the Scanner Pattern
+    void ScannerUpdate()
+    { 
+        for (int i = 0; i < numPixels(); i++)
+        {
+            if (i == Index)  // Scan Pixel to the right
+            {
+                 setPixelColor(i, Color1);
+            }
+            else if (i == TotalSteps - Index) // Scan Pixel to the left
+            {
+                 setPixelColor(i, Color1);
+            }
+            else // Fading tail
+            {
+                 setPixelColor(i, DimColor(getPixelColor(i)));
+            }
+        }
+        show();
+        Increment();
+    }
+    
+    // Initialize for a Fade
+    void Fade(uint32_t color1, uint32_t color2, uint16_t steps, uint8_t interval, direction dir = FORWARD)
+    {
+        ActivePattern = FADE;
+        Interval = interval;
+        TotalSteps = steps;
+        Color1 = color1;
+        Color2 = color2;
+        Index = 0;
+        Direction = dir;
+    }
+    
+    // Update the Fade Pattern
+    void FadeUpdate()
+    {
+        // Calculate linear interpolation between Color1 and Color2
+        // Optimise order of operations to minimize truncation error
+        uint8_t red = ((Red(Color1) * (TotalSteps - Index)) + (Red(Color2) * Index)) / TotalSteps;
+        uint8_t green = ((Green(Color1) * (TotalSteps - Index)) + (Green(Color2) * Index)) / TotalSteps;
+        uint8_t blue = ((Blue(Color1) * (TotalSteps - Index)) + (Blue(Color2) * Index)) / TotalSteps;
+        
+        ColorSet(Color(red, green, blue));
+        show();
+        Increment();
+    }
+   
+    // Calculate 50% dimmed version of a color (used by ScannerUpdate)
+    uint32_t DimColor(uint32_t color)
+    {
+        // Shift R, G and B components one bit to the right
+        uint32_t dimColor = Color(Red(color) >> 1, Green(color) >> 1, Blue(color) >> 1);
+        return dimColor;
+    }
+
+    // Set all pixels to a color (synchronously)
+    void ColorSet(uint32_t color)
+    {
+        for (int i = 0; i < numPixels(); i++)
+        {
+            setPixelColor(i, color);
+        }
+        show();
+    }
+
+    // Returns the Red component of a 32-bit color
+    uint8_t Red(uint32_t color)
+    {
+        return (color >> 16) & 0xFF;
+    }
+
+    // Returns the Green component of a 32-bit color
+    uint8_t Green(uint32_t color)
+    {
+        return (color >> 8) & 0xFF;
+    }
+
+    // Returns the Blue component of a 32-bit color
+    uint8_t Blue(uint32_t color)
+    {
+        return color & 0xFF;
+    }
+    
+    // Input a value 0 to 255 to get a color value.
+    // The colours are a transition r - g - b - back to r.
+    uint32_t Wheel(byte WheelPos)
+    {
+        WheelPos = 255 - WheelPos;
+        if(WheelPos < 85)
+        {
+            return Color(255 - WheelPos * 3, 0, WheelPos * 3);
+        }
+        else if(WheelPos < 170)
+        {
+            WheelPos -= 85;
+            return Color(0, WheelPos * 3, 255 - WheelPos * 3);
+        }
+        else
+        {
+            WheelPos -= 170;
+            return Color(WheelPos * 3, 255 - WheelPos * 3, 0);
         }
     }
 };
 
-struct Strip
+class Strip
 {
+    public:
     // state variables
-    StripLed stripLed;
     bool powerState;
-
+    
     // methods for main poweroff stripled
     void clear()
     {
-        strip.clear();
-        strip.show();
+        Stick.clear();
+        Stick.show();
     }
 };
+
+void StickComplete()
+{
+    // Random color change for next scan
+    //Stick.Color1 = Stick.Wheel(random(255));
+    Stick.ColorSet(Stick.Color(255, 0, 0));
+}
 
 // ----------------------------------------------------------------------------
 // Definition of global variables
 // ----------------------------------------------------------------------------
-
-StripLed simple = {SIMPLE_COLOR};
-StripLed rainbow = {RAINBOW};
-StripLed candychase = {CANDYCHASE};
-
+// Constructor
 Led onboard_led = {LED_BUILTIN, false};
-Strip stripLed = {simple, false};
+NeoPatterns Stick(STRIP_NUMBER_LEDS, STRIPLED_PIN, NEO_GRB + NEO_KHZ800, &StickComplete);
+Strip stripled = {false};
 
 AsyncWebServer server(HTTP_PORT);
 AsyncWebSocket ws("/ws");
@@ -198,19 +409,31 @@ void initWiFi()
 // Web server initialization
 // ----------------------------------------------------------------------------
 
-String processor(const String &var)
+String processor(const String &var) 
 {
     if (var == "RAINBOW_STATE")
     {
         return String("off");
     }
-    else if (var == "CANDYCHASE_STATE")
+    else if (var == "THEATER_STATE")
+    {
+        return String("off");
+    }
+    else if (var == "COLOR_STATE")
+    {
+        return String("off");
+    }
+    else if (var == "SCANNER_STATE")
+    {
+        return String("off");
+    }
+    else if (var == "FADE_STATE")
     {
         return String("off");
     }
     else if (var == "STATE")
     {
-        return String(var == "STATE" && stripLed.powerState ? "on" : "off");
+        return String(var == "STATE" && stripled.powerState ? "on" : "off");
     }
     return String();
 }
@@ -235,13 +458,10 @@ void notifyClients()
 {
     const uint8_t size = JSON_OBJECT_SIZE(2);
     StaticJsonDocument<size> json;
-    json["status"] = stripLed.powerState ? "on" : "off";
-    json["rainbowStatus"] = stripLed.stripLed.effectId == 1 && stripLed.powerState ? "on" : "off";
-    json["candychaseStatus"] = stripLed.stripLed.effectId == 2 && stripLed.powerState ? "on" : "off";
+    json["status"] = stripled.powerState ? "on" : "off";
+    json["rainbowStatus"] = Stick.ActivePattern == RAINBOW_CYCLE && stripled.powerState ? "on" : "off";
+    json["theaterStatus"] = Stick.ActivePattern == THEATER_CHASE && stripled.powerState ? "on" : "off";
     
-    Serial.println("RanibowStatus: " + String(stripLed.stripLed.effectId == 1 && stripLed.powerState));
-    Serial.println("CandychaseStatus: " + String(stripLed.stripLed.effectId == 2 && stripLed.powerState));
-
     char buffer[50];
     size_t len = serializeJson(json, buffer);
     ws.textAll(buffer, len);
@@ -328,7 +548,7 @@ void initWebSocket()
 void setup()
 {
     pinMode(onboard_led.pin, OUTPUT);
-    pinMode(LED_PIN, OUTPUT);
+    pinMode(STRIPLED_PIN, OUTPUT);
 
     Serial.begin(115200);
     delay(500);
@@ -338,10 +558,10 @@ void setup()
     initWebSocket();
     initWebServer();
 
-    strip.begin();
-    strip.setBrightness(ledBrightness);
-    strip.clear();
-    strip.show();
+    Stick.begin();
+    Stick.setBrightness(ledBrightness);
+    Stick.clear();
+    Stick.show();
 }
 
 // ----------------------------------------------------------------------------
