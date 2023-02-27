@@ -492,7 +492,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             stripled.powerState = !stripled.powerState;
             if (stripled.powerState)
             {
-                StickComplete();
+                Stick.ColorSet(Stick.Color(255, 0, 0)); // to do pasarle las variables R G B
             }
             else
             {
