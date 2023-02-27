@@ -357,7 +357,7 @@ void StickComplete()
 {
     // Random color change for next scan
     //Stick.Color1 = Stick.Wheel(random(255));
-    Stick.ColorSet(Stick.Color(255, 0, 0));
+    Stick.ColorSet(Stick.Color(255, 0, 0));  // All in RED color
 }
 
 // ----------------------------------------------------------------------------
@@ -431,9 +431,9 @@ String processor(const String &var)
     {
         return String("off");
     }
-    else if (var == "STATE")
+    else if (var == "STRIPLED_STATE")
     {
-        return String(var == "STATE" && stripled.powerState ? "on" : "off");
+        return String("off");
     }
     return String();
 }
@@ -456,13 +456,13 @@ void initWebServer()
 
 void notifyClients()
 {
-    const uint8_t size = JSON_OBJECT_SIZE(2);
+    const uint8_t size = JSON_OBJECT_SIZE(3);   //Remember change the number of member object
     StaticJsonDocument<size> json;
-    json["status"] = stripled.powerState ? "on" : "off";
+    json["stripledStatus"] = stripled.powerState ? "on" : "off";
     json["rainbowStatus"] = Stick.ActivePattern == RAINBOW_CYCLE && stripled.powerState ? "on" : "off";
     json["theaterStatus"] = Stick.ActivePattern == THEATER_CHASE && stripled.powerState ? "on" : "off";
     
-    char buffer[50];
+    char buffer[25]; // I'ts 25 because {"stripledStatus":"off"} has 24 character. Change it if exists a bigger json string
     size_t len = serializeJson(json, buffer);
     ws.textAll(buffer, len);
 }

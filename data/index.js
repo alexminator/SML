@@ -43,10 +43,10 @@ function onClose(event) {
 
 function onMessage(event) {
     let data = JSON.parse(event.data);
-    document.getElementById('led').className = data.status;
-    document.getElementById("toggle").className = data.status;
-    document.getElementById('Rainbowbutton').className = data.rainbowStatus;
-    document.getElementById('Theaterbutton').className = data.theaterStatus;
+    document.getElementById('led').className = data.stripledStatus;
+    document.getElementById("Stripledtoggle").className = data.stripledStatus;
+    document.getElementById('Rainbowtoggle').className = data.rainbowStatus;
+    document.getElementById('Theatertoogle').className = data.theaterStatus;
 }
 
 // ----------------------------------------------------------------------------
@@ -54,13 +54,13 @@ function onMessage(event) {
 // ----------------------------------------------------------------------------
 
 function initButton() {
-    document.getElementById('toggle').addEventListener('click', onToggle);
-    document.getElementById('Rainbowbutton').addEventListener('click', onToggleRainbow);
-    document.getElementById('Theaterbutton').addEventListener('click', onToggleTheater);
+    document.getElementById('Stripledtoggle').addEventListener('click', onToggleStripled);
+    document.getElementById('Rainbowtoggle').addEventListener('click', onToggleRainbow);
+    document.getElementById('Theatertoogle').addEventListener('click', onToggleTheater);
 }
 
-function onToggle(event) {
-    const toggle = document.getElementById("toggle");
+function onToggleStripled(event) {
+    const toggle = document.getElementById("Stripledtoggle");
     if (toggle.className == "on") {
         toggle.className = "off";
     } else {
@@ -75,25 +75,8 @@ function onToggle(event) {
     websocket.send(json);
 }
 
-function onToggleSimpleColor(event) {
-    const toggle = document.getElementById("SimpleColor");
-    if (toggle.className == "on") {
-        toggle.className = "off";
-    } else {
-        toggle.className = "on";
-    }
-    // TODO: Tomar los valores del picker del color
-    const json = JSON.stringify({
-        'action': 'animation',
-        'effectId': 0,
-        'color': "r=255,g=0,b=0"
-    });
-    console.log(json);
-    websocket.send(json);
-}
-
 function onToggleRainbow(event) {
-    const toggle = document.getElementById("Rainbowbutton");
+    const toggle = document.getElementById("Rainbowtoggle");
     var isOn;
     if (toggle.className == "on") {
         isOn = 0;
@@ -112,7 +95,7 @@ function onToggleRainbow(event) {
 }
 
 function onToggleTheater(event) {
-    const toggle = document.getElementById("Theaterbutton");
+    const toggle = document.getElementById("Theatertoogle");
     var isOn;
     if (toggle.className == "on") {
         isOn = 0;
