@@ -68,7 +68,8 @@ function onToggleStripled(event) {
     }
     const json = JSON.stringify({
         'action': 'toggle',
-        'effectId': 0,
+        'ActivePattern': 'COLOR',
+        'direction': 'dir',
         'color': "r=255,g=0,b=0"
     });
     console.log(json);
@@ -77,17 +78,18 @@ function onToggleStripled(event) {
 
 function onToggleRainbow(event) {
     const toggle = document.getElementById("Rainbowtoggle");
-    var isOn;
+    
     if (toggle.className == "on") {
-        isOn = 0;
+        
         toggle.className = "off";
     } else {
-        isOn = 1;
+        
         toggle.className = "on";
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn,
+        'ActivePattern': 'RAINBOW_CYCLE',
+        'direction': 'dir',
         'color': "r=255,g=0,b=0"
     });
     console.log(json);
@@ -96,17 +98,18 @@ function onToggleRainbow(event) {
 
 function onToggleTheater(event) {
     const toggle = document.getElementById("Theatertoogle");
-    var isOn;
+    
     if (toggle.className == "on") {
-        isOn = 0;
+        
         toggle.className = "off";
     } else {
-        isOn = 2;
+        
         toggle.className = "on";
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn,
+        'ActivePattern': 'THEATER_CHASE',
+        'direction': 'dir',
         'color': "r=255,g=0,b=0"
     });
     console.log(toggle.className);

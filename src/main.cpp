@@ -20,7 +20,7 @@
 #define STRIPLED_PIN 4
 #define STRIP_NUMBER_LEDS 24
 // Pattern types supported:
-enum  pattern { NONE, RAINBOW_CYCLE, THEATER_CHASE, COLOR_WIPE, SCANNER, FADE };
+enum  pattern { COLOR, RAINBOW_CYCLE, THEATER_CHASE, COLOR_WIPE, SCANNER, FADE };
 // Patern directions supported:
 enum  direction { FORWARD, REVERSE };
 // WEB
@@ -86,8 +86,11 @@ class NeoPatterns : public Adafruit_NeoPixel
         if((millis() - lastUpdate) > Interval) // time to update
         {
             lastUpdate = millis();
-            switch(ActivePattern)
+            switch(ActivePattern)COLOR, RAINBOW_CYCLE, THEATER_CHASE, COLOR_WIPE, SCANNER, FADE 
             {
+                case COLOR:
+                    ColorSet();
+                    break;
                 case RAINBOW_CYCLE:
                     RainbowCycleUpdate();
                     break;
@@ -486,23 +489,23 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         const char *action = json["action"];
         if (strcmp(action, "toggle") == 0)
         {
-            stripLed.powerState = !stripLed.powerState;
-            if (stripLed.powerState)
+            stripled.powerState = !stripled.powerState;
+            if (stripled.powerState)
             {
-                stripLed.stripLed.update();
+                StickComplete();
             }
             else
             {
-                stripLed.clear();
+                stripled.clear();
             }
         }
         else if (strcmp(action, "animation") == 0)
         {
-            const int effectId = json["effectId"];
-            if (stripLed.powerState)
+            pattern ActivePattern = json["ActivePattern"];
+            if (stripled.powerState)
             {
-                stripLed.stripLed.effectId = effectId;
-                stripLed.stripLed.update();
+                Stick.ActivePattern = ActivePattern;
+                Stick.Update();
             }
         }
         
