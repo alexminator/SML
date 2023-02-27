@@ -89,7 +89,7 @@ class NeoPatterns : public Adafruit_NeoPixel
             switch(ActivePattern) 
             {
                 case COLOR:
-                    ColorSet();
+                    ColorSet(Stick.Color(255, 0, 0)); // to do pasarle las variables R G B
                     break;
                 case RAINBOW_CYCLE:
                     RainbowCycleUpdate();
@@ -575,7 +575,7 @@ void loop()
 {
     ws.cleanupClients();
 
-    if (stripLed.powerState)
+    if (stripled.powerState)
     {
         switch (stripLed.stripLed.effectId)
         {
