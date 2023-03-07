@@ -8,7 +8,6 @@
  * ----------------------------------------------------------------------------
  */
 
-@import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
 * {
   margin: 0;
   padding: 0;
@@ -23,39 +22,22 @@ html, body {
 }
 
 body {
-  background-color: #0c0c0c;
+  display: grid;
+  grid-template-rows: 1fr;
+  align-items: center;
+  justify-items: center;
 }
 
-header {
-  font-family: "Impact", "Arial", sans-serif;
-  height: 180px;
-  padding-top: 20px;
-  background-color: #0c0c0c;
-  width: 100%;
+.panel {
+  display: grid;
+  grid-gap: 3em;
+  justify-items: center;
 }
 
-.navbar {
-  width: 100%;
-  margin: 0;
-  background-color: #0c0c0c;
-  
+h1 {
+  font-size: 1.5rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
-
-main {
-    justify-content: center;
-    align-items: center;
-    display: grid;
-    
-    justify-items: center;
-}
-
-footer, h1, h2, h3 {
-        color:darkgray;
-        padding: 10px;
-        font-family: Arial, Helvetica, sans-serif;
-        font-size: 1.5rem;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);    
-      }
 
 #led {
   position: relative;
@@ -80,7 +62,22 @@ footer, h1, h2, h3 {
   border-radius: 60%;
   background-image: linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.1));
 }
-/*  Toogle button*/
+
+/* button {
+  padding: .5em .75em;
+  font-size: 1.2rem;
+  color: #fff;
+  text-shadow: 0 -1px 1px #000;
+  border: 1px solid #000;
+  border-radius: .5em;
+  background-image: linear-gradient(#2e3538, #73848c);
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.5), 0 0.2em 0.4em rgba(0, 0, 0, 0.4);
+  outline: none;
+}
+button:active {
+  transform: translateY(2px);
+} */
+
 .button {
   position: relative;
   display: inline-block;
@@ -113,71 +110,35 @@ footer, h1, h2, h3 {
   left: 28px;
 }
 
-/* Glowing SML header text*/
+/* Wifi Signal */
 
-.glowing span {
-  color: #fff;
-  font-size: 6em;
-  color: #fff;
+.sizing-box {
+  height: 20px;
+  width: 50px;
+}
+
+.signal-bars {
   display: inline-block;
-  letter-spacing: 15px;
-  -webkit-box-reflect: below 1px linear-gradient(transparent,#0004);
-  line-height: 0.8em;
-  animation: animate 2s linear infinite;
-  
 }
 
-@keyframes animate
-{
-  0%
-  {
-      color: #f00;
-      text-shadow: 0 0 10px rgba(255,0,0,1);
-  }
-  33.3%
-  {
-      color: #ff0;
-      text-shadow: 0 0 20px rgba(255,255,0,1);
-      
-  }
-  66.6%
-  {
-      color: #0f0;
-      text-shadow: 0 0 40px rgba(0,255,0,1);
-  }
-  100%
-  {
-      color: #f00;
-      text-shadow: 0 0 80px rgba(255,0,0,1);
-  }
+.signal-bars .bar {
+  width: 14%;
+  margin-left: 1%;
+  min-height: 20%;
+  display: inline-block;
+  background-color: #16a085;
 }
-.glowing span:nth-child(1)
-{
-  animation-delay: 0s;
-}
-.glowing span:nth-child(2)
-{
-  animation-delay: 0.1s;
-}
-.glowing span:nth-child(3)
-{
-  animation-delay: 0.2s;
-}
-.glowing span:nth-child(4)
-{
-  animation-delay: 0.3s;
-}
-.glowing span:nth-child(5)
-{
-  animation-delay: 0.4s;
-}
-.glowing span:nth-child(6)
-{
-  animation-delay: 0.5s;
-}
-.glowing span:nth-child(7)
-{
-  animation-delay: 0.6s;
-}
+.signal-bars .bar.first-bar  { height: 20%; }
+.signal-bars .bar.second-bar { height: 40%; }
+.signal-bars .bar.third-bar  { height: 60%; }
+.signal-bars .bar.fourth-bar { height: 80%; }
+.signal-bars .bar.fifth-bar  { height: 99%; }
 
-/* END Glowing SML header text*/
+.four-bars .bar.fifth-bar,
+.three-bars .bar.fifth-bar,
+.three-bars .bar.fourth-bar,
+.one-bar .bar:not(.first-bar),
+.two-bars .bar:not(.first-bar):not(.second-bar) {
+  background-color: #fafafa;
+  border: thin solid #f3f3f3;
+}

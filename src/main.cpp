@@ -17,27 +17,13 @@
 // Definition of macros
 // ----------------------------------------------------------------------------
 // Strip LED
-#define STRIPLED_PIN 4
+#define LED_PIN 4
 #define STRIP_NUMBER_LEDS 24
-// Pattern types supported:
-enum pattern
-{
-    NONE,
-    COLOR,
-    RAINBOW_CYCLE,
-    THEATER_CHASE,
-    COLOR_WIPE,
-    SCANNER,
-    FADE
-};
-// Patern directions supported:
-enum direction
-{
-    FORWARD,
-    REVERSE
-};
 // WEB
 #define HTTP_PORT 80
+// Effects ID
+#define SIMPLE_COLOR 0
+#define RAINBOW 1
 
 // ----------------------------------------------------------------------------
 // Definition of global constants
@@ -46,17 +32,19 @@ enum direction
 // WiFi credentials
 const char *WIFI_SSID = "MyWiFi";
 const char *WIFI_PASS = "asd369/*";
+String strength;
 // Strip LED
-int ledBrightness = 80;
+int ledBrightness = 50;
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(STRIP_NUMBER_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
 long hueNow = 0;
+uint32_t colorNow = strip.Color(255, 0, 0); // Initial color
 
 // ----------------------------------------------------------------------------
 // Definition of the LED component
 // ----------------------------------------------------------------------------
 
-class Led
+struct Led
 {
-public:
     // state variables
     uint8_t pin;
     bool on;
@@ -68,330 +56,77 @@ public:
     }
 };
 
-// NeoPattern Class - derived from the Adafruit_NeoPixel class
-class NeoPatterns : public Adafruit_NeoPixel
+struct StripLed
 {
-public:
-    // Member Variables:
-    pattern ActivePattern; // which pattern is running
-    direction Direction;   // direction to run the pattern
-
-    unsigned long Interval;   // milliseconds between updates
-    unsigned long lastUpdate; // last update of position
-
-    uint32_t Color1, Color2; // What colors are in use
-    uint16_t TotalSteps;     // total number of steps in the pattern
-    uint16_t Index;          // current step within the pattern
-
-    void (*OnComplete)(); // Callback on completion of pattern
-
-    // Constructor - calls base-class constructor to initialize strip
-    NeoPatterns(uint16_t pixels, uint8_t pin, uint8_t type, void (*callback)())
-        : Adafruit_NeoPixel(pixels, pin, type)
+    // state variables
+    int effectId;
+    // methods for different effects on stripled
+    void simpleColor(uint32_t ColorNow)
     {
-        OnComplete = callback;
+        for (int i = 0; i < strip.numPixels(); i++)
+        {
+            strip.setPixelColor(i, ColorNow);
+        }
+        strip.show();
     }
 
-    // Update the pattern
-    void Update()
+    void rainbowcolor()
     {
-        if ((millis() - lastUpdate) > Interval) // time to update
-        {
-            // Serial.println(ActivePattern);
-            lastUpdate = millis();
-            switch (ActivePattern)
-            {
-            case COLOR:
-                ColorSet(Color(255, 0, 0)); // to do pasarle las variables R G B
-                break;
-            case RAINBOW_CYCLE:
-                RainbowCycleUpdate();
-                break;
-            case THEATER_CHASE:
-                TheaterChaseUpdate();
-                break;
-            case COLOR_WIPE:
-                ColorWipeUpdate();
-                break;
-            case SCANNER:
-                ScannerUpdate();
-                break;
-            case FADE:
-                FadeUpdate();
-                break;
-            default:
-                break;
-            }
-        }
-    }
-
-    // Increment the Index and reset at the end
-    void Increment()
-    {
-        if (Direction == FORWARD)
-        {
-            Index++;
-            if (Index >= TotalSteps)
-            {
-                Index = 0;
-                if (OnComplete != NULL)
-                {
-                    OnComplete(); // call the comlpetion callback
-                }
-            }
-        }
-        else // Direction == REVERSE
-        {
-            --Index;
-            if (Index <= 0)
-            {
-                Index = TotalSteps - 1;
-                if (OnComplete != NULL)
-                {
-                    OnComplete(); // call the comlpetion callback
-                }
-            }
-        }
-    }
-
-    // Reverse pattern direction
-    void Reverse()
-    {
-        if (Direction == FORWARD)
-        {
-            Direction = REVERSE;
-            Index = TotalSteps - 1;
-        }
-        else
-        {
-            Direction = FORWARD;
-            Index = 0;
-        }
-    }
-
-    // Initialize for a RainbowCycle
-    void RainbowCycle(uint8_t interval, direction dir = FORWARD)
-    {
-        ActivePattern = RAINBOW_CYCLE;
-        Interval = interval;
-        TotalSteps = 255;
-        Index = 0;
-        Direction = dir;
-    }
-
-    // Update the Rainbow Cycle Pattern
-    void RainbowCycleUpdate()
-    {
-        rainbow(hueNow);
+        strip.rainbow(hueNow);
         hueNow += 256;
         if (hueNow > 65536)
         {
             hueNow = 0;
         }
-        show();
-        Increment();
+        strip.show();
     }
-
-    // Initialize for a Theater Chase
-    void TheaterChase(uint32_t color1, uint32_t color2, uint8_t interval, direction dir = FORWARD)
+    void update()
     {
-        ActivePattern = THEATER_CHASE;
-        Interval = interval;
-        TotalSteps = numPixels();
-        Color1 = color1;
-        Color2 = color2;
-        Index = 0;
-        Direction = dir;
-    }
-
-    // Update the Theater Chase Pattern
-    void TheaterChaseUpdate()
-    {
-        for (int i = 0; i < numPixels(); i++)
+        switch (effectId)
         {
-            if ((i + Index) % 3 == 0)
-            {
-                setPixelColor(i, Color1);
-            }
-            else
-            {
-                setPixelColor(i, Color2);
-            }
-        }
-        show();
-        Increment();
-    }
-
-    // Initialize for a ColorWipe
-    void ColorWipe(uint32_t color, uint8_t interval, direction dir = FORWARD)
-    {
-        ActivePattern = COLOR_WIPE;
-        Interval = interval;
-        TotalSteps = numPixels();
-        Color1 = color;
-        Index = 0;
-        Direction = dir;
-    }
-
-    // Update the Color Wipe Pattern
-    void ColorWipeUpdate()
-    {
-        setPixelColor(Index, Color1);
-        show();
-        Increment();
-    }
-
-    // Initialize for a SCANNNER
-    void Scanner(uint32_t color1, uint8_t interval)
-    {
-        ActivePattern = SCANNER;
-        Interval = interval;
-        TotalSteps = (numPixels() - 1) * 2;
-        Color1 = color1;
-        Index = 0;
-    }
-
-    // Update the Scanner Pattern
-    void ScannerUpdate()
-    {
-        for (int i = 0; i < numPixels(); i++)
-        {
-            if (i == Index) // Scan Pixel to the right
-            {
-                setPixelColor(i, Color1);
-            }
-            else if (i == TotalSteps - Index) // Scan Pixel to the left
-            {
-                setPixelColor(i, Color1);
-            }
-            else // Fading tail
-            {
-                setPixelColor(i, DimColor(getPixelColor(i)));
-            }
-        }
-        show();
-        Increment();
-    }
-
-    // Initialize for a Fade
-    void Fade(uint32_t color1, uint32_t color2, uint16_t steps, uint8_t interval, direction dir = FORWARD)
-    {
-        ActivePattern = FADE;
-        Interval = interval;
-        TotalSteps = steps;
-        Color1 = color1;
-        Color2 = color2;
-        Index = 0;
-        Direction = dir;
-    }
-
-    // Update the Fade Pattern
-    void FadeUpdate()
-    {
-        // Calculate linear interpolation between Color1 and Color2
-        // Optimise order of operations to minimize truncation error
-        uint8_t red = ((Red(Color1) * (TotalSteps - Index)) + (Red(Color2) * Index)) / TotalSteps;
-        uint8_t green = ((Green(Color1) * (TotalSteps - Index)) + (Green(Color2) * Index)) / TotalSteps;
-        uint8_t blue = ((Blue(Color1) * (TotalSteps - Index)) + (Blue(Color2) * Index)) / TotalSteps;
-
-        ColorSet(Color(red, green, blue));
-        show();
-        Increment();
-    }
-
-    // Calculate 50% dimmed version of a color (used by ScannerUpdate)
-    uint32_t DimColor(uint32_t color)
-    {
-        // Shift R, G and B components one bit to the right
-        uint32_t dimColor = Color(Red(color) >> 1, Green(color) >> 1, Blue(color) >> 1);
-        return dimColor;
-    }
-
-    // Set all pixels to a color (synchronously)
-    void ColorSet(uint32_t color)
-    {
-        for (int i = 0; i < numPixels(); i++)
-        {
-            setPixelColor(i, color);
-        }
-        show();
-    }
-
-    // Returns the Red component of a 32-bit color
-    uint8_t Red(uint32_t color)
-    {
-        return (color >> 16) & 0xFF;
-    }
-
-    // Returns the Green component of a 32-bit color
-    uint8_t Green(uint32_t color)
-    {
-        return (color >> 8) & 0xFF;
-    }
-
-    // Returns the Blue component of a 32-bit color
-    uint8_t Blue(uint32_t color)
-    {
-        return color & 0xFF;
-    }
-
-    // Input a value 0 to 255 to get a color value.
-    // The colours are a transition r - g - b - back to r.
-    uint32_t Wheel(byte WheelPos)
-    {
-        WheelPos = 255 - WheelPos;
-        if (WheelPos < 85)
-        {
-            return Color(255 - WheelPos * 3, 0, WheelPos * 3);
-        }
-        else if (WheelPos < 170)
-        {
-            WheelPos -= 85;
-            return Color(0, WheelPos * 3, 255 - WheelPos * 3);
-        }
-        else
-        {
-            WheelPos -= 170;
-            return Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+        case 0:
+            simpleColor(colorNow);
+            break;
+        case 1:
+            rainbowcolor();
+            break;
+        default:
+            break;
         }
     }
 };
 
-void StickComplete();
-
-// Constructor
-Led onboard_led = {LED_BUILTIN, false};
-NeoPatterns Stick(STRIP_NUMBER_LEDS, STRIPLED_PIN, NEO_GRB + NEO_KHZ800, &StickComplete);
-
-void StickComplete()
+struct Strip
 {
-    // Random color change for next scan
-    // Stick.Color1 = Stick.Wheel(random(255));
-    Stick.ColorSet(Stick.Color(255, 0, 0));  // All in RED color
-}
-
-class Strip
-{
-public:
     // state variables
+    StripLed stripLed;
     bool powerState;
 
     // methods for main poweroff stripled
     void clear()
     {
-        Stick.clear();
-        Stick.show();
+        strip.clear();
+        strip.show();
     }
 };
-
-// Constructor
-Strip stripled = {false};
 
 // ----------------------------------------------------------------------------
 // Definition of global variables
 // ----------------------------------------------------------------------------
+
+StripLed simple = {SIMPLE_COLOR};
+StripLed rainbow = {RAINBOW};
+
+Led onboard_led = {LED_BUILTIN, false};
+Strip stripLed = {simple, false};
+
 AsyncWebServer server(HTTP_PORT);
 AsyncWebSocket ws("/ws");
+
+// Refresh web signal info
+unsigned long startMillis;
+unsigned long currentMillis;
+const unsigned long refresh = 3000;
 
 // ----------------------------------------------------------------------------
 // SPIFFS initialization
@@ -437,26 +172,37 @@ String processor(const String &var)
     {
         return String("off");
     }
-    else if (var == "THEATER_STATE")
+    else if (var == "STATE")
     {
-        return String("off");
+        return String(var == "STATE" && stripLed.powerState ? "on" : "off");
     }
-    else if (var == "COLOR_STATE")
+    else if (var == "SSID")
     {
-        return String("off");
+        return String(WiFi.SSID());
     }
-    else if (var == "SCANNER_STATE")
+    else if (var == "RSSI")
     {
-        return String("off");
+        return String(WiFi.RSSI());
     }
-    else if (var == "FADE_STATE")
+    /*
+    else if (var == "BARS")
     {
-        return String("off");
+        int signal = WiFi.RSSI();
+        switch (signal)
+        {
+        case -63 ... - 1:
+            return String("four-bars");
+        case -73 ... - 64:
+            return String("three-bars");
+        case -83 ... - 74:
+            return String("two-bars");
+        case -93 ... - 84:
+            return String("one-bar");
+        default:
+            return String("no-signal");
+        }
     }
-    else if (var == "STRIPLED_STATE")
-    {
-        return String("off");
-    }
+    */
     return String();
 }
 
@@ -465,9 +211,21 @@ void onRootRequest(AsyncWebServerRequest *request)
     request->send(SPIFFS, "/index.html", "text/html", false, processor);
 }
 
+// Initialize webserver URLs
 void initWebServer()
 {
     server.on("/", onRootRequest);
+    server.on("/wifi-info", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
+      AsyncResponseStream *response = request->beginResponseStream("application/json");
+      DynamicJsonDocument json(1024);
+      json["status"] = "ok";
+      json["ssid"] = WiFi.SSID();
+      json["ip"] = WiFi.localIP().toString();
+      json["rssi"] = WiFi.RSSI();
+      serializeJson(json, *response);
+      request->send(response); });
+
     server.serveStatic("/", SPIFFS, "/");
     server.begin();
 }
@@ -475,16 +233,36 @@ void initWebServer()
 // ----------------------------------------------------------------------------
 // WebSocket initialization
 // ----------------------------------------------------------------------------
+String bars() {
+    int signal = WiFi.RSSI();
+    switch (signal)
+        {
+        case -63 ... - 1:
+            return "signal-bars mt1 sizing-box four-bars";
+            break;
+        case -73 ... - 64:
+            return "signal-bars mt1 sizing-box three-bars";
+            break;
+        case -83 ... - 74:
+            return "signal-bars mt1 sizing-box two-bars";
+            break;
+        case -93 ... - 84:
+            return "signal-bars mt1 sizing-box one-bar";
+            break;
+        default:
+            return "no-signal";
+        }
+}
 
 void notifyClients()
 {
-    const uint8_t size = JSON_OBJECT_SIZE(3); // Remember change the number of member object
+    const uint8_t size = JSON_OBJECT_SIZE(7); // Remember change the number of member object
     StaticJsonDocument<size> json;
-    json["stripledStatus"] = stripled.powerState ? "on" : "off";
-    json["rainbowStatus"] = Stick.ActivePattern == RAINBOW_CYCLE && stripled.powerState ? "on" : "off";
-    json["theaterStatus"] = Stick.ActivePattern == THEATER_CHASE && stripled.powerState ? "on" : "off";
-
-    char buffer[80]; // I'ts 80 because {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
+    json["signalStrength"] = WiFi.RSSI();
+    json["bars"] = bars();
+    json["status"] = stripLed.powerState ? "on" : "off";
+    json["rainbowStatus"] = stripLed.stripLed.effectId == 1 && stripLed.powerState ? "on" : "off";
+    char buffer[120]; // I'ts 80 because {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
     size_t len = serializeJson(json, buffer);
     ws.textAll(buffer, len);
 }
@@ -494,7 +272,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
     {
-        const uint8_t size = JSON_OBJECT_SIZE(3);
+
+        const uint8_t size = JSON_OBJECT_SIZE(4);
         StaticJsonDocument<size> json;
         DeserializationError err = deserializeJson(json, data);
         if (err)
@@ -507,23 +286,23 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         const char *action = json["action"];
         if (strcmp(action, "toggle") == 0)
         {
-            stripled.powerState = !stripled.powerState;
-            if (stripled.powerState)
+            stripLed.powerState = !stripLed.powerState;
+            if (stripLed.powerState)
             {
-                Stick.ColorSet(Stick.Color(255, 0, 0)); // to do pasarle las variables R G B
+                stripLed.stripLed.update();
             }
             else
             {
-                stripled.clear();
+                stripLed.clear();
             }
         }
         else if (strcmp(action, "animation") == 0)
         {
-            pattern ActivePattern = json["pattern"];
-            if (stripled.powerState)
+            const int effectId = json["effectId"];
+            if (stripLed.powerState)
             {
-                Stick.ActivePattern = ActivePattern;
-                // Stick.Update();
+                stripLed.stripLed.effectId = effectId;
+                stripLed.stripLed.update();
             }
         }
 
@@ -569,7 +348,7 @@ void initWebSocket()
 void setup()
 {
     pinMode(onboard_led.pin, OUTPUT);
-    pinMode(STRIPLED_PIN, OUTPUT);
+    pinMode(LED_PIN, OUTPUT);
 
     Serial.begin(115200);
     delay(500);
@@ -579,10 +358,10 @@ void setup()
     initWebSocket();
     initWebServer();
 
-    Stick.begin();
-    Stick.setBrightness(ledBrightness);
-    Stick.clear();
-    Stick.show();
+    strip.begin();
+    strip.setBrightness(ledBrightness);
+    strip.clear();
+    strip.show();
 }
 
 // ----------------------------------------------------------------------------
@@ -591,9 +370,23 @@ void setup()
 
 void loop()
 {
+    
+
     ws.cleanupClients();
-    Stick.Update();
-    // Serial.println("Patron activo lazo: " + String(Stick.ActivePattern));
+    
+    if (stripLed.powerState)
+    {
+        stripLed.stripLed.update();
+        delay(6);
+    }
+
     onboard_led.on = millis() % 1000 < 50;
     onboard_led.update();
+
+    currentMillis = millis();
+    if (currentMillis - startMillis >= refresh) // Check the period has elapsed
+    {
+        notifyClients();
+        startMillis = currentMillis;
+    }
 }

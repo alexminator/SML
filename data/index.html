@@ -5,8 +5,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="author" content="Alexminator">
-  <meta name="description" content="Smart Music Lamp">
+  <meta name="author" content="Stéphane Calderoni">
+  <meta name="description" content="ESP32 Remote Control with WebSocket">
   <title>SML</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="stylesheet" href="index.css">
@@ -14,41 +14,33 @@
 </head>
 
 <body>
-  <center>  
-    <header>
-    <div class="navbar">
-      <div class="glowing">
-          <span>S</span>
-          <span>M</span>
-          <span>L</span>
-      </div>
-        
-    </div>    
-    </header>
-  <main>
-    <div id="led" class="%STRIPLED_STATE%"></div>
-    <h2>Power Stripled</h2>
-    <div id="Stripledtoggle" class="%STRIPLED_STATE%">
+  <div class="panel">
+    <h1>SML</h1>
+    <div id="led" class="%STATE%"></div>
+    <h3>Power</h3>
+    <div id="toggle" class="%STATE%">
       <span class="button">
         <span class="slide"></span>
       </span>
     </div>
     <h3>Rainbow</h3>
-    <div id="Rainbowtoggle" class="%RAINBOW_STATE%">
+    <div id="Rainbowbutton" class="%RAINBOW_STATE%">
       <span class="button">
         <span class="slide"></span>
       </span>
     </div>
-    <h3>Theater Chase</h3>
-    <div id="Theatertoggle" class="%THEATER_STATE%">
-      <span class="button">
-        <span class="slide"></span>
-      </span>
+  </div>
+  <p><strong>Esta conectado a: <br/><span id="ssid">%SSID%</span></strong></p>
+    <p>Signal: <span id="rssi"></span> dBm.</p>
+
+    <div id="Signal" class="%BARS%">
+      <div class="first-bar bar"></div>
+      <div class="second-bar bar"></div>
+      <div class="third-bar bar"></div>
+      <div class="fourth-bar bar"></div>
+      
     </div>
-  </main>
-     <footer div class="foot" id = "temp" >Smart Music Lamp 2023</div></footer>   
-    </center>
-  
+
 </body>
 
 </html>
