@@ -238,16 +238,16 @@ String bars() {
     switch (signal)
         {
         case -63 ... - 1:
-            return "signal-bars mt1 sizing-box four-bars";
+            return "waveStrength-4";
             break;
         case -73 ... - 64:
-            return "signal-bars mt1 sizing-box three-bars";
+            return "waveStrength-3";
             break;
         case -83 ... - 74:
-            return "signal-bars mt1 sizing-box two-bars";
+            return "waveStrength-2";
             break;
         case -93 ... - 84:
-            return "signal-bars mt1 sizing-box one-bar";
+            return "waveStrength-1";
             break;
         default:
             return "no-signal";

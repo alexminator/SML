@@ -1,11 +1,41 @@
-/**
- * ----------------------------------------------------------------------------
- * SML Smart Music Lamp with WebSocket
- * ----------------------------------------------------------------------------
- * © 2023 Alexminator
- * ----------------------------------------------------------------------------
- */
+var hex;
+var lastHex;
+var connected = false;
+var isOn = true;
 
+window.onload = function () {
+    // Create a new color picker instance
+    let colorPicker = new ColorPickerControl({ container: document.querySelector('.color-picker-dark-theme'), theme: 'dark' });
+
+    colorPicker.on(["color:init", "color:change"], function (color) {
+        hex = color.hexString;
+        document.getElementById('buttons').style.borderTop = '1px solid' + hex;
+    });
+
+    colorPicker.on('change', (color) =>  {
+        document.getElementById("butterfly").style.setProperty('--butterfly-color', color.toHEX());
+        document.getElementById("butterfly").style.setProperty('--butterfly-opacity', color.a / 255);
+        light_color_picker.color.fromHSVa(color.h, color.s, color.v, color.a);
+    });
+    
+
+    
+
+    // update the "selected color" values whenever the color changes
+    
+    var values = document.getElementById("values");
+    colorPicker.on(["color:init", "color:change"], function (color) {
+        // Show the current color in different formats
+        values.innerHTML = [
+            "hex: " + color.hexString,
+            "rgb: " + color.rgbString,
+            "hsl: " + color.hslString,
+        ].join("<br>");
+    });
+}
+// ----------------------------------------------------------------------------
+// WebSocket handling
+// ----------------------------------------------------------------------------
 var gateway = `ws://${window.location.hostname}/ws`;
 var websocket;
 
@@ -16,14 +46,9 @@ var websocket;
 window.addEventListener('load', onLoad);
 
 function onLoad(event) {
-    initButton();
     initWebSocket();
-    //signalStrength();
+    initButton();
 }
-
-// ----------------------------------------------------------------------------
-// WebSocket handling
-// ----------------------------------------------------------------------------
 
 function initWebSocket() {
     console.log('Trying to open a WebSocket connection...');
@@ -35,11 +60,15 @@ function initWebSocket() {
 
 function onOpen(event) {
     console.log('Connection opened');
+    connected = true;
+    setStatus();
 }
 
 function onClose(event) {
     console.log('Connection closed');
     setTimeout(initWebSocket, 2000);
+    connected = false;
+    setStatus();
 }
 
 function onMessage(event) {
@@ -48,9 +77,24 @@ function onMessage(event) {
     var data = JSON.parse(event.data);
     document.getElementById('Signal').className = data.bars;
     document.getElementById("rssi").innerHTML = data.signalStrength;
-    document.getElementById('led').className = data.status;
     document.getElementById("toggle").className = data.status;
     document.getElementById('Rainbowbutton').className = data.rainbowStatus;
+}
+
+function setStatus() {
+    var stat = document.getElementById('status');
+    var ind = document.getElementById('indicator');
+    var lvl = document.getElementById('Signal');
+    var rssi = document.getElementById("rssi");
+    if (connected) {
+        stat.innerHTML = "Connected";
+        ind.style.backgroundColor = 'green';
+    } else {
+        stat.innerHTML = "Disconnected";
+        ind.style.backgroundColor = 'red';
+        rssi.innerHTML = 0;
+        lvl.className = "no-signal";
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -113,3 +157,26 @@ function onToggleRainbowEffect(event) {
     console.log(json);
     websocket.send(json);
 }
+/*
+function checkColor() {
+    if (isOn) {
+        if (hex != lastHex) {
+            sendMessage(hex);
+        }
+        lastHex = hex;
+    }
+}
+
+function sendCommand(value) {
+    sendMessage(value, '!');
+}
+
+function power() {
+    isOn = !isOn;
+    if (!isOn)
+        sendMessage('#000000');
+    else
+        sendMessage(hex);
+}
+*/
+

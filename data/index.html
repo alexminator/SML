@@ -2,22 +2,60 @@
 <html>
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="author" content="Stéphane Calderoni">
-  <meta name="description" content="ESP32 Remote Control with WebSocket">
+  <meta name="author" content="Alexminator">
+  <meta name="description" content="Smart Music Lamp">
   <title>SML</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <link rel="stylesheet" href="index.css">
-  <script src="index.js"></script>
+	<link rel="stylesheet" href="css/reset.css">
+	<link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/color-picker.css">
+	<script src="js/app.js"></script>
+  <script src="js/color-picker.js"></script>
 </head>
 
 <body>
-  <div class="panel">
-    <h1>SML</h1>
-    <div id="led" class="%STATE%"></div>
-    <h3>Power</h3>
+  <div id="background-container">
+		<ul>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+			<li></li>
+		</ul>
+	</div>
+
+	<div id="caption-container">
+		<div id="butterfly"><div class="wings"></div></div>
+		<ul>
+			<li>
+				<div class="glowing" align="center">
+                <span>S</span>
+                <span>M</span>
+                <span>L</span>
+            </div>
+			</li>
+			<li>
+				<div class="cover"></div>
+				<p>Smart Music Lamp</p>
+			</li>
+		</ul>
+	</div>
+
+	<div class="flip-container">
+		<div class="flipper">
+			<div class="front color-picker-dark-theme"></div>
+		</div>
+	</div>
+
+	<h3>Power</h3>
     <div id="toggle" class="%STATE%">
       <span class="button">
         <span class="slide"></span>
@@ -29,17 +67,23 @@
         <span class="slide"></span>
       </span>
     </div>
-  </div>
-  <p><strong>Esta conectado a: <br/><span id="ssid">%SSID%</span></strong></p>
-    <p>Signal: <span id="rssi"></span> dBm.</p>
+	
+	<footer id="footer">
+		<div id="Signal" class="%BARS%">
+			<div class="wv4 wave">
+				<div class="wv3 wave">
+					<div class="wv2 wave">
+						<div class="wv1 wave"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+    <p><span id="rssi">0</span>dBm</p>
+    <p id="status">Disconnected</p>
+    <div id="indicator"></div>
+  </footer>
 
-    <div id="Signal" class="%BARS%">
-      <div class="first-bar bar"></div>
-      <div class="second-bar bar"></div>
-      <div class="third-bar bar"></div>
-      <div class="fourth-bar bar"></div>
-      
-    </div>
 
 </body>
 
