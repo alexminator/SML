@@ -9,10 +9,9 @@
   <meta name="description" content="Smart Music Lamp">
   <title>SML</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-	<link rel="stylesheet" href="css/reset.css">
-	<link rel="stylesheet" href="css/styles.css">
-	<link rel="stylesheet" href="css/color-picker.css">
-	<script src="js/app.js"></script>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/color-picker.css">
+  <script src="js/app.js"></script>
   <script src="js/color-picker.js"></script>
 </head>
 
@@ -42,20 +41,17 @@
                 <span>L</span>
             </div>
 			</li>
-			<li>
-				<div class="cover"></div>
-				<p>Smart Music Lamp</p>
-			</li>
 		</ul>
+        <div class="cover"></div>
+		<p>Smart Music Lamp</p>
 	</div>
 
-	<div class="flip-container">
-		<div class="flipper">
-			<div class="front color-picker-dark-theme"></div>
-		</div>
+	<div class="picker-container">
+		<div class="front color-picker-dark-theme"></div>
 	</div>
 
-	<h3>Power</h3>
+	<div class="button-container">
+		<h1>Power</h1>
     <div id="toggle" class="%STATE%">
       <span class="button">
         <span class="slide"></span>
@@ -67,7 +63,8 @@
         <span class="slide"></span>
       </span>
     </div>
-	
+	</div>
+
 	<footer id="footer">
 		<div id="Signal" class="%BARS%">
 			<div class="wv4 wave">
