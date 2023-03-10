@@ -284,7 +284,7 @@ body {
 .glowing span {
     font-family: 'Impact';
     color: #fff;
-    font-size: 6em;
+    font-size: 5em;
     color: #fff;
     display: inline-block;
     letter-spacing: 25px;
@@ -367,7 +367,7 @@ body {
     display: flex;
     align-items: center;
     top: 130px;
-    font-size: 60px;
+    font-size: 50px;
     color: #c0c0c0;
     
 }
@@ -380,7 +380,7 @@ body {
     justify-content: center;
     flex-direction: column;
     left: 50%;
-    margin-left: 25px;
+    margin-left: 40px;
     transform: translate(-50%, 0);
 }
 #caption-container ul li:nth-child(1) {
@@ -627,6 +627,4 @@ footer p {
   .on .slide {
     left: 28px;
   }
-link {
-    
-}
+
