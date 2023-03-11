@@ -8,10 +8,9 @@
 
 #include <Arduino.h>
 #include <SPIFFS.h>
-#include <WiFi.h>
-#include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 #include <Adafruit_NeoPixel.h>
+#include <ESPAsyncWebServer.h>
 
 // ----------------------------------------------------------------------------
 // Definition of macros
@@ -21,18 +20,41 @@
 #define STRIP_NUMBER_LEDS 24
 // WEB
 #define HTTP_PORT 80
+
 // Effects ID
 #define SIMPLE_COLOR 0
 #define RAINBOW 1
+
+#if defined(ESP32)
+
+#include <WiFi.h>
+#include <ESPmDNS.h>
+#include <Update.h>
+
+#elif defined(ESP8266)
+
+#include <ESP8266WiFi.h>
+#include <WiFiClient.h>
+#include <ESP8266mDNS.h>
+#else
+#error "Board not found"
+#endif
+
+#include "data.h"
+AsyncWebServer server(HTTP_PORT);
+AsyncWebSocket ws("/ws");
 
 // ----------------------------------------------------------------------------
 // Definition of global constants
 // ----------------------------------------------------------------------------
 
-// WiFi credentials
-const char *WIFI_SSID = "MyWiFi";
-const char *WIFI_PASS = "asd369/*";
+
 String strength;
+// Refresh web signal info
+unsigned long startMillis;
+unsigned long currentMillis;
+const unsigned long refresh = 3000;
+
 // Strip LED
 int ledBrightness = 50;
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(STRIP_NUMBER_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
@@ -120,14 +142,6 @@ StripLed rainbow = {RAINBOW};
 Led onboard_led = {LED_BUILTIN, false};
 Strip stripLed = {simple, false};
 
-AsyncWebServer server(HTTP_PORT);
-AsyncWebSocket ws("/ws");
-
-// Refresh web signal info
-unsigned long startMillis;
-unsigned long currentMillis;
-const unsigned long refresh = 3000;
-
 // ----------------------------------------------------------------------------
 // SPIFFS initialization
 // ----------------------------------------------------------------------------
@@ -152,14 +166,25 @@ void initSPIFFS()
 void initWiFi()
 {
     WiFi.mode(WIFI_STA);
-    WiFi.begin(WIFI_SSID, WIFI_PASS);
+    WiFi.begin(WIFI_SSID, WIFI_PASS);  
     Serial.printf("Trying to connect [%s] ", WiFi.macAddress().c_str());
-    while (WiFi.status() != WL_CONNECTED)
+    while(WiFi.status() != WL_CONNECTED)
     {
         Serial.print(".");
         delay(500);
     }
     Serial.printf(" %s\n", WiFi.localIP().toString().c_str());
+    Serial.printf("Listo!\nAbre http://%s.local en navegador\n", WEB_NAME);
+    Serial.print("o en la IP: ");
+    Serial.println(WiFi.localIP());
+
+    if (!MDNS.begin(WEB_NAME)) {
+    Serial.println("Error configurando mDNS!");
+    while (1) {
+      delay(1000);
+    }
+    }
+    Serial.println("mDNS configurado");
 }
 
 // ----------------------------------------------------------------------------
@@ -176,33 +201,11 @@ String processor(const String &var)
     {
         return String(var == "STATE" && stripLed.powerState ? "on" : "off");
     }
-    else if (var == "SSID")
-    {
-        return String(WiFi.SSID());
-    }
     else if (var == "RSSI")
     {
         return String(WiFi.RSSI());
     }
-    /*
-    else if (var == "BARS")
-    {
-        int signal = WiFi.RSSI();
-        switch (signal)
-        {
-        case -63 ... - 1:
-            return String("four-bars");
-        case -73 ... - 64:
-            return String("three-bars");
-        case -83 ... - 74:
-            return String("two-bars");
-        case -93 ... - 84:
-            return String("one-bar");
-        default:
-            return String("no-signal");
-        }
-    }
-    */
+    
     return String();
 }
 
@@ -226,8 +229,13 @@ void initWebServer()
       serializeJson(json, *response);
       request->send(response); });
 
-    server.serveStatic("/", SPIFFS, "/");
+    server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
+    server.onNotFound([](AsyncWebServerRequest *request) {
+    request->send(400, "text/plain", "Not found");
+   });
     server.begin();
+    Serial.println("HTTP server started");
+    MDNS.addService("http", "tcp", 80);
 }
 
 // ----------------------------------------------------------------------------
@@ -310,13 +318,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     }
 }
 
-void onEvent(AsyncWebSocket *server,
-             AsyncWebSocketClient *client,
-             AwsEventType type,
-             void *arg,
-             uint8_t *data,
-             size_t len)
-{
+void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len){
 
     switch (type)
     {
@@ -330,15 +332,18 @@ void onEvent(AsyncWebSocket *server,
         handleWebSocketMessage(arg, data, len);
         break;
     case WS_EVT_PONG:
+        Serial.printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
     case WS_EVT_ERROR:
+        Serial.printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
         break;
     }
 }
 
 void initWebSocket()
 {
-    ws.onEvent(onEvent);
+    ws.onEvent(onWsEvent);
     server.addHandler(&ws);
+    Serial.println("WebSocket server started");
 }
 
 // ----------------------------------------------------------------------------
@@ -370,9 +375,11 @@ void setup()
 
 void loop()
 {
-    
-
     ws.cleanupClients();
+
+    #if defined(ESP8266)
+    MDNS.update();
+    #endif
     
     if (stripLed.powerState)
     {

@@ -17,9 +17,6 @@ window.onload = function () {
         document.getElementById("butterfly").style.setProperty('--butterfly-opacity', color.a / 255);
         light_color_picker.color.fromHSVa(color.h, color.s, color.v, color.a);
     });
-    
-
-    
 
     // update the "selected color" values whenever the color changes
     
@@ -56,6 +53,7 @@ function initWebSocket() {
     websocket.onopen = onOpen;
     websocket.onclose = onClose;
     websocket.onmessage = onMessage;
+    websocket.onerror = onError;
 }
 
 function onOpen(event) {
@@ -79,6 +77,10 @@ function onMessage(event) {
     document.getElementById("rssi").innerHTML = data.signalStrength;
     document.getElementById("toggle").className = data.status;
     document.getElementById('Rainbowbutton').className = data.rainbowStatus;
+}
+
+function onError(event) {
+    console.log('WebSocket Error ', error);
 }
 
 function setStatus() {
