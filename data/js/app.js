@@ -90,7 +90,7 @@ function setStatus() {
     var rssi = document.getElementById("rssi");
     if (connected) {
         stat.innerHTML = "Connected";
-        ind.style.backgroundColor = 'green';
+        ind.style.backgroundColor = '#0f0';
     } else {
         stat.innerHTML = "Disconnected";
         ind.style.backgroundColor = 'red';
