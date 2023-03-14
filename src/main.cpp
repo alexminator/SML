@@ -29,6 +29,9 @@
 // Effects ID
 #define SIMPLE_COLOR 0
 #define RAINBOW 1
+#define MOVINGDOT 2
+#define RAINBOWBEAT 3
+#define RWB 4
 
 #if defined(ESP32)
 

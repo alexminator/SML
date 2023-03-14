@@ -186,6 +186,44 @@ function onToggleMovingDotEffect(event) {
     websocket.send(json);    
 }
 
+function onToggleRainbowBeatEffect(event) {
+    const toggle = document.getElementById("RainbowBeatbutton");
+    var isOn;
+    if (toggle.className == "on") {
+        isOn = 0;
+        toggle.className = "off";
+    } else {
+        isOn = 3;
+        toggle.className = "on";
+    }
+    const json = JSON.stringify({
+        'action': 'animation',
+        'effectId': isOn,
+        'color': "r=255,g=0,b=0"
+    });
+    console.log(json);
+    websocket.send(json);    
+}
+
+function onToggleRWBEffect(event) {
+    const toggle = document.getElementById("RWBbutton");
+    var isOn;
+    if (toggle.className == "on") {
+        isOn = 0;
+        toggle.className = "off";
+    } else {
+        isOn = 4;
+        toggle.className = "on";
+    }
+    const json = JSON.stringify({
+        'action': 'animation',
+        'effectId': isOn,
+        'color': "r=255,g=0,b=0"
+    });
+    console.log(json);
+    websocket.send(json);    
+}
+
 /*
 function checkColor() {
     if (isOn) {
