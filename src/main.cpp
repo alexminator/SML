@@ -146,6 +146,15 @@ struct StripLed
         case 1:
             rainbow(8);
             break;
+        case 2:    
+            runMovingDot();
+            break;
+        case 3:
+            runRainbowBeat();
+            break;
+        case 4:
+            runRedWhiteBlue();
+            break;
         default:
             break;
         }
@@ -232,6 +241,18 @@ String processor(const String &var)
     {
         return String("off");
     }
+    else if (var == "MOVINGDOT_STATE")
+    {
+        return String("off");
+    }
+    else if (var == "RAINBOWBEAT_STATE")
+    {
+        return String("off");
+    }
+    else if (var == "RWB_STATE")
+    {
+        return String("off");
+    }
     else if (var == "STATE")
     {
         return String(var == "STATE" && stripLed.powerState ? "on" : "off");
@@ -240,7 +261,6 @@ String processor(const String &var)
     {
         return String(WiFi.RSSI());
     }
-
     return String();
 }
 
@@ -305,6 +325,9 @@ void notifyClients()
     json["bars"] = bars();
     json["status"] = stripLed.powerState ? "on" : "off";
     json["rainbowStatus"] = stripLed.stripLed.effectId == 1 && stripLed.powerState ? "on" : "off";
+    json["movingdotStatus"] = stripLed.stripLed.effectId == 2 && stripLed.powerState ? "on" : "off";
+    json["rainbowbeatStatus"] = stripLed.stripLed.effectId == 3 && stripLed.powerState ? "on" : "off";
+    json["rwbStatus"] = stripLed.stripLed.effectId == 4 && stripLed.powerState ? "on" : "off";
     char buffer[120]; // I'ts 80 because {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
     size_t len = serializeJson(json, buffer);
     ws.textAll(buffer, len);

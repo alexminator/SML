@@ -77,6 +77,9 @@ function onMessage(event) {
     document.getElementById("rssi").innerHTML = data.signalStrength;
     document.getElementById("toggle").className = data.status;
     document.getElementById('Rainbowbutton').className = data.rainbowStatus;
+    document.getElementById('MovingDotbutton').className = data.movingdotStatus;
+    document.getElementById('RWBbutton').className = data.rwbStatus;
+    
 }
 
 function onError(event) {
@@ -106,6 +109,10 @@ function setStatus() {
 function initButton() {
     document.getElementById('toggle').addEventListener('click', onToggle);
     document.getElementById('Rainbowbutton').addEventListener('click', onToggleRainbowEffect);
+    document.getElementById('MovingDotbutton').addEventListener('click', onToggleMovingDotEffect);
+    document.getElementById('RainbowBeatbutton').addEventListener('click', onToggleRainbowBeatEffect);
+    document.getElementById('RWBbutton').addEventListener('click', onToggleRWBEffect);
+
 }
 
 function onToggle(event) {
@@ -159,6 +166,26 @@ function onToggleRainbowEffect(event) {
     console.log(json);
     websocket.send(json);
 }
+
+function onToggleMovingDotEffect(event) {
+    const toggle = document.getElementById("MovingDotbutton");
+    var isOn;
+    if (toggle.className == "on") {
+        isOn = 0;
+        toggle.className = "off";
+    } else {
+        isOn = 2;
+        toggle.className = "on";
+    }
+    const json = JSON.stringify({
+        'action': 'animation',
+        'effectId': isOn,
+        'color': "r=255,g=0,b=0"
+    });
+    console.log(json);
+    websocket.send(json);    
+}
+
 /*
 function checkColor() {
     if (isOn) {
