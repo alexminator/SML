@@ -9,15 +9,19 @@
 #include <Arduino.h>
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
-#include <Adafruit_NeoPixel.h>
 #include <ESPAsyncWebServer.h>
+#include <FastLED.h>
 
 // ----------------------------------------------------------------------------
 // Definition of macros
 // ----------------------------------------------------------------------------
 // Strip LED
-#define LED_PIN 4
-#define STRIP_NUMBER_LEDS 24
+#define STRIP_PIN 4
+#define N_PIXELS 24
+#define VOLTS 5           // Vcc Strip [5 volts]
+#define MAX_MILLIAMPS 500 // Maximum current to draw [500]
+#define COLOR_ORDER GRB   // Colour order of LED strip [GRB]
+#define LED_TYPE WS2812B  // LED string type [WS2812B]
 // WEB
 #define HTTP_PORT 80
 
@@ -40,14 +44,12 @@
 #error "Board not found"
 #endif
 
-#include "data.h"
 AsyncWebServer server(HTTP_PORT);
 AsyncWebSocket ws("/ws");
 
 // ----------------------------------------------------------------------------
 // Definition of global constants
 // ----------------------------------------------------------------------------
-
 
 String strength;
 // Refresh web signal info
@@ -56,10 +58,15 @@ unsigned long currentMillis;
 const unsigned long refresh = 3000;
 
 // Strip LED
-int ledBrightness = 50;
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(STRIP_NUMBER_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
-long hueNow = 0;
-uint32_t colorNow = strip.Color(255, 0, 0); // Initial color
+int BRIGHTNESS = 50;
+// uint8_t patternCounter = 0;
+bool isRunning = false;
+CRGB leds[N_PIXELS];
+
+#include "data.h"
+#include "MovingDot.h"
+#include "RainbowBeat.h"
+#include "RedWhiteBlue.h"
 
 // ----------------------------------------------------------------------------
 // Definition of the LED component
@@ -83,34 +90,60 @@ struct StripLed
     // state variables
     int effectId;
     // methods for different effects on stripled
-    void simpleColor(uint32_t ColorNow)
+
+    void simpleColor()
     {
-        for (int i = 0; i < strip.numPixels(); i++)
+        for (int i = 0; i < N_PIXELS; i++)
         {
-            strip.setPixelColor(i, ColorNow);
+            leds[i] = CRGB::Red;
         }
-        strip.show();
+        FastLED.show();
     }
 
-    void rainbowcolor()
+    void rainbow(uint8_t rate)
     {
-        strip.rainbow(hueNow);
-        hueNow += 256;
-        if (hueNow > 65536)
+        static uint8_t hueNow = 0;
+        fill_rainbow(leds, N_PIXELS, hueNow, 7);
+        EVERY_N_MILLISECONDS(20)
         {
-            hueNow = 0;
+            hueNow = (hueNow + rate) % 255;
         }
-        strip.show();
+        FastLED.show();
     }
+
+    void runMovingDot()
+    {
+        isRunning = true;
+        MovingDot movingDot = MovingDot();
+        while (isRunning)
+            movingDot.runPattern();
+    }
+
+    void runRainbowBeat()
+    {
+        isRunning = true;
+        RainbowBeat rainbowBeat = RainbowBeat();
+        while (isRunning)
+            rainbowBeat.runPattern();
+    }
+
+    void runRedWhiteBlue()
+    {
+        isRunning = true;
+        RedWhiteBlue redWhiteBlue = RedWhiteBlue();
+        while (isRunning)
+            redWhiteBlue.runPattern();
+    }
+
     void update()
     {
         switch (effectId)
         {
         case 0:
-            simpleColor(colorNow);
+            simpleColor();
             break;
         case 1:
-            rainbowcolor();
+            rainbow(8);
             break;
         default:
             break;
@@ -127,8 +160,8 @@ struct Strip
     // methods for main poweroff stripled
     void clear()
     {
-        strip.clear();
-        strip.show();
+        FastLED.clear(true); // clear all pixel data
+        // FastLED.show();
     }
 };
 
@@ -166,9 +199,9 @@ void initSPIFFS()
 void initWiFi()
 {
     WiFi.mode(WIFI_STA);
-    WiFi.begin(WIFI_SSID, WIFI_PASS);  
+    WiFi.begin(WIFI_SSID, WIFI_PASS);
     Serial.printf("Trying to connect [%s] ", WiFi.macAddress().c_str());
-    while(WiFi.status() != WL_CONNECTED)
+    while (WiFi.status() != WL_CONNECTED)
     {
         Serial.print(".");
         delay(500);
@@ -178,11 +211,13 @@ void initWiFi()
     Serial.print("o en la IP: ");
     Serial.println(WiFi.localIP());
 
-    if (!MDNS.begin(WEB_NAME)) {
-    Serial.println("Error configurando mDNS!");
-    while (1) {
-      delay(1000);
-    }
+    if (!MDNS.begin(WEB_NAME))
+    {
+        Serial.println("Error configurando mDNS!");
+        while (1)
+        {
+            delay(1000);
+        }
     }
     Serial.println("mDNS configurado");
 }
@@ -205,7 +240,7 @@ String processor(const String &var)
     {
         return String(WiFi.RSSI());
     }
-    
+
     return String();
 }
 
@@ -230,9 +265,8 @@ void initWebServer()
       request->send(response); });
 
     server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
-    server.onNotFound([](AsyncWebServerRequest *request) {
-    request->send(400, "text/plain", "Not found");
-   });
+    server.onNotFound([](AsyncWebServerRequest *request)
+                      { request->send(400, "text/plain", "Not found"); });
     server.begin();
     Serial.println("HTTP server started");
     MDNS.addService("http", "tcp", 80);
@@ -241,25 +275,26 @@ void initWebServer()
 // ----------------------------------------------------------------------------
 // WebSocket initialization
 // ----------------------------------------------------------------------------
-String bars() {
+String bars()
+{
     int signal = WiFi.RSSI();
     switch (signal)
-        {
-        case -63 ... - 1:
-            return "waveStrength-4";
-            break;
-        case -73 ... - 64:
-            return "waveStrength-3";
-            break;
-        case -83 ... - 74:
-            return "waveStrength-2";
-            break;
-        case -93 ... - 84:
-            return "waveStrength-1";
-            break;
-        default:
-            return "no-signal";
-        }
+    {
+    case -63 ... - 1:
+        return "waveStrength-4";
+        break;
+    case -73 ... - 64:
+        return "waveStrength-3";
+        break;
+    case -83 ... - 74:
+        return "waveStrength-2";
+        break;
+    case -93 ... - 84:
+        return "waveStrength-1";
+        break;
+    default:
+        return "no-signal";
+    }
 }
 
 void notifyClients()
@@ -318,7 +353,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     }
 }
 
-void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len){
+void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
+{
 
     switch (type)
     {
@@ -332,9 +368,9 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
         handleWebSocketMessage(arg, data, len);
         break;
     case WS_EVT_PONG:
-        Serial.printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
+        Serial.printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char *)data : "");
     case WS_EVT_ERROR:
-        Serial.printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+        Serial.printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t *)arg), (char *)data);
         break;
     }
 }
@@ -353,20 +389,21 @@ void initWebSocket()
 void setup()
 {
     pinMode(onboard_led.pin, OUTPUT);
-    pinMode(LED_PIN, OUTPUT);
+    pinMode(STRIP_PIN, OUTPUT);
 
     Serial.begin(115200);
     delay(500);
+
+    FastLED.addLeds<LED_TYPE, STRIP_PIN, COLOR_ORDER>(leds, N_PIXELS).setCorrection(TypicalLEDStrip);
+    FastLED.setMaxPowerInVoltsAndMilliamps(VOLTS, MAX_MILLIAMPS);
+    FastLED.setBrightness(BRIGHTNESS);
+    FastLED.clear();
+    FastLED.show();
 
     initSPIFFS();
     initWiFi();
     initWebSocket();
     initWebServer();
-
-    strip.begin();
-    strip.setBrightness(ledBrightness);
-    strip.clear();
-    strip.show();
 }
 
 // ----------------------------------------------------------------------------
@@ -377,10 +414,10 @@ void loop()
 {
     ws.cleanupClients();
 
-    #if defined(ESP8266)
+#if defined(ESP8266)
     MDNS.update();
-    #endif
-    
+#endif
+
     if (stripLed.powerState)
     {
         stripLed.stripLed.update();
