@@ -11,6 +11,7 @@
 #include <ArduinoJson.h>
 #include <ESPAsyncWebServer.h>
 #include <FastLED.h>
+#include "data.h"
 
 // ----------------------------------------------------------------------------
 // Definition of macros
@@ -63,7 +64,7 @@ int BRIGHTNESS = 50;
 bool isRunning = false;
 CRGB leds[N_PIXELS];
 
-#include "data.h"
+// Effects library
 #include "MovingDot.h"
 #include "RainbowBeat.h"
 #include "RedWhiteBlue.h"
@@ -160,8 +161,7 @@ struct Strip
     // methods for main poweroff stripled
     void clear()
     {
-        FastLED.clear(true); // clear all pixel data
-        // FastLED.show();
+        FastLED.clear(); // clear all pixel data
     }
 };
 
