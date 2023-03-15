@@ -20,18 +20,15 @@
 #define STRIP_PIN 4
 #define N_PIXELS 24
 #define VOLTS 5           // Vcc Strip [5 volts]
-#define MAX_MILLIAMPS 500 // Maximum current to draw [500]
+#define MAX_MILLIAMPS 500 // Maximum current to draw [500 mA]
 #define COLOR_ORDER GRB   // Colour order of LED strip [GRB]
 #define LED_TYPE WS2812B  // LED string type [WS2812B]
 // WEB
 #define HTTP_PORT 80
 
 // Effects ID
-#define SIMPLE_COLOR 0
-#define RAINBOW 1
-#define MOVINGDOT 2
-#define RAINBOWBEAT 3
-#define RWB 4
+#define EFFECT 0
+
 
 #if defined(ESP32)
 
@@ -55,16 +52,16 @@ AsyncWebSocket ws("/ws");
 // Definition of global constants
 // ----------------------------------------------------------------------------
 
-String strength;
-// Refresh web signal info
+// Web signal info
 unsigned long startMillis;
 unsigned long currentMillis;
-const unsigned long refresh = 3000;
+const unsigned long refresh = 5000; //5 seg
+String strength;
 
 // Strip LED
 int BRIGHTNESS = 50;
 // uint8_t patternCounter = 0;
-bool isRunning = false;
+// bool isRunning = false;
 CRGB leds[N_PIXELS];
 
 // Effects library
@@ -93,6 +90,7 @@ struct StripLed
 {
     // state variables
     int effectId;
+    bool powerState;
     // methods for different effects on stripled
 
     void simpleColor()
@@ -117,26 +115,26 @@ struct StripLed
 
     void runMovingDot()
     {
-        isRunning = true;
+        // isRunning = true;
         MovingDot movingDot = MovingDot();
-        while (isRunning)
-            movingDot.runPattern();
+        // while (isRunning)
+        movingDot.runPattern();
     }
 
     void runRainbowBeat()
     {
-        isRunning = true;
+        // isRunning = true;
         RainbowBeat rainbowBeat = RainbowBeat();
-        while (isRunning)
-            rainbowBeat.runPattern();
+        // while (isRunning)
+        rainbowBeat.runPattern();
     }
 
     void runRedWhiteBlue()
     {
-        isRunning = true;
+        // isRunning = true;
         RedWhiteBlue redWhiteBlue = RedWhiteBlue();
-        while (isRunning)
-            redWhiteBlue.runPattern();
+        // while (isRunning)
+        redWhiteBlue.runPattern();
     }
 
     void update()
@@ -149,7 +147,7 @@ struct StripLed
         case 1:
             rainbow(8);
             break;
-        case 2:    
+        case 2:
             runMovingDot();
             break;
         case 3:
@@ -162,18 +160,11 @@ struct StripLed
             break;
         }
     }
-};
 
-struct Strip
-{
-    // state variables
-    StripLed stripLed;
-    bool powerState;
-
-    // methods for main poweroff stripled
     void clear()
     {
         FastLED.clear(); // clear all pixel data
+        FastLED.show();
     }
 };
 
@@ -181,11 +172,8 @@ struct Strip
 // Definition of global variables
 // ----------------------------------------------------------------------------
 
-StripLed simple = {SIMPLE_COLOR};
-StripLed rainbow = {RAINBOW};
-
+StripLed stripLed = {EFFECT, false}; 
 Led onboard_led = {LED_BUILTIN, false};
-Strip stripLed = {simple, false};
 
 // ----------------------------------------------------------------------------
 // SPIFFS initialization
@@ -322,16 +310,16 @@ String bars()
 
 void notifyClients()
 {
-    const uint8_t size = JSON_OBJECT_SIZE(7); // Remember change the number of member object
+    const uint8_t size = JSON_OBJECT_SIZE(8); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["signalStrength"] = WiFi.RSSI();
     json["bars"] = bars();
     json["status"] = stripLed.powerState ? "on" : "off";
-    json["rainbowStatus"] = stripLed.stripLed.effectId == 1 && stripLed.powerState ? "on" : "off";
-    json["movingdotStatus"] = stripLed.stripLed.effectId == 2 && stripLed.powerState ? "on" : "off";
-    json["rainbowbeatStatus"] = stripLed.stripLed.effectId == 3 && stripLed.powerState ? "on" : "off";
-    json["rwbStatus"] = stripLed.stripLed.effectId == 4 && stripLed.powerState ? "on" : "off";
-    char buffer[120]; // I'ts 80 because {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
+    json["rainbowStatus"] = stripLed.effectId == 1 && stripLed.powerState ? "on" : "off";
+    json["movingdotStatus"] = stripLed.effectId == 2 && stripLed.powerState ? "on" : "off";
+    json["rainbowbeatStatus"] = stripLed.effectId == 3 && stripLed.powerState ? "on" : "off";
+    json["rwbStatus"] = stripLed.effectId == 4 && stripLed.powerState ? "on" : "off";
+    char buffer[180]; // I'ts 80 because {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
     size_t len = serializeJson(json, buffer);
     ws.textAll(buffer, len);
 }
@@ -342,7 +330,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
     {
 
-        const uint8_t size = JSON_OBJECT_SIZE(4);
+        const uint8_t size = JSON_OBJECT_SIZE(8);
         StaticJsonDocument<size> json;
         DeserializationError err = deserializeJson(json, data);
         if (err)
@@ -356,9 +344,10 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         if (strcmp(action, "toggle") == 0)
         {
             stripLed.powerState = !stripLed.powerState;
+            Serial.println(stripLed.powerState);
             if (stripLed.powerState)
             {
-                stripLed.stripLed.update();
+                stripLed.update();
             }
             else
             {
@@ -370,18 +359,16 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             const int effectId = json["effectId"];
             if (stripLed.powerState)
             {
-                stripLed.stripLed.effectId = effectId;
-                stripLed.stripLed.update();
+                stripLed.effectId = effectId;
+                stripLed.update();
             }
         }
-
         notifyClients();
     }
 }
 
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
-
     switch (type)
     {
     case WS_EVT_CONNECT:
@@ -446,7 +433,7 @@ void loop()
 
     if (stripLed.powerState)
     {
-        stripLed.stripLed.update();
+        stripLed.update();
         delay(6);
     }
 

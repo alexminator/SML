@@ -1,7 +1,7 @@
 var hex;
 var lastHex;
 var connected = false;
-var isOn = true;
+var isOn;
 
 window.onload = function () {
     // Create a new color picker instance
@@ -78,6 +78,7 @@ function onMessage(event) {
     document.getElementById("toggle").className = data.status;
     document.getElementById('Rainbowbutton').className = data.rainbowStatus;
     document.getElementById('MovingDotbutton').className = data.movingdotStatus;
+    document.getElementById('RainbowBeatbutton').className = data.rainbowbeatStatus;
     document.getElementById('RWBbutton').className = data.rwbStatus;
     
 }
@@ -150,7 +151,6 @@ function onToggleSimpleColor(event) {
 
 function onToggleRainbowEffect(event) {
     const toggle = document.getElementById("Rainbowbutton");
-    var isOn;
     if (toggle.className == "on") {
         isOn = 0;
         toggle.className = "off";
@@ -169,7 +169,6 @@ function onToggleRainbowEffect(event) {
 
 function onToggleMovingDotEffect(event) {
     const toggle = document.getElementById("MovingDotbutton");
-    var isOn;
     if (toggle.className == "on") {
         isOn = 0;
         toggle.className = "off";
@@ -188,7 +187,6 @@ function onToggleMovingDotEffect(event) {
 
 function onToggleRainbowBeatEffect(event) {
     const toggle = document.getElementById("RainbowBeatbutton");
-    var isOn;
     if (toggle.className == "on") {
         isOn = 0;
         toggle.className = "off";
@@ -207,7 +205,6 @@ function onToggleRainbowBeatEffect(event) {
 
 function onToggleRWBEffect(event) {
     const toggle = document.getElementById("RWBbutton");
-    var isOn;
     if (toggle.className == "on") {
         isOn = 0;
         toggle.className = "off";
