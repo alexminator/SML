@@ -10,7 +10,6 @@ class MovingDot {
 };
 
 void MovingDot::runPattern() {
-
   uint16_t posBeat  = beatsin16(30, 0, N_PIXELS - 1, 0, 0);
   uint16_t posBeat2 = beatsin16(60, 0, N_PIXELS - 1, 0, 0);
 

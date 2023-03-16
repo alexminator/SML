@@ -29,7 +29,6 @@
 // Effects ID
 #define EFFECT 0
 
-
 #if defined(ESP32)
 
 #include <WiFi.h>
@@ -55,7 +54,7 @@ AsyncWebSocket ws("/ws");
 // Web signal info
 unsigned long startMillis;
 unsigned long currentMillis;
-const unsigned long refresh = 5000; //5 seg
+const unsigned long refresh = 5000; // 5 seg
 String strength;
 
 // Strip LED
@@ -68,7 +67,7 @@ CRGB leds[N_PIXELS];
 #include "MovingDot.h"
 #include "RainbowBeat.h"
 #include "RedWhiteBlue.h"
-
+#include "Rainbow.h"
 // ----------------------------------------------------------------------------
 // Definition of the LED component
 // ----------------------------------------------------------------------------
@@ -104,6 +103,7 @@ struct StripLed
 
     void rainbow(uint8_t rate)
     {
+        /*
         static uint8_t hueNow = 0;
         fill_rainbow(leds, N_PIXELS, hueNow, 7);
         EVERY_N_MILLISECONDS(20)
@@ -111,6 +111,9 @@ struct StripLed
             hueNow = (hueNow + rate) % 255;
         }
         FastLED.show();
+        */
+        Rainbow rainbow = Rainbow();
+        rainbow.runPattern();
     }
 
     void runMovingDot()
@@ -172,7 +175,7 @@ struct StripLed
 // Definition of global variables
 // ----------------------------------------------------------------------------
 
-StripLed stripLed = {EFFECT, false}; 
+StripLed stripLed = {EFFECT, false};
 Led onboard_led = {LED_BUILTIN, false};
 
 // ----------------------------------------------------------------------------
