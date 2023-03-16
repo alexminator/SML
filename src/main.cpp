@@ -103,15 +103,6 @@ struct StripLed
 
     void rainbow(uint8_t rate)
     {
-        /*
-        static uint8_t hueNow = 0;
-        fill_rainbow(leds, N_PIXELS, hueNow, 7);
-        EVERY_N_MILLISECONDS(20)
-        {
-            hueNow = (hueNow + rate) % 255;
-        }
-        FastLED.show();
-        */
         Rainbow rainbow = Rainbow();
         rainbow.runPattern();
     }
