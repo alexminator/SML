@@ -26,8 +26,11 @@
 // WEB
 #define HTTP_PORT 80
 
-// Effects ID
+// Effects 
 #define EFFECT 0
+#define GRAVITY -1  // Downward (negative) acceleration of gravity in m/s^2
+#define h0 1        // Starting height, in meters, of the ball (strip length)
+#define NUM_BALLS 3 // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way)
 
 #if defined(ESP32)
 
@@ -62,6 +65,14 @@ int brightness = 150;
 CRGB leds[N_PIXELS];
 uint8_t myhue = 0;
 const uint8_t FADE_RATE = 2; // How long should the trails be. Very low value = longer trails.
+// balls effect
+float h[NUM_BALLS];                       // An array of heights
+float vImpact0 = sqrt(-2 * GRAVITY * h0); // Impact velocity of the ball when it hits the ground if "dropped" from the top of the strip
+float vImpact[NUM_BALLS];                 // As time goes on the impact velocity will change, so make an array to store those values
+float tCycle[NUM_BALLS];                  // The time since the last time the ball struck the ground
+int pos[NUM_BALLS];                       // The integer position of the dot on the strip (LED index)
+long tLast[NUM_BALLS];                    // The clock time of the last ground strike
+float COR[NUM_BALLS];                     // Coefficient of Restitution (bounce damping)
 
 // Effects library
 #include "MovingDot.h"
@@ -173,13 +184,12 @@ struct StripLed
         comet.runPattern();
     }
 
-
     void update()
     {
         switch (effectId)
         {
         case 0:
-            simpleColor(0,brightness);
+            simpleColor(0, brightness);
             break;
         case 1:
             runFire();
@@ -210,7 +220,7 @@ struct StripLed
             break;
         case 10:
             runComet();
-            break;    
+            break;
         default:
             break;
         }
@@ -496,6 +506,17 @@ void setup()
     FastLED.setBrightness(brightness);
     FastLED.clear();
     FastLED.show();
+    
+    // Initialize variables for balls effect
+    for (int i = 0; i < NUM_BALLS; i++)
+    { 
+        tLast[i] = millis();
+        h[i] = h0;
+        pos[i] = 0;            // Balls start on the ground
+        vImpact[i] = vImpact0; // And "pop" up at vImpact0
+        tCycle[i] = 0;
+        COR[i] = 0.90 - float(i) / pow(NUM_BALLS, 2);
+    }
 
     initSPIFFS();
     initWiFi();
