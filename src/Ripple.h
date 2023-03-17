@@ -34,7 +34,7 @@ void Ripple::runPattern() {
     }
 
     if (rippleStep == 0) {
-      leds[rippleCenter] = CHSV(rippleColor, 255, BRIGHTNESS);
+      leds[rippleCenter] = CHSV(rippleColor, 255, brightness);
       rippleStep++;
     } else {
       if (rippleStep < MAX_STEPS) {

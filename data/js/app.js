@@ -85,6 +85,7 @@ function onMessage(event) {
     document.getElementById('Ballsbutton').className = data.ballsStatus;
     document.getElementById('Jugglebutton').className = data.juggleStatus;
     document.getElementById('Sinelonbutton').className = data.sinelonStatus;
+    document.getElementById('Cometbutton').className = data.cometStatus;
 }
 
 function onError(event) {
@@ -122,6 +123,7 @@ function initButton() {
     document.getElementById('Ballsbutton').addEventListener('click', onToggleBallseffect);
     document.getElementById('Jugglebutton').addEventListener('click', onToggleJuggleeffect);
     document.getElementById('Sinelonbutton').addEventListener('click', onToggleSineloneffect);
+    document.getElementById('Cometbutton').addEventListener('click', onToggleCometeffect);
 }
 
 function onToggle(event) {
@@ -308,6 +310,24 @@ function onToggleSineloneffect(event) {
         toggle.className = "off";
     } else {
         isOn = 9;
+        toggle.className = "on";
+    }
+    const json = JSON.stringify({
+        'action': 'animation',
+        'effectId': isOn,
+        'color': "r=255,g=0,b=0"
+    });
+    console.log(json);
+    websocket.send(json);    
+}
+
+function onToggleCometeffect(event) {
+    const toggle = document.getElementById("Cometbutton");
+    if (toggle.className == "on") {
+        isOn = 0;
+        toggle.className = "off";
+    } else {
+        isOn = 10;
         toggle.className = "on";
     }
     const json = JSON.stringify({

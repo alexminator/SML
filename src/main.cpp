@@ -58,11 +58,8 @@ const unsigned long refresh = 5000; // 5 seg
 String strength;
 
 // Strip LED
-int BRIGHTNESS = 150;
-// uint8_t patternCounter = 0;
-// bool isRunning = false;
+int brightness = 150;
 CRGB leds[N_PIXELS];
-
 uint8_t myhue = 0;
 const uint8_t FADE_RATE = 2; // How long should the trails be. Very low value = longer trails.
 
@@ -76,6 +73,7 @@ const uint8_t FADE_RATE = 2; // How long should the trails be. Very low value = 
 #include "Balls.h"
 #include "Juggle.h"
 #include "Sinelon.h"
+#include "Comet.h"
 // ----------------------------------------------------------------------------
 // Definition of the LED component
 // ----------------------------------------------------------------------------
@@ -100,22 +98,17 @@ struct StripLed
     bool powerState;
     // methods for different effects on stripled
 
-    void simpleColor()
-    {
+    void simpleColor(int ahue, int brightness)
+    { // SET ALL LEDS TO ONE COLOR (HSV)
         for (int i = 0; i < N_PIXELS; i++)
         {
-            leds[i] = CRGB::Red;
+            leds[i] = CHSV(ahue, 255, brightness);
         }
         FastLED.show();
     }
 
-    //void rainbow(uint8_t rate)
-    //{
-    //    Rainbow rainbow = Rainbow();
-    //    rainbow.runPattern();
-    //}
-
-    void runFire() {
+    void runFire()
+    {
         Fire fire = Fire();
         fire.runPattern();
     }
@@ -144,37 +137,49 @@ struct StripLed
         redWhiteBlue.runPattern();
     }
 
-    void runRipple() {
+    void runRipple()
+    {
         Ripple ripple = Ripple();
         ripple.runPattern();
     }
 
-    void runTwinkle() {
+    void runTwinkle()
+    {
         Twinkle twinkle = Twinkle();
         twinkle.runPattern();
     }
 
-    void runBalls() {
+    void runBalls()
+    {
         Balls balls = Balls();
         balls.runPattern();
     }
 
-    void runJuggle() {
+    void runJuggle()
+    {
         Juggle juggle = Juggle();
         juggle.runPattern();
     }
 
-    void runSinelon() {
+    void runSinelon()
+    {
         Sinelon sinelon = Sinelon();
         sinelon.runPattern();
     }
+
+    void runComet()
+    {
+        Comet comet = Comet();
+        comet.runPattern();
+    }
+
 
     void update()
     {
         switch (effectId)
         {
         case 0:
-            simpleColor();
+            simpleColor(0,brightness);
             break;
         case 1:
             runFire();
@@ -193,7 +198,7 @@ struct StripLed
             break;
         case 6:
             runTwinkle();
-            break; 
+            break;
         case 7:
             runBalls();
             break;
@@ -202,7 +207,10 @@ struct StripLed
             break;
         case 9:
             runSinelon();
-            break;                    
+            break;
+        case 10:
+            runComet();
+            break;    
         default:
             break;
         }
@@ -311,6 +319,10 @@ String processor(const String &var)
     {
         return String("off");
     }
+    else if (var == "COMET_STATE")
+    {
+        return String("off");
+    }
     else if (var == "STATE")
     {
         return String(var == "STATE" && stripLed.powerState ? "on" : "off");
@@ -377,7 +389,7 @@ String bars()
 
 void notifyClients()
 {
-    const uint8_t size = JSON_OBJECT_SIZE(13); // Remember change the number of member object
+    const uint8_t size = JSON_OBJECT_SIZE(14); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["signalStrength"] = WiFi.RSSI();
     json["bars"] = bars();
@@ -391,7 +403,8 @@ void notifyClients()
     json["ballsStatus"] = stripLed.effectId == 7 && stripLed.powerState ? "on" : "off";
     json["juggleStatus"] = stripLed.effectId == 8 && stripLed.powerState ? "on" : "off";
     json["sinelonStatus"] = stripLed.effectId == 9 && stripLed.powerState ? "on" : "off";
-    char buffer[260]; // I'ts 80 because {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
+    json["cometStatus"] = stripLed.effectId == 10 && stripLed.powerState ? "on" : "off";
+    char buffer[280]; // I'ts 80 because {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
     size_t len = serializeJson(json, buffer);
     ws.textAll(buffer, len);
 }
@@ -480,7 +493,7 @@ void setup()
 
     FastLED.addLeds<LED_TYPE, STRIP_PIN, COLOR_ORDER>(leds, N_PIXELS).setCorrection(TypicalLEDStrip);
     FastLED.setMaxPowerInVoltsAndMilliamps(VOLTS, MAX_MILLIAMPS);
-    FastLED.setBrightness(BRIGHTNESS);
+    FastLED.setBrightness(brightness);
     FastLED.clear();
     FastLED.show();
 

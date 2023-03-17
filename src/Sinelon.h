@@ -16,7 +16,7 @@ void Sinelon::runPattern() {
   fadeToBlackBy(leds, N_PIXELS, THIS_FADE);
   int pos1 = beatsin16(THIS_BEAT, 0, N_PIXELS - 1);
   int pos2 = beatsin16(THAT_BEAT, 0, N_PIXELS - 1);
-  leds[(pos1 + pos2) / 2] += CHSV(myhue, 255, BRIGHTNESS);
+  leds[(pos1 + pos2) / 2] += CHSV(myhue, 255, brightness);
   EVERY_N_MILLISECONDS(10) {
     myhue++;
   }

@@ -19,7 +19,7 @@ void Juggle::runPattern() {
   curhue = thishue; // Reset the hue values?
   fadeToBlackBy(leds, N_PIXELS, FADE_RATE);
   for (int i = 0; i < NUM_DOTS; i++) {
-    leds[beatsin16(basebeat + i + NUM_DOTS, 0, N_PIXELS - 1)] |= CHSV(curhue, 255, BRIGHTNESS);
+    leds[beatsin16(basebeat + i + NUM_DOTS, 0, N_PIXELS - 1)] |= CHSV(curhue, 255, brightness);
     curhue += HUE_INC;
   }
 
