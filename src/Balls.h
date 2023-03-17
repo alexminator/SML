@@ -49,8 +49,7 @@ void Balls::runPattern() {
   }
 
   //Choose color of LEDs, then the "pos" LED on
-  for (int i = 0; i < NUM_BALLS; i++) leds[pos[i]] = CHSV(uint8_t(i * 40), 255, 255);
-
+  for (int i = 0; i < NUM_BALLS; i++) leds[pos[i]] = CHSV(uint8_t(i * 40), 255, BRIGHTNESS);
   
   FastLED.show();
   

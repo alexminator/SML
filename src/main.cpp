@@ -62,6 +62,7 @@ int BRIGHTNESS = 150;
 // uint8_t patternCounter = 0;
 // bool isRunning = false;
 CRGB leds[N_PIXELS];
+
 uint8_t myhue = 0;
 const uint8_t FADE_RATE = 2; // How long should the trails be. Very low value = longer trails.
 

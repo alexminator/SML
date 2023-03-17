@@ -19,8 +19,8 @@ void MovingDot::runPattern() {
   // Wave for LED color
   uint8_t colBeat  = beatsin8(45, 0, 255, 0, 0);
 
-  leds[(posBeat + posBeat2) / 2]  = CHSV(colBeat, 255, 255);
-  leds[(posBeat3 + posBeat4) / 2]  = CHSV(colBeat, 255, 255);
+  leds[(posBeat + posBeat2) / 2]  = CHSV(colBeat, 255, BRIGHTNESS);
+  leds[(posBeat3 + posBeat4) / 2]  = CHSV(colBeat, 255, BRIGHTNESS);
 
   fadeToBlackBy(leds, N_PIXELS, 10);
 
