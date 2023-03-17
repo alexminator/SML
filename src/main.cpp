@@ -72,6 +72,7 @@ const uint8_t FADE_RATE = 2; // How long should the trails be. Very low value = 
 #include "Ripple.h"
 #include "Fire.h"
 #include "Twinkle.h"
+#include "Balls.h"
 // ----------------------------------------------------------------------------
 // Definition of the LED component
 // ----------------------------------------------------------------------------
@@ -150,6 +151,11 @@ struct StripLed
         twinkle.runPattern();
     }
 
+    void runBalls() {
+        Balls balls = Balls();
+        balls.runPattern();
+    }
+
     void update()
     {
         switch (effectId)
@@ -174,7 +180,10 @@ struct StripLed
             break;
         case 6:
             runTwinkle();
-            break;        
+            break; 
+        case 7:
+            runBalls();
+            break;           
         default:
             break;
         }
@@ -271,6 +280,10 @@ String processor(const String &var)
     {
         return String("off");
     }
+    else if (var == "BALLS_STATE")
+    {
+        return String("off");
+    }
     else if (var == "STATE")
     {
         return String(var == "STATE" && stripLed.powerState ? "on" : "off");
@@ -337,7 +350,7 @@ String bars()
 
 void notifyClients()
 {
-    const uint8_t size = JSON_OBJECT_SIZE(10); // Remember change the number of member object
+    const uint8_t size = JSON_OBJECT_SIZE(11); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["signalStrength"] = WiFi.RSSI();
     json["bars"] = bars();
@@ -348,8 +361,8 @@ void notifyClients()
     json["rwbStatus"] = stripLed.effectId == 4 && stripLed.powerState ? "on" : "off";
     json["rippleStatus"] = stripLed.effectId == 5 && stripLed.powerState ? "on" : "off";
     json["twinkleStatus"] = stripLed.effectId == 6 && stripLed.powerState ? "on" : "off";
-
-    char buffer[200]; // I'ts 80 because {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
+    json["ballsStatus"] = stripLed.effectId == 7 && stripLed.powerState ? "on" : "off";
+    char buffer[230]; // I'ts 80 because {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
     size_t len = serializeJson(json, buffer);
     ws.textAll(buffer, len);
 }

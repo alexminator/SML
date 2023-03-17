@@ -82,6 +82,7 @@ function onMessage(event) {
     document.getElementById('RWBbutton').className = data.rwbStatus;
     document.getElementById('Ripplebutton').className = data.rippleStatus;
     document.getElementById('Twinklebutton').className = data.twinkleStatus;
+    document.getElementById('Ballsbutton').className = data.ballsStatus;
 
 }
 
@@ -117,6 +118,7 @@ function initButton() {
     document.getElementById('RWBbutton').addEventListener('click', onToggleRWBEffect);
     document.getElementById('Ripplebutton').addEventListener('click', onToggleRippleffect);
     document.getElementById('Twinklebutton').addEventListener('click', onToggleTwinkleffect);
+    document.getElementById('Ballsbutton').addEventListener('click', onToggleBallseffect);
 
 }
 
@@ -250,6 +252,24 @@ function onToggleTwinkleffect(event) {
         toggle.className = "off";
     } else {
         isOn = 6;
+        toggle.className = "on";
+    }
+    const json = JSON.stringify({
+        'action': 'animation',
+        'effectId': isOn,
+        'color': "r=255,g=0,b=0"
+    });
+    console.log(json);
+    websocket.send(json);    
+}
+
+function onToggleBallseffect(event) {
+    const toggle = document.getElementById("Ballsbutton");
+    if (toggle.className == "on") {
+        isOn = 0;
+        toggle.className = "off";
+    } else {
+        isOn = 7;
         toggle.className = "on";
     }
     const json = JSON.stringify({
