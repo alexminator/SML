@@ -58,16 +58,20 @@ const unsigned long refresh = 5000; // 5 seg
 String strength;
 
 // Strip LED
-int BRIGHTNESS = 50;
+int BRIGHTNESS = 150;
 // uint8_t patternCounter = 0;
 // bool isRunning = false;
 CRGB leds[N_PIXELS];
+uint8_t myhue = 0;
+const uint8_t FADE_RATE = 2; // How long should the trails be. Very low value = longer trails.
 
 // Effects library
 #include "MovingDot.h"
 #include "RainbowBeat.h"
 #include "RedWhiteBlue.h"
-#include "Rainbow.h"
+#include "Ripple.h"
+#include "Fire.h"
+#include "Twinkle.h"
 // ----------------------------------------------------------------------------
 // Definition of the LED component
 // ----------------------------------------------------------------------------
@@ -101,10 +105,15 @@ struct StripLed
         FastLED.show();
     }
 
-    void rainbow(uint8_t rate)
-    {
-        Rainbow rainbow = Rainbow();
-        rainbow.runPattern();
+    //void rainbow(uint8_t rate)
+    //{
+    //    Rainbow rainbow = Rainbow();
+    //    rainbow.runPattern();
+    //}
+
+    void runFire() {
+        Fire fire = Fire();
+        fire.runPattern();
     }
 
     void runMovingDot()
@@ -131,6 +140,16 @@ struct StripLed
         redWhiteBlue.runPattern();
     }
 
+    void runRipple() {
+        Ripple ripple = Ripple();
+        ripple.runPattern();
+    }
+
+    void runTwinkle() {
+        Twinkle twinkle = Twinkle();
+        twinkle.runPattern();
+    }
+
     void update()
     {
         switch (effectId)
@@ -139,7 +158,7 @@ struct StripLed
             simpleColor();
             break;
         case 1:
-            rainbow(8);
+            runFire();
             break;
         case 2:
             runMovingDot();
@@ -150,6 +169,12 @@ struct StripLed
         case 4:
             runRedWhiteBlue();
             break;
+        case 5:
+            runRipple();
+            break;
+        case 6:
+            runTwinkle();
+            break;        
         default:
             break;
         }
@@ -222,7 +247,7 @@ void initWiFi()
 
 String processor(const String &var)
 {
-    if (var == "RAINBOW_STATE")
+    if (var == "FIRE_STATE")
     {
         return String("off");
     }
@@ -235,6 +260,14 @@ String processor(const String &var)
         return String("off");
     }
     else if (var == "RWB_STATE")
+    {
+        return String("off");
+    }
+    else if (var == "RIPPLE_STATE")
+    {
+        return String("off");
+    }
+    else if (var == "TWINKLE_STATE")
     {
         return String("off");
     }
@@ -304,16 +337,19 @@ String bars()
 
 void notifyClients()
 {
-    const uint8_t size = JSON_OBJECT_SIZE(8); // Remember change the number of member object
+    const uint8_t size = JSON_OBJECT_SIZE(10); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["signalStrength"] = WiFi.RSSI();
     json["bars"] = bars();
     json["status"] = stripLed.powerState ? "on" : "off";
-    json["rainbowStatus"] = stripLed.effectId == 1 && stripLed.powerState ? "on" : "off";
+    json["fireStatus"] = stripLed.effectId == 1 && stripLed.powerState ? "on" : "off";
     json["movingdotStatus"] = stripLed.effectId == 2 && stripLed.powerState ? "on" : "off";
     json["rainbowbeatStatus"] = stripLed.effectId == 3 && stripLed.powerState ? "on" : "off";
     json["rwbStatus"] = stripLed.effectId == 4 && stripLed.powerState ? "on" : "off";
-    char buffer[180]; // I'ts 80 because {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
+    json["rippleStatus"] = stripLed.effectId == 5 && stripLed.powerState ? "on" : "off";
+    json["twinkleStatus"] = stripLed.effectId == 6 && stripLed.powerState ? "on" : "off";
+
+    char buffer[200]; // I'ts 80 because {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
     size_t len = serializeJson(json, buffer);
     ws.textAll(buffer, len);
 }
@@ -323,8 +359,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
     {
-
-        const uint8_t size = JSON_OBJECT_SIZE(8);
+        const uint8_t size = JSON_OBJECT_SIZE(3);
         StaticJsonDocument<size> json;
         DeserializationError err = deserializeJson(json, data);
         if (err)

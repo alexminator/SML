@@ -76,11 +76,13 @@ function onMessage(event) {
     document.getElementById('Signal').className = data.bars;
     document.getElementById("rssi").innerHTML = data.signalStrength;
     document.getElementById("toggle").className = data.status;
-    document.getElementById('Rainbowbutton').className = data.rainbowStatus;
+    document.getElementById('Firebutton').className = data.fireStatus;
     document.getElementById('MovingDotbutton').className = data.movingdotStatus;
     document.getElementById('RainbowBeatbutton').className = data.rainbowbeatStatus;
     document.getElementById('RWBbutton').className = data.rwbStatus;
-    
+    document.getElementById('Ripplebutton').className = data.rippleStatus;
+    document.getElementById('Twinklebutton').className = data.twinkleStatus;
+
 }
 
 function onError(event) {
@@ -109,10 +111,12 @@ function setStatus() {
 
 function initButton() {
     document.getElementById('toggle').addEventListener('click', onToggle);
-    document.getElementById('Rainbowbutton').addEventListener('click', onToggleRainbowEffect);
+    document.getElementById('Firebutton').addEventListener('click', onToggleFireEffect);
     document.getElementById('MovingDotbutton').addEventListener('click', onToggleMovingDotEffect);
     document.getElementById('RainbowBeatbutton').addEventListener('click', onToggleRainbowBeatEffect);
     document.getElementById('RWBbutton').addEventListener('click', onToggleRWBEffect);
+    document.getElementById('Ripplebutton').addEventListener('click', onToggleRippleffect);
+    document.getElementById('Twinklebutton').addEventListener('click', onToggleTwinkleffect);
 
 }
 
@@ -149,8 +153,8 @@ function onToggleSimpleColor(event) {
     websocket.send(json);
 }
 
-function onToggleRainbowEffect(event) {
-    const toggle = document.getElementById("Rainbowbutton");
+function onToggleFireEffect(event) {
+    const toggle = document.getElementById("Firebutton");
     if (toggle.className == "on") {
         isOn = 0;
         toggle.className = "off";
@@ -210,6 +214,42 @@ function onToggleRWBEffect(event) {
         toggle.className = "off";
     } else {
         isOn = 4;
+        toggle.className = "on";
+    }
+    const json = JSON.stringify({
+        'action': 'animation',
+        'effectId': isOn,
+        'color': "r=255,g=0,b=0"
+    });
+    console.log(json);
+    websocket.send(json);    
+}
+
+function onToggleRippleffect(event) {
+    const toggle = document.getElementById("Ripplebutton");
+    if (toggle.className == "on") {
+        isOn = 0;
+        toggle.className = "off";
+    } else {
+        isOn = 5;
+        toggle.className = "on";
+    }
+    const json = JSON.stringify({
+        'action': 'animation',
+        'effectId': isOn,
+        'color': "r=255,g=0,b=0"
+    });
+    console.log(json);
+    websocket.send(json);    
+}
+
+function onToggleTwinkleffect(event) {
+    const toggle = document.getElementById("Twinklebutton");
+    if (toggle.className == "on") {
+        isOn = 0;
+        toggle.className = "off";
+    } else {
+        isOn = 6;
         toggle.className = "on";
     }
     const json = JSON.stringify({
