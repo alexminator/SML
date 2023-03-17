@@ -83,7 +83,8 @@ function onMessage(event) {
     document.getElementById('Ripplebutton').className = data.rippleStatus;
     document.getElementById('Twinklebutton').className = data.twinkleStatus;
     document.getElementById('Ballsbutton').className = data.ballsStatus;
-
+    document.getElementById('Jugglebutton').className = data.juggleStatus;
+    document.getElementById('Sinelonbutton').className = data.sinelonStatus;
 }
 
 function onError(event) {
@@ -119,7 +120,8 @@ function initButton() {
     document.getElementById('Ripplebutton').addEventListener('click', onToggleRippleffect);
     document.getElementById('Twinklebutton').addEventListener('click', onToggleTwinkleffect);
     document.getElementById('Ballsbutton').addEventListener('click', onToggleBallseffect);
-
+    document.getElementById('Jugglebutton').addEventListener('click', onToggleJuggleeffect);
+    document.getElementById('Sinelonbutton').addEventListener('click', onToggleSineloneffect);
 }
 
 function onToggle(event) {
@@ -270,6 +272,42 @@ function onToggleBallseffect(event) {
         toggle.className = "off";
     } else {
         isOn = 7;
+        toggle.className = "on";
+    }
+    const json = JSON.stringify({
+        'action': 'animation',
+        'effectId': isOn,
+        'color': "r=255,g=0,b=0"
+    });
+    console.log(json);
+    websocket.send(json);    
+}
+
+function onToggleJuggleeffect(event) {
+    const toggle = document.getElementById("Jugglebutton");
+    if (toggle.className == "on") {
+        isOn = 0;
+        toggle.className = "off";
+    } else {
+        isOn = 8;
+        toggle.className = "on";
+    }
+    const json = JSON.stringify({
+        'action': 'animation',
+        'effectId': isOn,
+        'color': "r=255,g=0,b=0"
+    });
+    console.log(json);
+    websocket.send(json);    
+}
+
+function onToggleSineloneffect(event) {
+    const toggle = document.getElementById("Sinelonbutton");
+    if (toggle.className == "on") {
+        isOn = 0;
+        toggle.className = "off";
+    } else {
+        isOn = 9;
         toggle.className = "on";
     }
     const json = JSON.stringify({

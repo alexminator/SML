@@ -74,6 +74,8 @@ const uint8_t FADE_RATE = 2; // How long should the trails be. Very low value = 
 #include "Fire.h"
 #include "Twinkle.h"
 #include "Balls.h"
+#include "Juggle.h"
+#include "Sinelon.h"
 // ----------------------------------------------------------------------------
 // Definition of the LED component
 // ----------------------------------------------------------------------------
@@ -157,6 +159,16 @@ struct StripLed
         balls.runPattern();
     }
 
+    void runJuggle() {
+        Juggle juggle = Juggle();
+        juggle.runPattern();
+    }
+
+    void runSinelon() {
+        Sinelon sinelon = Sinelon();
+        sinelon.runPattern();
+    }
+
     void update()
     {
         switch (effectId)
@@ -184,7 +196,13 @@ struct StripLed
             break; 
         case 7:
             runBalls();
-            break;           
+            break;
+        case 8:
+            runJuggle();
+            break;
+        case 9:
+            runSinelon();
+            break;                    
         default:
             break;
         }
@@ -285,6 +303,14 @@ String processor(const String &var)
     {
         return String("off");
     }
+    else if (var == "JUGGLE_STATE")
+    {
+        return String("off");
+    }
+    else if (var == "SINELON_STATE")
+    {
+        return String("off");
+    }
     else if (var == "STATE")
     {
         return String(var == "STATE" && stripLed.powerState ? "on" : "off");
@@ -351,7 +377,7 @@ String bars()
 
 void notifyClients()
 {
-    const uint8_t size = JSON_OBJECT_SIZE(11); // Remember change the number of member object
+    const uint8_t size = JSON_OBJECT_SIZE(13); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["signalStrength"] = WiFi.RSSI();
     json["bars"] = bars();
@@ -363,7 +389,9 @@ void notifyClients()
     json["rippleStatus"] = stripLed.effectId == 5 && stripLed.powerState ? "on" : "off";
     json["twinkleStatus"] = stripLed.effectId == 6 && stripLed.powerState ? "on" : "off";
     json["ballsStatus"] = stripLed.effectId == 7 && stripLed.powerState ? "on" : "off";
-    char buffer[230]; // I'ts 80 because {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
+    json["juggleStatus"] = stripLed.effectId == 8 && stripLed.powerState ? "on" : "off";
+    json["sinelonStatus"] = stripLed.effectId == 9 && stripLed.powerState ? "on" : "off";
+    char buffer[260]; // I'ts 80 because {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
     size_t len = serializeJson(json, buffer);
     ws.textAll(buffer, len);
 }
