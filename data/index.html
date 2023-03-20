@@ -11,116 +11,64 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/color-picker.css">
-  <script src="js/app.js"></script>
+  <link rel="stylesheet" href="css/fontawesome.min.css">
+  <link rel="stylesheet" href="css/solid.min.css">
   <script src="js/color-picker.js"></script>
+  <script src="js/main.js"></script>
 </head>
+    
+<body class="grid-container">
 
-<body>
-  <div id="background-container">
-		<ul>
-			<li></li>
-			<li></li>
-			<li></li>
-			<li></li>
-			<li></li>
-			<li></li>
-			<li></li>
-			<li></li>
-			<li></li>
-			<li></li>
+<ul class="circles">
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+</ul>
+
+<header class="header">
+    <div id="butterfly"><div class="wings"></div></div>
+    <div class="glowing"><span>S</span><span>M</span><span>L</span></div>
+    <p>Smart Music Lamp</p>
+</header>
+
+<main class="main">
+
+ <div class="wrap">
+		<ul class="tabs">
+			<li><a href="#tab-lamp"><span class="fa fa-lightbulb"></span><span class="tab-text">Lamp</span></a></li>
+			<li><a href="#tab-music"><span class="fa fa-music"></span><span class="tab-text">Music</span></a></li>
+			<li><a href="#tab-battery"><span class="fa fa-battery"></span><span class="tab-text">Battery</span></a></li>
 		</ul>
-	</div>
-
-	<div id="caption-container">
-		<div id="butterfly"><div class="wings"></div></div>
-		<ul>
-			<li>
-				<div class="glowing" align="center">
-                <span>S</span>
-                <span>M</span>
-                <span>L</span>
-            </div>
-			</li>
-		</ul>
-        <div class="cover"></div>
-		<p>Smart Music Lamp</p>
-	</div>
-
-	<div class="picker-container">
-		<div class="front color-picker-dark-theme"></div>
-	</div>
-
-	<div class="button-container">
-		<h1>Power</h1>
-    <div id="toggle" class="%STATE%">
-      <span class="button">
-        <span class="slide"></span>
-      </span>
-    </div>
-    <h3>Fire</h3>
-    <div id="Firebutton" class="%FIRE_STATE%">
-      <span class="button">
-        <span class="slide"></span>
-      </span>
-    </div>
-		<h3>Moving Dot</h3>
-    <div id="MovingDotbutton" class="%MOVINGDOT_STATE%">
-      <span class="button">
-        <span class="slide"></span>
-      </span>
-    </div>
-		<h3>Rainbow Beat</h3>
-    <div id="RainbowBeatbutton" class="%RAINBOWBEAT_STATE%">
-      <span class="button">
-        <span class="slide"></span>
-      </span>
-    </div>
-		<h3>Red White Blue</h3>
-    <div id="RWBbutton" class="%RWB_STATE%">
-      <span class="button">
-        <span class="slide"></span>
-      </span>
-    </div>
-    <h3>Ripple</h3>
-    <div id="Ripplebutton" class="%RIPPLE_STATE%">
-      <span class="button">
-        <span class="slide"></span>
-      </span>
-    </div>
-    <h3>Twinkle</h3>
-    <div id="Twinklebutton" class="%TWINKLE_STATE%">
-      <span class="button">
-        <span class="slide"></span>
-      </span>
-    </div>
-    <h3>Balls</h3>
-    <div id="Ballsbutton" class="%BALLS_STATE%">
-      <span class="button">
-        <span class="slide"></span>
-      </span>
-    </div>
-    <h3>Juggle</h3>
-    <div id="Jugglebutton" class="%JUGGLE_STATE%">
-      <span class="button">
-        <span class="slide"></span>
-      </span>
-    </div>
-    <h3>Sinelon</h3>
-    <div id="Sinelonbutton" class="%SINELON_STATE%">
-      <span class="button">
-        <span class="slide"></span>
-      </span>
-    </div>
-    <h3>Comet</h3>
-    <div id="Cometbutton" class="%COMET_STATE%">
-      <span class="button">
-        <span class="slide"></span>
-      </span>
-    </div>
-	</div>
-
-	<footer id="footer">
-		<div id="Signal" class="%BARS%">
+      
+      <div class="sections">
+        <div id="tab-lamp">
+            <h1>Lamp</h1>
+            
+        </div>
+        
+        <div id="tab-music">
+            <h1>Music</h1>
+        </div>
+        
+        <div id="tab-battery">
+            <h1>Battery</h1>
+        </div>
+      </div>
+      
+ </div>
+    
+ 
+</main>
+    
+<footer class="footer">
+  		<div id="Signal" class="%BARS%">
 			<div class="wv4 wave">
 				<div class="wv3 wave">
 					<div class="wv2 wave">
@@ -130,11 +78,10 @@
 			</div>
 		</div>
 		
-    <p><span id="rssi">0</span>dBm</p>
+    
     <p id="status">Disconnected</p>
-    <div id="indicator"></div>
-  </footer>
-
+    <div id="indicator"></div>  
+</footer>
 
 </body>
 

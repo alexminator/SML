@@ -337,10 +337,7 @@ String processor(const String &var)
     {
         return String(var == "STATE" && stripLed.powerState ? "on" : "off");
     }
-    else if (var == "RSSI")
-    {
-        return String(WiFi.RSSI());
-    }
+    
     return String();
 }
 
@@ -401,7 +398,7 @@ void notifyClients()
 {
     const uint8_t size = JSON_OBJECT_SIZE(14); // Remember change the number of member object
     StaticJsonDocument<size> json;
-    json["signalStrength"] = WiFi.RSSI();
+    //json["signalStrength"] = WiFi.RSSI();
     json["bars"] = bars();
     json["status"] = stripLed.powerState ? "on" : "off";
     json["fireStatus"] = stripLed.effectId == 1 && stripLed.powerState ? "on" : "off";
@@ -414,7 +411,7 @@ void notifyClients()
     json["juggleStatus"] = stripLed.effectId == 8 && stripLed.powerState ? "on" : "off";
     json["sinelonStatus"] = stripLed.effectId == 9 && stripLed.powerState ? "on" : "off";
     json["cometStatus"] = stripLed.effectId == 10 && stripLed.powerState ? "on" : "off";
-    char buffer[280]; // I'ts 80 because {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
+    char buffer[260]; // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
     size_t len = serializeJson(json, buffer);
     ws.textAll(buffer, len);
 }

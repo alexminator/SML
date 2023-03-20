@@ -3,6 +3,26 @@ var lastHex;
 var connected = false;
 var isOn;
 
+document.addEventListener('DOMContentLoaded', function() {
+  const tabs = document.querySelectorAll('ul.tabs li a');
+  const sections = document.querySelectorAll('.sections div');
+  
+  tabs[0].classList.add('active');
+  sections.forEach(section => section.style.display = 'none');
+  sections[0].style.display = 'block';
+  
+  tabs.forEach(tab => {
+    tab.addEventListener('click', function(event) {
+      event.preventDefault();
+      tabs.forEach(tab => tab.classList.remove('active'));
+      this.classList.add('active');
+      sections.forEach(section => section.style.display = 'none');
+      const activeTab = document.querySelector(this.getAttribute('href'));
+      activeTab.style.display = 'block';
+    });
+  });
+});
+
 window.onload = function () {
     // Create a new color picker instance
     let colorPicker = new ColorPickerControl({ container: document.querySelector('.color-picker-dark-theme'), theme: 'dark' });
@@ -19,7 +39,6 @@ window.onload = function () {
     });
 
     // update the "selected color" values whenever the color changes
-    
     var values = document.getElementById("values");
     colorPicker.on(["color:init", "color:change"], function (color) {
         // Show the current color in different formats
@@ -29,6 +48,7 @@ window.onload = function () {
             "hsl: " + color.hslString,
         ].join("<br>");
     });
+    
 }
 // ----------------------------------------------------------------------------
 // WebSocket handling
@@ -74,7 +94,6 @@ function onMessage(event) {
     console.log("Received: " + event.data);
     var data = JSON.parse(event.data);
     document.getElementById('Signal').className = data.bars;
-    document.getElementById("rssi").innerHTML = data.signalStrength;
     document.getElementById("toggle").className = data.status;
     document.getElementById('Firebutton').className = data.fireStatus;
     document.getElementById('MovingDotbutton').className = data.movingdotStatus;
@@ -96,14 +115,12 @@ function setStatus() {
     var stat = document.getElementById('status');
     var ind = document.getElementById('indicator');
     var lvl = document.getElementById('Signal');
-    var rssi = document.getElementById("rssi");
     if (connected) {
         stat.innerHTML = "Connected";
         ind.style.backgroundColor = '#0f0';
     } else {
         stat.innerHTML = "Disconnected";
         ind.style.backgroundColor = 'red';
-        rssi.innerHTML = 0;
         lvl.className = "no-signal";
     }
 }
@@ -361,4 +378,3 @@ function power() {
         sendMessage(hex);
 }
 */
-
