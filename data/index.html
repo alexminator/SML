@@ -15,73 +15,85 @@
   <link rel="stylesheet" href="css/solid.min.css">
   <script src="js/color-picker.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/slider.js" async></script>
 </head>
-    
+
 <body class="grid-container">
 
-<ul class="circles">
-                    <li></li>
-                    <li></li>
-                    <li></li>
-                    <li></li>
-                    <li></li>
-                    <li></li>
-                    <li></li>
-                    <li></li>
-                    <li></li>
-                    <li></li>
-</ul>
+  <ul class="circles">
+    <li></li>
+    <li></li>
+    <li></li>
+    <li></li>
+    <li></li>
+    <li></li>
+    <li></li>
+    <li></li>
+    <li></li>
+    <li></li>
+  </ul>
 
-<header class="header">
-    <div id="butterfly"><div class="wings"></div></div>
+  <header class="header">
+    <div id="butterfly">
+      <div class="wings"></div>
+    </div>
     <div class="glowing"><span>S</span><span>M</span><span>L</span></div>
     <p>Smart Music Lamp</p>
-</header>
+  </header>
 
-<main class="main">
+  <main class="main">
 
- <div class="wrap">
-		<ul class="tabs">
-			<li><a href="#tab-lamp"><span class="fa fa-lightbulb"></span><span class="tab-text">Lamp</span></a></li>
-			<li><a href="#tab-music"><span class="fa fa-music"></span><span class="tab-text">Music</span></a></li>
-			<li><a href="#tab-battery"><span class="fa fa-battery"></span><span class="tab-text">Battery</span></a></li>
-		</ul>
-      
+    <div class="wrap">
+      <ul class="tabs">
+        <li><a href="#tab-lamp"><span class="fa fa-lightbulb"></span><span class="tab-text">Lamp</span></a></li>
+        <li><a href="#tab-music"><span class="fa fa-music"></span><span class="tab-text">Music</span></a></li>
+        <li><a href="#tab-battery"><span class="fa fa-battery"></span><span class="tab-text">Battery</span></a></li>
+      </ul>
+
       <div class="sections">
         <div id="tab-lamp">
-            <h1>Lamp</h1>
-            
+          <h1>Lamp</h1>
+          <div class="range">
+            <div class="sliderValue">
+              <span class="mark">100</span>
+            </div>
+            <div class="field">
+              <div class="value left">0</div>
+              <input type="range" min="10" max="200" value="100" steps="1">
+              <div class="value right">200</div>
+            </div>
+          </div>
         </div>
-        
+
         <div id="tab-music">
-            <h1>Music</h1>
+          <h1>Music</h1>
         </div>
-        
+
         <div id="tab-battery">
-            <h1>Battery</h1>
+          <h1>Battery</h1>
         </div>
       </div>
-      
- </div>
+
+    </div>
     
- 
-</main>
-    
-<footer class="footer">
-  		<div id="Signal" class="%BARS%">
-			<div class="wv4 wave">
-				<div class="wv3 wave">
-					<div class="wv2 wave">
-						<div class="wv1 wave"></div>
-					</div>
-				</div>
-			</div>
-		</div>
-		
-    
+
+  </main>
+
+  <footer class="footer">
+    <div id="Signal" class="%BARS%">
+      <div class="wv4 wave">
+        <div class="wv3 wave">
+          <div class="wv2 wave">
+            <div class="wv1 wave"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
     <p id="status">Disconnected</p>
-    <div id="indicator"></div>  
-</footer>
+    <div id="indicator"></div>
+  </footer>
 
 </body>
 

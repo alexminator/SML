@@ -3,24 +3,24 @@ var lastHex;
 var connected = false;
 var isOn;
 
-document.addEventListener('DOMContentLoaded', function() {
-  const tabs = document.querySelectorAll('ul.tabs li a');
-  const sections = document.querySelectorAll('.sections div');
-  
-  tabs[0].classList.add('active');
-  sections.forEach(section => section.style.display = 'none');
-  sections[0].style.display = 'block';
-  
-  tabs.forEach(tab => {
-    tab.addEventListener('click', function(event) {
-      event.preventDefault();
-      tabs.forEach(tab => tab.classList.remove('active'));
-      this.classList.add('active');
-      sections.forEach(section => section.style.display = 'none');
-      const activeTab = document.querySelector(this.getAttribute('href'));
-      activeTab.style.display = 'block';
+document.addEventListener('DOMContentLoaded', function () {
+    const tabs = document.querySelectorAll('ul.tabs li a');
+    const sections = document.querySelectorAll('.sections > div');
+
+    tabs[0].classList.add('active');
+    sections.forEach(section => section.style.display = 'none');
+    sections[0].style.display = 'block';
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function (event) {
+            event.preventDefault();
+            tabs.forEach(tab => tab.classList.remove('active'));
+            this.classList.add('active');
+            sections.forEach(section => section.style.display = 'none');
+            const activeTab = document.querySelector(this.getAttribute('href'));
+            activeTab.style.display = 'block';
+        });
     });
-  });
 });
 
 window.onload = function () {
@@ -32,7 +32,7 @@ window.onload = function () {
         document.getElementById('buttons').style.borderTop = '1px solid' + hex;
     });
 
-    colorPicker.on('change', (color) =>  {
+    colorPicker.on('change', (color) => {
         document.getElementById("butterfly").style.setProperty('--butterfly-color', color.toHEX());
         document.getElementById("butterfly").style.setProperty('--butterfly-opacity', color.a / 255);
         light_color_picker.color.fromHSVa(color.h, color.s, color.v, color.a);
@@ -48,7 +48,7 @@ window.onload = function () {
             "hsl: " + color.hslString,
         ].join("<br>");
     });
-    
+
 }
 // ----------------------------------------------------------------------------
 // WebSocket handling
@@ -209,7 +209,7 @@ function onToggleMovingDotEffect(event) {
         'color': "r=255,g=0,b=0"
     });
     console.log(json);
-    websocket.send(json);    
+    websocket.send(json);
 }
 
 function onToggleRainbowBeatEffect(event) {
@@ -227,7 +227,7 @@ function onToggleRainbowBeatEffect(event) {
         'color': "r=255,g=0,b=0"
     });
     console.log(json);
-    websocket.send(json);    
+    websocket.send(json);
 }
 
 function onToggleRWBEffect(event) {
@@ -245,7 +245,7 @@ function onToggleRWBEffect(event) {
         'color': "r=255,g=0,b=0"
     });
     console.log(json);
-    websocket.send(json);    
+    websocket.send(json);
 }
 
 function onToggleRippleffect(event) {
@@ -263,7 +263,7 @@ function onToggleRippleffect(event) {
         'color': "r=255,g=0,b=0"
     });
     console.log(json);
-    websocket.send(json);    
+    websocket.send(json);
 }
 
 function onToggleTwinkleffect(event) {
@@ -281,7 +281,7 @@ function onToggleTwinkleffect(event) {
         'color': "r=255,g=0,b=0"
     });
     console.log(json);
-    websocket.send(json);    
+    websocket.send(json);
 }
 
 function onToggleBallseffect(event) {
@@ -299,7 +299,7 @@ function onToggleBallseffect(event) {
         'color': "r=255,g=0,b=0"
     });
     console.log(json);
-    websocket.send(json);    
+    websocket.send(json);
 }
 
 function onToggleJuggleeffect(event) {
@@ -317,7 +317,7 @@ function onToggleJuggleeffect(event) {
         'color': "r=255,g=0,b=0"
     });
     console.log(json);
-    websocket.send(json);    
+    websocket.send(json);
 }
 
 function onToggleSineloneffect(event) {
@@ -335,7 +335,7 @@ function onToggleSineloneffect(event) {
         'color': "r=255,g=0,b=0"
     });
     console.log(json);
-    websocket.send(json);    
+    websocket.send(json);
 }
 
 function onToggleCometeffect(event) {
@@ -353,7 +353,7 @@ function onToggleCometeffect(event) {
         'color': "r=255,g=0,b=0"
     });
     console.log(json);
-    websocket.send(json);    
+    websocket.send(json);
 }
 
 /*
