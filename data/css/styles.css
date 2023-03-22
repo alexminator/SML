@@ -128,15 +128,14 @@ ul.tabs li a .tab-text {
     background: #664AFF;
 }
 
-.sections div {}
+.sections div {
+    
+}
 
 .sections p {
     width: 90%;
 }
 
-#range {
-    color: #0f0;
-}
 
 @media screen and (max-width: 420px) {
     .wrap {
@@ -533,6 +532,19 @@ ul.tabs li a .tab-text {
 
 /* END signal animation*/
 
+.picker-container {
+    position: relative;
+    margin-top: 50%;
+    margin-left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    background-color: transparent;
+    perspective: 1000px;
+    
+}
+
+
 .range{
     height: 80px;
     width: 360px;
@@ -626,5 +638,7 @@ ul.tabs li a .tab-text {
     cursor: pointer;
   }
   .range input::-moz-range-progress{
-    background: #664AFF; //this progress background is only shown on Firefox
+    background: #664AFF; 
   }
+
+    
