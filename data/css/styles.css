@@ -44,16 +44,17 @@ body {
 
 .header {
     grid-area: header;
-    align-items: center;
 
+    text-align: center;
 }
 
 .header p {
     font-family: 'Handmade';
     position: relative;
-    top: 40px;
-    font-size: 65px;
+    top: 25px;
+    font-size: 60px;
     color: #c0c0c0;
+    margin-right: 10px;
 }
 
 .main {
@@ -61,11 +62,9 @@ body {
 }
 
 .wrap {
-
     max-width: 90%;
     margin: 10px auto;
     box-shadow: 3px 5px 10px rgba(0, 0, 0, .8);
-    border-radius: 5px;
     position: relative;
 }
 
@@ -89,7 +88,7 @@ footer p {
 .grid-container {
     display: grid;
     grid-template:
-        "header" 200px
+        "header" 170px
         "main" auto
         "footer" 80px;
 }
@@ -106,14 +105,14 @@ ul.tabs {
 ul.tabs li a {
     color: #fff;
     text-decoration: none;
-    font-size: 16px;
+    font-size: 1.5rem;
     display: block;
     padding: 20px 0px;
     text-align: center;
 }
 
 .active {
-    background: linear-gradient(-135deg, #4e54c8, #131431);
+    background: #4f4f6a;
 }
 
 ul.tabs li a .tab-text {
@@ -125,17 +124,21 @@ ul.tabs li a .tab-text {
     height: 100%;
     text-align: center;
     place-items: center;
-    background: #664AFF;
+    background: rgba(79, 79, 106, 1);
+    background: -moz-linear-gradient(top, rgba(79, 79, 106, 1) 0%, rgba(79, 79, 106, 1) 23%, rgba(79, 79, 106, 1) 42%, rgba(0, 0, 0, 1) 97%, rgba(0, 0, 0, 1) 100%);
+    background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(79, 79, 106, 1)), color-stop(23%, rgba(79, 79, 106, 1)), color-stop(42%, rgba(79, 79, 106, 1)), color-stop(97%, rgba(0, 0, 0, 1)), color-stop(100%, rgba(0, 0, 0, 1)));
+    background: -webkit-linear-gradient(top, rgba(79, 79, 106, 1) 0%, rgba(79, 79, 106, 1) 23%, rgba(79, 79, 106, 1) 42%, rgba(0, 0, 0, 1) 97%, rgba(0, 0, 0, 1) 100%);
+    background: -o-linear-gradient(top, rgba(79, 79, 106, 1) 0%, rgba(79, 79, 106, 1) 23%, rgba(79, 79, 106, 1) 42%, rgba(0, 0, 0, 1) 97%, rgba(0, 0, 0, 1) 100%);
+    background: -ms-linear-gradient(top, rgba(79, 79, 106, 1) 0%, rgba(79, 79, 106, 1) 23%, rgba(79, 79, 106, 1) 42%, rgba(0, 0, 0, 1) 97%, rgba(0, 0, 0, 1) 100%);
+    background: linear-gradient(to bottom, rgba(79, 79, 106, 1) 0%, rgba(79, 79, 106, 1) 23%, rgba(79, 79, 106, 1) 42%, rgba(0, 0, 0, 1) 97%, rgba(0, 0, 0, 1) 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#4f4f6a', endColorstr='#000000', GradientType=0);
 }
 
-.sections div {
-    
-}
+.sections div {}
 
 .sections p {
     width: 90%;
 }
-
 
 @media screen and (max-width: 420px) {
     .wrap {
@@ -151,7 +154,7 @@ ul.tabs li a .tab-text {
         display: none;
     }
 
-    
+
 }
 
 /* Butterfly animation*/
@@ -322,8 +325,8 @@ ul.tabs li a .tab-text {
     animation: animateTEXT 2s linear infinite;
     align-items: center;
     position: relative;
-    top: 70px;
-    margin-left: 10px;
+    top: 60px;
+
 }
 
 @keyframes animateTEXT {
@@ -528,31 +531,33 @@ ul.tabs li a .tab-text {
 
 .picker-container {
     position: relative;
-    margin-top: 50%;
+    margin-top: 45%;
     margin-left: 50%;
     transform: translate(-50%, -50%);
     width: 250px;
     height: 200px;
     background-color: transparent;
     perspective: 1000px;
-    
 }
 
 /* END picker color*/
 
-.range{
-    height: 80px;
-    width: 360px;
-    background: #fff;
+.range {
+    height: 60px;
+    width: 350px;
+    background: #4f4f6a;
     border-radius: 10px;
-    padding: 0 65px 0 45px;
-    box-shadow: 2px 4px 8px rgba(0,0,0,0.1);
-  }
-  .sliderValue{
+    padding: 0 60px 0 40px;
+    box-shadow: 3px 5px 10px rgba(0, 0, 0, .8);
+    margin-bottom: 50%;
+}
+
+.sliderValue {
     position: relative;
     width: 100%;
-  }
-  .sliderValue span{
+}
+
+.sliderValue span {
     position: absolute;
     height: 45px;
     width: 45px;
@@ -564,11 +569,13 @@ ul.tabs li a .tab-text {
     color: #fff;
     transform-origin: bottom;
     transition: transform 0.3s ease-in-out;
-  }
-  .sliderValue span.show{
+}
+
+.sliderValue span.show {
     transform: translateX(-70%) scale(1);
-  }
-  .sliderValue span:after{
+}
+
+.sliderValue span:after {
     position: absolute;
     content: '';
     height: 100%;
@@ -579,30 +586,35 @@ ul.tabs li a .tab-text {
     left: 50%;
     transform: translateX(-50%) rotate(45deg);
     border-bottom-left-radius: 50%;
-    box-shadow: 0px 0px 8px rgba(0,0,0,0.1);
+    box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.1);
     border-top-left-radius: 50%;
     border-top-right-radius: 50%;
-  }
-  .field{
+}
+
+.field {
     display: flex;
     align-items: center;
     justify-content: center;
     height: 100%;
     position: relative;
-  }
-  .field .value{
+}
+
+.field .value {
     position: absolute;
     font-size: 18px;
-    color: #664AFF;
+    color: #fff;
     font-weight: 600;
-  }
-  .field .value.left{
+}
+
+.field .value.left {
     left: -22px;
-  }
-  .field .value.right{
+}
+
+.field .value.right {
     right: -43px;
-  }
-  .range input{
+}
+
+.range input {
     -webkit-appearance: none;
     width: 100%;
     height: 3px;
@@ -611,30 +623,32 @@ ul.tabs li a .tab-text {
     outline: none;
     border: none;
     z-index: 2222;
-  }
-  .range input::-webkit-slider-thumb{
-    -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    background: red;
-    border-radius: 50%;
-    background: #664AFF;
-    border: 1px solid #664AFF;
-    cursor: pointer;
-  }
-  .range input::-moz-range-thumb{
-    -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    background: red;
-    border-radius: 50%;
-    background: #664AFF;
-    border: 1px solid #664AFF;
-    cursor: pointer;
-  }
-  .range input::-moz-range-progress{
-    background: #664AFF; 
-  }
-  /* END slider brightness*/
+}
 
-    
+.range input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: red;
+    border-radius: 50%;
+    background: #664AFF;
+    border: 3px solid #fff;
+    cursor: pointer;
+}
+
+.range input::-moz-range-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: red;
+    border-radius: 50%;
+    background: #664AFF;
+    border: 1px solid #664AFF;
+    cursor: pointer;
+}
+
+.range input::-moz-range-progress {
+    background: #664AFF;
+}
+
+/* END slider brightness*/
