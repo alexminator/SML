@@ -151,13 +151,7 @@ ul.tabs li a .tab-text {
         display: none;
     }
 
-    .sections div {
-        padding: 20px;
-    }
-
-    .sections>div {
-        padding: 20px;
-    }
+    
 }
 
 /* Butterfly animation*/
@@ -537,13 +531,14 @@ ul.tabs li a .tab-text {
     margin-top: 50%;
     margin-left: 50%;
     transform: translate(-50%, -50%);
-    width: 200px;
+    width: 250px;
     height: 200px;
     background-color: transparent;
     perspective: 1000px;
     
 }
 
+/* END picker color*/
 
 .range{
     height: 80px;
@@ -640,5 +635,6 @@ ul.tabs li a .tab-text {
   .range input::-moz-range-progress{
     background: #664AFF; 
   }
+  /* END slider brightness*/
 
     
