@@ -44,7 +44,6 @@ body {
 
 .header {
     grid-area: header;
-
     text-align: center;
 }
 
@@ -103,20 +102,25 @@ ul.tabs {
 }
 
 ul.tabs li a {
-    color: #fff;
+    font-family: Impact;
+    color: rgba(0,0,0,.2);
     text-decoration: none;
-    font-size: 1.5rem;
+    font-size: 2rem;
     display: block;
     padding: 20px 0px;
     text-align: center;
 }
 
-.active {
+ul.tabs li a.active{
+    color: #fff;
     background: #4f4f6a;
 }
 
 ul.tabs li a .tab-text {
-    margin-left: 8px;
+    font-family: Impactreg;
+    margin-left: 10px;
+    font-size: 1.5rem;
+    text-align: center;
 }
 
 .sections {
@@ -134,10 +138,19 @@ ul.tabs li a .tab-text {
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#4f4f6a', endColorstr='#000000', GradientType=0);
 }
 
-.sections div {}
-
+.sections div {
+}
+    
 .sections p {
     width: 90%;
+}
+
+@media screen and (max-width: 700px) {
+    ul.tabs li {
+        width: none;
+        flex-basis: 0;
+        flex-grow: 1;
+    }
 }
 
 @media screen and (max-width: 420px) {
@@ -148,13 +161,12 @@ ul.tabs li a .tab-text {
 
     ul.tabs li a {
         padding: 15px 0px;
+        font-size: 3rem;
     }
 
     ul.tabs li a .tab-text {
         display: none;
     }
-
-
 }
 
 /* Butterfly animation*/
