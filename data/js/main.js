@@ -164,7 +164,7 @@ function onToggleNeo(event) {
 
 function onChangeBrightness(event) {
     var brightness = document.getElementById("pwmSlider").value;
-    document.getElementById("textSliderValue").innerHTML = sliderValue;
+    document.getElementById("textSliderValue").innerHTML = brightness;
     console.log(brightness);
     var xhr = new XMLHttpRequest();
     xhr.open("GET", "/slider?value=" + brightness, true);

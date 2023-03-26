@@ -117,7 +117,7 @@ struct StripLed
     void simpleColor(int ahue, int brightness)
     { // SET ALL LEDS TO ONE COLOR (HSV)
         //Serial.println(ahue);
-        //Serial.println(brightness);
+        Serial.println("punto 1 simple color" + String(brightness));
         for (int i = 0; i < N_PIXELS; i++)
         {
             leds[i] = CHSV(ahue, 255, brightness);
@@ -382,6 +382,7 @@ void initWebServer()
     inputMessage = request->getParam(PARAM_INPUT)->value();
     sliderValue = inputMessage;
     stripLed.brightness = sliderValue.toInt();
+    Serial.println("punto 2 lo q recibo" + String(brightness));
     }
     else {
     inputMessage = "No message sent";
@@ -424,6 +425,7 @@ String bars()
 
 void notifyClients()
 {
+    Serial.println("punto 3 lo q envio" + String(brightness));
     const uint8_t size = JSON_OBJECT_SIZE(14); // Remember change the number of member object
     StaticJsonDocument<size> json;
     // json["signalStrength"] = WiFi.RSSI();
@@ -580,7 +582,7 @@ void loop()
     {
         brightness = stripLed.brightness;
         notifyClients();
-        Serial.println(brightness);
+        Serial.println("punto 4 en el lazo cada 5seg" + String(brightness));
         startMillis = currentMillis;
     }
 }
