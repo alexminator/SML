@@ -22,6 +22,5 @@ void Juggle::runPattern() {
     leds[beatsin16(basebeat + i + NUM_DOTS, 0, N_PIXELS - 1)] |= CHSV(curhue, 255, brightness);
     curhue += HUE_INC;
   }
-
   FastLED.show();
 }

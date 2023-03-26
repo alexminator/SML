@@ -93,8 +93,11 @@ function onMessage(event) {
     // Print out our received message
     console.log("Received: " + event.data);
     var data = JSON.parse(event.data);
+    console.log(data);
     document.getElementById('Signal').className = data.bars;
-    document.getElementById("toggle").className = data.status;
+    document.getElementById("Neo").className = data.neostatus;
+    document.getElementById("textSliderValue").innerHTML = data.neobrightness;
+    document.getElementById("pwmSlider").value = data.neobrightness;
     document.getElementById('Firebutton').className = data.fireStatus;
     document.getElementById('MovingDotbutton').className = data.movingdotStatus;
     document.getElementById('RainbowBeatbutton').className = data.rainbowbeatStatus;
@@ -130,7 +133,8 @@ function setStatus() {
 // ----------------------------------------------------------------------------
 
 function initButton() {
-    document.getElementById('toggle').addEventListener('click', onToggle);
+    document.getElementById('Neo').addEventListener('click', onToggleNeo);
+    document.getElementById('pwmSlider').addEventListener('change', onChangeBrightness);
     document.getElementById('Firebutton').addEventListener('click', onToggleFireEffect);
     document.getElementById('MovingDotbutton').addEventListener('click', onToggleMovingDotEffect);
     document.getElementById('RainbowBeatbutton').addEventListener('click', onToggleRainbowBeatEffect);
@@ -143,8 +147,8 @@ function initButton() {
     document.getElementById('Cometbutton').addEventListener('click', onToggleCometeffect);
 }
 
-function onToggle(event) {
-    const toggle = document.getElementById("toggle");
+function onToggleNeo(event) {
+    const toggle = document.getElementById("Neo");
     if (toggle.className == "on") {
         toggle.className = "off";
     } else {
@@ -153,27 +157,18 @@ function onToggle(event) {
     const json = JSON.stringify({
         'action': 'toggle',
         'effectId': 0,
-        'color': "r=255,g=0,b=0"
     });
     console.log(json);
     websocket.send(json);
 }
 
-function onToggleSimpleColor(event) {
-    const toggle = document.getElementById("SimpleColor");
-    if (toggle.className == "on") {
-        toggle.className = "off";
-    } else {
-        toggle.className = "on";
-    }
-    // TODO: Tomar los valores del picker del color
-    const json = JSON.stringify({
-        'action': 'animation',
-        'effectId': 0,
-        'color': "r=255,g=0,b=0"
-    });
-    console.log(json);
-    websocket.send(json);
+function onChangeBrightness(event) {
+    var brightness = document.getElementById("pwmSlider").value;
+    document.getElementById("textSliderValue").innerHTML = sliderValue;
+    console.log(brightness);
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "/slider?value=" + brightness, true);
+    xhr.send();
 }
 
 function onToggleFireEffect(event) {
@@ -187,8 +182,7 @@ function onToggleFireEffect(event) {
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn,
-        'color': "r=255,g=0,b=0"
+        'effectId': isOn
     });
     console.log(json);
     websocket.send(json);
@@ -205,8 +199,7 @@ function onToggleMovingDotEffect(event) {
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn,
-        'color': "r=255,g=0,b=0"
+        'effectId': isOn
     });
     console.log(json);
     websocket.send(json);
@@ -223,8 +216,7 @@ function onToggleRainbowBeatEffect(event) {
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn,
-        'color': "r=255,g=0,b=0"
+        'effectId': isOn
     });
     console.log(json);
     websocket.send(json);
@@ -241,8 +233,7 @@ function onToggleRWBEffect(event) {
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn,
-        'color': "r=255,g=0,b=0"
+        'effectId': isOn
     });
     console.log(json);
     websocket.send(json);
@@ -259,8 +250,7 @@ function onToggleRippleffect(event) {
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn,
-        'color': "r=255,g=0,b=0"
+        'effectId': isOn
     });
     console.log(json);
     websocket.send(json);
@@ -277,8 +267,7 @@ function onToggleTwinkleffect(event) {
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn,
-        'color': "r=255,g=0,b=0"
+        'effectId': isOn
     });
     console.log(json);
     websocket.send(json);
@@ -295,8 +284,7 @@ function onToggleBallseffect(event) {
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn,
-        'color': "r=255,g=0,b=0"
+        'effectId': isOn
     });
     console.log(json);
     websocket.send(json);
@@ -313,8 +301,7 @@ function onToggleJuggleeffect(event) {
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn,
-        'color': "r=255,g=0,b=0"
+        'effectId': isOn
     });
     console.log(json);
     websocket.send(json);
@@ -331,8 +318,7 @@ function onToggleSineloneffect(event) {
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn,
-        'color': "r=255,g=0,b=0"
+        'effectId': isOn
     });
     console.log(json);
     websocket.send(json);
@@ -349,8 +335,7 @@ function onToggleCometeffect(event) {
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn,
-        'color': "r=255,g=0,b=0"
+        'effectId': isOn
     });
     console.log(json);
     websocket.send(json);

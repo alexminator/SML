@@ -102,7 +102,6 @@ ul.tabs {
 }
 
 ul.tabs li a {
-    font-family: Impact;
     color: rgba(0,0,0,.2);
     text-decoration: none;
     font-size: 2rem;
@@ -144,6 +143,31 @@ ul.tabs li a .tab-text {
 .sections p {
     width: 90%;
 }
+
+.power-button {
+    display: grid;
+    padding: 30px;
+    justify-content: center;
+}
+
+.power-button h1 {
+    text-align: center;
+    padding: 10px;
+    color: #fff;
+}
+
+.effects-button {
+    display: grid;
+    padding: 30px;
+    justify-content: center;
+}
+
+.effects-button h3 {
+    text-align: center;
+    padding: 10px;
+    color: #fff;
+}
+
 
 @media screen and (max-width: 700px) {
     ul.tabs li {
@@ -556,7 +580,7 @@ ul.tabs li a .tab-text {
 
 .range {
     height: 60px;
-    width: 350px;
+    width: 300px;
     background: #4f4f6a;
     border-radius: 10px;
     padding: 0 60px 0 40px;
@@ -619,7 +643,7 @@ ul.tabs li a .tab-text {
 }
 
 .field .value.left {
-    left: -22px;
+    left: -30px;
 }
 
 .field .value.right {
@@ -664,3 +688,41 @@ ul.tabs li a .tab-text {
 }
 
 /* END slider brightness*/
+
+.button {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+    background-color: #ccc;
+    border-radius: 34px;
+  }
+  
+  .on .button {
+    background-color: #2196f3;
+  }
+  
+  .button:hover {
+    background-color: #072a46;
+  }
+  
+  .slide {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    border-radius: 34px;
+    background-color: white;
+  }
+  
+  .on .slide {
+    left: 28px;
+  }
+
+  #toggle {
+    display: flex;
+  }
+
+  /* END Button */

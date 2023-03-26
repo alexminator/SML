@@ -52,18 +52,97 @@
 
       <div class="sections">
         <div id="tab-lamp">
+          <div class="power-button">
+            <h1>Power</h1>
+            <h3>Lamp</h3>
+            <div id="lamp" class="%LAMP%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+            <h3>Neopixel</h3>
+            <div id="Neo" class="%NEOPIXEL%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+          </div>
+
+          <div class="effects-button">
+            <h3>Fire</h3>
+            <div id="Firebutton" class="%FIRE_STATE%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+            <h3>Moving Dot</h3>
+            <div id="MovingDotbutton" class="%MOVINGDOT_STATE%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+            <h3>Rainbow Beat</h3>
+            <div id="RainbowBeatbutton" class="%RAINBOWBEAT_STATE%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+            <h3>Red White Blue</h3>
+            <div id="RWBbutton" class="%RWB_STATE%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+            <h3>Ripple</h3>
+            <div id="Ripplebutton" class="%RIPPLE_STATE%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+            <h3>Twinkle</h3>
+            <div id="Twinklebutton" class="%TWINKLE_STATE%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+            <h3>Balls</h3>
+            <div id="Ballsbutton" class="%BALLS_STATE%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+            <h3>Juggle</h3>
+            <div id="Jugglebutton" class="%JUGGLE_STATE%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+            <h3>Sinelon</h3>
+            <div id="Sinelonbutton" class="%SINELON_STATE%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+            <h3>Comet</h3>
+            <div id="Cometbutton" class="%COMET_STATE%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+          </div>
+
           <div class="picker-container">
             <div class="front color-picker-dark-theme"></div>
           </div>
 
           <div class="range">
             <div class="sliderValue">
-              <span class="mark">100</span>
+              <span id="textSliderValue">%BRIGHTNESS%</span>
             </div>
             <div class="field">
-              <div class="value left">0</div>
-              <input type="range" min="10" max="200" value="100" steps="1">
-              <div class="value right">200</div>
+              <div class="value left">25</div>
+              <input type="range" id="pwmSlider" min="25" max="255" value="%BRIGHTNESS%" steps="1">
+              <div class="value right">255</div>
             </div>
           </div>
         </div>

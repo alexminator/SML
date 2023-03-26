@@ -26,7 +26,7 @@
 // WEB
 #define HTTP_PORT 80
 
-// Effects 
+// Effects
 #define EFFECT 0
 #define GRAVITY -1  // Downward (negative) acceleration of gravity in m/s^2
 #define h0 1        // Starting height, in meters, of the ball (strip length)
@@ -61,10 +61,14 @@ const unsigned long refresh = 5000; // 5 seg
 String strength;
 
 // Strip LED
-int brightness = 150;
+String sliderValue = "0";
+int brightness = 130;
 CRGB leds[N_PIXELS];
-uint8_t myhue = 0;
+int myhue = 0;               // hue 0. red color
 const uint8_t FADE_RATE = 2; // How long should the trails be. Very low value = longer trails.
+const char* PARAM_INPUT = "value";  //Slider brightness
+
+
 // balls effect
 float h[NUM_BALLS];                       // An array of heights
 float vImpact0 = sqrt(-2 * GRAVITY * h0); // Impact velocity of the ball when it hits the ground if "dropped" from the top of the strip
@@ -107,10 +111,13 @@ struct StripLed
     // state variables
     int effectId;
     bool powerState;
+    int brightness;
     // methods for different effects on stripled
 
     void simpleColor(int ahue, int brightness)
     { // SET ALL LEDS TO ONE COLOR (HSV)
+        //Serial.println(ahue);
+        //Serial.println(brightness);
         for (int i = 0; i < N_PIXELS; i++)
         {
             leds[i] = CHSV(ahue, 255, brightness);
@@ -189,7 +196,7 @@ struct StripLed
         switch (effectId)
         {
         case 0:
-            simpleColor(0, brightness);
+            simpleColor(myhue, brightness);
             break;
         case 1:
             runFire();
@@ -237,7 +244,7 @@ struct StripLed
 // Definition of global variables
 // ----------------------------------------------------------------------------
 
-StripLed stripLed = {EFFECT, false};
+StripLed stripLed = {EFFECT, false, brightness};
 Led onboard_led = {LED_BUILTIN, false};
 
 // ----------------------------------------------------------------------------
@@ -293,6 +300,7 @@ void initWiFi()
 
 String processor(const String &var)
 {
+    // Serial.println(var);
     if (var == "FIRE_STATE")
     {
         return String("off");
@@ -333,11 +341,15 @@ String processor(const String &var)
     {
         return String("off");
     }
-    else if (var == "STATE")
+    else if (var == "BRIGHTNESS")
     {
-        return String(var == "STATE" && stripLed.powerState ? "on" : "off");
+        return sliderValue;
     }
-    
+    else if (var == "NEOPIXEL")
+    {
+        return String(var == "NEOPIXEL" && stripLed.powerState ? "on" : "off");
+    }
+
     return String();
 }
 
@@ -360,6 +372,22 @@ void initWebServer()
       json["rssi"] = WiFi.RSSI();
       serializeJson(json, *response);
       request->send(response); });
+
+    // Send a GET request to <ESP_IP>/slider?value=<inputMessage>
+    server.on("/slider", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
+        String inputMessage;
+    // GET input1 value on <ESP_IP>/slider?value=<inputMessage>
+    if (request->hasParam(PARAM_INPUT)) {
+    inputMessage = request->getParam(PARAM_INPUT)->value();
+    sliderValue = inputMessage;
+    stripLed.brightness = sliderValue.toInt();
+    }
+    else {
+    inputMessage = "No message sent";
+    }
+    Serial.println(inputMessage);
+    request->send(200, "text/plain", "OK"); });
 
     server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
     server.onNotFound([](AsyncWebServerRequest *request)
@@ -398,9 +426,10 @@ void notifyClients()
 {
     const uint8_t size = JSON_OBJECT_SIZE(14); // Remember change the number of member object
     StaticJsonDocument<size> json;
-    //json["signalStrength"] = WiFi.RSSI();
+    // json["signalStrength"] = WiFi.RSSI();
     json["bars"] = bars();
-    json["status"] = stripLed.powerState ? "on" : "off";
+    json["neostatus"] = stripLed.powerState ? "on" : "off";
+    json["neobrightness"] = stripLed.brightness;
     json["fireStatus"] = stripLed.effectId == 1 && stripLed.powerState ? "on" : "off";
     json["movingdotStatus"] = stripLed.effectId == 2 && stripLed.powerState ? "on" : "off";
     json["rainbowbeatStatus"] = stripLed.effectId == 3 && stripLed.powerState ? "on" : "off";
@@ -411,7 +440,7 @@ void notifyClients()
     json["juggleStatus"] = stripLed.effectId == 8 && stripLed.powerState ? "on" : "off";
     json["sinelonStatus"] = stripLed.effectId == 9 && stripLed.powerState ? "on" : "off";
     json["cometStatus"] = stripLed.effectId == 10 && stripLed.powerState ? "on" : "off";
-    char buffer[260]; // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
+    char buffer[290]; // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
     size_t len = serializeJson(json, buffer);
     ws.textAll(buffer, len);
 }
@@ -432,10 +461,12 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         }
 
         const char *action = json["action"];
+        // const int myhue = json["hue"];
+
         if (strcmp(action, "toggle") == 0)
         {
             stripLed.powerState = !stripLed.powerState;
-            Serial.println(stripLed.powerState);
+            // Serial.println(stripLed.powerState);
             if (stripLed.powerState)
             {
                 stripLed.update();
@@ -454,6 +485,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
                 stripLed.update();
             }
         }
+
         notifyClients();
     }
 }
@@ -503,10 +535,10 @@ void setup()
     FastLED.setBrightness(brightness);
     FastLED.clear();
     FastLED.show();
-    
+
     // Initialize variables for balls effect
     for (int i = 0; i < NUM_BALLS; i++)
-    { 
+    {
         tLast[i] = millis();
         h[i] = h0;
         pos[i] = 0;            // Balls start on the ground
@@ -535,6 +567,7 @@ void loop()
 
     if (stripLed.powerState)
     {
+        brightness = stripLed.brightness;
         stripLed.update();
         delay(6);
     }
@@ -545,7 +578,9 @@ void loop()
     currentMillis = millis();
     if (currentMillis - startMillis >= refresh) // Check the period has elapsed
     {
+        brightness = stripLed.brightness;
         notifyClients();
+        Serial.println(brightness);
         startMillis = currentMillis;
     }
 }
