@@ -61,13 +61,10 @@ const unsigned long refresh = 5000; // 5 seg
 String strength;
 
 // Strip LED
-String sliderValue = "0";
 int brightness = 130;
 CRGB leds[N_PIXELS];
 int myhue = 0;               // hue 0. red color
 const uint8_t FADE_RATE = 2; // How long should the trails be. Very low value = longer trails.
-const char* PARAM_INPUT = "value";  //Slider brightness
-
 
 // balls effect
 float h[NUM_BALLS];                       // An array of heights
@@ -112,6 +109,7 @@ struct StripLed
     int effectId;
     bool powerState;
     int brightness;
+    int hue;
     // methods for different effects on stripled
 
     void simpleColor(int ahue, int brightness)
@@ -244,7 +242,7 @@ struct StripLed
 // Definition of global variables
 // ----------------------------------------------------------------------------
 
-StripLed stripLed = {EFFECT, false, brightness};
+StripLed stripLed = {myhue, brightness, EFFECT, false};
 Led onboard_led = {LED_BUILTIN, false};
 
 // ----------------------------------------------------------------------------
@@ -343,7 +341,7 @@ String processor(const String &var)
     }
     else if (var == "BRIGHTNESS")
     {
-        return sliderValue;
+        return String(stripLed.brightness);
     }
     else if (var == "NEOPIXEL")
     {
@@ -372,22 +370,6 @@ void initWebServer()
       json["rssi"] = WiFi.RSSI();
       serializeJson(json, *response);
       request->send(response); });
-
-    // Send a GET request to <ESP_IP>/slider?value=<inputMessage>
-    server.on("/slider", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
-        String inputMessage;
-    // GET input1 value on <ESP_IP>/slider?value=<inputMessage>
-    if (request->hasParam(PARAM_INPUT)) {
-    inputMessage = request->getParam(PARAM_INPUT)->value();
-    sliderValue = inputMessage;
-    stripLed.brightness = sliderValue.toInt();
-    }
-    else {
-    inputMessage = "No message sent";
-    }
-    Serial.println(inputMessage);
-    request->send(200, "text/plain", "OK"); });
 
     server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
     server.onNotFound([](AsyncWebServerRequest *request)
@@ -425,11 +407,11 @@ String bars()
 void notifyClients()
 {
     const uint8_t size = JSON_OBJECT_SIZE(14); // Remember change the number of member object
+    Serial.println(size);
     StaticJsonDocument<size> json;
-    // json["signalStrength"] = WiFi.RSSI();
     json["bars"] = bars();
     json["neostatus"] = stripLed.powerState ? "on" : "off";
-    json["neobrightness"] = stripLed.brightness;
+    //json["neobrightness"] = stripLed.brightness;
     json["fireStatus"] = stripLed.effectId == 1 && stripLed.powerState ? "on" : "off";
     json["movingdotStatus"] = stripLed.effectId == 2 && stripLed.powerState ? "on" : "off";
     json["rainbowbeatStatus"] = stripLed.effectId == 3 && stripLed.powerState ? "on" : "off";
@@ -451,6 +433,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
     {
         const uint8_t size = JSON_OBJECT_SIZE(3);
+        //Serial.println(size);
         StaticJsonDocument<size> json;
         DeserializationError err = deserializeJson(json, data);
         if (err)
@@ -462,6 +445,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 
         const char *action = json["action"];
         // const int myhue = json["hue"];
+        //const int brillo = json["brigthness"];
+        //Serial.println(brillo);
+        //stripLed.brightness = brillo;
 
         if (strcmp(action, "toggle") == 0)
         {
@@ -578,9 +564,9 @@ void loop()
     currentMillis = millis();
     if (currentMillis - startMillis >= refresh) // Check the period has elapsed
     {
-        brightness = stripLed.brightness;
+        //brightness = stripLed.brightness;
         notifyClients();
-        Serial.println(brightness);
+        //Serial.println(brightness);
         startMillis = currentMillis;
     }
 }

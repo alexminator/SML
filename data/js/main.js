@@ -93,11 +93,8 @@ function onMessage(event) {
     // Print out our received message
     console.log("Received: " + event.data);
     var data = JSON.parse(event.data);
-    console.log(data);
     document.getElementById('Signal').className = data.bars;
     document.getElementById("Neo").className = data.neostatus;
-    document.getElementById("textSliderValue").innerHTML = data.neobrightness;
-    document.getElementById("pwmSlider").value = data.neobrightness;
     document.getElementById('Firebutton').className = data.fireStatus;
     document.getElementById('MovingDotbutton').className = data.movingdotStatus;
     document.getElementById('RainbowBeatbutton').className = data.rainbowbeatStatus;
@@ -134,7 +131,6 @@ function setStatus() {
 
 function initButton() {
     document.getElementById('Neo').addEventListener('click', onToggleNeo);
-    document.getElementById('pwmSlider').addEventListener('change', onChangeBrightness);
     document.getElementById('Firebutton').addEventListener('click', onToggleFireEffect);
     document.getElementById('MovingDotbutton').addEventListener('click', onToggleMovingDotEffect);
     document.getElementById('RainbowBeatbutton').addEventListener('click', onToggleRainbowBeatEffect);
@@ -166,9 +162,11 @@ function onChangeBrightness(event) {
     var brightness = document.getElementById("pwmSlider").value;
     document.getElementById("textSliderValue").innerHTML = sliderValue;
     console.log(brightness);
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", "/slider?value=" + brightness, true);
-    xhr.send();
+    const json = JSON.stringify({
+        'brightness': brightness
+    });
+    console.log(json);
+    websocket.send(json);
 }
 
 function onToggleFireEffect(event) {
