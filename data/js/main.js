@@ -148,6 +148,7 @@ function initButton() {
 }
 
 function onToggleNeo(event) {
+    var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("Neo");
     if (toggle.className == "on") {
         toggle.className = "off";
@@ -157,6 +158,7 @@ function onToggleNeo(event) {
     const json = JSON.stringify({
         'action': 'toggle',
         'effectId': 0,
+        'brightness': brightness
     });
     console.log(json);
     websocket.send(json);
@@ -166,12 +168,17 @@ function onChangeBrightness(event) {
     var brightness = document.getElementById("pwmSlider").value;
     document.getElementById("textSliderValue").innerHTML = brightness;
     console.log(brightness);
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", "/slider?value=" + brightness, true);
-    xhr.send();
+    const json = JSON.stringify({
+        'action': 'slider',
+        'effectId': 0,
+        'brightness': brightness
+    });
+    console.log(json);
+    websocket.send(json);
 }
 
 function onToggleFireEffect(event) {
+    var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("Firebutton");
     if (toggle.className == "on") {
         isOn = 0;
@@ -182,13 +189,15 @@ function onToggleFireEffect(event) {
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn
+        'effectId': isOn,
+        'brightness': brightness
     });
     console.log(json);
     websocket.send(json);
 }
 
 function onToggleMovingDotEffect(event) {
+    var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("MovingDotbutton");
     if (toggle.className == "on") {
         isOn = 0;
@@ -199,13 +208,15 @@ function onToggleMovingDotEffect(event) {
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn
+        'effectId': isOn,
+        'brightness': brightness
     });
     console.log(json);
     websocket.send(json);
 }
 
 function onToggleRainbowBeatEffect(event) {
+    var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("RainbowBeatbutton");
     if (toggle.className == "on") {
         isOn = 0;
@@ -216,13 +227,15 @@ function onToggleRainbowBeatEffect(event) {
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn
+        'effectId': isOn,
+        'brightness': brightness
     });
     console.log(json);
     websocket.send(json);
 }
 
 function onToggleRWBEffect(event) {
+    var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("RWBbutton");
     if (toggle.className == "on") {
         isOn = 0;
@@ -233,13 +246,15 @@ function onToggleRWBEffect(event) {
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn
+        'effectId': isOn,
+        'brightness': brightness
     });
     console.log(json);
     websocket.send(json);
 }
 
 function onToggleRippleffect(event) {
+    var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("Ripplebutton");
     if (toggle.className == "on") {
         isOn = 0;
@@ -250,13 +265,15 @@ function onToggleRippleffect(event) {
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn
+        'effectId': isOn,
+        'brightness': brightness
     });
     console.log(json);
     websocket.send(json);
 }
 
 function onToggleTwinkleffect(event) {
+    var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("Twinklebutton");
     if (toggle.className == "on") {
         isOn = 0;
@@ -267,13 +284,15 @@ function onToggleTwinkleffect(event) {
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn
+        'effectId': isOn,
+        'brightness': brightness
     });
     console.log(json);
     websocket.send(json);
 }
 
 function onToggleBallseffect(event) {
+    var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("Ballsbutton");
     if (toggle.className == "on") {
         isOn = 0;
@@ -284,13 +303,15 @@ function onToggleBallseffect(event) {
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn
+        'effectId': isOn,
+        'brightness': brightness
     });
     console.log(json);
     websocket.send(json);
 }
 
 function onToggleJuggleeffect(event) {
+    var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("Jugglebutton");
     if (toggle.className == "on") {
         isOn = 0;
@@ -301,13 +322,15 @@ function onToggleJuggleeffect(event) {
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn
+        'effectId': isOn,
+        'brightness': brightness
     });
     console.log(json);
     websocket.send(json);
 }
 
 function onToggleSineloneffect(event) {
+    var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("Sinelonbutton");
     if (toggle.className == "on") {
         isOn = 0;
@@ -318,13 +341,15 @@ function onToggleSineloneffect(event) {
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn
+        'effectId': isOn,
+        'brightness': brightness
     });
     console.log(json);
     websocket.send(json);
 }
 
 function onToggleCometeffect(event) {
+    var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("Cometbutton");
     if (toggle.className == "on") {
         isOn = 0;
@@ -335,7 +360,8 @@ function onToggleCometeffect(event) {
     }
     const json = JSON.stringify({
         'action': 'animation',
-        'effectId': isOn
+        'effectId': isOn,
+        'brightness': brightness
     });
     console.log(json);
     websocket.send(json);
