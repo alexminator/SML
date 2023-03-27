@@ -93,7 +93,7 @@ function onMessage(event) {
     // Print out our received message
     console.log("Received: " + event.data);
     var data = JSON.parse(event.data);
-    console.log(data);
+    //console.log(data);
     document.getElementById('Signal').className = data.bars;
     document.getElementById("Neo").className = data.neostatus;
     document.getElementById("textSliderValue").innerHTML = data.neobrightness;
