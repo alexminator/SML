@@ -64,7 +64,7 @@ String strength;
 //String sliderValue = "0";
 int brightness = 130;
 CRGB leds[N_PIXELS];
-int myhue = 238;               // hue 0. red color
+int myhue = 0;               // hue 0. red color
 const uint8_t FADE_RATE = 2; // How long should the trails be. Very low value = longer trails.
 //const char* PARAM_INPUT = "value";  //Slider brightness
 
