@@ -2,6 +2,14 @@ var hex;
 var lastHex;
 var connected = false;
 var isOn;
+let brightness = "";
+const json = {
+    'action': '',
+    'effectId': 0,
+    'color': 0,
+    'brightness': 0
+};
+
 
 document.addEventListener('DOMContentLoaded', function () {
     const tabs = document.querySelectorAll('ul.tabs li a');
@@ -24,18 +32,22 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 window.onload = function () {
+    brightness = parseInt(document.getElementById("pwmSlider").value);
     // Create a new color picker instance
     let colorPicker = new ColorPickerControl({ container: document.querySelector('.color-picker-dark-theme'), theme: 'dark' });
-
-    colorPicker.on(["color:init", "color:change"], function (color) {
-        hex = color.hexString;
-        document.getElementById('buttons').style.borderTop = '1px solid' + hex;
-    });
+    const hue = document.getElementById("picker_bridge").className;
+    colorPicker.color.fromHSVa(parseInt(hue), 100, 100, 255);
 
     colorPicker.on('change', (color) => {
         document.getElementById("butterfly").style.setProperty('--butterfly-color', color.toHEX());
         document.getElementById("butterfly").style.setProperty('--butterfly-opacity', color.a / 255);
-        light_color_picker.color.fromHSVa(color.h, color.s, color.v, color.a);
+
+        colorPicker.color.fromHSVa(color.h, color.s, color.v, color.a);
+        json.action = 'picker';
+        json.color = color.h;
+        json.brightness = brightness;
+        console.log(json);
+        websocket.send(JSON.stringify(json));
     });
 
     // update the "selected color" values whenever the color changes
@@ -48,7 +60,7 @@ window.onload = function () {
             "hsl: " + color.hslString,
         ].join("<br>");
     });
-
+    
 }
 // ----------------------------------------------------------------------------
 // WebSocket handling
@@ -96,6 +108,7 @@ function onMessage(event) {
     //console.log(data);
     document.getElementById('Signal').className = data.bars;
     document.getElementById("Neo").className = data.neostatus;
+    document.getElementById("picker_bridge").className = data.color;
     document.getElementById("textSliderValue").innerHTML = data.neobrightness;
     document.getElementById("pwmSlider").value = data.neobrightness;
     document.getElementById('Firebutton').className = data.fireStatus;
@@ -148,37 +161,30 @@ function initButton() {
 }
 
 function onToggleNeo(event) {
-    var brightness = document.getElementById("pwmSlider").value;
+    //var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("Neo");
     if (toggle.className == "on") {
         toggle.className = "off";
     } else {
         toggle.className = "on";
     }
-    const json = JSON.stringify({
-        'action': 'toggle',
-        'effectId': 0,
-        'brightness': brightness
-    });
+    json.action = 'toggle';
     console.log(json);
-    websocket.send(json);
+    websocket.send(JSON.stringify(json));
 }
 
 function onChangeBrightness(event) {
-    var brightness = document.getElementById("pwmSlider").value;
+    brightness = document.getElementById("pwmSlider").value;
     document.getElementById("textSliderValue").innerHTML = brightness;
     console.log(brightness);
-    const json = JSON.stringify({
-        'action': 'slider',
-        'effectId': 0,
-        'brightness': brightness
-    });
+    json.action = 'slider';
+    json.brightness = brightness;
     console.log(json);
-    websocket.send(json);
+    websocket.send(JSON.stringify(json));
 }
 
 function onToggleFireEffect(event) {
-    var brightness = document.getElementById("pwmSlider").value;
+    //var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("Firebutton");
     if (toggle.className == "on") {
         isOn = 0;
@@ -187,17 +193,14 @@ function onToggleFireEffect(event) {
         isOn = 1;
         toggle.className = "on";
     }
-    const json = JSON.stringify({
-        'action': 'animation',
-        'effectId': isOn,
-        'brightness': brightness
-    });
+    json.action = 'animation';
+    json.effectId = isOn;
     console.log(json);
-    websocket.send(json);
+    websocket.send(JSON.stringify(json));
 }
 
 function onToggleMovingDotEffect(event) {
-    var brightness = document.getElementById("pwmSlider").value;
+    //var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("MovingDotbutton");
     if (toggle.className == "on") {
         isOn = 0;
@@ -206,17 +209,14 @@ function onToggleMovingDotEffect(event) {
         isOn = 2;
         toggle.className = "on";
     }
-    const json = JSON.stringify({
-        'action': 'animation',
-        'effectId': isOn,
-        'brightness': brightness
-    });
+    json.action = 'animation';
+    json.effectId = isOn;
     console.log(json);
-    websocket.send(json);
+    websocket.send(JSON.stringify(json));
 }
 
 function onToggleRainbowBeatEffect(event) {
-    var brightness = document.getElementById("pwmSlider").value;
+    //var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("RainbowBeatbutton");
     if (toggle.className == "on") {
         isOn = 0;
@@ -225,17 +225,14 @@ function onToggleRainbowBeatEffect(event) {
         isOn = 3;
         toggle.className = "on";
     }
-    const json = JSON.stringify({
-        'action': 'animation',
-        'effectId': isOn,
-        'brightness': brightness
-    });
+    json.action = 'animation';
+    json.effectId = isOn;
     console.log(json);
-    websocket.send(json);
+    websocket.send(JSON.stringify(json));
 }
 
 function onToggleRWBEffect(event) {
-    var brightness = document.getElementById("pwmSlider").value;
+    //var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("RWBbutton");
     if (toggle.className == "on") {
         isOn = 0;
@@ -244,17 +241,14 @@ function onToggleRWBEffect(event) {
         isOn = 4;
         toggle.className = "on";
     }
-    const json = JSON.stringify({
-        'action': 'animation',
-        'effectId': isOn,
-        'brightness': brightness
-    });
+    json.action = 'animation';
+    json.effectId = isOn;
     console.log(json);
-    websocket.send(json);
+    websocket.send(JSON.stringify(json));
 }
 
 function onToggleRippleffect(event) {
-    var brightness = document.getElementById("pwmSlider").value;
+    //var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("Ripplebutton");
     if (toggle.className == "on") {
         isOn = 0;
@@ -263,17 +257,14 @@ function onToggleRippleffect(event) {
         isOn = 5;
         toggle.className = "on";
     }
-    const json = JSON.stringify({
-        'action': 'animation',
-        'effectId': isOn,
-        'brightness': brightness
-    });
+    json.action = 'animation';
+    json.effectId = isOn;
     console.log(json);
-    websocket.send(json);
+    websocket.send(JSON.stringify(json));
 }
 
 function onToggleTwinkleffect(event) {
-    var brightness = document.getElementById("pwmSlider").value;
+    //var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("Twinklebutton");
     if (toggle.className == "on") {
         isOn = 0;
@@ -282,17 +273,14 @@ function onToggleTwinkleffect(event) {
         isOn = 6;
         toggle.className = "on";
     }
-    const json = JSON.stringify({
-        'action': 'animation',
-        'effectId': isOn,
-        'brightness': brightness
-    });
+    json.action = 'animation';
+    json.effectId = isOn;
     console.log(json);
-    websocket.send(json);
+    websocket.send(JSON.stringify(json));
 }
 
 function onToggleBallseffect(event) {
-    var brightness = document.getElementById("pwmSlider").value;
+    //var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("Ballsbutton");
     if (toggle.className == "on") {
         isOn = 0;
@@ -301,17 +289,14 @@ function onToggleBallseffect(event) {
         isOn = 7;
         toggle.className = "on";
     }
-    const json = JSON.stringify({
-        'action': 'animation',
-        'effectId': isOn,
-        'brightness': brightness
-    });
+    json.action = 'animation';
+    json.effectId = isOn;
     console.log(json);
-    websocket.send(json);
+    websocket.send(JSON.stringify(json));
 }
 
 function onToggleJuggleeffect(event) {
-    var brightness = document.getElementById("pwmSlider").value;
+    //var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("Jugglebutton");
     if (toggle.className == "on") {
         isOn = 0;
@@ -320,17 +305,14 @@ function onToggleJuggleeffect(event) {
         isOn = 8;
         toggle.className = "on";
     }
-    const json = JSON.stringify({
-        'action': 'animation',
-        'effectId': isOn,
-        'brightness': brightness
-    });
+    json.action = 'animation';
+    json.effectId = isOn;
     console.log(json);
-    websocket.send(json);
+    websocket.send(JSON.stringify(json));
 }
 
 function onToggleSineloneffect(event) {
-    var brightness = document.getElementById("pwmSlider").value;
+    //var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("Sinelonbutton");
     if (toggle.className == "on") {
         isOn = 0;
@@ -339,17 +321,14 @@ function onToggleSineloneffect(event) {
         isOn = 9;
         toggle.className = "on";
     }
-    const json = JSON.stringify({
-        'action': 'animation',
-        'effectId': isOn,
-        'brightness': brightness
-    });
+    json.action = 'animation';
+    json.effectId = isOn;
     console.log(json);
-    websocket.send(json);
+    websocket.send(JSON.stringify(json));
 }
 
 function onToggleCometeffect(event) {
-    var brightness = document.getElementById("pwmSlider").value;
+    //var brightness = document.getElementById("pwmSlider").value;
     const toggle = document.getElementById("Cometbutton");
     if (toggle.className == "on") {
         isOn = 0;
@@ -358,13 +337,10 @@ function onToggleCometeffect(event) {
         isOn = 10;
         toggle.className = "on";
     }
-    const json = JSON.stringify({
-        'action': 'animation',
-        'effectId': isOn,
-        'brightness': brightness
-    });
+    json.action = 'animation';
+    json.effectId = isOn;
     console.log(json);
-    websocket.send(json);
+    websocket.send(JSON.stringify(json));
 }
 
 /*
