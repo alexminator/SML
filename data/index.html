@@ -52,16 +52,18 @@
       </ul>
 
       <div class="sections">
+        
         <div id="tab-lamp">
           <div class="power-button">
-            <h1>Power</h1>
-            <h3>Lamp</h3>
+            <h2 class="power-label">Power <span class="fa fa-power-off"></span></h2>
+            <h4 class="power-lamp">Lamp</h4>
             <div id="lamp" class="%LAMP%">
               <span class="button">
                 <span class="slide"></span>
               </span>
             </div>
-            <h3>Neopixel</h3>
+
+            <h4 class="power-neo">Neopixel</h4>
             <div id="Neo" class="%NEOPIXEL%">
               <span class="button">
                 <span class="slide"></span>
@@ -70,62 +72,62 @@
           </div>
           
           <div class="effects-button">
-            <h1>Effects</h1>
-            <h3>Fire</h3>
+            <h2 class="power-label">Effects <span class="fa fa-magic-wand-sparkles"></span></h2>
+            <h3 class="fire">Fire</h3>
             <div id="Firebutton" class="%FIRE_STATE%">
               <span class="button">
                 <span class="slide"></span>
               </span>
             </div>
-            <h3>Moving Dot</h3>
+            <h3 class="movingdot">Dots</h3>
             <div id="MovingDotbutton" class="%MOVINGDOT_STATE%">
               <span class="button">
                 <span class="slide"></span>
               </span>
             </div>
-            <h3>Rainbow Beat</h3>
+            <h3 class="rainbow">Rainbow</h3>
             <div id="RainbowBeatbutton" class="%RAINBOWBEAT_STATE%">
               <span class="button">
                 <span class="slide"></span>
               </span>
             </div>
-            <h3>Red White Blue</h3>
+            <h3 class="rwb">RWB</h3>
             <div id="RWBbutton" class="%RWB_STATE%">
               <span class="button">
                 <span class="slide"></span>
               </span>
             </div>
-            <h3>Ripple</h3>
+            <h3 class="ripple">Ripple</h3>
             <div id="Ripplebutton" class="%RIPPLE_STATE%">
               <span class="button">
                 <span class="slide"></span>
               </span>
             </div>
-            <h3>Twinkle</h3>
+            <h3 class="twinkle">Twinkle</h3>
             <div id="Twinklebutton" class="%TWINKLE_STATE%">
               <span class="button">
                 <span class="slide"></span>
               </span>
             </div>
-            <h3>Balls</h3>
+            <h3 class="balls">Balls</h3>
             <div id="Ballsbutton" class="%BALLS_STATE%">
               <span class="button">
                 <span class="slide"></span>
               </span>
             </div>
-            <h3>Juggle</h3>
+            <h3 class="juggle">Juggle</h3>
             <div id="Jugglebutton" class="%JUGGLE_STATE%">
               <span class="button">
                 <span class="slide"></span>
               </span>
             </div>
-            <h3>Sinelon</h3>
+            <h3 class="sinelon">Sinelon</h3>
             <div id="Sinelonbutton" class="%SINELON_STATE%">
               <span class="button">
                 <span class="slide"></span>
               </span>
             </div>
-            <h3>Comet</h3>
+            <h3 class="comet">Comet</h3>
             <div id="Cometbutton" class="%COMET_STATE%">
               <span class="button">
                 <span class="slide"></span>
@@ -133,20 +135,26 @@
             </div>
           </div>
 
-          <div class="picker-container">
-            <div class="front color-picker-dark-theme"></div>
-          </div>
+          <picker>
+            <h2 class="colorpicker">Color <span class="fa fa-paint-brush"></span></h2>
+          </picker>
 
-          <div class="range">
-            <div class="sliderValue">
-              <span id="textSliderValue" class="mark">%BRIGHTNESS%</span>
+          <slider>  
+              <h2 class="brigthness">Brightness <span class="fa fa-sun"></span></h2>
+            <div class="range">
+              <div class="sliderValue">
+                <span id="textSliderValue" class="mark">%BRIGHTNESS%</span>
+              </div>
+              <div class="field">
+                <div class="value left">25</div>
+                <input type="range" id="pwmSlider" min="25" max="255" value="%BRIGHTNESS%" steps="1">
+                <div class="value right">255</div>
+              </div>
             </div>
-            <div class="field">
-              <div class="value left">25</div>
-              <input type="range" id="pwmSlider" min="25" max="255" value="%BRIGHTNESS%" steps="1">
-              <div class="value right">255</div>
-            </div>
-          </div>
+          </slider>  
+          
+
+
         </div>
 
         <div id="tab-music">

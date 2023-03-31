@@ -23,6 +23,7 @@
 #define MAX_MILLIAMPS 500 // Maximum current to draw [500 mA]
 #define COLOR_ORDER GRB   // Colour order of LED strip [GRB]
 #define LED_TYPE WS2812B  // LED string type [WS2812B]
+#define HSV2RGB_SMOOTH_RANGE 1535
 // WEB
 #define HTTP_PORT 80
 
@@ -61,12 +62,10 @@ const unsigned long refresh = 5000; // 5 seg
 String strength;
 
 // Strip LED
-//String sliderValue = "0";
 int brightness = 130;
 CRGB leds[N_PIXELS];
 int myhue = 0;               // hue 0. red color
 const uint8_t FADE_RATE = 2; // How long should the trails be. Very low value = longer trails.
-//const char* PARAM_INPUT = "value";  //Slider brightness
 
 
 // balls effect
@@ -118,8 +117,6 @@ struct StripLed
 
     void simpleColor(int ahue, int brightness)
     { // SET ALL LEDS TO ONE COLOR (HSV)
-        //Serial.println(ahue);
-        //Serial.println("punto 1 simple color" + String(brightness));
         for (int i = 0; i < N_PIXELS; i++)
         {
             leds[i] = CHSV(ahue, 255, brightness);
@@ -378,24 +375,6 @@ void initWebServer()
       json["rssi"] = WiFi.RSSI();
       serializeJson(json, *response);
       request->send(response); });
-    /*
-    // Send a GET request to <ESP_IP>/slider?value=<inputMessage>
-    server.on("/slider", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
-        String inputMessage;
-    // GET input1 value on <ESP_IP>/slider?value=<inputMessage>
-    if (request->hasParam(PARAM_INPUT)) {
-    inputMessage = request->getParam(PARAM_INPUT)->value();
-    sliderValue = inputMessage;
-    stripLed.brightness = sliderValue.toInt();
-    Serial.println("punto 2 lo q recibo" + String(brightness));
-    }
-    else {
-    inputMessage = "No message sent";
-    }
-    Serial.println(inputMessage);
-    request->send(200, "text/plain", "OK"); });
-    */
 
     server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
     server.onNotFound([](AsyncWebServerRequest *request)
@@ -505,9 +484,13 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         else if (strcmp(action, "picker") == 0)
         {
             const int color = json["color"];
-            Serial.println("el color " + String(color));
             myhue = color;
-            stripLed.hue = myhue;
+            CHSV hsv(myhue, 255, 255);
+            CRGB rgb;
+            hsv2rgb_spectrum(hsv, rgb);
+            Serial.println(myhue);
+            stripLed.hue = rgb;
+            
         }
 
         notifyClients();
@@ -602,9 +585,7 @@ void loop()
     currentMillis = millis();
     if (currentMillis - startMillis >= refresh) // Check the period has elapsed
     {
-        //brightness = stripLed.brightness;
         notifyClients();
-        //Serial.println("punto 4 en el lazo cada 5seg " + String(brightness));
         startMillis = currentMillis;
     }
 }
