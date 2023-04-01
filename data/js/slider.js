@@ -1,4 +1,4 @@
-const slideValue = document.querySelector("span.mark");
+const slideValue = document.querySelector(".range span");
 const inputSlider = document.querySelector("input");
 inputSlider.oninput = (()=>{
   let value = inputSlider.value;
