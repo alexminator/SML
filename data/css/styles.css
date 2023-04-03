@@ -46,7 +46,7 @@ body {
     top: 25px;
     font-size: 60px;
     color: #c0c0c0;
-    margin-right: 10px;
+    margin-right: 20px;
 }
 
 .main {
@@ -54,7 +54,7 @@ body {
 }
 
 .wrap {
-    max-width: 420px;
+    max-width: 370px;
 	margin: 20px auto;
     position: relative;
 }
@@ -239,7 +239,7 @@ ul.tabs li a .tab-text {
     }
 }
 
-@media screen and (max-width: 420px) {
+@media screen and (max-width: 400px) {
     .wrap {
         margin: 10px auto;
         width: 100%;
