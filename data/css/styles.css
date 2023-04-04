@@ -643,8 +643,9 @@ picker h2.colorpicker{
     grid-area: colorpicker;
 }
 
-picker .color-picker-dark-theme.dark.color-picker{
+.color-picker {
     grid-area: picker;
+    color: #0f0;
 }
 
 /* END picker color*/

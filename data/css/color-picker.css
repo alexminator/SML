@@ -37,7 +37,7 @@
 }
 
 .color-picker{
-    position: absolute;
+    position: relative;
     width: 180px;
     height: auto;
     min-height: 226px;
