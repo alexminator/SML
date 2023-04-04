@@ -630,7 +630,7 @@ picker {
     display: grid;
     grid-template:
         "colorpicker" 0.3fr 
-        "picker" 1fr;
+        "picker" 1.5fr;
     grid-gap: 0.5rem;
     justify-content: center;
 }
@@ -645,7 +645,6 @@ picker h2.colorpicker{
 
 .color-picker {
     grid-area: picker;
-    color: #0f0;
 }
 
 /* END picker color*/
