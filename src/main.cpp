@@ -65,7 +65,9 @@ String strength;
 int brightness = 130;
 CRGB leds[N_PIXELS];
 CHSV hsvs[N_PIXELS];          //maybe del this
-int myhue = 0;               // hue 0. red color
+int myhue = 0;                 // hue 0. red color
+int mysat = 100;
+int myval = 100;               
 const uint8_t FADE_RATE = 2; // How long should the trails be. Very low value = longer trails.
 int r, g, b = 0;            //maybe del this
 
@@ -110,6 +112,8 @@ struct StripLed
 {
     // state variables
     int hue;
+    int sat;
+    int val;
     int brightness;
     int effectId;
     bool powerState;
@@ -118,7 +122,6 @@ struct StripLed
 
     void simpleColor(int ahue, int brightness)
     { // SET ALL LEDS TO ONE COLOR (HSV)
-        //hsv2rgb_spectrum(hsvs, leds, N_PIXELS);
         for (int i = 0; i < N_PIXELS; i++)
         {
             leds[i] = CHSV(ahue, 255, brightness);
@@ -243,7 +246,7 @@ struct StripLed
 // Definition of global variables
 // ----------------------------------------------------------------------------
 
-StripLed stripLed = {myhue, brightness, EFFECT, false};
+StripLed stripLed = {myhue, mysat, myval, brightness, EFFECT, false};
 Led onboard_led = {LED_BUILTIN, false};
 
 // ----------------------------------------------------------------------------
@@ -450,12 +453,10 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         }
         
         const char *action = json["action"];
-        // const int myhue = json["hue"];
         
         if (strcmp(action, "toggle") == 0)
         {
             stripLed.powerState = !stripLed.powerState;
-            // Serial.println(stripLed.powerState);
             if (stripLed.powerState)
             {
                 stripLed.update();
@@ -485,8 +486,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         {
             const int color = json["color"];
             myhue = color;
-            
-            Serial.println(String(r) + "," + String(g) + "," + String(b));
+            stripLed.hue = myhue;
+            Serial.println(color);
         }
 
         notifyClients();

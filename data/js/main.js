@@ -33,39 +33,30 @@ document.addEventListener('DOMContentLoaded', function () {
 
 window.onload = function () {
     brightness = parseInt(document.getElementById("pwmSlider").value);
+    var hue = document.getElementById("picker_bridge").className;
+    console.log(hue);
     // Create a new color picker instance
-    let colorPicker = new ColorPickerControl({ container: document.querySelector('.color-picker-dark-theme'), theme: 'dark' });
-    const hue = document.getElementById("picker_bridge").className;
-    colorPicker.color.fromHSVa(parseInt(hue), 100, 100, 255);
-
-    colorPicker.on('change', (color) => {
-        document.getElementById("butterfly").style.setProperty('--butterfly-color', color.toHEX());
-        document.getElementById("butterfly").style.setProperty('--butterfly-opacity', color.a / 255);
-
-        colorPicker.color.fromHSVa(color.h, color.s, color.v, color.a);
-        color.toRGBa(color.r, color.g, color.b, color.a);
-        console.log("R: ", color.r);
-        console.log("G: ", color.g);
-        console.log("B: ", color.b);
-        console.log("A: ", color.a);
+    // https://iro.js.org/guide.html#getting-started
+    var colorPicker = new iro.ColorPicker("#wheelPicker", {
+        // color picker options
+        // Option guide: https://iro.js.org/guide.html#color-picker-options
+        width: 250,
+        color: {h: hue, s: 100, v: 100},
+        borderWidth: 2,
+        borderColor: "#fff",
+        layout: [{component: iro.ui.Wheel, },]
+    });
+    
+    colorPicker.on('color:change', function(color) {
+        document.getElementById("butterfly").style.setProperty('--butterfly-color', color.hexString);
         json.action = 'picker';
-        json.color = color.h;
+        json.color = color.hsv.h;
         json.brightness = brightness;
         console.log(json);
         websocket.send(JSON.stringify(json));
     });
 
-    // update the "selected color" values whenever the color changes
-    var values = document.getElementById("values");
-    colorPicker.on(["color:init", "color:change"], function (color) {
-        // Show the current color in different formats
-        values.innerHTML = [
-            "hex: " + color.hexString,
-            "rgb: " + color.rgbString,
-            "hsl: " + color.hslString,
-        ].join("<br>");
-    });
-    
+   
 }
 // ----------------------------------------------------------------------------
 // WebSocket handling

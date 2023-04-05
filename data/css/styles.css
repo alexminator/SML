@@ -629,8 +629,8 @@ ul.tabs li a .tab-text {
 picker {
     display: grid;
     grid-template:
-        "colorpicker" 0.3fr 
-        "picker" 1.5fr;
+        "colorpicker" 0.1fr 
+        "picker" 1fr;
     grid-gap: 0.5rem;
     justify-content: center;
 }
@@ -641,6 +641,13 @@ picker span.fa-paint-brush {
 
 picker h2.colorpicker{
     grid-area: colorpicker;
+}
+
+.ColorPicker {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .color-picker {
