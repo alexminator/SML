@@ -43,6 +43,11 @@ window.onload = function () {
         document.getElementById("butterfly").style.setProperty('--butterfly-opacity', color.a / 255);
 
         colorPicker.color.fromHSVa(color.h, color.s, color.v, color.a);
+        color.toRGBa(color.r, color.g, color.b, color.a);
+        console.log("R: ", color.r);
+        console.log("G: ", color.g);
+        console.log("B: ", color.b);
+        console.log("A: ", color.a);
         json.action = 'picker';
         json.color = color.h;
         json.brightness = brightness;

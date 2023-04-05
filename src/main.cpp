@@ -64,9 +64,10 @@ String strength;
 // Strip LED
 int brightness = 130;
 CRGB leds[N_PIXELS];
+CHSV hsvs[N_PIXELS];          //maybe del this
 int myhue = 0;               // hue 0. red color
 const uint8_t FADE_RATE = 2; // How long should the trails be. Very low value = longer trails.
-
+int r, g, b = 0;            //maybe del this
 
 // balls effect
 float h[NUM_BALLS];                       // An array of heights
@@ -117,6 +118,7 @@ struct StripLed
 
     void simpleColor(int ahue, int brightness)
     { // SET ALL LEDS TO ONE COLOR (HSV)
+        //hsv2rgb_spectrum(hsvs, leds, N_PIXELS);
         for (int i = 0; i < N_PIXELS; i++)
         {
             leds[i] = CHSV(ahue, 255, brightness);
@@ -148,9 +150,7 @@ struct StripLed
 
     void runRedWhiteBlue()
     {
-        // isRunning = true;
         RedWhiteBlue redWhiteBlue = RedWhiteBlue();
-        // while (isRunning)
         redWhiteBlue.runPattern();
     }
 
@@ -485,12 +485,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         {
             const int color = json["color"];
             myhue = color;
-            CHSV hsv(myhue, 255, 255);
-            CRGB rgb;
-            hsv2rgb_spectrum(hsv, rgb);
-            Serial.println(myhue);
-            stripLed.hue = rgb;
             
+            Serial.println(String(r) + "," + String(g) + "," + String(b));
         }
 
         notifyClients();
