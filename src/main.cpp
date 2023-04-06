@@ -12,6 +12,7 @@
 #include <ESPAsyncWebServer.h>
 #include <FastLED.h>
 #include "data.h"
+#include "RGBConverter.h"
 
 // ----------------------------------------------------------------------------
 // Definition of macros
@@ -64,7 +65,6 @@ String strength;
 // Strip LED
 int brightness = 130;
 CRGB leds[N_PIXELS];
-CHSV hsvs[N_PIXELS];          //maybe del this
 int myhue = 0;                 // hue 0. red color
 int mysat = 100;
 int myval = 100;               
@@ -120,11 +120,12 @@ struct StripLed
     
     // methods for different effects on stripled
 
-    void simpleColor(int ahue, int brightness)
+    void simpleColor(int ar, int ag, int ab)
     { // SET ALL LEDS TO ONE COLOR (HSV)
         for (int i = 0; i < N_PIXELS; i++)
         {
-            leds[i] = CHSV(ahue, 255, brightness);
+            //leds[i] = CHSV(ahue, asat, brightness);
+            leds[i] = CRGB(ar, ag, ab);
         }
         FastLED.show();
     }
@@ -198,7 +199,7 @@ struct StripLed
         switch (effectId)
         {
         case 0:
-            simpleColor(myhue, brightness);
+            simpleColor(r, g, b);
             break;
         case 1:
             runFire();
@@ -442,7 +443,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
     {
-        const uint8_t size = JSON_OBJECT_SIZE(4);
+        const uint8_t size = JSON_OBJECT_SIZE(4) + JSON_ARRAY_SIZE(3);;
         StaticJsonDocument<size> json;
         DeserializationError err = deserializeJson(json, data);
         if (err)
@@ -477,17 +478,31 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         }
         else if (strcmp(action, "slider") == 0)
         {
-            const int brightness = json["brightness"];
+            const int brightness = json["brightness"].as<int>();
             Serial.println("deserealizado " + String(brightness));
             stripLed.brightness = brightness;
         }
 
         else if (strcmp(action, "picker") == 0)
         {
-            const int color = json["color"];
-            myhue = color;
-            stripLed.hue = myhue;
-            Serial.println(color);
+            JsonArray color = json["color"];
+            r = color[0].as<int>();
+            g = color[1].as<int>();
+            b = color[2].as<int>();
+            Serial.print("RGB:  ");
+            Serial.print(r);
+            Serial.print(", ");
+            Serial.print(g);
+            Serial.print(", ");
+            Serial.println(b);
+            CRGB rgb = (r, g, b);
+            CHSV hsvs = rgb2hsv_approximate(rgb);
+            myhue = stripLed.hue = hsvs.h;
+            Serial.println(stripLed.hue);
+            mysat = stripLed.sat = hsvs.s;
+            Serial.println(stripLed.sat);
+            myval = stripLed.val = hsvs.v;
+            Serial.println(stripLed.val);
         }
 
         notifyClients();

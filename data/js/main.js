@@ -1,5 +1,3 @@
-var hex;
-var lastHex;
 var connected = false;
 var isOn;
 let brightness = "";
@@ -36,10 +34,8 @@ window.onload = function () {
     var hue = document.getElementById("picker_bridge").className;
     console.log(hue);
     // Create a new color picker instance
-    // https://iro.js.org/guide.html#getting-started
     var colorPicker = new iro.ColorPicker("#wheelPicker", {
         // color picker options
-        // Option guide: https://iro.js.org/guide.html#color-picker-options
         width: 250,
         color: {h: hue, s: 100, v: 100},
         borderWidth: 2,
@@ -50,7 +46,7 @@ window.onload = function () {
     colorPicker.on('color:change', function(color) {
         document.getElementById("butterfly").style.setProperty('--butterfly-color', color.hexString);
         json.action = 'picker';
-        json.color = color.hsv.h;
+        json.color = [color.red, color.green, color.blue];
         json.brightness = brightness;
         console.log(json);
         websocket.send(JSON.stringify(json));

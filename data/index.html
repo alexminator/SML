@@ -69,6 +69,28 @@
               </span>
             </div>
           </div>
+
+          <picker>
+            <h2 class="colorpicker">Color <span class="fa fa-paint-brush"></span></h2>
+            <div class="picker-container">
+              <div class="ColorPicker" id="wheelPicker"></div>
+            </div>
+          </picker>
+
+          <slider>  
+              <h2 class="brigthness">Brightness <span class="fa fa-sun"></span></h2>
+            <div class="range">
+              <div class="sliderValue">
+                <span id="textSliderValue" class="mark">%BRIGHTNESS%</span>
+              </div>
+              <div class="field">
+                <div class="value left">25</div>
+                <input type="range" id="pwmSlider" min="25" max="255" value="%BRIGHTNESS%" steps="1">
+                <div class="value right">255</div>
+              </div>
+            </div>
+          </slider>  
+
           
           <div class="effects-button">
             <h2 class="power-label">Effects <span class="fa fa-magic-wand-sparkles"></span></h2>
@@ -133,28 +155,6 @@
               </span>
             </div>
           </div>
-
-          <picker>
-            <h2 class="colorpicker">Color <span class="fa fa-paint-brush"></span></h2>
-            <div class="picker-container">
-              <div class="ColorPicker" id="wheelPicker"></div>
-            </div>
-          </picker>
-
-          <slider>  
-              <h2 class="brigthness">Brightness <span class="fa fa-sun"></span></h2>
-            <div class="range">
-              <div class="sliderValue">
-                <span id="textSliderValue" class="mark">%BRIGHTNESS%</span>
-              </div>
-              <div class="field">
-                <div class="value left">25</div>
-                <input type="range" id="pwmSlider" min="25" max="255" value="%BRIGHTNESS%" steps="1">
-                <div class="value right">255</div>
-              </div>
-            </div>
-          </slider>  
-          
 
 
         </div>
