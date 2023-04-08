@@ -12,7 +12,6 @@
 #include <ESPAsyncWebServer.h>
 #include <FastLED.h>
 #include "data.h"
-#include "RGBConverter.h"
 
 // ----------------------------------------------------------------------------
 // Definition of macros
@@ -124,7 +123,6 @@ struct StripLed
     {  
         for (int i = 0; i < N_PIXELS; i++)
         {
-            //leds[i] = CHSV(ahue, asat, brightness);
             leds[i] = CRGB(ar, ag, ab);
         }
         FastLED.setBrightness(brightness);
