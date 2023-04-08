@@ -4,7 +4,7 @@ let brightness = "";
 const json = {
     'action': '',
     'effectId': 0,
-    'color': 0,
+    'color': [0, 0, 0],
     'brightness': 0
 };
 
@@ -31,13 +31,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
 window.onload = function () {
     brightness = parseInt(document.getElementById("pwmSlider").value);
-    var hue = document.getElementById("picker_bridge").className;
-    console.log(hue);
+    var colorR = document.getElementById("picker_bridge_R").className;
+    var colorG = document.getElementById("picker_bridge_G").className;
+    var colorB = document.getElementById("picker_bridge_B").className;
+    console.log(colorR, colorG, colorB);
     // Create a new color picker instance
     var colorPicker = new iro.ColorPicker("#wheelPicker", {
         // color picker options
         width: 250,
-        color: {h: hue, s: 100, v: 100},
+        color: {r: colorR, g: colorG, b: colorB},
         borderWidth: 2,
         borderColor: "#fff",
         layout: [{component: iro.ui.Wheel, },]
@@ -100,7 +102,9 @@ function onMessage(event) {
     //console.log(data);
     document.getElementById('Signal').className = data.bars;
     document.getElementById("Neo").className = data.neostatus;
-    document.getElementById("picker_bridge").className = data.color;
+    document.getElementById("picker_bridge_R").className = data.colorR;
+    document.getElementById("picker_bridge_G").className = data.colorG;
+    document.getElementById("picker_bridge_B").className = data.colorB;
     document.getElementById("textSliderValue").innerHTML = data.neobrightness;
     document.getElementById("pwmSlider").value = data.neobrightness;
     document.getElementById('Firebutton').className = data.fireStatus;

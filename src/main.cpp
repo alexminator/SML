@@ -66,10 +66,10 @@ String strength;
 int brightness = 130;
 CRGB leds[N_PIXELS];
 int myhue = 0;                 // hue 0. red color
-int mysat = 100;
-int myval = 100;               
 const uint8_t FADE_RATE = 2; // How long should the trails be. Very low value = longer trails.
-int r, g, b = 0;            //maybe del this
+uint8_t r = 255;
+uint8_t g = 255;
+uint8_t b = 255;            
 
 // balls effect
 float h[NUM_BALLS];                       // An array of heights
@@ -111,22 +111,23 @@ struct Led
 struct StripLed
 {
     // state variables
-    int hue;
-    int sat;
-    int val;
+    int R;
+    int G;
+    int B;
     int brightness;
     int effectId;
     bool powerState;
     
     // methods for different effects on stripled
-
-    void simpleColor(int ar, int ag, int ab)
-    { // SET ALL LEDS TO ONE COLOR (HSV)
+    // SET ALL LEDS TO ONE COLOR
+    void simpleColor(int ar, int ag, int ab, int brightness)
+    {  
         for (int i = 0; i < N_PIXELS; i++)
         {
             //leds[i] = CHSV(ahue, asat, brightness);
             leds[i] = CRGB(ar, ag, ab);
         }
+        FastLED.setBrightness(brightness);
         FastLED.show();
     }
 
@@ -138,17 +139,13 @@ struct StripLed
 
     void runMovingDot()
     {
-        // isRunning = true;
         MovingDot movingDot = MovingDot();
-        // while (isRunning)
         movingDot.runPattern();
     }
 
     void runRainbowBeat()
     {
-        // isRunning = true;
         RainbowBeat rainbowBeat = RainbowBeat();
-        // while (isRunning)
         rainbowBeat.runPattern();
     }
 
@@ -199,7 +196,7 @@ struct StripLed
         switch (effectId)
         {
         case 0:
-            simpleColor(r, g, b);
+            simpleColor(r, g, b, brightness);
             break;
         case 1:
             runFire();
@@ -247,7 +244,7 @@ struct StripLed
 // Definition of global variables
 // ----------------------------------------------------------------------------
 
-StripLed stripLed = {myhue, mysat, myval, brightness, EFFECT, false};
+StripLed stripLed = {r, g, b, brightness, EFFECT, false};
 Led onboard_led = {LED_BUILTIN, false};
 
 // ----------------------------------------------------------------------------
@@ -348,9 +345,17 @@ String processor(const String &var)
     {
         return String(brightness);
     }
-    else if (var == "COLOR")
+    else if (var == "COLOR_R")
     {
-        return String(myhue);
+        return String(stripLed.R);
+    }
+    else if (var == "COLOR_G")
+    {
+        return String(stripLed.G);
+    }
+    else if (var == "COLOR_B")
+    {
+        return String(stripLed.B);
     }
     else if (var == "NEOPIXEL")
     {
@@ -415,13 +420,13 @@ String bars()
 
 void notifyClients()
 {
-    //Serial.println("punto 3 lo q envio" + String(brightness));
-    const uint8_t size = JSON_OBJECT_SIZE(15); // Remember change the number of member object
+    const int size = JSON_OBJECT_SIZE(17); // Remember change the number of member object
     StaticJsonDocument<size> json;
-    // json["signalStrength"] = WiFi.RSSI();
     json["bars"] = bars();
     json["neostatus"] = stripLed.powerState ? "on" : "off";
-    json["color"] = stripLed.hue;
+    json["colorR"] = stripLed.R;
+    json["colorG"] = stripLed.G;
+    json["colorB"] = stripLed.B;
     json["neobrightness"] = stripLed.brightness;
     json["fireStatus"] = stripLed.effectId == 1 && stripLed.powerState ? "on" : "off";
     json["movingdotStatus"] = stripLed.effectId == 2 && stripLed.powerState ? "on" : "off";
@@ -433,8 +438,8 @@ void notifyClients()
     json["juggleStatus"] = stripLed.effectId == 8 && stripLed.powerState ? "on" : "off";
     json["sinelonStatus"] = stripLed.effectId == 9 && stripLed.powerState ? "on" : "off";
     json["cometStatus"] = stripLed.effectId == 10 && stripLed.powerState ? "on" : "off";
-    char buffer[290]; // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
-    size_t len = serializeJson(json, buffer);
+    char buffer[320]; // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
+    size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
 }
 
@@ -443,7 +448,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
     {
-        const uint8_t size = JSON_OBJECT_SIZE(4) + JSON_ARRAY_SIZE(3);;
+        const uint8_t size = JSON_OBJECT_SIZE(4) + JSON_ARRAY_SIZE(3);
         StaticJsonDocument<size> json;
         DeserializationError err = deserializeJson(json, data);
         if (err)
@@ -495,14 +500,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             Serial.print(g);
             Serial.print(", ");
             Serial.println(b);
-            CRGB rgb = (r, g, b);
-            CHSV hsvs = rgb2hsv_approximate(rgb);
-            myhue = stripLed.hue = hsvs.h;
-            Serial.println(stripLed.hue);
-            mysat = stripLed.sat = hsvs.s;
-            Serial.println(stripLed.sat);
-            myval = stripLed.val = hsvs.v;
-            Serial.println(stripLed.val);
+            stripLed.R = r;
+            stripLed.G = g;
+            stripLed.B = b;
         }
 
         notifyClients();
