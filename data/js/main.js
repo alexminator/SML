@@ -34,7 +34,6 @@ window.onload = function () {
     var colorR = document.getElementById("picker_bridge_R").className;
     var colorG = document.getElementById("picker_bridge_G").className;
     var colorB = document.getElementById("picker_bridge_B").className;
-    console.log(colorR, colorG, colorB);
     // Create a new color picker instance
     var colorPicker = new iro.ColorPicker("#wheelPicker", {
         // color picker options

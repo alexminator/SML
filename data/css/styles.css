@@ -54,7 +54,7 @@ body {
 }
 
 .wrap {
-    max-width: 370px;
+    max-width: 350px;
 	margin: 20px auto;
     position: relative;
 }
@@ -239,7 +239,7 @@ ul.tabs li a .tab-text {
     }
 }
 
-@media screen and (max-width: 400px) {
+@media screen and (max-width: 370px) {
     .wrap {
         margin: 10px auto;
         width: 100%;
