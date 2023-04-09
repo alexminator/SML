@@ -478,7 +478,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         else if (strcmp(action, "slider") == 0)
         {
             const int brightness = json["brightness"].as<int>();
-            Serial.println("deserealizado " + String(brightness));
+            Serial.println("Brillo " + String(brightness));
             stripLed.brightness = brightness;
         }
 

@@ -652,7 +652,7 @@ picker h2.colorpicker{
     align-items: center;
 }
 
-.color-picker {
+#wheelPicker {
     grid-area: picker;
 }
 
