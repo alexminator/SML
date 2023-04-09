@@ -46,7 +46,7 @@ body {
     top: 25px;
     font-size: 60px;
     color: #c0c0c0;
-    margin-right: 20px;
+    margin-left: 10px;
 }
 
 .main {
@@ -263,6 +263,7 @@ ul.tabs li a .tab-text {
     display: inline-block;
     opacity: var(--butterfly-opacity);
     transform: translate(-50%, 0);
+    margin-left: 20px;
 }
 
 #butterfly>.wings {
@@ -408,6 +409,7 @@ ul.tabs li a .tab-text {
 .glowing {
     align-items: center;
     align-content: center;
+    margin-left: 30px;
 }
 
 .glowing span {

@@ -23,7 +23,6 @@
 #define MAX_MILLIAMPS 500 // Maximum current to draw [500 mA]
 #define COLOR_ORDER GRB   // Colour order of LED strip [GRB]
 #define LED_TYPE WS2812B  // LED string type [WS2812B]
-#define HSV2RGB_SMOOTH_RANGE 1535
 // WEB
 #define HTTP_PORT 80
 
@@ -343,17 +342,16 @@ String processor(const String &var)
     {
         return String(brightness);
     }
-    else if (var == "COLOR_R")
+    else if (var == "COLOR")
     {
-        return String(stripLed.R);
-    }
-    else if (var == "COLOR_G")
-    {
-        return String(stripLed.G);
-    }
-    else if (var == "COLOR_B")
-    {
-        return String(stripLed.B);
+        const uint8_t size = JSON_ARRAY_SIZE(3);
+        StaticJsonDocument<size> doc;   
+        doc["color"]["r"] = stripLed.R;
+        doc["color"]["g"] = stripLed.G;
+        doc["color"]["b"] = stripLed.B;
+        char buffer[60];
+        serializeJson(doc, buffer);
+        return String( buffer );
     }
     else if (var == "NEOPIXEL")
     {

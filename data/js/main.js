@@ -31,9 +31,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
 window.onload = function () {
     brightness = parseInt(document.getElementById("pwmSlider").value);
-    var colorR = document.getElementById("picker_bridge_R").className;
-    var colorG = document.getElementById("picker_bridge_G").className;
-    var colorB = document.getElementById("picker_bridge_B").className;
+    var colors = document.getElementById("picker_bridge").className;
+    console.log(colors);
+
+
     // Create a new color picker instance
     var colorPicker = new iro.ColorPicker("#wheelPicker", {
         // color picker options
@@ -101,9 +102,7 @@ function onMessage(event) {
     //console.log(data);
     document.getElementById('Signal').className = data.bars;
     document.getElementById("Neo").className = data.neostatus;
-    document.getElementById("picker_bridge_R").className = data.colorR;
-    document.getElementById("picker_bridge_G").className = data.colorG;
-    document.getElementById("picker_bridge_B").className = data.colorB;
+    document.getElementById("picker_bridge").className = data.color;
     document.getElementById("textSliderValue").innerHTML = data.neobrightness;
     document.getElementById("pwmSlider").value = data.neobrightness;
     document.getElementById('Firebutton').className = data.fireStatus;
