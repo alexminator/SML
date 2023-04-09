@@ -351,7 +351,7 @@ String processor(const String &var)
         doc["color"]["b"] = stripLed.B;
         char buffer_size[40];
         serializeJson(doc, buffer_size);
-        Serial.println(buffer_size);
+        //Serial.println(buffer_size);
         return String( buffer_size );
     }
     else if (var == "NEOPIXEL")
@@ -416,16 +416,6 @@ String bars()
 
 void notifyClients()
 {
-    /*
-    const uint8_t array_size = JSON_ARRAY_SIZE(4);
-    StaticJsonDocument<array_size> doc;
-    doc["color"]["r"] = stripLed.R;
-    doc["color"]["g"] = stripLed.G;
-    doc["color"]["b"] = stripLed.B;
-    char buffer_size[40];
-    size_t length = serializeJson(doc, buffer_size); // serialize the json+array and send the result to buffer
-    ws.textAll(buffer_size, length);
-    */
     const int size = JSON_OBJECT_SIZE(14); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["bars"] = bars();
