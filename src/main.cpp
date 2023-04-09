@@ -344,14 +344,15 @@ String processor(const String &var)
     }
     else if (var == "COLOR")
     {
-        const uint8_t size = JSON_ARRAY_SIZE(3);
-        StaticJsonDocument<size> doc;   
+        const uint8_t array_size = JSON_ARRAY_SIZE(4);
+        StaticJsonDocument<array_size> doc;   
         doc["color"]["r"] = stripLed.R;
         doc["color"]["g"] = stripLed.G;
         doc["color"]["b"] = stripLed.B;
-        char buffer[60];
-        serializeJson(doc, buffer);
-        return String( buffer );
+        char buffer_size[40];
+        serializeJson(doc, buffer_size);
+        Serial.println(buffer_size);
+        return String( buffer_size );
     }
     else if (var == "NEOPIXEL")
     {
@@ -370,8 +371,7 @@ void onRootRequest(AsyncWebServerRequest *request)
 void initWebServer()
 {
     server.on("/", onRootRequest);
-    server.on("/wifi-info", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
+    server.on("/wifi-info", HTTP_GET, [](AsyncWebServerRequest *request) {
       AsyncResponseStream *response = request->beginResponseStream("application/json");
       DynamicJsonDocument json(1024);
       json["status"] = "ok";
@@ -416,13 +416,20 @@ String bars()
 
 void notifyClients()
 {
-    const int size = JSON_OBJECT_SIZE(17); // Remember change the number of member object
+    /*
+    const uint8_t array_size = JSON_ARRAY_SIZE(4);
+    StaticJsonDocument<array_size> doc;
+    doc["color"]["r"] = stripLed.R;
+    doc["color"]["g"] = stripLed.G;
+    doc["color"]["b"] = stripLed.B;
+    char buffer_size[40];
+    size_t length = serializeJson(doc, buffer_size); // serialize the json+array and send the result to buffer
+    ws.textAll(buffer_size, length);
+    */
+    const int size = JSON_OBJECT_SIZE(14); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["bars"] = bars();
     json["neostatus"] = stripLed.powerState ? "on" : "off";
-    json["colorR"] = stripLed.R;
-    json["colorG"] = stripLed.G;
-    json["colorB"] = stripLed.B;
     json["neobrightness"] = stripLed.brightness;
     json["fireStatus"] = stripLed.effectId == 1 && stripLed.powerState ? "on" : "off";
     json["movingdotStatus"] = stripLed.effectId == 2 && stripLed.powerState ? "on" : "off";
@@ -434,8 +441,9 @@ void notifyClients()
     json["juggleStatus"] = stripLed.effectId == 8 && stripLed.powerState ? "on" : "off";
     json["sinelonStatus"] = stripLed.effectId == 9 && stripLed.powerState ? "on" : "off";
     json["cometStatus"] = stripLed.effectId == 10 && stripLed.powerState ? "on" : "off";
-    char buffer[320]; // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
+    char buffer[280]; // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
+    //Serial.println(buffer);
     ws.textAll(buffer, len);
 }
 

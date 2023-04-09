@@ -4,7 +4,7 @@ let brightness = "";
 const json = {
     'action': '',
     'effectId': 0,
-    'color': [0, 0, 0],
+    'color' : { 'r': 0, 'g': 0, 'b': 0 },
     'brightness': 0
 };
 
@@ -32,9 +32,13 @@ document.addEventListener('DOMContentLoaded', function () {
 window.onload = function () {
     brightness = parseInt(document.getElementById("pwmSlider").value);
     var colors = document.getElementById("picker_bridge").className;
-    console.log(colors);
-
-
+    const json_colors = colors;
+    const obj = JSON.parse(json_colors);
+    //console.log(obj);
+    json.color.r = colorR = obj.color.r;
+    json.color.g = colorG = obj.color.g;
+    json.color.b = colorB = obj.color.b;
+    //console.log(json);
     // Create a new color picker instance
     var colorPicker = new iro.ColorPicker("#wheelPicker", {
         // color picker options
