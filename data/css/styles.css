@@ -147,7 +147,7 @@ ul.tabs li a .tab-text {
 }
 
 .power-button span.fa-power-off {
-    font-size: 20px;
+    font-size: 25px;
 }
 
 .power-button h2.power-label {
@@ -183,8 +183,8 @@ ul.tabs li a .tab-text {
     grid-area: cometbutton;
 }
 
-.effects-button span.fa-magic-wand-sparkles {
-    font-size: 20px;
+.effects-button span.fa-magic {
+    font-size: 25px;
 }
 
 .effects-button h2.power-label {
@@ -229,6 +229,11 @@ ul.tabs li a .tab-text {
 
 .effects-button h3.comet {
     grid-area: comet;
+}
+
+/* Tab music */
+.power-bt span.fa-bluetooth {
+    font-size: 25px;
 }
 
 @media screen and (max-width: 700px) {
@@ -638,7 +643,7 @@ picker {
 }
 
 picker span.fa-paint-brush {
-    font-size: 20px;
+    font-size: 25px;
 }
 
 picker h2.colorpicker{
@@ -667,8 +672,8 @@ slider {
     justify-content: center;    
 }
 
-slider span.fa-sun {
-    font-size: 20px;
+slider span.fa-sun-o {
+    font-size: 25px;
 }
 
 .range {
