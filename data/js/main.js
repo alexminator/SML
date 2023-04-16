@@ -341,25 +341,3 @@ function onToggleCometeffect(event) {
     websocket.send(JSON.stringify(json));
 }
 
-/*
-function checkColor() {
-    if (isOn) {
-        if (hex != lastHex) {
-            sendMessage(hex);
-        }
-        lastHex = hex;
-    }
-}
-
-function sendCommand(value) {
-    sendMessage(value, '!');
-}
-
-function power() {
-    isOn = !isOn;
-    if (!isOn)
-        sendMessage('#000000');
-    else
-        sendMessage(hex);
-}
-*/

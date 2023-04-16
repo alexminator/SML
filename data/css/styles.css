@@ -8,12 +8,12 @@
 
 @font-face {
     font-family: Handmade;
-    src: url('../webfonts/Handmade.woff');
+    src: url('../fonts/Handmade.woff');
 }
 
 @font-face {
     font-family: Impactreg;
-    src: url('../webfonts/impactreg.woff');
+    src: url('../fonts/impactreg.woff');
 }
 
 html {

@@ -10,8 +10,7 @@
   <title>SML</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="css/fontawesome.min.css">
-  <link rel="stylesheet" href="css/solid.min.css">
+  <link rel="stylesheet" href="css/font-awesome.min.css">
   <script src="js/iro.min.js"></script>
   <script src="js/main.js"></script>
   <script src="js/slider.js" async></script>
@@ -44,7 +43,7 @@
         
     <div class="wrap">
       <ul class="tabs">
-        <li><a href="#tab-lamp"><span class="fa fa-lightbulb"></span><span class="tab-text">Lamp</span></a></li>
+        <li><a href="#tab-lamp"><span class="fa fa-lightbulb-o"></span><span class="tab-text">Lamp</span></a></li>
         <li><a href="#tab-music"><span class="fa fa-music"></span><span class="tab-text">Music</span></a></li>
         <li><a href="#tab-battery"><span class="fa fa-battery"></span><span class="tab-text">Battery</span></a></li>
       </ul>
@@ -78,7 +77,7 @@
           </picker>
 
           <slider>  
-              <h2 class="brigthness">Brightness <span class="fa fa-sun"></span></h2>
+              <h2 class="brigthness">Brightness <span class="fa fa-sun-o"></span></h2>
             <div class="range">
               <div class="sliderValue">
                 <span id="textSliderValue" class="mark">%BRIGHTNESS%</span>
@@ -93,7 +92,7 @@
 
           
           <div class="effects-button">
-            <h2 class="power-label">Effects <span class="fa fa-magic-wand-sparkles"></span></h2>
+            <h2 class="power-label">Effects <span class="fa fa-magic"></span></h2>
             <h3 class="fire">Fire</h3>
             <div id="Firebutton" class="%FIRE_STATE%">
               <span class="button">
@@ -160,7 +159,14 @@
         </div>
 
         <div id="tab-music">
-          <h1>Music</h1>
+          <div class="power-music">
+            <h2 class="power-bt">Bluetooth <span class="fa fa-bluetooth"></span></h2>
+            <div id="bluetooth" class="%BLUETOOTH%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+          </div>  
         </div>
 
         <div id="tab-battery">

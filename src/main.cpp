@@ -27,7 +27,6 @@
 #define HTTP_PORT 80
 
 // Effects
-#define EFFECT 0
 #define GRAVITY -1  // Downward (negative) acceleration of gravity in m/s^2
 #define h0 1        // Starting height, in meters, of the ball (strip length)
 #define NUM_BALLS 3 // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way)
@@ -62,12 +61,13 @@ String strength;
 
 // Strip LED
 int brightness = 130;
+int effectId = 0;
 CRGB leds[N_PIXELS];
-int myhue = 0;                 // hue 0. red color
+int myhue = 0;               // hue 0. red color
 const uint8_t FADE_RATE = 2; // How long should the trails be. Very low value = longer trails.
 uint8_t r = 255;
 uint8_t g = 255;
-uint8_t b = 255;            
+uint8_t b = 255;
 
 // balls effect
 float h[NUM_BALLS];                       // An array of heights
@@ -115,11 +115,11 @@ struct StripLed
     int brightness;
     int effectId;
     bool powerState;
-    
+
     // methods for different effects on stripled
     // SET ALL LEDS TO ONE COLOR
     void simpleColor(int ar, int ag, int ab, int brightness)
-    {  
+    {
         for (int i = 0; i < N_PIXELS; i++)
         {
             leds[i] = CRGB(ar, ag, ab);
@@ -241,7 +241,7 @@ struct StripLed
 // Definition of global variables
 // ----------------------------------------------------------------------------
 
-StripLed stripLed = {r, g, b, brightness, EFFECT, false};
+StripLed stripLed = {r, g, b, brightness, effectId, false};
 Led onboard_led = {LED_BUILTIN, false};
 
 // ----------------------------------------------------------------------------
@@ -345,14 +345,14 @@ String processor(const String &var)
     else if (var == "COLOR")
     {
         const uint8_t array_size = JSON_ARRAY_SIZE(4);
-        StaticJsonDocument<array_size> doc;   
+        StaticJsonDocument<array_size> doc;
         doc["color"]["r"] = stripLed.R;
         doc["color"]["g"] = stripLed.G;
         doc["color"]["b"] = stripLed.B;
         char buffer_size[40];
         serializeJson(doc, buffer_size);
-        //Serial.println(buffer_size);
-        return String( buffer_size );
+        // Serial.println(buffer_size);
+        return String(buffer_size);
     }
     else if (var == "NEOPIXEL")
     {
@@ -371,7 +371,8 @@ void onRootRequest(AsyncWebServerRequest *request)
 void initWebServer()
 {
     server.on("/", onRootRequest);
-    server.on("/wifi-info", HTTP_GET, [](AsyncWebServerRequest *request) {
+    server.on("/wifi-info", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
       AsyncResponseStream *response = request->beginResponseStream("application/json");
       DynamicJsonDocument json(1024);
       json["status"] = "ok";
@@ -431,9 +432,9 @@ void notifyClients()
     json["juggleStatus"] = stripLed.effectId == 8 && stripLed.powerState ? "on" : "off";
     json["sinelonStatus"] = stripLed.effectId == 9 && stripLed.powerState ? "on" : "off";
     json["cometStatus"] = stripLed.effectId == 10 && stripLed.powerState ? "on" : "off";
-    char buffer[280]; // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
+    char buffer[280];                         // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
-    //Serial.println(buffer);
+    // Serial.println(buffer);
     ws.textAll(buffer, len);
 }
 
@@ -451,9 +452,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             Serial.println(err.c_str());
             return;
         }
-        
+
         const char *action = json["action"];
-        
+
         if (strcmp(action, "toggle") == 0)
         {
             stripLed.powerState = !stripLed.powerState;
@@ -481,7 +482,6 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             Serial.println("Brillo " + String(brightness));
             stripLed.brightness = brightness;
         }
-
         else if (strcmp(action, "picker") == 0)
         {
             JsonArray color = json["color"];
@@ -498,7 +498,6 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             stripLed.G = g;
             stripLed.B = b;
         }
-
         notifyClients();
     }
 }
@@ -542,7 +541,7 @@ void setup()
 
     Serial.begin(115200);
     delay(500);
-
+    
     FastLED.addLeds<LED_TYPE, STRIP_PIN, COLOR_ORDER>(leds, N_PIXELS).setCorrection(TypicalLEDStrip);
     FastLED.setMaxPowerInVoltsAndMilliamps(VOLTS, MAX_MILLIAMPS);
     FastLED.setBrightness(brightness);
