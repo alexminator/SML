@@ -23,6 +23,22 @@
 #define MAX_MILLIAMPS 500 // Maximum current to draw [500 mA]
 #define COLOR_ORDER GRB   // Colour order of LED strip [GRB]
 #define LED_TYPE WS2812B  // LED string type [WS2812B]
+//VU
+# define AUDIO_IN_PIN A0             // Left aux in signal [A5]
+# define DC_OFFSET 0                // DC offset in aux signal [0]
+# define NOISE 20                   // Noise/hum/interference in aux signal [10]
+# define SAMPLES 60                 // Length of buffer for dynamic level adjustment [60]
+# define TOP (N_PIXELS + 2)         // Allow dot to go slightly off scale [(N_PIXELS + 2)]
+# define PEAK_FALL 20               // Rate of peak falling dot [20]
+# define N_PIXELS_HALF (N_PIXELS / 2)
+# define PATTERN_TIME 10            // Seconds to show eaach pattern on auto [10]
+
+uint8_t volCountLeft = 0;           // Frame counter for storing past volume data
+int volLeft[SAMPLES];               // Collection of prior volume samples
+int lvlLeft = 0;                    // Current "dampened" audio level
+int minLvlAvgLeft = 0;              // For dynamic adjustment of graph low & high
+int maxLvlAvgLeft = 512;
+
 // WEB
 #define HTTP_PORT 80
 
@@ -53,6 +69,10 @@ AsyncWebSocket ws("/ws");
 // Definition of global constants
 // ----------------------------------------------------------------------------
 
+//CMOS Switch for Bluetooth
+#define SWITCH_PIN 5            // Pin to command swith MOSFET
+bool bt_powerState = false;
+
 // Web signal info
 unsigned long startMillis;
 unsigned long currentMillis;
@@ -63,7 +83,7 @@ String strength;
 int brightness = 130;
 int effectId = 0;
 CRGB leds[N_PIXELS];
-int myhue = 0;               // hue 0. red color
+uint8_t myhue = 0;               // hue 0. red color
 const uint8_t FADE_RATE = 2; // How long should the trails be. Very low value = longer trails.
 uint8_t r = 255;
 uint8_t g = 255;
@@ -78,6 +98,8 @@ int pos[NUM_BALLS];                       // The integer position of the dot on 
 long tLast[NUM_BALLS];                    // The clock time of the last ground strike
 float COR[NUM_BALLS];                     // Coefficient of Restitution (bounce damping)
 
+//VU 
+
 // Effects library
 #include "MovingDot.h"
 #include "RainbowBeat.h"
@@ -89,6 +111,15 @@ float COR[NUM_BALLS];                     // Coefficient of Restitution (bounce 
 #include "Juggle.h"
 #include "Sinelon.h"
 #include "Comet.h"
+// VU
+#include "common.h"
+#include "vu4.h"
+#include "vu5.h"
+#include "vu6.h"
+#include "vu7.h"
+#include "vu8.h"
+#include "vu9.h"
+#include "vu10.h"
 // ----------------------------------------------------------------------------
 // Definition of the LED component
 // ----------------------------------------------------------------------------
@@ -297,7 +328,6 @@ void initWiFi()
 
 String processor(const String &var)
 {
-    // Serial.println(var);
     if (var == "FIRE_STATE")
     {
         return String("off");
@@ -351,12 +381,15 @@ String processor(const String &var)
         doc["color"]["b"] = stripLed.B;
         char buffer_size[40];
         serializeJson(doc, buffer_size);
-        // Serial.println(buffer_size);
         return String(buffer_size);
     }
     else if (var == "NEOPIXEL")
     {
         return String(var == "NEOPIXEL" && stripLed.powerState ? "on" : "off");
+    }
+    else if (var == "BLUETOOTH")
+    {
+        return String(var == "BLUETOOTH" && bt_powerState ? "on" : "off");
     }
 
     return String();
@@ -417,10 +450,12 @@ String bars()
 
 void notifyClients()
 {
-    const int size = JSON_OBJECT_SIZE(14); // Remember change the number of member object
+    Serial.println(bt_powerState);
+    const int size = JSON_OBJECT_SIZE(15); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["bars"] = bars();
     json["neostatus"] = stripLed.powerState ? "on" : "off";
+    json["btstatus"] = bt_powerState ? "on" : "off";
     json["neobrightness"] = stripLed.brightness;
     json["fireStatus"] = stripLed.effectId == 1 && stripLed.powerState ? "on" : "off";
     json["movingdotStatus"] = stripLed.effectId == 2 && stripLed.powerState ? "on" : "off";
@@ -432,9 +467,8 @@ void notifyClients()
     json["juggleStatus"] = stripLed.effectId == 8 && stripLed.powerState ? "on" : "off";
     json["sinelonStatus"] = stripLed.effectId == 9 && stripLed.powerState ? "on" : "off";
     json["cometStatus"] = stripLed.effectId == 10 && stripLed.powerState ? "on" : "off";
-    char buffer[280];                         // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
+    char buffer[300];                         // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
-    // Serial.println(buffer);
     ws.textAll(buffer, len);
 }
 
@@ -498,6 +532,22 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             stripLed.G = g;
             stripLed.B = b;
         }
+        else if (strcmp(action, "music") == 0)
+        {
+            bt_powerState = !bt_powerState;
+            if (bt_powerState)
+            {
+                digitalWrite(SWITCH_PIN,HIGH);
+                bt_powerState = true;
+                Serial.println("Encendido del modulo BT");
+            }
+            else
+            {
+                digitalWrite(SWITCH_PIN,LOW);
+                bt_powerState = false;
+                Serial.println("Apagado del modulo BT");
+            }
+        }
         notifyClients();
     }
 }
@@ -538,6 +588,7 @@ void setup()
 {
     pinMode(onboard_led.pin, OUTPUT);
     pinMode(STRIP_PIN, OUTPUT);
+    pinMode(SWITCH_PIN, OUTPUT);
 
     Serial.begin(115200);
     delay(500);
