@@ -587,12 +587,15 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 
         else if (strcmp(action, "vu") == 0)
         {
-            if (bt_powerState)
+            stripLed.powerState = !stripLed.powerState;
+            if (bt_powerState && !stripLed.powerState)
             {
                 stripLed.update();
-            } else {
+            } else if (stripLed.effectId == 0){
+                stripLed.update();
+            } else
+                stripLed.powerState = false;
                 stripLed.clear();
-            }
         }
         notifyClients();
     }
