@@ -694,7 +694,7 @@ void loop()
         brightness = stripLed.brightness;
         stripLed.update();
         delay(6);
-    } else if (bt_powerState && stripLed.effectId >= 11)
+    } else if (!stripLed.powerState && stripLed.effectId >= 11)
     {
         stripLed.update();
     } else
