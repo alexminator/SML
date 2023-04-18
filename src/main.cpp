@@ -120,12 +120,12 @@ bool is_centered = false;          //For VU1 effects
 // VU
 #include "common.h"
 #include "vu1.h"
-//#include "vu5.h"
-//#include "vu6.h"
-//#include "vu7.h"
-//#include "vu8.h"
-//#include "vu10.h"
-//#include "vu9.h"
+#include "vu2.h"
+#include "vu3.h"
+#include "vu4.h"
+#include "vu5.h"
+#include "vu7.h"
+#include "vu6.h"
 
 // ----------------------------------------------------------------------------
 // Definition of the LED component
@@ -226,10 +226,16 @@ struct StripLed
         comet.runPattern();
     }
 
-    void runRainbowVU(bool is_centered, uint8_t channel)
+    void runRainbowVU()
     {
         RainbowVU VU1 = RainbowVU();
-        VU1.runPattern(true, 0);
+        VU1.runPattern(is_centered, 0);
+    }
+
+    void runOldVU()
+    {
+        OldskoolVU VU2 = OldskoolVU();
+        VU2.runPattern(is_centered, 0);
     }
 
     void update()
@@ -270,8 +276,11 @@ struct StripLed
             runComet();
             break;
         case 11:
-            runRainbowVU(true, 0);
-            break;    
+            runRainbowVU();
+            break;
+        case 12:
+            runOldVU();
+            break;
         default:
             break;
         }
@@ -411,6 +420,10 @@ String processor(const String &var)
     {
         return String("off");
     }
+    else if (var == "VU2")
+    {
+        return String("off");
+    }
 
     return String();
 }
@@ -471,7 +484,7 @@ String bars()
 void notifyClients()
 {
     //Serial.println(bt_powerState);
-    const int size = JSON_OBJECT_SIZE(16); // Remember change the number of member object
+    const int size = JSON_OBJECT_SIZE(17); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["bars"] = bars();
     json["neostatus"] = stripLed.powerState ? "on" : "off";
@@ -489,8 +502,8 @@ void notifyClients()
     json["cometStatus"] = stripLed.effectId == 10 && stripLed.powerState ? "on" : "off";
     //VU
     json["rainbowVUStatus"] = stripLed.effectId == 11 && bt_powerState ? "on" : "off";
-    //json["rainbowVU"] = stripLed.effectId == 11;
-    char buffer[330];                         // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
+    json["oldVUStatus"] = stripLed.effectId == 12 && bt_powerState ? "on" : "off";
+    char buffer[350];                         // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
 }
@@ -666,10 +679,11 @@ void loop()
         brightness = stripLed.brightness;
         stripLed.update();
         delay(6);
-    } else if (bt_powerState)
+    } else if (bt_powerState && stripLed.effectId >= 11)
     {
         stripLed.update();
-    } else 
+    } else
+        stripLed.powerState = false;
         stripLed.clear();
     
 
