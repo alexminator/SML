@@ -1,7 +1,13 @@
 /*
  * VU: Ripple (mono) with or without background
  */
- 
+class RippleVU {
+  public:
+    RippleVU(){};
+    void runPattern(boolean show_background);
+  private:
+};
+
 int rippleStep = -1;
 const float RIPPLE_FADE_RATE = 0.80;
 int peakspersec = 0;
@@ -68,7 +74,7 @@ void soundmems() { // Rolling average counter - means we don't have to go throug
   }
 }
 
-void vu7(boolean show_background) {
+void RippleVU::runPattern(boolean show_background) {
   
   EVERY_N_MILLISECONDS(1000) {
     peakspersec = peakcount; // Count the peaks per second. This value will become the foreground rippleHue.
