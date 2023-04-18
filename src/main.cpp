@@ -591,8 +591,6 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             if (bt_powerState && !stripLed.powerState)
             {
                 stripLed.update();
-            } else if (stripLed.effectId == 0){
-                stripLed.update();
             } else
                 stripLed.powerState = false;
                 stripLed.clear();
@@ -677,7 +675,7 @@ void loop()
     MDNS.update();
 #endif
 
-    if (stripLed.powerState)
+    if (stripLed.powerState && !bt_powerState)
     {
         brightness = stripLed.brightness;
         stripLed.update();
