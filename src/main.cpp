@@ -104,6 +104,7 @@ int volLeft[SAMPLES];               // Collection of prior volume samples
 int lvlLeft = 0;                    // Current "dampened" audio level
 int minLvlAvgLeft = 0;              // For dynamic adjustment of graph low & high
 int maxLvlAvgLeft = 512;
+bool is_centered = false;          //For VU1 effects
 
 // Effects library
 #include "MovingDot.h"
@@ -118,7 +119,7 @@ int maxLvlAvgLeft = 512;
 #include "Comet.h"
 // VU
 #include "common.h"
-#include "vu4.h"
+#include "vu1.h"
 //#include "vu5.h"
 //#include "vu6.h"
 //#include "vu7.h"
@@ -665,7 +666,12 @@ void loop()
         brightness = stripLed.brightness;
         stripLed.update();
         delay(6);
-    }
+    } else if (bt_powerState)
+    {
+        stripLed.update();
+    } else 
+        stripLed.clear();
+    
 
     onboard_led.on = millis() % 1000 < 50;
     onboard_led.update();
