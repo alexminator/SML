@@ -119,6 +119,8 @@ function onMessage(event) {
     document.getElementById('Jugglebutton').className = data.juggleStatus;
     document.getElementById('Sinelonbutton').className = data.sinelonStatus;
     document.getElementById('Cometbutton').className = data.cometStatus;
+    //VU
+    document.getElementById('RainbowVU').className = data.rainbowVUStatus;
 }
 
 function onError(event) {
@@ -157,6 +159,8 @@ function initButton() {
     document.getElementById('Jugglebutton').addEventListener('click', onToggleJuggleeffect);
     document.getElementById('Sinelonbutton').addEventListener('click', onToggleSineloneffect);
     document.getElementById('Cometbutton').addEventListener('click', onToggleCometeffect);
+    //VU
+    document.getElementById('RainbowVU').addEventListener('click', onToggleRainbowVU);
 }
 
 function onToggleNeo(event) {
@@ -343,3 +347,17 @@ function onToggleCometeffect(event) {
     websocket.send(JSON.stringify(json));
 }
 
+function onToggleRainbowVU(event) {
+    const toggle = document.getElementById("RainbowVU");
+    if (toggle.className == "on") {
+        isOn = 0;
+        toggle.className = "off";
+    } else {
+        isOn = 11;
+        toggle.className = "on";
+    }
+    json.action = 'vu';
+    json.effectId = isOn;
+    console.log(json);
+    websocket.send(JSON.stringify(json));
+}

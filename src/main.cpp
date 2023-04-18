@@ -24,7 +24,7 @@
 #define COLOR_ORDER GRB   // Colour order of LED strip [GRB]
 #define LED_TYPE WS2812B  // LED string type [WS2812B]
 //VU
-# define AUDIO_IN_PIN A0             // Left aux in signal [A5]
+# define AUDIO_IN_PIN 34             // Left aux in signal [A5]
 # define DC_OFFSET 0                // DC offset in aux signal [0]
 # define NOISE 20                   // Noise/hum/interference in aux signal [10]
 # define SAMPLES 60                 // Length of buffer for dynamic level adjustment [60]
@@ -33,11 +33,11 @@
 # define N_PIXELS_HALF (N_PIXELS / 2)
 # define PATTERN_TIME 10            // Seconds to show eaach pattern on auto [10]
 
-uint8_t volCountLeft = 0;           // Frame counter for storing past volume data
-int volLeft[SAMPLES];               // Collection of prior volume samples
-int lvlLeft = 0;                    // Current "dampened" audio level
-int minLvlAvgLeft = 0;              // For dynamic adjustment of graph low & high
-int maxLvlAvgLeft = 512;
+uint8_t volCount = 0;           // Frame counter for storing past volume data
+int vol[SAMPLES];               // Collection of prior volume samples
+int lvl = 0;                    // Current "dampened" audio level
+int minLvlAvg = 0;              // For dynamic adjustment of graph low & high
+int maxLvlAvg = 512;
 
 // WEB
 #define HTTP_PORT 80
@@ -99,6 +99,11 @@ long tLast[NUM_BALLS];                    // The clock time of the last ground s
 float COR[NUM_BALLS];                     // Coefficient of Restitution (bounce damping)
 
 //VU 
+uint8_t volCountLeft = 0;           // Frame counter for storing past volume data
+int volLeft[SAMPLES];               // Collection of prior volume samples
+int lvlLeft = 0;                    // Current "dampened" audio level
+int minLvlAvgLeft = 0;              // For dynamic adjustment of graph low & high
+int maxLvlAvgLeft = 512;
 
 // Effects library
 #include "MovingDot.h"
@@ -114,12 +119,13 @@ float COR[NUM_BALLS];                     // Coefficient of Restitution (bounce 
 // VU
 #include "common.h"
 #include "vu4.h"
-#include "vu5.h"
-#include "vu6.h"
-#include "vu7.h"
-#include "vu8.h"
-#include "vu9.h"
-#include "vu10.h"
+//#include "vu5.h"
+//#include "vu6.h"
+//#include "vu7.h"
+//#include "vu8.h"
+//#include "vu10.h"
+//#include "vu9.h"
+
 // ----------------------------------------------------------------------------
 // Definition of the LED component
 // ----------------------------------------------------------------------------
@@ -219,6 +225,12 @@ struct StripLed
         comet.runPattern();
     }
 
+    void runRainbowVU(bool is_centered, uint8_t channel)
+    {
+        RainbowVU VU1 = RainbowVU();
+        VU1.runPattern(true, 0);
+    }
+
     void update()
     {
         switch (effectId)
@@ -256,6 +268,9 @@ struct StripLed
         case 10:
             runComet();
             break;
+        case 11:
+            runRainbowVU(true, 0);
+            break;    
         default:
             break;
         }
@@ -391,6 +406,10 @@ String processor(const String &var)
     {
         return String(var == "BLUETOOTH" && bt_powerState ? "on" : "off");
     }
+    else if (var == "VU1")
+    {
+        return String("off");
+    }
 
     return String();
 }
@@ -450,8 +469,8 @@ String bars()
 
 void notifyClients()
 {
-    Serial.println(bt_powerState);
-    const int size = JSON_OBJECT_SIZE(15); // Remember change the number of member object
+    //Serial.println(bt_powerState);
+    const int size = JSON_OBJECT_SIZE(16); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["bars"] = bars();
     json["neostatus"] = stripLed.powerState ? "on" : "off";
@@ -467,7 +486,10 @@ void notifyClients()
     json["juggleStatus"] = stripLed.effectId == 8 && stripLed.powerState ? "on" : "off";
     json["sinelonStatus"] = stripLed.effectId == 9 && stripLed.powerState ? "on" : "off";
     json["cometStatus"] = stripLed.effectId == 10 && stripLed.powerState ? "on" : "off";
-    char buffer[300];                         // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
+    //VU
+    json["rainbowVUStatus"] = stripLed.effectId == 11 && bt_powerState ? "on" : "off";
+    //json["rainbowVU"] = stripLed.effectId == 11;
+    char buffer[330];                         // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
 }
@@ -488,6 +510,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         }
 
         const char *action = json["action"];
+        const int effectId = json["effectId"];
+        stripLed.effectId = effectId;
 
         if (strcmp(action, "toggle") == 0)
         {
@@ -503,10 +527,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         }
         else if (strcmp(action, "animation") == 0)
         {
-            const int effectId = json["effectId"];
             if (stripLed.powerState)
             {
-                stripLed.effectId = effectId;
                 stripLed.update();
             }
         }
@@ -546,6 +568,16 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
                 digitalWrite(SWITCH_PIN,LOW);
                 bt_powerState = false;
                 Serial.println("Apagado del modulo BT");
+            }
+        }
+
+        else if (strcmp(action, "vu") == 0)
+        {
+            if (bt_powerState)
+            {
+                stripLed.update();
+            } else {
+                stripLed.clear();
             }
         }
         notifyClients();

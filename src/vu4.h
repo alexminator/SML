@@ -1,31 +1,38 @@
 /*
  * VU: Rainbow from bottom or middle, green through purple
  */
+class RainbowVU {
+  public:
+    RainbowVU(){};
+    void runPattern(bool is_centered, uint8_t channel);
+  private:
+};
+
 uint8_t rainbowHue2(uint8_t pixel, uint8_t num_pixels) {
   uint8_t hue = 96 - pixel * (145 / num_pixels);
   return hue;
 }
 
-void vu4(bool is_centered, uint8_t channel) {
+void RainbowVU::runPattern(bool is_centered, uint8_t channel) {
   
-  CRGB* leds;
+  CRGB* vuleds;
   uint8_t i = 0;
   uint8_t *peak;      // Pointer variable declaration
   uint16_t height = auxReading(channel);
 
   if(channel == 0) {
-    leds = ledsLeft;    // Store address of peakLeft in peak, then use *peak to
+    vuleds = leds;    // Store address of peakLeft in peak, then use *peak to
     peak = &peakLeft;   // access the value of that address
   }
   
   
   // Draw vu meter part
-  fill_solid(leds, N_PIXELS, CRGB::Black);
+  fill_solid(vuleds, N_PIXELS, CRGB::Black);
   if(is_centered) {
     
     // Fill with colour gradient
-    fill_gradient(leds, N_PIXELS_HALF  , CHSV(96, 255, 255), N_PIXELS - 1, CHSV(224, 255, 255),SHORTEST_HUES);
-    fill_gradient(leds, N_PIXELS_HALF-1, CHSV(96, 255, 255), 0, CHSV(224, 255, 255),LONGEST_HUES);
+    fill_gradient(vuleds, N_PIXELS_HALF  , CHSV(96, 255, 255), N_PIXELS - 1, CHSV(224, 255, 255),SHORTEST_HUES);
+    fill_gradient(vuleds, N_PIXELS_HALF-1, CHSV(96, 255, 255), 0, CHSV(224, 255, 255),LONGEST_HUES);
     
     // Black out ends
     for (i = 0; i < N_PIXELS; i++) {
@@ -38,8 +45,8 @@ void vu4(bool is_centered, uint8_t channel) {
       *peak = height/2; // Keep 'peak' dot at top
 
     if(*peak > 0 && *peak <= N_PIXELS_HALF-1) {
-      leds[N_PIXELS_HALF + *peak]   = CHSV(rainbowHue2(*peak, N_PIXELS_HALF),255,255);
-      leds[N_PIXELS_HALF - 1 - *peak] = CHSV(rainbowHue2(*peak, N_PIXELS_HALF),255,255);
+      vuleds[N_PIXELS_HALF + *peak]   = CHSV(rainbowHue2(*peak, N_PIXELS_HALF),255,255);
+      vuleds[N_PIXELS_HALF - 1 - *peak] = CHSV(rainbowHue2(*peak, N_PIXELS_HALF),255,255);
     }
   } 
   

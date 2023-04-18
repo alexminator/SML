@@ -5,7 +5,7 @@
 /*
  * Function for dropping the peak
  */
-uint8_t peakLeft, peakRight;
+uint8_t peakLeft;
 
 uint16_t auxReading(uint8_t channel) {
 

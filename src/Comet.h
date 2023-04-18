@@ -1,11 +1,9 @@
 #include "Arduino.h"
 
-class Comet
-{
+class Comet {
 public:
   Comet(){};
   void runPattern();
-
 private:
 };
 
