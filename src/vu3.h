@@ -1,8 +1,14 @@
 /*
  * VU: Rainbow from bottom or middle with hue cycling
  */
+class RainbowHueVU {
+  public:
+    RainbowHueVU(){};
+    void runPattern(bool is_centered, uint8_t channel);
+  private:
+};
 
-void vu6(bool is_centered, uint8_t channel) {
+void RainbowHueVU::runPattern(bool is_centered, uint8_t channel) {
 
   const uint8_t SPEED = 10;
   static uint8_t hueOffset = 30;

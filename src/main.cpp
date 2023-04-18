@@ -238,6 +238,12 @@ struct StripLed
         VU2.runPattern(is_centered, 0);
     }
 
+    void runRainbowHueVU()
+    {
+        RainbowHueVU VU3 = RainbowHueVU();
+        VU3.runPattern(is_centered, 0);
+    }
+
     void update()
     {
         switch (effectId)
@@ -281,6 +287,9 @@ struct StripLed
         case 12:
             runOldVU();
             break;
+        case 13:
+            runRainbowHueVU();
+            break;    
         default:
             break;
         }
@@ -424,6 +433,10 @@ String processor(const String &var)
     {
         return String("off");
     }
+    else if (var == "VU3")
+    {
+        return String("off");
+    }
 
     return String();
 }
@@ -484,7 +497,7 @@ String bars()
 void notifyClients()
 {
     //Serial.println(bt_powerState);
-    const int size = JSON_OBJECT_SIZE(17); // Remember change the number of member object
+    const int size = JSON_OBJECT_SIZE(18); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["bars"] = bars();
     json["neostatus"] = stripLed.powerState ? "on" : "off";
@@ -503,7 +516,8 @@ void notifyClients()
     //VU
     json["rainbowVUStatus"] = stripLed.effectId == 11 && bt_powerState ? "on" : "off";
     json["oldVUStatus"] = stripLed.effectId == 12 && bt_powerState ? "on" : "off";
-    char buffer[350];                         // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
+    json["rainbowHueVUStatus"] = stripLed.effectId == 13 && bt_powerState ? "on" : "off";
+    char buffer[370];                         // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
 }
