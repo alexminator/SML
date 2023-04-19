@@ -32,6 +32,10 @@
 # define PEAK_FALL 20               // Rate of peak falling dot [20]
 # define N_PIXELS_HALF (N_PIXELS / 2)
 # define PATTERN_TIME 10            // Seconds to show eaach pattern on auto [10]
+// Effects
+#define GRAVITY -1  // Downward (negative) acceleration of gravity in m/s^2
+#define h0 1        // Starting height, in meters, of the ball (strip length)
+#define NUM_BALLS 3 // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way)
 
 uint8_t volCount = 0;           // Frame counter for storing past volume data
 int vol[SAMPLES];               // Collection of prior volume samples
@@ -41,11 +45,6 @@ int maxLvlAvg = 512;
 
 // WEB
 #define HTTP_PORT 80
-
-// Effects
-#define GRAVITY -1  // Downward (negative) acceleration of gravity in m/s^2
-#define h0 1        // Starting height, in meters, of the ball (strip length)
-#define NUM_BALLS 3 // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way)
 
 #if defined(ESP32)
 
