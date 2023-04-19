@@ -1,6 +1,12 @@
 /*
  * VU: Ocean waves (stereo)
  */
+class OceanVU {
+  public:
+    OceanVU(){};
+    void runPattern();
+  private:
+};
 
 void sndwave() {
 
@@ -18,7 +24,7 @@ void sndwave() {
 
 }
 
-void vu9() {
+void OceanVU::runPattern() {
   currentPalette = OceanColors_p; // Initial palette.
   EVERY_N_SECONDS(5) { // Change the palette every 5 seconds.
     for (int i = 0; i < 16; i++) {

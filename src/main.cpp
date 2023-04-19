@@ -256,6 +256,17 @@ struct StripLed
         VU5.runPattern();
     }
 
+    void runOceanVU()
+    {
+        OceanVU VU6 = OceanVU();
+        VU6.runPattern();
+    }
+
+    void runBlendingVU()
+    {
+        BlendingVU VU7 = BlendingVU();
+        VU7.runPattern();
+    }
 
     void update()
     {
@@ -308,7 +319,13 @@ struct StripLed
             break; 
         case 15:
             runThreebarsVU();
-            break;            
+            break;
+        case 16:
+            runOceanVU();
+            break;
+        case 17:
+            runBlendingVU();
+            break;                    
         default:
             break;
         }
@@ -464,6 +481,14 @@ String processor(const String &var)
     {
         return String("off");
     }
+    else if (var == "VU6")
+    {
+        return String("off");
+    }
+    else if (var == "VU7")
+    {
+        return String("off");
+    }
 
     return String();
 }
@@ -524,7 +549,7 @@ String bars()
 void notifyClients()
 {
     //Serial.println(bt_powerState);
-    const int size = JSON_OBJECT_SIZE(20); // Remember change the number of member object
+    const int size = JSON_OBJECT_SIZE(22); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["bars"] = bars();
     json["neostatus"] = stripLed.powerState ? "on" : "off";
@@ -546,7 +571,9 @@ void notifyClients()
     json["rainbowHueVUStatus"] = stripLed.effectId == 13 && bt_powerState ? "on" : "off";
     json["rippleVUStatus"] = stripLed.effectId == 14 && bt_powerState ? "on" : "off";
     json["threebarsVUStatus"] = stripLed.effectId == 15 && bt_powerState ? "on" : "off";
-    char buffer[420];                         // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
+    json["oceanVUStatus"] = stripLed.effectId == 16 && bt_powerState ? "on" : "off";
+    json["blendingVUStatus"] = stripLed.effectId == 17 && bt_powerState ? "on" : "off";
+    char buffer[470];                         // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
 }

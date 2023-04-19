@@ -1,6 +1,12 @@
 /*
  * VU: Palette blending demo
  */
+class BlendingVU {
+  public:
+    BlendingVU(){};
+    void runPattern();
+  private:
+};
 
 CRGBPalette16 currentPalette;
 CRGBPalette16 targetPalette;
@@ -16,7 +22,7 @@ void soundtun() {
   
 }
 
-void vu10() {
+void BlendingVU::runPattern() {
 
   EVERY_N_SECONDS(5) { // Change the target palette to a random one every 5 seconds.
     static uint8_t baseC = random8(); // You can use this as a baseline colour if you want similar hues in the next line.
