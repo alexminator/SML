@@ -124,6 +124,7 @@ function onMessage(event) {
     document.getElementById('Old-skoolVU').className = data.oldVUStatus;
     document.getElementById('RainbowHueVU').className = data.rainbowHueVUStatus;
     document.getElementById('RippleVU').className = data.rippleVUStatus;
+    document.getElementById('ThreebarsVU').className = data.threebarsVUStatus;
 }
 
 function onError(event) {
@@ -167,6 +168,7 @@ function initButton() {
     document.getElementById('Old-skoolVU').addEventListener('click', onToggleOldVU);
     document.getElementById('RainbowHueVU').addEventListener('click', onToggleRainbowHueVU);
     document.getElementById('RippleVU').addEventListener('click', onToggleRippleVU);
+    document.getElementById('ThreebarsVU').addEventListener('click', onToggle3barsVU);
 }
 
 function onToggleNeo(event) {
@@ -405,6 +407,21 @@ function onToggleRippleVU(event) {
         toggle.className = "off";
     } else {
         isOn = 14;
+        toggle.className = "on";
+    }
+    json.action = 'vu';
+    json.effectId = isOn;
+    console.log(json);
+    websocket.send(JSON.stringify(json));
+}
+
+function onToggle3barsVU(event) {
+    const toggle = document.getElementById("ThreebarsVU");
+    if (toggle.className == "on") {
+        isOn = 0;
+        toggle.className = "off";
+    } else {
+        isOn = 15;
         toggle.className = "on";
     }
     json.action = 'vu';

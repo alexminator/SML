@@ -1,8 +1,14 @@
 /*
  * VU: Hue cycling, three bars (shatter, mono)
  */
+class ThreebarsVU {
+  public:
+    ThreebarsVU(){};
+    void runPattern();
+  private:
+};
 
-void vu8() {
+void ThreebarsVU::runPattern() {
   const uint8_t DRAW_MAX = 30;
   const uint8_t SEGMENTS = 3;
   
