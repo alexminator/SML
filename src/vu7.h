@@ -8,18 +8,18 @@ class BlendingVU {
   private:
 };
 
-CRGBPalette16 currentPalette;
-CRGBPalette16 targetPalette;
-
 void soundtun() {
-
-  int sampleLeft = abs(analogRead(AUDIO_IN_PIN) - 512 - DC_OFFSET);
-  CRGB newcolourLeft = ColorFromPalette(currentPalette, constrain(sampleLeft, 0, 255), constrain(sampleLeft, 0, 255), LINEARBLEND);
-  nblend(leds[0], newcolourLeft, 128);
-  for (int i = N_PIXELS - 1; i > 0; i--) {
-    leds[i] = leds[i - 1];
+    int sampleLeft = abs(analogRead(AUDIO_IN_PIN) - 512 - DC_OFFSET);
+    // Serial.println(sampleLeft);
+    uint8_t indexpalette = sampleLeft / 2;
+    Serial.println(indexpalette);
+    // int sampleLeft = abs(analogRead(AUDIO_IN_PIN) - 512 - DC_OFFSET);
+    CRGB newcolourLeft = ColorFromPalette(currentPalette, constrain(indexpalette, 0, 255), constrain(indexpalette, 0, 255), LINEARBLEND);
+    nblend(leds[0], newcolourLeft, 128);
+    for (int i = N_PIXELS - 1; i > 0; i--)
+    {
+      leds[i] = leds[i - 1];
   }
-  
 }
 
 void BlendingVU::runPattern() {

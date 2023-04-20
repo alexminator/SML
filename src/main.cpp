@@ -42,6 +42,8 @@ int vol[SAMPLES];               // Collection of prior volume samples
 int lvl = 0;                    // Current "dampened" audio level
 int minLvlAvg = 0;              // For dynamic adjustment of graph low & high
 int maxLvlAvg = 512;
+CRGBPalette16 currentPalette; // Define the current palette
+CRGBPalette16 targetPalette; // Define the target palette
 
 // WEB
 #define HTTP_PORT 80
@@ -702,6 +704,8 @@ void initWebSocket()
 
 void setup()
 {
+    // Establecer la resolución del ADC a 10 bits
+    analogReadResolution(10);
     pinMode(onboard_led.pin, OUTPUT);
     pinMode(STRIP_PIN, OUTPUT);
     pinMode(SWITCH_PIN, OUTPUT);
