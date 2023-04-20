@@ -10,6 +10,7 @@
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
 #include <ESPAsyncWebServer.h>
+#include <Adafruit_NeoPixel.h>
 #include <FastLED.h>
 #include "data.h"
 
@@ -33,17 +34,38 @@
 # define N_PIXELS_HALF (N_PIXELS / 2)
 # define PATTERN_TIME 10            // Seconds to show eaach pattern on auto [10]
 // Effects
-#define GRAVITY -1  // Downward (negative) acceleration of gravity in m/s^2
+#define GRAVITY -9.81  // Downward (negative) acceleration of gravity in m/s^2
 #define h0 1        // Starting height, in meters, of the ball (strip length)
 #define NUM_BALLS 3 // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way)
+#define SPEED .20       // Amount to increment RGB color by each cycle
 
-uint8_t volCount = 0;           // Frame counter for storing past volume data
-int vol[SAMPLES];               // Collection of prior volume samples
-int lvl = 0;                    // Current "dampened" audio level
-int minLvlAvg = 0;              // For dynamic adjustment of graph low & high
-int maxLvlAvg = 512;
-CRGBPalette16 currentPalette; // Define the current palette
-CRGBPalette16 targetPalette; // Define the target palette
+float
+  greenOffset = 30,
+  blueOffset = 150;
+
+byte
+  peak      = 0,      // Used for falling dot
+  dotCount  = 0,      // Frame counter for delaying dot-falling speed
+  volCount  = 0;      // Frame counter for storing past volume data
+int
+  vol[SAMPLES],       // Collection of prior volume samples
+  lvl       = 10,      // Current "dampened" audio level
+  minLvlAvg = 0,      // For dynamic adjustment of graph low & high
+  maxLvlAvg = 512;
+
+CRGBPalette16 currentPalette;
+CRGBPalette16 targetPalette;  
+
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(N_PIXELS, STRIP_PIN, NEO_GRB + NEO_KHZ800);  
+
+// Vu meter 4
+const uint32_t Red = strip.Color(255, 0, 0);
+const uint32_t Yellow = strip.Color(255, 255, 0);
+const uint32_t Green = strip.Color(0, 255, 0);
+const uint32_t Blue = strip.Color(0, 0, 255);
+const uint32_t White = strip.Color(255, 255, 255);
+const uint32_t Dark = strip.Color(0, 0, 0);
+unsigned int sample;
 
 // WEB
 #define HTTP_PORT 80
@@ -718,6 +740,8 @@ void setup()
     FastLED.setBrightness(brightness);
     FastLED.clear();
     FastLED.show();
+    strip.begin();
+    strip.show(); // Initialize all pixels to 'off'
 
     // Initialize variables for balls effect
     for (int i = 0; i < NUM_BALLS; i++)
