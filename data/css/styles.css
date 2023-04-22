@@ -239,13 +239,11 @@ ul.tabs li a .tab-text {
 .effects-vu {
     display: grid;
     grid-template:
-        "rainbowL oldL"   0.3fr
-        "rainbowvu oldvu"   0.5fr
-        "hueL rippleL"    0.3fr
-        "huevu ripplevu"    0.5fr
-        "barsL oceanL"    0.3fr
-        "barsvu oceanvu"    0.5fr  /
-        1fr 1fr;
+        "rainbowL oldL hueL"   0.3fr
+        "rainbowvu oldvu huevu"   0.5fr
+        "rippleL barsL oceanL"    0.3fr
+        "ripplevu barsvu oceanvu"    0.5fr  /
+        1fr 1fr 1fr;
     grid-gap: 0.5rem;
     padding: 20px;
 }
