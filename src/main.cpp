@@ -24,14 +24,13 @@
 #define COLOR_ORDER GRB   // Colour order of LED strip [GRB]
 #define LED_TYPE WS2812B  // LED string type [WS2812B]
 //VU
-# define AUDIO_IN_PIN 34             // Left aux in signal [A5]
+# define AUDIO_IN_PIN 34             // Aux in signal 
 # define DC_OFFSET 0                // DC offset in aux signal [0]
 # define NOISE 20                   // Noise/hum/interference in aux signal [10]
 # define SAMPLES 60                 // Length of buffer for dynamic level adjustment [60]
 # define TOP (N_PIXELS + 2)         // Allow dot to go slightly off scale [(N_PIXELS + 2)]
 # define PEAK_FALL 20               // Rate of peak falling dot [20]
 # define N_PIXELS_HALF (N_PIXELS / 2)
-# define PATTERN_TIME 10            // Seconds to show eaach pattern on auto [10]
 // Effects
 #define GRAVITY -1  // Downward (negative) acceleration of gravity in m/s^2
 #define h0 1        // Starting height, in meters, of the ball (strip length)
@@ -42,6 +41,7 @@ int vol[SAMPLES];               // Collection of prior volume samples
 int lvl = 0;                    // Current "dampened" audio level
 int minLvlAvg = 0;              // For dynamic adjustment of graph low & high
 int maxLvlAvg = 512;
+
 CRGBPalette16 currentPalette; // Define the current palette
 CRGBPalette16 targetPalette; // Define the target palette
 
@@ -306,6 +306,15 @@ struct StripLed
         case 10:
             runComet();
             break;
+                         
+        default:
+            break;
+        }
+    }
+
+    void updateVU () {
+        switch (effectId)
+        {
         case 11:
             runRainbowVU();
             break;
@@ -326,10 +335,10 @@ struct StripLed
             break;
         case 17:
             runBlendingVU();
-            break;                    
+            break;
         default:
             break;
-        }
+        } 
     }
 
     void clear()
@@ -598,6 +607,14 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         const int effectId = json["effectId"];
         stripLed.effectId = effectId;
 
+        if (effectId == 99)
+        {
+            stripLed.clear();
+        } else if (effectId == 0)
+        {
+            bt_powerState = false;
+        }
+
         if (strcmp(action, "toggle") == 0)
         {
             stripLed.powerState = !stripLed.powerState;
@@ -646,6 +663,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             {
                 digitalWrite(SWITCH_PIN,HIGH);
                 bt_powerState = true;
+                stripLed.effectId = 0;
                 Serial.println("Encendido del modulo BT");
             }
             else
@@ -704,6 +722,7 @@ void initWebSocket()
 
 void setup()
 {
+    delay(3000); // sanity delay
     // Establecer la resolución del ADC a 10 bits
     analogReadResolution(10);
     pinMode(onboard_led.pin, OUTPUT);
@@ -711,11 +730,11 @@ void setup()
     pinMode(SWITCH_PIN, OUTPUT);
 
     Serial.begin(115200);
-    delay(500);
     
     FastLED.addLeds<LED_TYPE, STRIP_PIN, COLOR_ORDER>(leds, N_PIXELS).setCorrection(TypicalLEDStrip);
     FastLED.setMaxPowerInVoltsAndMilliamps(VOLTS, MAX_MILLIAMPS);
     FastLED.setBrightness(brightness);
+    //Clear all neo's
     FastLED.clear();
     FastLED.show();
 
@@ -744,23 +763,23 @@ void loop()
 {
     ws.cleanupClients();
 
-#if defined(ESP8266)
+    #if defined(ESP8266)
     MDNS.update();
-#endif
+    #endif
 
-    if (stripLed.powerState && !bt_powerState)
+    if (stripLed.powerState)
     {
+        bt_powerState = false;
         brightness = stripLed.brightness;
         stripLed.update();
         delay(6);
-    } else if (!stripLed.powerState && stripLed.effectId >= 11)
+    }else if (bt_powerState)
     {
-        stripLed.update();
-    } else
         stripLed.powerState = false;
+        stripLed.updateVU();
+    } else
         stripLed.clear();
-    
-
+        
     onboard_led.on = millis() % 1000 < 50;
     onboard_led.update();
 
@@ -770,4 +789,6 @@ void loop()
         notifyClients();
         startMillis = currentMillis;
     }
+    
 }
+

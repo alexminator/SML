@@ -60,7 +60,7 @@ void soundmems() { // Rolling average counter - means we don't have to go throug
   static unsigned long samplesum;
   static unsigned long oldtime;
   unsigned long newtime = millis();
-  unsigned int sample = abs(analogRead(AUDIO_IN_PIN) -512);
+  unsigned int sample = abs(analogRead(AUDIO_IN_PIN) -512)/2;
   
   samplesum = samplesum + sample - volLeft[samplecount]; // Add the new sample and remove the oldest sample in the array 
   sampleavg = samplesum / SAMPLES; // Get an average
@@ -86,7 +86,7 @@ void RippleVU::runPattern(boolean show_background) {
   EVERY_N_MILLISECONDS(20) {
     ripple3(show_background);
   }
-  
+  FastLED.setBrightness(255);
   FastLED.show();
 }
 

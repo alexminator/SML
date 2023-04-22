@@ -64,6 +64,10 @@ void averageReadings(uint8_t channel) {
     minLvlAvgLeft = (minLvlAvgLeft * 63 + minLvl) >> 6; // Dampen min/max levels
     maxLvlAvgLeft = (maxLvlAvgLeft * 63 + maxLvl) >> 6; // (fake rolling average)
   }
-
-  
 }
+
+void addGlitter( fract8 chanceOfGlitter) {             // Let's add some glitter, thanks to Mark
+  if( random8() < chanceOfGlitter) {
+    leds[random16(N_PIXELS)] += CRGB::White;
+  }
+} 
