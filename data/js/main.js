@@ -34,14 +34,11 @@ window.onload = function () {
     var colors = document.getElementById("picker_bridge").className;
     const json_colors = colors;
     const obj = JSON.parse(json_colors);
-    //console.log(obj);
     json.color.r = colorR = obj.color.r;
     json.color.g = colorG = obj.color.g;
     json.color.b = colorB = obj.color.b;
-    //console.log(json);
     // Create a new color picker instance
     var colorPicker = new iro.ColorPicker("#wheelPicker", {
-        // color picker options
         width: 250,
         color: {r: colorR, g: colorG, b: colorB},
         borderWidth: 2,
@@ -105,7 +102,6 @@ function onMessage(event) {
     var data = JSON.parse(event.data);
     document.getElementById('Signal').className = data.bars;
     document.getElementById("Neo").className = data.neostatus;
-    document.getElementById("Bluetooth").className = data.btstatus;
     document.getElementById("picker_bridge").className = data.color;
     document.getElementById("textSliderValue").innerHTML = data.neobrightness;
     document.getElementById("pwmSlider").value = data.neobrightness;
@@ -153,7 +149,6 @@ function setStatus() {
 
 function initButton() {
     document.getElementById('Neo').addEventListener('click', onToggleNeo);
-    document.getElementById('Bluetooth').addEventListener('click', onToggleBt);
     document.getElementById('pwmSlider').addEventListener('change', onChangeBrightness);
     document.getElementById('Firebutton').addEventListener('click', onToggleFireEffect);
     document.getElementById('MovingDotbutton').addEventListener('click', onToggleMovingDotEffect);
@@ -179,28 +174,10 @@ function onToggleNeo(event) {
     const toggle = document.getElementById("Neo");
     if (toggle.className == "on") {
         toggle.className = "off";
-        isOn = 99;
     } else {
         toggle.className = "on";
-        isOn = 0;
     }
     json.action = 'toggle';
-    json.effectId = isOn;
-    console.log(json);
-    websocket.send(JSON.stringify(json));
-}
-
-function onToggleBt(event) {
-    const toggle = document.getElementById("Bluetooth");
-    if (toggle.className == "on") {
-        isOn = 99;
-        toggle.className = "off";
-    } else {
-        toggle.className = "on";
-        isOn = 13;
-    }
-    json.action = 'music';
-    json.effectId = isOn;
     console.log(json);
     websocket.send(JSON.stringify(json));
 }
@@ -368,7 +345,7 @@ function onToggleCometeffect(event) {
 function onToggleRainbowVU(event) {
     const toggle = document.getElementById("RainbowVU");
     if (toggle.className == "on") {
-        isOn = 99;
+        isOn = 0;
         toggle.className = "off";
     } else {
         isOn = 11;
@@ -383,7 +360,7 @@ function onToggleRainbowVU(event) {
 function onToggleOldVU(event) {
     const toggle = document.getElementById("Old-skoolVU");
     if (toggle.className == "on") {
-        isOn = 99;
+        isOn = 0;
         toggle.className = "off";
     } else {
         isOn = 12;
@@ -398,7 +375,7 @@ function onToggleOldVU(event) {
 function onToggleRainbowHueVU(event) {
     const toggle = document.getElementById("RainbowHueVU");
     if (toggle.className == "on") {
-        isOn = 99;
+        isOn = 0;
         toggle.className = "off";
     } else {
         isOn = 13;
@@ -413,7 +390,7 @@ function onToggleRainbowHueVU(event) {
 function onToggleRippleVU(event) {
     const toggle = document.getElementById("RippleVU");
     if (toggle.className == "on") {
-        isOn = 99;
+        isOn = 0;
         toggle.className = "off";
     } else {
         isOn = 14;
@@ -428,7 +405,7 @@ function onToggleRippleVU(event) {
 function onToggle3barsVU(event) {
     const toggle = document.getElementById("ThreebarsVU");
     if (toggle.className == "on") {
-        isOn = 99;
+        isOn = 0;
         toggle.className = "off";
     } else {
         isOn = 15;
@@ -443,7 +420,7 @@ function onToggle3barsVU(event) {
 function onToggleOceanVU(event) {
     const toggle = document.getElementById("OceanVU");
     if (toggle.className == "on") {
-        isOn = 99;
+        isOn = 0;
         toggle.className = "off";
     } else {
         isOn = 16;
@@ -458,7 +435,7 @@ function onToggleOceanVU(event) {
 function onToggleBlendingVU(event) {
     const toggle = document.getElementById("BlendingVU");
     if (toggle.className == "on") {
-        isOn = 99;
+        isOn = 0;
         toggle.className = "off";
     } else {
         isOn = 17;

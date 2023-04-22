@@ -306,15 +306,6 @@ struct StripLed
         case 10:
             runComet();
             break;
-                         
-        default:
-            break;
-        }
-    }
-
-    void updateVU () {
-        switch (effectId)
-        {
         case 11:
             runRainbowVU();
             break;
@@ -335,10 +326,10 @@ struct StripLed
             break;
         case 17:
             runBlendingVU();
-            break;
+            break;                 
         default:
             break;
-        } 
+        }
     }
 
     void clear()
@@ -559,11 +550,10 @@ String bars()
 void notifyClients()
 {
     //Serial.println(bt_powerState);
-    const int size = JSON_OBJECT_SIZE(22); // Remember change the number of member object
+    const int size = JSON_OBJECT_SIZE(21); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["bars"] = bars();
     json["neostatus"] = stripLed.powerState ? "on" : "off";
-    json["btstatus"] = bt_powerState ? "on" : "off";
     json["neobrightness"] = stripLed.brightness;
     json["fireStatus"] = stripLed.effectId == 1 && stripLed.powerState ? "on" : "off";
     json["movingdotStatus"] = stripLed.effectId == 2 && stripLed.powerState ? "on" : "off";
@@ -576,14 +566,14 @@ void notifyClients()
     json["sinelonStatus"] = stripLed.effectId == 9 && stripLed.powerState ? "on" : "off";
     json["cometStatus"] = stripLed.effectId == 10 && stripLed.powerState ? "on" : "off";
     //VU
-    json["rainbowVUStatus"] = stripLed.effectId == 11 && bt_powerState ? "on" : "off";
-    json["oldVUStatus"] = stripLed.effectId == 12 && bt_powerState ? "on" : "off";
-    json["rainbowHueVUStatus"] = stripLed.effectId == 13 && bt_powerState ? "on" : "off";
-    json["rippleVUStatus"] = stripLed.effectId == 14 && bt_powerState ? "on" : "off";
-    json["threebarsVUStatus"] = stripLed.effectId == 15 && bt_powerState ? "on" : "off";
-    json["oceanVUStatus"] = stripLed.effectId == 16 && bt_powerState ? "on" : "off";
-    json["blendingVUStatus"] = stripLed.effectId == 17 && bt_powerState ? "on" : "off";
-    char buffer[470];                         // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
+    json["rainbowVUStatus"] = stripLed.effectId == 11 && stripLed.powerState ? "on" : "off";
+    json["oldVUStatus"] = stripLed.effectId == 12 && stripLed.powerState ? "on" : "off";
+    json["rainbowHueVUStatus"] = stripLed.effectId == 13 && stripLed.powerState ? "on" : "off";
+    json["rippleVUStatus"] = stripLed.effectId == 14 && stripLed.powerState ? "on" : "off";
+    json["threebarsVUStatus"] = stripLed.effectId == 15 && stripLed.powerState ? "on" : "off";
+    json["oceanVUStatus"] = stripLed.effectId == 16 && stripLed.powerState ? "on" : "off";
+    json["blendingVUStatus"] = stripLed.effectId == 17 && stripLed.powerState ? "on" : "off";
+    char buffer[450];                         // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
 }
@@ -607,14 +597,6 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         const int effectId = json["effectId"];
         stripLed.effectId = effectId;
 
-        if (effectId == 99)
-        {
-            stripLed.clear();
-        } else if (effectId == 0)
-        {
-            bt_powerState = false;
-        }
-
         if (strcmp(action, "toggle") == 0)
         {
             stripLed.powerState = !stripLed.powerState;
@@ -627,7 +609,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
                 stripLed.clear();
             }
         }
-        else if (strcmp(action, "animation") == 0)
+        else if (strcmp(action, "animation") == 0 || strcmp(action, "vu") == 0)
         {
             if (stripLed.powerState)
             {
@@ -656,34 +638,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             stripLed.G = g;
             stripLed.B = b;
         }
-        else if (strcmp(action, "music") == 0)
-        {
-            bt_powerState = !bt_powerState;
-            if (bt_powerState)
-            {
-                digitalWrite(SWITCH_PIN,HIGH);
-                bt_powerState = true;
-                stripLed.effectId = 0;
-                Serial.println("Encendido del modulo BT");
-            }
-            else
-            {
-                digitalWrite(SWITCH_PIN,LOW);
-                bt_powerState = false;
-                Serial.println("Apagado del modulo BT");
-            }
-        }
-
-        else if (strcmp(action, "vu") == 0)
-        {
-            stripLed.powerState = !stripLed.powerState;
-            if (bt_powerState && !stripLed.powerState)
-            {
-                stripLed.update();
-            } else
-                stripLed.powerState = false;
-                stripLed.clear();
-        }
+        
         notifyClients();
     }
 }
@@ -769,14 +724,9 @@ void loop()
 
     if (stripLed.powerState)
     {
-        bt_powerState = false;
         brightness = stripLed.brightness;
         stripLed.update();
         delay(6);
-    }else if (bt_powerState)
-    {
-        stripLed.powerState = false;
-        stripLed.updateVU();
     } else
         stripLed.clear();
         
