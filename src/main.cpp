@@ -24,7 +24,7 @@
 #define COLOR_ORDER GRB   // Colour order of LED strip [GRB]
 #define LED_TYPE WS2812B  // LED string type [WS2812B]
 //VU
-# define AUDIO_IN_PIN 34             // Aux in signal 
+# define AUDIO_IN_PIN 34            // Aux in signal 
 # define DC_OFFSET 0                // DC offset in aux signal [0]
 # define NOISE 20                   // Noise/hum/interference in aux signal [10]
 # define SAMPLES 60                 // Length of buffer for dynamic level adjustment [60]
@@ -457,10 +457,6 @@ String processor(const String &var)
     else if (var == "NEOPIXEL")
     {
         return String(var == "NEOPIXEL" && stripLed.powerState ? "on" : "off");
-    }
-    else if (var == "BLUETOOTH")
-    {
-        return String(var == "BLUETOOTH" && bt_powerState ? "on" : "off");
     }
     else if (var == "VU1")
     {
