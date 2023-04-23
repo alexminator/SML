@@ -396,55 +396,33 @@ void initWiFi()
 // ----------------------------------------------------------------------------
 // Web server initialization
 // ----------------------------------------------------------------------------
+enum Status {
+    COLOR,    
+    FIRE_STATE,
+    MOVINGDOT_STATE,
+    RAINBOWBEAT_STATE,
+    RWB_STATE,
+    RIPPLE_STATE,
+    TWINKLE_STATE,
+    BALLS_STATE,
+    JUGGLE_STATE,
+    SINELON_STATE,
+    COMET_STATE,
+	BRIGHTNESS,
+	STRIPLED,
+	VU1,
+	VU2,
+	VU3,
+	VU4,
+	VU5,
+	VU6,
+	VU7
+} status;
 
 String processor(const String &var)
 {
-    if (var == "FIRE_STATE")
-    {
-        return String("off");
-    }
-    else if (var == "MOVINGDOT_STATE")
-    {
-        return String("off");
-    }
-    else if (var == "RAINBOWBEAT_STATE")
-    {
-        return String("off");
-    }
-    else if (var == "RWB_STATE")
-    {
-        return String("off");
-    }
-    else if (var == "RIPPLE_STATE")
-    {
-        return String("off");
-    }
-    else if (var == "TWINKLE_STATE")
-    {
-        return String("off");
-    }
-    else if (var == "BALLS_STATE")
-    {
-        return String("off");
-    }
-    else if (var == "JUGGLE_STATE")
-    {
-        return String("off");
-    }
-    else if (var == "SINELON_STATE")
-    {
-        return String("off");
-    }
-    else if (var == "COMET_STATE")
-    {
-        return String("off");
-    }
-    else if (var == "BRIGHTNESS")
-    {
-        return String(brightness);
-    }
-    else if (var == "COLOR")
-    {
+    switch (status) {
+    case COLOR:{
         const uint8_t array_size = JSON_ARRAY_SIZE(4);
         StaticJsonDocument<array_size> doc;
         doc["color"]["r"] = stripLed.R;
@@ -454,40 +432,35 @@ String processor(const String &var)
         serializeJson(doc, buffer_size);
         return String(buffer_size);
     }
-    else if (var == "NEOPIXEL")
-    {
-        return String(var == "NEOPIXEL" && stripLed.powerState ? "on" : "off");
-    }
-    else if (var == "VU1")
-    {
+        break;
+    case FIRE_STATE:
+    case MOVINGDOT_STATE:
+    case RAINBOWBEAT_STATE:
+    case RWB_STATE:
+    case RIPPLE_STATE:
+    case TWINKLE_STATE:
+    case BALLS_STATE:
+    case JUGGLE_STATE:
+    case SINELON_STATE:
+    case COMET_STATE:
+    case VU1:
+    case VU2:
+    case VU3:
+    case VU4:
+    case VU5:
+    case VU6:
+    case VU7: 
         return String("off");
+    break;
+    case BRIGHTNESS: 
+        return String(brightness);
+    break;
+    case STRIPLED: 
+        return String(stripLed.powerState ? "on" : "off");
+        break;
+    default:
+        return String();
     }
-    else if (var == "VU2")
-    {
-        return String("off");
-    }
-    else if (var == "VU3")
-    {
-        return String("off");
-    }
-    else if (var == "VU4")
-    {
-        return String("off");
-    }
-    else if (var == "VU5")
-    {
-        return String("off");
-    }
-    else if (var == "VU6")
-    {
-        return String("off");
-    }
-    else if (var == "VU7")
-    {
-        return String("off");
-    }
-
-    return String();
 }
 
 void onRootRequest(AsyncWebServerRequest *request)
