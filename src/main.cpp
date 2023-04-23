@@ -451,10 +451,10 @@ String processor(const String &var)
     case VU6:
     case VU7: 
         return String("off");
-    break;
+        break;
     case BRIGHTNESS: 
         return String(brightness);
-    break;
+        break;
     case STRIPLED: 
         return String(stripLed.powerState ? "on" : "off");
         break;
