@@ -72,7 +72,6 @@ AsyncWebSocket ws("/ws");
 
 //CMOS Switch for Bluetooth
 #define SWITCH_PIN 5            // Pin to command swith MOSFET
-bool bt_powerState = false;
 
 // Web signal info
 unsigned long startMillis;
@@ -708,6 +707,5 @@ void loop()
         notifyClients();
         startMillis = currentMillis;
     }
-    
 }
 
