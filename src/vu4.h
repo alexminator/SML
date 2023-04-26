@@ -60,8 +60,8 @@ void soundmems() { // Rolling average counter - means we don't have to go throug
   static unsigned long samplesum;
   static unsigned long oldtime;
   unsigned long newtime = millis();
-  unsigned int sample = abs(analogRead(AUDIO_IN_PIN) -512)/2;
-  
+  unsigned int sample = abs(analogRead(AUDIO_IN_PIN) - BIAS);
+
   samplesum = samplesum + sample - volLeft[samplecount]; // Add the new sample and remove the oldest sample in the array 
   sampleavg = samplesum / SAMPLES; // Get an average
   volLeft[samplecount] = sample; // Update oldest sample in the array with new sample

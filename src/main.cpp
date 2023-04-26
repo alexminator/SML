@@ -6,35 +6,37 @@
  * ----------------------------------------------------------------------------
  */
 
-#include <Arduino.h>
-#include <SPIFFS.h>
-#include <ArduinoJson.h>
-#include <ESPAsyncWebServer.h>
-#include <FastLED.h>
-#include "data.h"
+# include <Arduino.h>
+# include <SPIFFS.h>
+# include <ArduinoJson.h>
+# include <ESPAsyncWebServer.h>
+# include <FastLED.h>
+# include <Battery18650Stats.h>
+# include "data.h"
 
 // ----------------------------------------------------------------------------
 // Definition of macros
 // ----------------------------------------------------------------------------
 // Strip LED
-#define STRIP_PIN 4
-#define N_PIXELS 24
-#define VOLTS 5           // Vcc Strip [5 volts]
-#define MAX_MILLIAMPS 500 // Maximum current to draw [500 mA]
-#define COLOR_ORDER GRB   // Colour order of LED strip [GRB]
-#define LED_TYPE WS2812B  // LED string type [WS2812B]
+# define STRIP_PIN 4
+# define N_PIXELS 24
+# define VOLTS 5           // Vcc Strip [5 volts]
+# define MAX_MILLIAMPS 500 // Maximum current to draw [500 mA]
+# define COLOR_ORDER GRB   // Colour order of LED strip [GRB]
+# define LED_TYPE WS2812B  // LED string type [WS2812B]
 //VU
-# define AUDIO_IN_PIN 34            // Aux in signal 
+# define AUDIO_IN_PIN 36            // Aux in signal 
 # define DC_OFFSET 0                // DC offset in aux signal [0]
 # define NOISE 20                   // Noise/hum/interference in aux signal [10]
 # define SAMPLES 60                 // Length of buffer for dynamic level adjustment [60]
 # define TOP (N_PIXELS + 2)         // Allow dot to go slightly off scale [(N_PIXELS + 2)]
 # define PEAK_FALL 20               // Rate of peak falling dot [20]
 # define N_PIXELS_HALF (N_PIXELS / 2)
+# define BIAS 1870                  // ADC value for 1.613V (HALF of 3.22V VCC), 2048 on 3.3V VCC
 // Effects
-#define GRAVITY -1  // Downward (negative) acceleration of gravity in m/s^2
-#define h0 1        // Starting height, in meters, of the ball (strip length)
-#define NUM_BALLS 3 // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way)
+# define GRAVITY -1  // Downward (negative) acceleration of gravity in m/s^2
+# define h0 1        // Starting height, in meters, of the ball (strip length)
+# define NUM_BALLS 3 // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way)
 
 uint8_t volCount = 0;           // Frame counter for storing past volume data
 int vol[SAMPLES];               // Collection of prior volume samples
@@ -46,22 +48,22 @@ CRGBPalette16 currentPalette; // Define the current palette
 CRGBPalette16 targetPalette; // Define the target palette
 
 // WEB
-#define HTTP_PORT 80
+# define HTTP_PORT 80
 
-#if defined(ESP32)
+# if defined(ESP32)
 
-#include <WiFi.h>
-#include <ESPmDNS.h>
-#include <Update.h>
+# include <WiFi.h>
+# include <ESPmDNS.h>
+# include <Update.h>
 
-#elif defined(ESP8266)
+# elif defined(ESP8266)
 
-#include <ESP8266WiFi.h>
-#include <WiFiClient.h>
-#include <ESP8266mDNS.h>
-#else
-#error "Board not found"
-#endif
+# include <ESP8266WiFi.h>
+# include <WiFiClient.h>
+# include <ESP8266mDNS.h>
+# else
+# error "Board not found"
+# endif
 
 AsyncWebServer server(HTTP_PORT);
 AsyncWebSocket ws("/ws");
@@ -70,8 +72,16 @@ AsyncWebSocket ws("/ws");
 // Definition of global constants
 // ----------------------------------------------------------------------------
 
-//CMOS Switch for Bluetooth
-#define SWITCH_PIN 5            // Pin to command swith MOSFET
+//Lamp Switch 
+# define LAMP_PIN 5          // Pin to command LAMP
+//Charge Switch
+# define CHARGE_PIN 5
+//Sensor Battery
+# define ADC_PIN 33          // Pin to monitor Batt
+# define CONV_FACTOR 1.7
+# define READS 20
+
+Battery18650Stats battery(ADC_PIN, CONV_FACTOR, READS);
 
 // Web signal info
 unsigned long startMillis;
@@ -107,25 +117,25 @@ int maxLvlAvgLeft = 512;
 bool is_centered = false;          //For VU1 effects
 
 // Effects library
-#include "MovingDot.h"
-#include "RainbowBeat.h"
-#include "RedWhiteBlue.h"
-#include "Ripple.h"
-#include "Fire.h"
-#include "Twinkle.h"
-#include "Balls.h"
-#include "Juggle.h"
-#include "Sinelon.h"
-#include "Comet.h"
+# include "MovingDot.h"
+# include "RainbowBeat.h"
+# include "RedWhiteBlue.h"
+# include "Ripple.h"
+# include "Fire.h"
+# include "Twinkle.h"
+# include "Balls.h"
+# include "Juggle.h"
+# include "Sinelon.h"
+# include "Comet.h"
 // VU
-#include "common.h"
-#include "vu1.h"
-#include "vu2.h"
-#include "vu3.h"
-#include "vu4.h"
-#include "vu5.h"
-#include "vu7.h"
-#include "vu6.h"
+# include "common.h"
+# include "vu1.h"
+# include "vu2.h"
+# include "vu3.h"
+# include "vu4.h"
+# include "vu5.h"
+# include "vu7.h"
+# include "vu6.h"
 
 // ----------------------------------------------------------------------------
 // Definition of the LED component
@@ -647,10 +657,11 @@ void setup()
 {
     delay(3000); // sanity delay
     // Establecer la resolución del ADC a 10 bits
-    analogReadResolution(10);
+    //analogReadResolution(10);
     pinMode(onboard_led.pin, OUTPUT);
     pinMode(STRIP_PIN, OUTPUT);
-    pinMode(SWITCH_PIN, OUTPUT);
+    pinMode(LAMP_PIN, OUTPUT);
+    pinMode(CHARGE_PIN, OUTPUT);
 
     Serial.begin(115200);
     
@@ -676,6 +687,15 @@ void setup()
     initWiFi();
     initWebSocket();
     initWebServer();
+
+    Serial.print("Volts: ");
+    Serial.println(battery.getBatteryVolts());
+
+    Serial.print("Charge level: ");
+    Serial.println(battery.getBatteryChargeLevel());
+
+    Serial.print("Charge level (using the reference table): ");
+    Serial.println(battery.getBatteryChargeLevel(true));
 }
 
 // ----------------------------------------------------------------------------
@@ -707,5 +727,6 @@ void loop()
         notifyClients();
         startMillis = currentMillis;
     }
+
 }
 

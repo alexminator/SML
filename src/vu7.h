@@ -9,13 +9,12 @@ class BlendingVU {
 };
 
 void soundtun() {
-    int sampleLeft = abs(analogRead(AUDIO_IN_PIN) - 512 - DC_OFFSET) / 2;
+    int sampleLeft = abs(analogRead(AUDIO_IN_PIN) - BIAS - DC_OFFSET);
     CRGB newcolourLeft = ColorFromPalette(currentPalette, constrain(sampleLeft, 0, 255), constrain(sampleLeft, 0, 255), LINEARBLEND);
     nblend(leds[0], newcolourLeft, 128);
     for (int i = N_PIXELS - 1; i > 0; i--)
     {
       leds[i] = leds[i - 1];
-      Serial.println(leds[i]);
   }
 }
 
@@ -36,7 +35,6 @@ void BlendingVU::runPattern() {
 
   EVERY_N_MILLISECONDS(20) { // FastLED based non-blocking delay to update/display the sequence.
     soundtun();
-
     FastLED.show();
   }
 }

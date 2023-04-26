@@ -10,8 +10,7 @@ class OceanVU {
 };
 
 void sndwave() {
-  int sampleLeft = abs(analogRead(AUDIO_IN_PIN) - 512 - DC_OFFSET) / 2;
-  
+  int sampleLeft = abs(analogRead(AUDIO_IN_PIN) - BIAS - DC_OFFSET);
   leds[N_PIXELS_HALF] = ColorFromPalette(currentPalette, sampleLeft, sampleLeft * 2, LINEARBLEND); // Put the sample into the center
   
   for (int i = N_PIXELS - 1; i > N_PIXELS_HALF; i--) { //move to the left      // Copy to the left, and let the fade do the rest.

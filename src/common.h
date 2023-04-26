@@ -14,7 +14,7 @@ uint16_t auxReading(uint8_t channel) {
 
   if(channel == 0) {
     int n = analogRead(AUDIO_IN_PIN); // Raw reading from left line in
-    n = abs(n - 512 - DC_OFFSET) / 2; // Center on zero
+    n = abs(n - BIAS - DC_OFFSET); // Center on zero
     n = (n <= NOISE) ? 0 : (n - NOISE); // Remove noise/hum
     lvlLeft = ((lvlLeft * 7) + n) >> 3; // "Dampened" reading else looks twitchy (>>3 is divide by 8)
     volLeft[volCountLeft] = n; // Save sample for dynamic leveling
