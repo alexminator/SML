@@ -102,6 +102,7 @@ function onMessage(event) {
     var data = JSON.parse(event.data);
     document.getElementById('Signal').className = data.bars;
     document.getElementById("Neo").className = data.neostatus;
+    document.getElementById("lamp").className = data.lampstatus;
     document.getElementById("picker_bridge").className = data.color;
     document.getElementById("textSliderValue").innerHTML = data.neobrightness;
     document.getElementById("pwmSlider").value = data.neobrightness;
@@ -148,6 +149,7 @@ function setStatus() {
 // ----------------------------------------------------------------------------
 
 function initButton() {
+    document.getElementById('lamp').addEventListener('click', onToggleLamp);
     document.getElementById('Neo').addEventListener('click', onToggleNeo);
     document.getElementById('pwmSlider').addEventListener('change', onChangeBrightness);
     document.getElementById('Firebutton').addEventListener('click', onToggleFireEffect);
@@ -168,6 +170,18 @@ function initButton() {
     document.getElementById('ThreebarsVU').addEventListener('click', onToggle3barsVU);
     document.getElementById('OceanVU').addEventListener('click', onToggleOceanVU);
     document.getElementById('BlendingVU').addEventListener('click', onToggleBlendingVU);
+}
+
+function onToggleLamp(event) {
+    const toggle = document.getElementById("lamp");
+    if (toggle.className == "on") {
+        toggle.className = "off";
+    } else {
+        toggle.className = "on";
+    }
+    json.action = 'lamp';
+    console.log(json);
+    websocket.send(JSON.stringify(json));
 }
 
 function onToggleNeo(event) {

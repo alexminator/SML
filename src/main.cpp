@@ -74,6 +74,7 @@ AsyncWebSocket ws("/ws");
 
 //Lamp Switch 
 # define LAMP_PIN 5          // Pin to command LAMP
+bool lampState = true;
 //Charge Switch
 # define CHARGE_PIN 5
 //Sensor Battery
@@ -425,7 +426,8 @@ enum Status {
 	VU4,
 	VU5,
 	VU6,
-	VU7
+	VU7,
+    LAMP
 } status;
 
 String processor(const String &var)
@@ -460,6 +462,9 @@ String processor(const String &var)
     case VU6:
     case VU7: 
         return String("off");
+        break;
+    case LAMP:
+        return String("on");
         break;
     case BRIGHTNESS: 
         return String(brightness);
@@ -527,10 +532,11 @@ String bars()
 
 void notifyClients()
 {
-    //Serial.println(bt_powerState);
-    const int size = JSON_OBJECT_SIZE(21); // Remember change the number of member object
+    Serial.println("estado  lamp " + String(lampState));
+    const int size = JSON_OBJECT_SIZE(22); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["bars"] = bars();
+    json["lampstatus"] = lampState ? "on" : "off";
     json["neostatus"] = stripLed.powerState ? "on" : "off";
     json["neobrightness"] = stripLed.brightness;
     json["fireStatus"] = stripLed.effectId == 1 && stripLed.powerState ? "on" : "off";
@@ -551,7 +557,7 @@ void notifyClients()
     json["threebarsVUStatus"] = stripLed.effectId == 15 && stripLed.powerState ? "on" : "off";
     json["oceanVUStatus"] = stripLed.effectId == 16 && stripLed.powerState ? "on" : "off";
     json["blendingVUStatus"] = stripLed.effectId == 17 && stripLed.powerState ? "on" : "off";
-    char buffer[450];                         // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
+    char buffer[470];                         // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
 }
@@ -585,6 +591,21 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             else
             {
                 stripLed.clear();
+            }
+        }
+        else if (strcmp(action, "lamp") == 0)
+        {
+            lampState = !lampState;
+            Serial.println(lampState);
+            if (lampState)
+            {
+                digitalWrite(LAMP_PIN, HIGH);
+                Serial.println("lampara encendida");
+            }
+            else
+            {
+                digitalWrite(LAMP_PIN, LOW);
+                Serial.println("lampara apagada");
             }
         }
         else if (strcmp(action, "animation") == 0 || strcmp(action, "vu") == 0)
@@ -663,6 +684,9 @@ void setup()
     pinMode(LAMP_PIN, OUTPUT);
     pinMode(CHARGE_PIN, OUTPUT);
 
+    //Init Rele on OFF
+    digitalWrite(LAMP_PIN, HIGH);
+    
     Serial.begin(115200);
     
     FastLED.addLeds<LED_TYPE, STRIP_PIN, COLOR_ORDER>(leds, N_PIXELS).setCorrection(TypicalLEDStrip);
