@@ -29,7 +29,7 @@
     --body-color: hsl(0, 0%, 9%);
     --container-color: hsl(0, 0%, 15%);
     --container-color-active: hsl(0, 0%, 20%);
-    --slider-ballon: hsl(0, 0%, 50%);
+    --slider-ballon: #5d68e2;
   
 /*========== Font and typography ==========*/
     /*.5rem = 8px | 1rem = 16px ...*/
@@ -900,16 +900,16 @@ slider span.fa-sun-o {
     display: inline-block;
     width: 60px;
     height: 34px;
-    background-color: #ccc;
+    background-color: rgba(214, 214, 214, 0.434);
     border-radius: 34px;
   }
   
   .on .button {
-    background-color: #2196f3;
+    background-color: #5d68e2;
   }
   
   .button:hover {
-    background-color: #072a46;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.75);
   }
   
   .slide {
@@ -921,6 +921,7 @@ slider span.fa-sun-o {
     bottom: 4px;
     border-radius: 34px;
     background-color: white;
+    cursor: pointer;
   }
   
   .on .slide {
