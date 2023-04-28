@@ -32,7 +32,7 @@
 # define TOP (N_PIXELS + 2)         // Allow dot to go slightly off scale [(N_PIXELS + 2)]
 # define PEAK_FALL 20               // Rate of peak falling dot [20]
 # define N_PIXELS_HALF (N_PIXELS / 2)
-# define BIAS 1870                  // ADC value for 1.613V (HALF of 3.22V VCC), 2048 on 3.3V VCC
+# define BIAS 512                  // ADC value for HALF of 3.22V VCC
 // Effects
 # define GRAVITY -1  // Downward (negative) acceleration of gravity in m/s^2
 # define h0 1        // Starting height, in meters, of the ball (strip length)
@@ -532,7 +532,7 @@ String bars()
 
 void notifyClients()
 {
-    Serial.println("estado  lamp " + String(lampState));
+    //Serial.println("estado  lamp " + String(lampState));
     const int size = JSON_OBJECT_SIZE(22); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["bars"] = bars();
@@ -600,12 +600,12 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             if (lampState)
             {
                 digitalWrite(LAMP_PIN, HIGH);
-                Serial.println("lampara encendida");
+                //Serial.println("lampara encendida");
             }
             else
             {
                 digitalWrite(LAMP_PIN, LOW);
-                Serial.println("lampara apagada");
+                //Serial.println("lampara apagada");
             }
         }
         else if (strcmp(action, "animation") == 0 || strcmp(action, "vu") == 0)
@@ -686,7 +686,7 @@ void setup()
 
     //Init Rele on OFF
     digitalWrite(LAMP_PIN, HIGH);
-    
+
     Serial.begin(115200);
     
     FastLED.addLeds<LED_TYPE, STRIP_PIN, COLOR_ORDER>(leds, N_PIXELS).setCorrection(TypicalLEDStrip);

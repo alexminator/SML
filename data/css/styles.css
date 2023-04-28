@@ -1,11 +1,4 @@
-* {
-    box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    -webkit-box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
+/*=============== FONTS ===============*/
 @font-face {
     font-family: Handmade;
     src: url('../fonts/Handmade.woff');
@@ -16,17 +9,56 @@
     src: url('../fonts/impactreg.woff');
 }
 
+/*=============== VARIABLES CSS ===============*/
+:root {
+    /*========== Colors ==========*/
+    /*Color mode HSL(hue, saturation, lightness)*/
+    --gradient-color-red: linear-gradient(90deg, 
+                            hsl(7, 89%, 46%) 15%,
+                            hsl(11, 93%, 68%) 100%);
+    --gradient-color-orange: linear-gradient(90deg, 
+                             hsl(22, 89%, 46%) 15%,
+                             hsl(54, 90%, 45%) 100%);
+    --gradient-color-yellow: linear-gradient(90deg, 
+                             hsl(54, 89%, 46%) 15%,
+                             hsl(92, 90%, 45%) 100%);
+    --gradient-color-green: linear-gradient(90deg, 
+                            hsl(92, 89%, 46%) 15%,
+                            hsl(92, 90%, 68%) 100%);
+    --text-color: #ccc;
+    --body-color: hsl(0, 0%, 9%);
+    --container-color: hsl(0, 0%, 15%);
+    --container-color-active: hsl(0, 0%, 20%);
+    --slider-ballon: hsl(0, 0%, 50%);
+  
+/*========== Font and typography ==========*/
+    /*.5rem = 8px | 1rem = 16px ...*/
+    --body-font: "Public Sans", sans-serif;
+    --biggest-font-size: 2.5rem;
+    --normal-font-size: 1.2rem;
+    --smaller-font-size: .75rem;
+}
+
+/*=============== BASE ===============*/
+* {
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 html {
     height: 100%;
 }
 
 body {
-    font-family: "Public Sans", sans-serif;
-    font-size: 1.2rem;
+    font-family: var(--body-font);
+    font-size: var(--normal-font-size);
+    background-color: var(--body-color);
+    color: var(--text-color);
     min-height: 100%;
     position: relative;
-    color: #e2e1e6;
-	background-color: #141414;
 }
 
 .grid-container>* {
@@ -86,7 +118,9 @@ footer p {
 
 ul.tabs {
     width: 100%;
-    background: #363636;
+    border-top-left-radius: 1.5rem;
+    border-top-right-radius: 1.5rem;
+    background-color: var(--container-color);
     list-style: none;
     display: grid;
     grid-template:
@@ -94,7 +128,7 @@ ul.tabs {
 }
 
 ul.tabs li a {
-    color: #1d1d1f;
+    color: var(--body-color);
     text-decoration: none;
     font-size: 2rem;
     display: block;
@@ -103,8 +137,10 @@ ul.tabs li a {
 }
 
 ul.tabs li a.active{
-    color: #fff;
-    background: #4f4f6a;
+    color: var(--text-color);
+    background-color: var(--container-color-active);
+    border-top-left-radius: 1.5rem;
+    border-top-right-radius: 1.5rem;
 }
 
 ul.tabs li a .tab-text {
@@ -115,8 +151,10 @@ ul.tabs li a .tab-text {
 }
 
 .sections {
-    background-color: #4f4f6a;
+    background-color: var(--container-color-active);
     padding: 10px;
+    border-bottom-left-radius: 1.5rem;
+    border-bottom-right-radius: 1.5rem;
 }
 
 .sections h1 {
@@ -279,15 +317,30 @@ ul.tabs li a .tab-text {
     grid-area: oceanL;
 }
 
-@media screen and (max-width: 700px) {
-    ul.tabs li {
-        width: none;
-        flex-basis: 0;
-        flex-grow: 1;
+/* Responsive typography */
+@media screen and (min-width: 968px) {
+    :root {
+      --biggest-font-size: 2.75rem;
+      --normal-font-size: 1rem;
+      --smaller-font-size: .813rem;
     }
 }
 
-@media screen and (max-width: 370px) {
+
+/*=============== BREAKPOINTS ===============*/
+/* For small devices */
+@media screen and (max-width: 30px) {
+    .battery__card{
+        zoom: .8;
+    }
+}
+
+/* For medium devices */
+@media screen and (max-width: 430px) {
+    .battery__card{
+        width: 312px;
+    }
+
     .wrap {
         margin: 10px auto;
         width: 100%;
@@ -300,6 +353,19 @@ ul.tabs li a .tab-text {
 
     ul.tabs li a .tab-text {
         display: none;
+    }
+}
+
+/* For large devices */
+@media screen and (max-width: 1024px) {
+    .battery__card{
+        zoom: 1.5;
+    }
+
+    ul.tabs li {
+        width: none;
+        flex-basis: 0;
+        flex-grow: 1;
     }
 }
 
@@ -723,10 +789,9 @@ slider span.fa-sun-o {
     grid-area: range;
     height: 60px;
     width: 300px;
-    background: #4f4f6a;
     border-radius: 10px;
     padding: 0 60px 0 40px;
-    box-shadow: 3px 5px 10px rgba(0, 0, 0, .8);
+    border: 3px solid var(--text-color);
 }
 
 .sliderValue {
@@ -757,7 +822,7 @@ slider span.fa-sun-o {
     content: '';
     height: 100%;
     width: 100%;
-    background: #664AFF;
+    background: var(--slider-ballon);
     border: 3px solid #fff;
     z-index: -1;
     left: 50%;
@@ -808,7 +873,7 @@ slider span.fa-sun-o {
     height: 20px;
     background: red;
     border-radius: 50%;
-    background: #664AFF;
+    background: var(--slider-ballon);
     border: 3px solid #fff;
     cursor: pointer;
 }
@@ -819,13 +884,13 @@ slider span.fa-sun-o {
     height: 20px;
     background: red;
     border-radius: 50%;
-    background: #664AFF;
-    border: 1px solid #664AFF;
+    background: var(--container-color-active);
+    border: 1px solid var(--container-color-active);
     cursor: pointer;
 }
 
 .range input::-moz-range-progress {
-    background: #664AFF;
+    background: var(--container-color-active);
 }
 
 /* END slider brightness*/

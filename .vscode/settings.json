@@ -12,5 +12,6 @@
     "initializer_list": "cpp",
     "regex": "cpp",
     "cmath": "cpp"
-  }
+  },
+  "liveServer.settings.port": 5501
 }

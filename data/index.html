@@ -9,11 +9,15 @@
   <meta name="description" content="Smart Music Lamp">
   <title>SML</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <!--=============== CSS ===============-->
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/font-awesome.min.css">
+  <link rel="stylesheet" href="css/battstyles.css">
+  <!--=============== MAIN JS ===============-->
   <script src="js/iro.min.js"></script>
   <script src="js/main.js"></script>
   <script src="js/slider.js" async></script>
+  <script src="js/battery.js"></script>
 </head>
 
 <body class="grid-container">
@@ -205,16 +209,34 @@
         </div>
 
         <div id="tab-battery">
-          <h1>Battery</h1>
+          <section class="battery">
+            <div class="battery__card">
+               <div class="battery__data">
+                   <p class="battery__text">Battery</p>
+                   <h1 class="battery__percentage">
+                      20% 
+                   </h1>
+                   
+                   <p class="battery__status">
+                      Low Battery <span class="fa fa-plug"></span>
+                   </p>
+               </div>
+               
+               <div class="battery__pill">
+                   <div class="battery__level">
+                      <div class="battery__liquid"></div> 
+                   </div>
+               </div> 
+            </div>
+        </section>
         </div>
       </div>
 
     </div>
     
-
   </main>
 
-  <footer class="footer">
+ <footer class="footer">
     <div id="Signal" class="%BARS%">
       <div class="wv4 wave">
         <div class="wv3 wave">
@@ -224,12 +246,8 @@
         </div>
       </div>
     </div>
-
-
     <p id="status">Disconnected</p>
     <div id="indicator"></div>
   </footer>
-
 </body>
-
 </html>
