@@ -77,7 +77,7 @@ body {
     position: relative;
     top: 25px;
     font-size: 60px;
-    color: #c0c0c0;
+    color: var(--text-color);
     margin-left: 10px;
 }
 
@@ -94,7 +94,7 @@ body {
 .footer {
     grid-area: footer;
     position: absolute;
-    color: #ffffff;
+    color: var(--text-color);
     background: rgba(0, 0, 0, .1);
     right: 0;
     opacity: 1;
