@@ -16,7 +16,7 @@
 }
 
 .battery__text {
-    margin-bottom: .5rem;
+    margin-bottom: 1rem;
 }
 
 .battery__percentage {
@@ -27,13 +27,13 @@
     position: absolute;
     bottom: 1.5rem;
     display: flex;
-    align-items: center;
     column-gap: .5rem;
     font-size: var(--smaller-font-size);
+    left: 30px;
 }
 
-.battery__status i {
-    font-size: 1.25rem;
+.battery__status span {
+    font-size: 1rem;
 }
 
 .battery__pill {
@@ -42,7 +42,8 @@
     height: 180px;
     background-color: var(--container-color);
     box-shadow: inset 20px 0 48px hsl(0, 0%, 16%),
-                inset -4px 12px 48px hsl(0, 0%, 56%);
+                inset -4px 12px 48px hsl(0, 0%, 56%),
+                5px 10px 8px var(--container-color);   
     border-radius: 3rem;
     justify-self: flex-end;
 }

@@ -34,9 +34,9 @@
 /*========== Font and typography ==========*/
     /*.5rem = 8px | 1rem = 16px ...*/
     --body-font: "Public Sans", sans-serif;
-    --biggest-font-size: 2.5rem;
+    --biggest-font-size: 4rem;
     --normal-font-size: 1.2rem;
-    --smaller-font-size: .75rem;
+    --smaller-font-size: .9rem;
 }
 
 /*=============== BASE ===============*/
@@ -329,16 +329,9 @@ ul.tabs li a .tab-text {
 
 /*=============== BREAKPOINTS ===============*/
 /* For small devices */
-@media screen and (max-width: 30px) {
+@media screen and (max-width: 360px) {
     .battery__card{
         zoom: .8;
-    }
-}
-
-/* For medium devices */
-@media screen and (max-width: 430px) {
-    .battery__card{
-        width: 312px;
     }
 
     .wrap {
@@ -356,8 +349,15 @@ ul.tabs li a .tab-text {
     }
 }
 
+/* For medium devices */
+@media screen and (min-width: 430px) {
+    .battery__card{
+        width: 312px;
+    }
+}
+
 /* For large devices */
-@media screen and (max-width: 1024px) {
+@media screen and (min-width: 1024px) {
     .battery__card{
         zoom: 1.5;
     }

@@ -15,9 +15,9 @@
   <link rel="stylesheet" href="css/battstyles.css">
   <!--=============== MAIN JS ===============-->
   <script src="js/iro.min.js"></script>
+  <script src="js/battery.js"></script>
   <script src="js/main.js"></script>
   <script src="js/slider.js" async></script>
-  <script src="js/battery.js"></script>
 </head>
 
 <body class="grid-container">
@@ -213,15 +213,12 @@
             <div class="battery__card">
                <div class="battery__data">
                    <p class="battery__text">Battery</p>
-                   <h1 class="battery__percentage">
-                      20 
-                   </h1>
-                   
-                   <p class="battery__status">
+                   <p id="battVolt">%BATTVOLTAGE%</p>
+                   <h1 id="battlevel" class="battery__percentage"></h1>
+                   <p id="battCharge" class="battery__status">
                       Low Battery <span class="fa fa-plug"></span>
                    </p>
                </div>
-               
                <div class="battery__pill">
                    <div class="battery__level">
                       <div class="battery__liquid"></div> 

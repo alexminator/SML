@@ -13,57 +13,61 @@
 # include <FastLED.h>
 # include <Battery18650Stats.h>
 # include "data.h"
+// Declare the debugging level then include the header file
+#define DEBUGLEVEL DEBUGLEVEL_DEBUGGING
+//#define DEBUGLEVEL DEBUGLEVEL_NONE
+#include "debug.h"
 
 // ----------------------------------------------------------------------------
 // Definition of macros
 // ----------------------------------------------------------------------------
 // Strip LED
-# define STRIP_PIN 4
-# define N_PIXELS 24
-# define VOLTS 5           // Vcc Strip [5 volts]
-# define MAX_MILLIAMPS 500 // Maximum current to draw [500 mA]
-# define COLOR_ORDER GRB   // Colour order of LED strip [GRB]
-# define LED_TYPE WS2812B  // LED string type [WS2812B]
-//VU
-# define AUDIO_IN_PIN 36            // Aux in signal 
-# define DC_OFFSET 0                // DC offset in aux signal [0]
-# define NOISE 20                   // Noise/hum/interference in aux signal [10]
-# define SAMPLES 60                 // Length of buffer for dynamic level adjustment [60]
-# define TOP (N_PIXELS + 2)         // Allow dot to go slightly off scale [(N_PIXELS + 2)]
-# define PEAK_FALL 20               // Rate of peak falling dot [20]
-# define N_PIXELS_HALF (N_PIXELS / 2)
-# define BIAS 512                  // ADC value for HALF of 3.22V VCC
+#define STRIP_PIN 4
+#define N_PIXELS 24
+#define VOLTS 5           // Vcc Strip [5 volts]
+#define MAX_MILLIAMPS 500 // Maximum current to draw [500 mA]
+#define COLOR_ORDER GRB   // Colour order of LED strip [GRB]
+#define LED_TYPE WS2812B  // LED string type [WS2812B]
+// VU
+#define AUDIO_IN_PIN 36    // Aux in signal
+#define DC_OFFSET 0        // DC offset in aux signal [0]
+#define NOISE 20           // Noise/hum/interference in aux signal [10]
+#define SAMPLES 60         // Length of buffer for dynamic level adjustment [60]
+#define TOP (N_PIXELS + 2) // Allow dot to go slightly off scale [(N_PIXELS + 2)]
+#define PEAK_FALL 20       // Rate of peak falling dot [20]
+#define N_PIXELS_HALF (N_PIXELS / 2)
+#define BIAS 512 // ADC value for HALF of 3.22V VCC
 // Effects
-# define GRAVITY -1  // Downward (negative) acceleration of gravity in m/s^2
-# define h0 1        // Starting height, in meters, of the ball (strip length)
-# define NUM_BALLS 3 // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way)
+#define GRAVITY -1  // Downward (negative) acceleration of gravity in m/s^2
+#define h0 1        // Starting height, in meters, of the ball (strip length)
+#define NUM_BALLS 3 // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way)
 
-uint8_t volCount = 0;           // Frame counter for storing past volume data
-int vol[SAMPLES];               // Collection of prior volume samples
-int lvl = 0;                    // Current "dampened" audio level
-int minLvlAvg = 0;              // For dynamic adjustment of graph low & high
+uint8_t volCount = 0; // Frame counter for storing past volume data
+int vol[SAMPLES];     // Collection of prior volume samples
+int lvl = 0;          // Current "dampened" audio level
+int minLvlAvg = 0;    // For dynamic adjustment of graph low & high
 int maxLvlAvg = 512;
 
 CRGBPalette16 currentPalette; // Define the current palette
-CRGBPalette16 targetPalette; // Define the target palette
+CRGBPalette16 targetPalette;  // Define the target palette
 
 // WEB
-# define HTTP_PORT 80
+#define HTTP_PORT 80
 
-# if defined(ESP32)
+#if defined(ESP32)
 
-# include <WiFi.h>
-# include <ESPmDNS.h>
-# include <Update.h>
+#include <WiFi.h>
+#include <ESPmDNS.h>
+#include <Update.h>
 
-# elif defined(ESP8266)
+#elif defined(ESP8266)
 
-# include <ESP8266WiFi.h>
-# include <WiFiClient.h>
-# include <ESP8266mDNS.h>
-# else
-# error "Board not found"
-# endif
+#include <ESP8266WiFi.h>
+#include <WiFiClient.h>
+#include <ESP8266mDNS.h>
+#else
+#error "Board not found"
+#endif
 
 AsyncWebServer server(HTTP_PORT);
 AsyncWebSocket ws("/ws");
@@ -72,16 +76,18 @@ AsyncWebSocket ws("/ws");
 // Definition of global constants
 // ----------------------------------------------------------------------------
 
-//Lamp Switch 
-# define LAMP_PIN 5          // Pin to command LAMP
+// Lamp Switch
+#define LAMP_PIN 5 // Pin to command LAMP
 bool lampState = true;
-//Charge Switch
-# define CHARGE_PIN 5
-//Sensor Battery
-# define ADC_PIN 33          // Pin to monitor Batt
-# define CONV_FACTOR 1.7
-# define READS 20
-
+// Charge Switch
+#define CHARGE_PIN 18 // Pin to command Charge module
+// Sensor Battery
+#define ADC_PIN 33 // Pin to monitor Batt
+#define CONV_FACTOR 1.709
+#define READS 30
+double battVolts;
+int battLvl;
+bool chargeState = false;
 Battery18650Stats battery(ADC_PIN, CONV_FACTOR, READS);
 
 // Web signal info
@@ -94,7 +100,7 @@ String strength;
 int brightness = 130;
 int effectId = 0;
 CRGB leds[N_PIXELS];
-uint8_t myhue = 0;               // hue 0. red color
+uint8_t myhue = 0;           // hue 0. red color
 const uint8_t FADE_RATE = 2; // How long should the trails be. Very low value = longer trails.
 uint8_t r = 255;
 uint8_t g = 255;
@@ -109,34 +115,34 @@ int pos[NUM_BALLS];                       // The integer position of the dot on 
 long tLast[NUM_BALLS];                    // The clock time of the last ground strike
 float COR[NUM_BALLS];                     // Coefficient of Restitution (bounce damping)
 
-//VU 
-uint8_t volCountLeft = 0;           // Frame counter for storing past volume data
-int volLeft[SAMPLES];               // Collection of prior volume samples
-int lvlLeft = 0;                    // Current "dampened" audio level
-int minLvlAvgLeft = 0;              // For dynamic adjustment of graph low & high
+// VU
+uint8_t volCountLeft = 0; // Frame counter for storing past volume data
+int volLeft[SAMPLES];     // Collection of prior volume samples
+int lvlLeft = 0;          // Current "dampened" audio level
+int minLvlAvgLeft = 0;    // For dynamic adjustment of graph low & high
 int maxLvlAvgLeft = 512;
-bool is_centered = false;          //For VU1 effects
+bool is_centered = false; // For VU1 effects
 
 // Effects library
-# include "MovingDot.h"
-# include "RainbowBeat.h"
-# include "RedWhiteBlue.h"
-# include "Ripple.h"
-# include "Fire.h"
-# include "Twinkle.h"
-# include "Balls.h"
-# include "Juggle.h"
-# include "Sinelon.h"
-# include "Comet.h"
+#include "MovingDot.h"
+#include "RainbowBeat.h"
+#include "RedWhiteBlue.h"
+#include "Ripple.h"
+#include "Fire.h"
+#include "Twinkle.h"
+#include "Balls.h"
+#include "Juggle.h"
+#include "Sinelon.h"
+#include "Comet.h"
 // VU
-# include "common.h"
-# include "vu1.h"
-# include "vu2.h"
-# include "vu3.h"
-# include "vu4.h"
-# include "vu5.h"
-# include "vu7.h"
-# include "vu6.h"
+#include "common.h"
+#include "vu1.h"
+#include "vu2.h"
+#include "vu3.h"
+#include "vu4.h"
+#include "vu5.h"
+#include "vu7.h"
+#include "vu6.h"
 
 // ----------------------------------------------------------------------------
 // Definition of the LED component
@@ -327,7 +333,7 @@ struct StripLed
             break;
         case 14:
             runRippleVU();
-            break; 
+            break;
         case 15:
             runThreebarsVU();
             break;
@@ -336,7 +342,7 @@ struct StripLed
             break;
         case 17:
             runBlendingVU();
-            break;                 
+            break;
         default:
             break;
         }
@@ -364,7 +370,7 @@ void initSPIFFS()
 {
     if (!SPIFFS.begin())
     {
-        Serial.println("Cannot mount SPIFFS volume...");
+        debuglnD("Cannot mount SPIFFS volume...");
         while (1)
         {
             onboard_led.on = millis() % 200 < 50;
@@ -384,7 +390,7 @@ void initWiFi()
     Serial.printf("Trying to connect [%s] ", WiFi.macAddress().c_str());
     while (WiFi.status() != WL_CONNECTED)
     {
-        Serial.print(".");
+        debuglnD(".");
         delay(500);
     }
     Serial.printf(" %s\n", WiFi.localIP().toString().c_str());
@@ -394,20 +400,21 @@ void initWiFi()
 
     if (!MDNS.begin(WEB_NAME))
     {
-        Serial.println("Error configurando mDNS!");
+        debuglnD("Error configurando mDNS!");
         while (1)
         {
             delay(1000);
         }
     }
-    Serial.println("mDNS configurado");
+    debuglnD("mDNS configurado");
 }
 
 // ----------------------------------------------------------------------------
 // Web server initialization
 // ----------------------------------------------------------------------------
-enum Status {
-    COLOR,    
+enum Status
+{
+    COLOR,
     FIRE_STATE,
     MOVINGDOT_STATE,
     RAINBOWBEAT_STATE,
@@ -418,22 +425,24 @@ enum Status {
     JUGGLE_STATE,
     SINELON_STATE,
     COMET_STATE,
-	BRIGHTNESS,
-	STRIPLED,
-	VU1,
-	VU2,
-	VU3,
-	VU4,
-	VU5,
-	VU6,
-	VU7,
+    BRIGHTNESS,
+    STRIPLED,
+    VU1,
+    VU2,
+    VU3,
+    VU4,
+    VU5,
+    VU6,
+    VU7,
     LAMP
 } status;
 
 String processor(const String &var)
 {
-    switch (status) {
-    case COLOR:{
+    switch (status)
+    {
+    case COLOR:
+    {
         const uint8_t array_size = JSON_ARRAY_SIZE(4);
         StaticJsonDocument<array_size> doc;
         doc["color"]["r"] = stripLed.R;
@@ -443,7 +452,7 @@ String processor(const String &var)
         serializeJson(doc, buffer_size);
         return String(buffer_size);
     }
-        break;
+    break;
     case FIRE_STATE:
     case MOVINGDOT_STATE:
     case RAINBOWBEAT_STATE:
@@ -460,16 +469,16 @@ String processor(const String &var)
     case VU4:
     case VU5:
     case VU6:
-    case VU7: 
+    case VU7:
         return String("off");
         break;
     case LAMP:
         return String("on");
         break;
-    case BRIGHTNESS: 
+    case BRIGHTNESS:
         return String(brightness);
         break;
-    case STRIPLED: 
+    case STRIPLED:
         return String(stripLed.powerState ? "on" : "off");
         break;
     default:
@@ -501,7 +510,7 @@ void initWebServer()
     server.onNotFound([](AsyncWebServerRequest *request)
                       { request->send(400, "text/plain", "Not found"); });
     server.begin();
-    Serial.println("HTTP server started");
+    debuglnD("HTTP server started");
     MDNS.addService("http", "tcp", 80);
 }
 
@@ -532,10 +541,12 @@ String bars()
 
 void notifyClients()
 {
-    //Serial.println("estado  lamp " + String(lampState));
-    const int size = JSON_OBJECT_SIZE(22); // Remember change the number of member object
+    const int size = JSON_OBJECT_SIZE(25); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["bars"] = bars();
+    json["battVoltage"] = String(battVolts);
+    json["level"] = String(battLvl);
+    json["charging"] = chargeState;
     json["lampstatus"] = lampState ? "on" : "off";
     json["neostatus"] = stripLed.powerState ? "on" : "off";
     json["neobrightness"] = stripLed.brightness;
@@ -549,7 +560,7 @@ void notifyClients()
     json["juggleStatus"] = stripLed.effectId == 8 && stripLed.powerState ? "on" : "off";
     json["sinelonStatus"] = stripLed.effectId == 9 && stripLed.powerState ? "on" : "off";
     json["cometStatus"] = stripLed.effectId == 10 && stripLed.powerState ? "on" : "off";
-    //VU
+    // VU
     json["rainbowVUStatus"] = stripLed.effectId == 11 && stripLed.powerState ? "on" : "off";
     json["oldVUStatus"] = stripLed.effectId == 12 && stripLed.powerState ? "on" : "off";
     json["rainbowHueVUStatus"] = stripLed.effectId == 13 && stripLed.powerState ? "on" : "off";
@@ -557,7 +568,7 @@ void notifyClients()
     json["threebarsVUStatus"] = stripLed.effectId == 15 && stripLed.powerState ? "on" : "off";
     json["oceanVUStatus"] = stripLed.effectId == 16 && stripLed.powerState ? "on" : "off";
     json["blendingVUStatus"] = stripLed.effectId == 17 && stripLed.powerState ? "on" : "off";
-    char buffer[470];                         // the sum of all character {"stripledStatus":"off"} has 24 character and rainbow+theater= 46, total 70
+    char buffer[500];                         // the sum of all character {"stripledStatus":"off"}
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
 }
@@ -572,8 +583,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         DeserializationError err = deserializeJson(json, data);
         if (err)
         {
-            Serial.print(F("deserializeJson() failed with code "));
-            Serial.println(err.c_str());
+            debuglnD(F("deserializeJson() failed with code "));
+            debuglnD(err.c_str());
             return;
         }
 
@@ -596,16 +607,13 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         else if (strcmp(action, "lamp") == 0)
         {
             lampState = !lampState;
-            Serial.println(lampState);
             if (lampState)
             {
                 digitalWrite(LAMP_PIN, HIGH);
-                //Serial.println("lampara encendida");
             }
             else
             {
                 digitalWrite(LAMP_PIN, LOW);
-                //Serial.println("lampara apagada");
             }
         }
         else if (strcmp(action, "animation") == 0 || strcmp(action, "vu") == 0)
@@ -618,7 +626,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         else if (strcmp(action, "slider") == 0)
         {
             const int brightness = json["brightness"].as<int>();
-            Serial.println("Brillo " + String(brightness));
+            debuglnD("Brillo " + String(brightness));
             stripLed.brightness = brightness;
         }
         else if (strcmp(action, "picker") == 0)
@@ -627,17 +635,12 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             r = color[0].as<int>();
             g = color[1].as<int>();
             b = color[2].as<int>();
-            Serial.print("RGB:  ");
-            Serial.print(r);
-            Serial.print(", ");
-            Serial.print(g);
-            Serial.print(", ");
-            Serial.println(b);
+            debuglnD("RGB: " + String(r) + ", " + String(g) + ", " + String(b));
             stripLed.R = r;
             stripLed.G = g;
             stripLed.B = b;
         }
-        
+
         notifyClients();
     }
 }
@@ -667,7 +670,14 @@ void initWebSocket()
 {
     ws.onEvent(onWsEvent);
     server.addHandler(&ws);
-    Serial.println("WebSocket server started");
+    debuglnD("WebSocket server started");
+}
+
+void battMonitor()
+{
+    battVolts = battery.getBatteryVolts();
+    battLvl = battery.getBatteryChargeLevel(true);
+    debuglnD("Average value from pin: " + String(battery.pinRead()) + ", Volts: " + String(battVolts) + ", Charge level: " + String(battLvl));
 }
 
 // ----------------------------------------------------------------------------
@@ -677,22 +687,20 @@ void initWebSocket()
 void setup()
 {
     delay(3000); // sanity delay
-    // Establecer la resolución del ADC a 10 bits
-    //analogReadResolution(10);
     pinMode(onboard_led.pin, OUTPUT);
     pinMode(STRIP_PIN, OUTPUT);
     pinMode(LAMP_PIN, OUTPUT);
     pinMode(CHARGE_PIN, OUTPUT);
 
-    //Init Rele on OFF
+    // Init Rele on OFF
     digitalWrite(LAMP_PIN, HIGH);
 
     Serial.begin(115200);
-    
+
     FastLED.addLeds<LED_TYPE, STRIP_PIN, COLOR_ORDER>(leds, N_PIXELS).setCorrection(TypicalLEDStrip);
     FastLED.setMaxPowerInVoltsAndMilliamps(VOLTS, MAX_MILLIAMPS);
     FastLED.setBrightness(brightness);
-    //Clear all neo's
+    // Clear all neo's
     FastLED.clear();
     FastLED.show();
 
@@ -711,15 +719,6 @@ void setup()
     initWiFi();
     initWebSocket();
     initWebServer();
-
-    Serial.print("Volts: ");
-    Serial.println(battery.getBatteryVolts());
-
-    Serial.print("Charge level: ");
-    Serial.println(battery.getBatteryChargeLevel());
-
-    Serial.print("Charge level (using the reference table): ");
-    Serial.println(battery.getBatteryChargeLevel(true));
 }
 
 // ----------------------------------------------------------------------------
@@ -730,18 +729,19 @@ void loop()
 {
     ws.cleanupClients();
 
-    #if defined(ESP8266)
+#if defined(ESP8266)
     MDNS.update();
-    #endif
+#endif
 
     if (stripLed.powerState)
     {
         brightness = stripLed.brightness;
         stripLed.update();
         delay(6);
-    } else
+    }
+    else
         stripLed.clear();
-        
+
     onboard_led.on = millis() % 1000 < 50;
     onboard_led.update();
 
@@ -749,8 +749,21 @@ void loop()
     if (currentMillis - startMillis >= refresh) // Check the period has elapsed
     {
         notifyClients();
+        battMonitor();
         startMillis = currentMillis;
     }
 
+    if (battVolts >= 3.51 && battVolts <= 4.20)
+    {
+        digitalWrite(CHARGE_PIN, HIGH);
+        chargeState = false;
+    }
+    else if (battVolts <= 3.50)
+    {
+        digitalWrite(CHARGE_PIN, LOW);
+        chargeState = true;
+    }
+    else
+        digitalWrite(CHARGE_PIN, HIGH);
+        chargeState = false;
 }
-

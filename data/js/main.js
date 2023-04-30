@@ -7,7 +7,7 @@ const json = {
     'color' : { 'r': 0, 'g': 0, 'b': 0 },
     'brightness': 0
 };
-
+const batt = {"level": 0, "charging": false};
 
 document.addEventListener('DOMContentLoaded', function () {
     const tabs = document.querySelectorAll('ul.tabs li a');
@@ -54,8 +54,6 @@ window.onload = function () {
         console.log(json);
         websocket.send(JSON.stringify(json));
     });
-
-   
 }
 // ----------------------------------------------------------------------------
 // WebSocket handling
@@ -72,6 +70,7 @@ window.addEventListener('load', onLoad);
 function onLoad(event) {
     initWebSocket();
     initButton();
+    
 }
 
 function initWebSocket() {
@@ -100,6 +99,11 @@ function onMessage(event) {
     // Print out our received message
     console.log("Received: " + event.data);
     var data = JSON.parse(event.data);
+    //BATT
+    batt.level = data.level;
+    batt.charging = data.charging;
+    initBattery(batt);
+    document.getElementById('battVolt').innerHTML = data.battVoltage + ' V';
     document.getElementById('Signal').className = data.bars;
     document.getElementById("Neo").className = data.neostatus;
     document.getElementById("lamp").className = data.lampstatus;
