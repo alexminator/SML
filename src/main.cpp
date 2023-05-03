@@ -77,13 +77,13 @@ AsyncWebSocket ws("/ws");
 // ----------------------------------------------------------------------------
 
 // Lamp Switch
-#define LAMP_PIN 5 // Pin to command LAMP
+#define LAMP_PIN 32 // Pin to command LAMP
 bool lampState = true;
 // Charge Switch
 #define CHARGE_PIN 18 // Pin to command Charge module
 // Sensor Battery
 #define ADC_PIN 33 // Pin to monitor Batt
-#define CONV_FACTOR 1.709
+#define CONV_FACTOR 1.610
 #define READS 30
 double battVolts;
 int battLvl;
@@ -541,10 +541,11 @@ String bars()
 
 void notifyClients()
 {
+    debuglnD(chargeState);
     const int size = JSON_OBJECT_SIZE(25); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["bars"] = bars();
-    json["battVoltage"] = String(battVolts);
+    json["battVoltage"] = String(battVolts, 3);
     json["level"] = String(battLvl);
     json["charging"] = chargeState;
     json["lampstatus"] = lampState ? "on" : "off";
@@ -675,9 +676,20 @@ void initWebSocket()
 
 void battMonitor()
 {
+    debuglnD(chargeState);
     battVolts = battery.getBatteryVolts();
     battLvl = battery.getBatteryChargeLevel(true);
     debuglnD("Average value from pin: " + String(battery.pinRead()) + ", Volts: " + String(battVolts) + ", Charge level: " + String(battLvl));
+    if (battLvl >= 31 && battVolts <= 100)
+    {
+        digitalWrite(CHARGE_PIN, HIGH);
+        chargeState = false;
+    }
+    else if (battLvl <= 30)
+    {
+        digitalWrite(CHARGE_PIN, LOW);
+        chargeState = true;
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -691,9 +703,11 @@ void setup()
     pinMode(STRIP_PIN, OUTPUT);
     pinMode(LAMP_PIN, OUTPUT);
     pinMode(CHARGE_PIN, OUTPUT);
+    pinMode(ADC_PIN, INPUT);
 
     // Init Rele on OFF
     digitalWrite(LAMP_PIN, HIGH);
+    digitalWrite(CHARGE_PIN, HIGH);
 
     Serial.begin(115200);
 
@@ -748,22 +762,9 @@ void loop()
     currentMillis = millis();
     if (currentMillis - startMillis >= refresh) // Check the period has elapsed
     {
-        notifyClients();
         battMonitor();
+        notifyClients();
         startMillis = currentMillis;
     }
-
-    if (battVolts >= 3.51 && battVolts <= 4.20)
-    {
-        digitalWrite(CHARGE_PIN, HIGH);
-        chargeState = false;
-    }
-    else if (battVolts <= 3.50)
-    {
-        digitalWrite(CHARGE_PIN, LOW);
-        chargeState = true;
-    }
-    else
-        digitalWrite(CHARGE_PIN, HIGH);
-        chargeState = false;
+    
 }
