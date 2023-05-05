@@ -1,14 +1,16 @@
 // Bubbles charging
-//document.querySelectorAll('.bubbles').style.display = 'none';
 // Array with size of bubble
 sArray = [4, 6, 8, 10];
-// Helper function to get a random value from an array
+
+  // Helper function to get a random value from an array
 function randomValue(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
   }
-  
   // setInterval function used to create a new bubble every 350 milliseconds
-  setInterval(function () {
+let Interval  
+  
+const startBubbles = () => {  
+  Interval = setInterval(function () {
     if (sArray.length > 0) {
       // Get a random size, defined as variable so it can be used for both width and height
       var size = randomValue(sArray);
@@ -54,12 +56,16 @@ function randomValue(arr) {
       });
     }
   }, 350);
+}
+
+const stopBubbles = () => clearInterval(Interval);
 
 /*=============== BATTERY ===============*/
 function initBattery(batt) {
   const batteryLiquid = document.querySelector('.battery__liquid'),
         batteryStatus = document.querySelector('.battery__status'),
         batteryPercentage = document.querySelector('.battery__percentage');
+  stopBubbles();
 
   const t = (batt) => {
       updateBattery = () => {
@@ -79,9 +85,7 @@ function initBattery(batt) {
           }
           else if (batt.charging){ /* We validate if battery its charging */
               batteryStatus.innerHTML = `Charging... <span class="fa fa-flash animated-green"></span>`;
-              batteryLiquid.style.height = '20%';
-              batteryPercentage.style.display = 'none';
-              //document.querySelectorAll('.bubbles').style.display = 'inline-block';
+              startBubbles();
           } 
           else { /* If its not loading, dont show anything. */
               batteryStatus.innerHTML = '';
@@ -91,14 +95,17 @@ function initBattery(batt) {
           if(level <= 20) {
               batteryLiquid.classList.add('gradient-color-red');
               batteryLiquid.classList.remove('gradient-color-orange','gradient-color-yellow','gradient-color-green');
+              //document.querySelectorAll('.bubbles').style.display = 'none';
           }
           else if (level <= 40) {
               batteryLiquid.classList.add('gradient-color-orange');
               batteryLiquid.classList.remove('gradient-color-red','gradient-color-yellow','gradient-color-green');
+              //document.querySelectorAll('.bubbles').style.display = 'none';
           }
           else if (level <= 80) {
               batteryLiquid.classList.add('gradient-color-yellow');
               batteryLiquid.classList.remove('gradient-color-red','gradient-color-orange','gradient-color-green');    
+              //document.querySelectorAll('.bubbles').style.display = 'none';
           }
           else {
               batteryLiquid.classList.add('gradient-color-green');

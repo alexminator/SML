@@ -19,7 +19,6 @@ void RainbowVU::runPattern(bool is_centered, uint8_t channel) {
   uint8_t i = 0;
   uint8_t *peak;      // Pointer variable declaration
   uint16_t height = auxReading(channel);
-  Serial.println(height);
   if(channel == 0) {
     vuleds = leds;    // Store address of peakLeft in peak, then use *peak to
     peak = &peakLeft;   // access the value of that address

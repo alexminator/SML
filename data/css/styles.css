@@ -34,7 +34,7 @@
 /*========== Font and typography ==========*/
     /*.5rem = 8px | 1rem = 16px ...*/
     --body-font: "Public Sans", sans-serif;
-    --biggest-font-size: 4rem;
+    --biggest-font-size: 3.5rem;
     --normal-font-size: 1.2rem;
     --smaller-font-size: .9rem;
 }

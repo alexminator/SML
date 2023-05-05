@@ -12,8 +12,6 @@ class OceanVU {
 void sndwave() {
   int n = analogRead(AUDIO_IN_PIN) / 4 ;
   int sampleLeft = abs(n - BIAS - DC_OFFSET);
-  //Serial.println("ADC read " + String(n));
-  //Serial.println("VU 9 sample " + String(sampleLeft));
   leds[N_PIXELS_HALF] = ColorFromPalette(currentPalette, sampleLeft, sampleLeft * 2, LINEARBLEND); // Put the sample into the center
   
   for (int i = N_PIXELS - 1; i > N_PIXELS_HALF; i--) { //move to the left      // Copy to the left, and let the fade do the rest.

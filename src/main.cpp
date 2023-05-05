@@ -78,16 +78,18 @@ AsyncWebSocket ws("/ws");
 
 // Lamp Switch
 #define LAMP_PIN 32 // Pin to command LAMP
-bool lampState = true;
+bool lampState = false;
 // Charge Switch
 #define CHARGE_PIN 18 // Pin to command Charge module
 // Sensor Battery
+#define FULL_CHARGE_PIN 35  // Pin to stop charging
 #define ADC_PIN 33 // Pin to monitor Batt
-#define CONV_FACTOR 1.610
+#define CONV_FACTOR 1.702
 #define READS 30
 double battVolts;
 int battLvl;
-bool chargeState = false;
+//int fullBatt;
+//bool chargeState = false;
 Battery18650Stats battery(ADC_PIN, CONV_FACTOR, READS);
 
 // Web signal info
@@ -143,6 +145,46 @@ bool is_centered = false; // For VU1 effects
 #include "vu5.h"
 #include "vu7.h"
 #include "vu6.h"
+// ----------------------------------------------------------------------------
+// Definition of Battery component
+// ----------------------------------------------------------------------------
+
+struct Battery
+{
+    // state variables
+    double battVolts;
+    int battLvl;
+    bool fullBatt;
+    bool chargeState;
+    // methods for monitor battery
+    void battMonitor()
+    {
+    debuglnD(chargeState);
+    //int fullyCharge = analogRead(FULL_CHARGE_PIN);
+    int fullyCharge = digitalRead(FULL_CHARGE_PIN);
+    debuglnD(fullyCharge);
+    fullBatt = fullyCharge == LOW;
+    //fullBatt = fullyCharge < 700;
+    //debuglnD(fullBatt);
+    battVolts = battery.getBatteryVolts();
+    battLvl = battery.getBatteryChargeLevel(true);
+    debuglnD("Average value from pin: " + String(battery.pinRead()) + ", Volts: " + String(battVolts) + ", Charge level: " + String(battLvl));
+
+    if (!chargeState && battLvl <=30)
+    {
+        digitalWrite(CHARGE_PIN, LOW);
+        chargeState = true;
+    }
+    //(!chargeState && battLvl <=35) ? digitalWrite(CHARGE_PIN, LOW), chargeState = true : null;
+    //fullBatt ? digitalWrite(CHARGE_PIN, HIGH), chargeState = false : null;
+
+    if (fullBatt)
+    {
+        digitalWrite(CHARGE_PIN, HIGH);
+        chargeState = false;
+    }
+    }
+};
 
 // ----------------------------------------------------------------------------
 // Definition of the LED component
@@ -361,6 +403,7 @@ struct StripLed
 
 StripLed stripLed = {r, g, b, brightness, effectId, false};
 Led onboard_led = {LED_BUILTIN, false};
+Battery batt = {battVolts, battLvl, false, false};
 
 // ----------------------------------------------------------------------------
 // SPIFFS initialization
@@ -390,7 +433,7 @@ void initWiFi()
     Serial.printf("Trying to connect [%s] ", WiFi.macAddress().c_str());
     while (WiFi.status() != WL_CONNECTED)
     {
-        debuglnD(".");
+        Serial.print(".");
         delay(500);
     }
     Serial.printf(" %s\n", WiFi.localIP().toString().c_str());
@@ -473,7 +516,7 @@ String processor(const String &var)
         return String("off");
         break;
     case LAMP:
-        return String("on");
+        return String("off");
         break;
     case BRIGHTNESS:
         return String(brightness);
@@ -541,13 +584,13 @@ String bars()
 
 void notifyClients()
 {
-    debuglnD(chargeState);
-    const int size = JSON_OBJECT_SIZE(25); // Remember change the number of member object
+    //debuglnD(batt.chargeState);
+    const int size = JSON_OBJECT_SIZE(26); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["bars"] = bars();
-    json["battVoltage"] = String(battVolts, 3);
-    json["level"] = String(battLvl);
-    json["charging"] = chargeState;
+    json["battVoltage"] = String(batt.battVolts, 3);
+    json["level"] = String(batt.battLvl);
+    json["charging"] = batt.chargeState;
     json["lampstatus"] = lampState ? "on" : "off";
     json["neostatus"] = stripLed.powerState ? "on" : "off";
     json["neobrightness"] = stripLed.brightness;
@@ -569,7 +612,7 @@ void notifyClients()
     json["threebarsVUStatus"] = stripLed.effectId == 15 && stripLed.powerState ? "on" : "off";
     json["oceanVUStatus"] = stripLed.effectId == 16 && stripLed.powerState ? "on" : "off";
     json["blendingVUStatus"] = stripLed.effectId == 17 && stripLed.powerState ? "on" : "off";
-    char buffer[500];                         // the sum of all character {"stripledStatus":"off"}
+    char buffer[530];                         // the sum of all character {"stripledStatus":"off"}
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
 }
@@ -610,11 +653,13 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             lampState = !lampState;
             if (lampState)
             {
-                digitalWrite(LAMP_PIN, HIGH);
+                digitalWrite(LAMP_PIN, LOW);
+                debuglnD("Lampara ON");
             }
             else
             {
-                digitalWrite(LAMP_PIN, LOW);
+                digitalWrite(LAMP_PIN, HIGH);
+                debuglnD("Lampara OFF");
             }
         }
         else if (strcmp(action, "animation") == 0 || strcmp(action, "vu") == 0)
@@ -674,23 +719,7 @@ void initWebSocket()
     debuglnD("WebSocket server started");
 }
 
-void battMonitor()
-{
-    debuglnD(chargeState);
-    battVolts = battery.getBatteryVolts();
-    battLvl = battery.getBatteryChargeLevel(true);
-    debuglnD("Average value from pin: " + String(battery.pinRead()) + ", Volts: " + String(battVolts) + ", Charge level: " + String(battLvl));
-    if (battLvl >= 31 && battVolts <= 100)
-    {
-        digitalWrite(CHARGE_PIN, HIGH);
-        chargeState = false;
-    }
-    else if (battLvl <= 30)
-    {
-        digitalWrite(CHARGE_PIN, LOW);
-        chargeState = true;
-    }
-}
+
 
 // ----------------------------------------------------------------------------
 // Initialization
@@ -704,6 +733,7 @@ void setup()
     pinMode(LAMP_PIN, OUTPUT);
     pinMode(CHARGE_PIN, OUTPUT);
     pinMode(ADC_PIN, INPUT);
+    pinMode(FULL_CHARGE_PIN, INPUT);
 
     // Init Rele on OFF
     digitalWrite(LAMP_PIN, HIGH);
@@ -747,24 +777,12 @@ void loop()
     MDNS.update();
 #endif
 
-    if (stripLed.powerState)
-    {
-        brightness = stripLed.brightness;
-        stripLed.update();
-        delay(6);
-    }
-    else
-        stripLed.clear();
+    stripLed.powerState ? (brightness = stripLed.brightness, stripLed.update(), delay(6)) : stripLed.clear();
 
     onboard_led.on = millis() % 1000 < 50;
     onboard_led.update();
 
     currentMillis = millis();
-    if (currentMillis - startMillis >= refresh) // Check the period has elapsed
-    {
-        battMonitor();
-        notifyClients();
-        startMillis = currentMillis;
-    }
+    (currentMillis - startMillis >= refresh) ? (batt.battMonitor(), notifyClients(), startMillis = currentMillis) : 0;
     
 }

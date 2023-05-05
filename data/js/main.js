@@ -102,7 +102,7 @@ function onMessage(event) {
     //BATT
     batt.level = data.level;
     batt.charging = data.charging;
-    initBattery(batt);
+        initBattery(batt);
     document.getElementById('battVolt').innerHTML = data.battVoltage + ' V';
     document.getElementById('Signal').className = data.bars;
     document.getElementById("Neo").className = data.neostatus;
