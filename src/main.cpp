@@ -398,7 +398,7 @@ struct StripLed
 };
 
 // ----------------------------------------------------------------------------
-// Definition of global variables
+// Definition of objects
 // ----------------------------------------------------------------------------
 
 StripLed stripLed = {r, g, b, brightness, effectId, false};
@@ -678,13 +678,10 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         else if (strcmp(action, "picker") == 0)
         {
             JsonArray color = json["color"];
-            r = color[0].as<int>();
-            g = color[1].as<int>();
-            b = color[2].as<int>();
+            stripLed.R = r = color[0].as<int>();
+            stripLed.G = g = color[1].as<int>();
+            stripLed.B = b = color[2].as<int>();
             debuglnD("RGB: " + String(r) + ", " + String(g) + ", " + String(b));
-            stripLed.R = r;
-            stripLed.G = g;
-            stripLed.B = b;
         }
 
         notifyClients();
