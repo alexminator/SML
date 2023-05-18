@@ -10,6 +10,7 @@
 # include <SPIFFS.h>
 # include <ArduinoJson.h>
 # include <ESPAsyncWebServer.h>
+# include <AsyncElegantOTA.h>
 # include <FastLED.h>
 # include <Battery18650Stats.h>
 # include "data.h"
@@ -82,14 +83,12 @@ bool lampState = false;
 // Charge Switch
 #define CHARGE_PIN 18 // Pin to command Charge module
 // Sensor Battery
-#define FULL_CHARGE_PIN 35  // Pin to stop charging
+#define FULL_CHARGE_PIN 35  // Pin to stop charging, signal come from TP4056
 #define ADC_PIN 33 // Pin to monitor Batt
 #define CONV_FACTOR 1.702
 #define READS 30
 double battVolts;
 int battLvl;
-//int fullBatt;
-//bool chargeState = false;
 Battery18650Stats battery(ADC_PIN, CONV_FACTOR, READS);
 
 // Web signal info
@@ -159,13 +158,10 @@ struct Battery
     // methods for monitor battery
     void battMonitor()
     {
-    debuglnD(chargeState);
-    //int fullyCharge = analogRead(FULL_CHARGE_PIN);
+    debuglnD(chargeState ? "Cargador conectado" : "Cargador desconectado");
     int fullyCharge = digitalRead(FULL_CHARGE_PIN);
-    debuglnD(fullyCharge);
     fullBatt = fullyCharge == LOW;
-    //fullBatt = fullyCharge < 700;
-    //debuglnD(fullBatt);
+    debuglnD(fullBatt ? "Bateria completamente cargada" : "Bateria en uso");
     battVolts = battery.getBatteryVolts();
     battLvl = battery.getBatteryChargeLevel(true);
     debuglnD("Average value from pin: " + String(battery.pinRead()) + ", Volts: " + String(battVolts) + ", Charge level: " + String(battLvl));
@@ -552,6 +548,7 @@ void initWebServer()
     server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
     server.onNotFound([](AsyncWebServerRequest *request)
                       { request->send(400, "text/plain", "Not found"); });
+    AsyncElegantOTA.begin(&server);    // Start ElegantOTA                  
     server.begin();
     debuglnD("HTTP server started");
     MDNS.addService("http", "tcp", 80);
@@ -770,9 +767,9 @@ void loop()
 {
     ws.cleanupClients();
 
-#if defined(ESP8266)
+    #if defined(ESP8266)
     MDNS.update();
-#endif
+    #endif
 
     stripLed.powerState ? (brightness = stripLed.brightness, stripLed.update(), delay(6)) : stripLed.clear();
 
