@@ -6,17 +6,17 @@
  * ----------------------------------------------------------------------------
  */
 
-# include <Arduino.h>
-# include <SPIFFS.h>
-# include <ArduinoJson.h>
-# include <ESPAsyncWebServer.h>
-# include <AsyncElegantOTA.h>
-# include <FastLED.h>
-# include <Battery18650Stats.h>
-# include "data.h"
+#include <Arduino.h>
+#include <SPIFFS.h>
+#include <ArduinoJson.h>
+#include <ESPAsyncWebServer.h>
+#include <AsyncElegantOTA.h>
+#include <FastLED.h>
+#include <Battery18650Stats.h>
+#include "data.h"
 // Declare the debugging level then include the header file
 #define DEBUGLEVEL DEBUGLEVEL_DEBUGGING
-//#define DEBUGLEVEL DEBUGLEVEL_NONE
+// #define DEBUGLEVEL DEBUGLEVEL_NONE
 #include "debug.h"
 
 // ----------------------------------------------------------------------------
@@ -83,18 +83,22 @@ bool lampState = false;
 // Charge Switch
 #define CHARGE_PIN 18 // Pin to command Charge module
 // Sensor Battery
-#define FULL_CHARGE_PIN 35  // Pin to stop charging, signal come from TP4056
-#define ADC_PIN 33 // Pin to monitor Batt
+#define FULL_CHARGE_PIN 35 // Pin to stop charging, signal come from TP4056
+#define ADC_PIN 33         // Pin to monitor Batt
 #define CONV_FACTOR 1.702
 #define READS 30
+#define BATT_THRESHOLD 30 // Define una constante simbólica para el umbral de la batería en %
+#define MAX_READS 10      // Define una constante simbólica para el número máximo de lecturas cuando la batería llega al umbral
+#define FULL_READS 10     // Define una constante simbólica para el número máximo de lecturas cuando la batería está llena
 double battVolts;
 int battLvl;
+int readCount = 0;
 Battery18650Stats battery(ADC_PIN, CONV_FACTOR, READS);
 
 // Web signal info
 unsigned long startMillis;
 unsigned long currentMillis;
-const unsigned long refresh = 5000; // 5 seg
+const unsigned long refresh = 3000; // 3 seg
 String strength;
 
 // Strip LED
@@ -156,29 +160,76 @@ struct Battery
     bool fullBatt;
     bool chargeState;
     // methods for monitor battery
+    // Define una función para activar o desactivar la carga según el estado dado
+    void setChargeState(bool state)
+    {
+        // Asigna el valor de chargeState usando el estado dado
+        chargeState = state;
+        // Cambia el estado del pin de carga según el estado dado
+        digitalWrite(CHARGE_PIN, state ? LOW : HIGH);
+    }
+    // Define una función para leer el estado de la batería y la carga
     void battMonitor()
     {
-    debuglnD(chargeState ? "Cargador conectado" : "Cargador desconectado");
-    int fullyCharge = digitalRead(FULL_CHARGE_PIN);
-    fullBatt = fullyCharge == LOW;
-    debuglnD(fullBatt ? "Bateria completamente cargada" : "Bateria en uso");
-    battVolts = battery.getBatteryVolts();
-    battLvl = battery.getBatteryChargeLevel(true);
-    debuglnD("Average value from pin: " + String(battery.pinRead()) + ", Volts: " + String(battVolts) + ", Charge level: " + String(battLvl));
+        debuglnD(chargeState ? "Cargador conectado" : "Cargador desconectado"); // Imprime el estado del cargador
+        int fullyCharge = digitalRead(FULL_CHARGE_PIN); // Lee el pin que indica si la batería está completamente cargada
+        debuglnD("Estado del pin carga: " +  String(fullyCharge));
+        fullBatt = fullyCharge == LOW;  // Asigna el valor de fullBatt según el valor leído
+        debuglnD("Batt al full: " +  String(fullBatt));
+        debuglnD(fullBatt ? "Batería completamente cargada" : "Batería usándose o cargándose");    // Imprime el estado de la batería
 
-    if (!chargeState && battLvl <=30)
-    {
-        digitalWrite(CHARGE_PIN, LOW);
-        chargeState = true;
-    }
-    //(!chargeState && battLvl <=35) ? digitalWrite(CHARGE_PIN, LOW), chargeState = true : null;
-    //fullBatt ? digitalWrite(CHARGE_PIN, HIGH), chargeState = false : null;
+        // Obtiene el voltaje y el nivel de carga de la batería usando la librería Battery
+        battVolts = battery.getBatteryVolts();
+        battLvl = battery.getBatteryChargeLevel(true);
 
-    if (fullBatt)
-    {
-        digitalWrite(CHARGE_PIN, HIGH);
-        chargeState = false;
-    }
+        // Imprime los valores obtenidos
+        debuglnD("Lectura promedio del pin: " + String(battery.pinRead()) + ", Voltaje: " + String(battVolts) + ", Nivel de carga: " + String(battLvl));
+
+        // Define una variable local para indicar si la batería necesita ser cargada
+        int chargeNeeded;
+
+        // Asigna un valor a chargeNeeded según el nivel de la batería y el estado de carga completa
+        if (!chargeState && battLvl <= BATT_THRESHOLD)
+            chargeNeeded = 1; // La batería necesita ser cargada
+        else if (fullBatt)
+            chargeNeeded = -1; // La batería está completamente cargada
+        else
+            chargeNeeded = 0; // La batería no necesita ser cargada
+
+        switch (chargeNeeded)
+        {
+        case 1: // La batería necesita ser cargada
+            // Incrementa el contador de lecturas
+            readCount++;
+            // Imprime un mensaje de depuración con el contador de lecturas
+            debuglnD("Retries count for charge: " +  String(readCount));
+            // Verifica si se ha alcanzado el número máximo de lecturas
+            if (readCount >= MAX_READS)
+            {
+                // Activa la carga usando la función definida
+                setChargeState(true);
+                // Reinicia el contador de lecturas
+                readCount = 0;
+            }
+            break;
+        case -1: // La batería está completamente cargada
+            // Incrementa el contador de lecturas
+            readCount++;
+            // Imprime un mensaje de depuración con el contador de lecturas
+            debuglnD("Retries count for full charge: " +  String(readCount));
+            // Verifica si se ha alcanzado el número máximo de lecturas
+            if (readCount >= FULL_READS)
+            {
+                // Desactiva la carga usando la función definida
+                setChargeState(false);
+                // Reinicia el contador de lecturas
+                readCount = 0;
+            }
+            break;
+        default: // La batería no necesita ser cargada
+            // Reinicia el contador de lecturas
+            readCount = 0;
+        }
     }
 };
 
@@ -548,7 +599,7 @@ void initWebServer()
     server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
     server.onNotFound([](AsyncWebServerRequest *request)
                       { request->send(400, "text/plain", "Not found"); });
-    AsyncElegantOTA.begin(&server);    // Start ElegantOTA                  
+    AsyncElegantOTA.begin(&server); // Start ElegantOTA
     server.begin();
     debuglnD("HTTP server started");
     MDNS.addService("http", "tcp", 80);
@@ -581,7 +632,7 @@ String bars()
 
 void notifyClients()
 {
-    //debuglnD(batt.chargeState);
+    // debuglnD(batt.chargeState);
     const int size = JSON_OBJECT_SIZE(26); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["bars"] = bars();
@@ -713,8 +764,6 @@ void initWebSocket()
     debuglnD("WebSocket server started");
 }
 
-
-
 // ----------------------------------------------------------------------------
 // Initialization
 // ----------------------------------------------------------------------------
@@ -767,9 +816,9 @@ void loop()
 {
     ws.cleanupClients();
 
-    #if defined(ESP8266)
+#if defined(ESP8266)
     MDNS.update();
-    #endif
+#endif
 
     stripLed.powerState ? (brightness = stripLed.brightness, stripLed.update(), delay(6)) : stripLed.clear();
 
@@ -778,5 +827,4 @@ void loop()
 
     currentMillis = millis();
     (currentMillis - startMillis >= refresh) ? (batt.battMonitor(), notifyClients(), startMillis = currentMillis) : 0;
-    
 }
