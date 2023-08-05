@@ -186,7 +186,7 @@ struct Battery
         debuglnD("Lectura promedio del pin: " + String(battery.pinRead()) + ", Voltaje: " + String(battVolts) + ", Nivel de carga: " + String(battLvl));
 
         // Define una variable local para indicar si la batería necesita ser cargada
-        int chargeNeeded;
+        int chargeNeeded = 0;
 
         // Asigna un valor a chargeNeeded según el nivel de la batería y el estado de carga completa
         if (!chargeState && battLvl <= BATT_THRESHOLD)
@@ -229,6 +229,7 @@ struct Battery
         default: // La batería no necesita ser cargada
             // Reinicia el contador de lecturas
             readCount = 0;
+            break;
         }
     }
 };
