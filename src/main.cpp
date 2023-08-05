@@ -87,13 +87,15 @@ bool lampState = false;
 #define ADC_PIN 33         // Pin to monitor Batt
 #define CONV_FACTOR 1.702
 #define READS 30
+#define MAXV  4.08
+#define MINV  3.20
 #define BATT_THRESHOLD 30 // Define una constante simbólica para el umbral de la batería en %
 #define MAX_READS 10      // Define una constante simbólica para el número máximo de lecturas cuando la batería llega al umbral
 #define FULL_READS 10     // Define una constante simbólica para el número máximo de lecturas cuando la batería está llena
 double battVolts;
 int battLvl;
 int readCount = 0;
-Battery18650Stats battery(ADC_PIN, CONV_FACTOR, READS);
+Battery18650Stats battery(ADC_PIN, CONV_FACTOR, READS, MAXV, MINV);
 
 // Web signal info
 unsigned long startMillis;
