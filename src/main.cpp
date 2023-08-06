@@ -13,7 +13,11 @@
 #include <AsyncElegantOTA.h>
 #include <FastLED.h>
 #include <Battery18650Stats.h>
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
 #include "data.h"
+
 // Declare the debugging level then include the header file
 #define DEBUGLEVEL DEBUGLEVEL_DEBUGGING
 // #define DEBUGLEVEL DEBUGLEVEL_NONE
@@ -54,21 +58,9 @@ CRGBPalette16 targetPalette;  // Define the target palette
 
 // WEB
 #define HTTP_PORT 80
-
-#if defined(ESP32)
-
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <Update.h>
-
-#elif defined(ESP8266)
-
-#include <ESP8266WiFi.h>
-#include <WiFiClient.h>
-#include <ESP8266mDNS.h>
-#else
-#error "Board not found"
-#endif
 
 AsyncWebServer server(HTTP_PORT);
 AsyncWebSocket ws("/ws");
@@ -76,6 +68,14 @@ AsyncWebSocket ws("/ws");
 // ----------------------------------------------------------------------------
 // Definition of global constants
 // ----------------------------------------------------------------------------
+
+// DHT Sensor
+#define DHTPIN 2     // Digital pin connected to the DHT sensor
+// Uncomment the type of sensor in use:
+//#define DHTTYPE   DHT11     // DHT 11
+#define DHTTYPE DHT22     // DHT 22 (AM2302)
+//#define DHTTYPE   DHT21     // DHT 21 (AM2301)
+DHT_Unified dht(DHTPIN, DHTTYPE);
 
 // Lamp Switch
 #define LAMP_PIN 32 // Pin to command LAMP
@@ -89,9 +89,9 @@ bool lampState = false;
 #define READS 30
 #define MAXV  4.08
 #define MINV  3.20
-#define BATT_THRESHOLD 30 // Define una constante simbólica para el umbral de la batería en %
-#define MAX_READS 10      // Define una constante simbólica para el número máximo de lecturas cuando la batería llega al umbral
-#define FULL_READS 10     // Define una constante simbólica para el número máximo de lecturas cuando la batería está llena
+#define BATT_THRESHOLD 30 // Defines a symbolic constant for the battery threshold in %
+#define MAX_READS 10      // Defines a symbolic constant for the maximum number of readings when the battery reaches the threshold
+#define FULL_READS 10     // Defines a symbolic constant for the maximum number of readings when the battery is full
 double battVolts;
 int battLvl;
 int readCount = 0;
@@ -162,74 +162,74 @@ struct Battery
     bool fullBatt;
     bool chargeState;
     // methods for monitor battery
-    // Define una función para activar o desactivar la carga según el estado dado
-    void setChargeState(bool state)
+    
+    void setChargeState(bool state) // Defines a function to enable or disable charging based on the given state
     {
-        // Asigna el valor de chargeState usando el estado dado
+        //Assign the value of chargeState using the given state
         chargeState = state;
-        // Cambia el estado del pin de carga según el estado dado
+        //Change the state of the charge pin based on the given state
         digitalWrite(CHARGE_PIN, state ? LOW : HIGH);
     }
-    // Define una función para leer el estado de la batería y la carga
-    void battMonitor()
+    
+    void battMonitor()  //Define a function to read the state of the battery and charge
     {
-        debuglnD(chargeState ? "Cargador conectado" : "Cargador desconectado"); // Imprime el estado del cargador
-        int fullyCharge = digitalRead(FULL_CHARGE_PIN); // Lee el pin que indica si la batería está completamente cargada
+        debuglnD(chargeState ? "Cargador conectado" : "Cargador desconectado"); //Print the charger status
+        int fullyCharge = digitalRead(FULL_CHARGE_PIN); //Read the pin that indicates if the battery is fully charged
         debuglnD("Estado del pin carga: " +  String(fullyCharge));
-        fullBatt = fullyCharge == LOW;  // Asigna el valor de fullBatt según el valor leído
+        fullBatt = fullyCharge == LOW;  //Assign the value of fullBatt according to the read value
         debuglnD("Batt al full: " +  String(fullBatt));
-        debuglnD(fullBatt ? "Batería completamente cargada" : "Batería usándose o cargándose");    // Imprime el estado de la batería
+        debuglnD(fullBatt ? "Batería completamente cargada" : "Batería usándose o cargándose");    //Print the battery status
 
-        // Obtiene el voltaje y el nivel de carga de la batería usando la librería Battery
+        //Get the voltage and charge level of the battery using the Battery library
         battVolts = battery.getBatteryVolts();
         battLvl = battery.getBatteryChargeLevel(true);
 
-        // Imprime los valores obtenidos
+        //Print the obtained values
         debuglnD("Lectura promedio del pin: " + String(battery.pinRead()) + ", Voltaje: " + String(battVolts) + ", Nivel de carga: " + String(battLvl));
 
-        // Define una variable local para indicar si la batería necesita ser cargada
+        //Define a local variable to indicate if the battery needs to be charged
         int chargeNeeded = 0;
 
-        // Asigna un valor a chargeNeeded según el nivel de la batería y el estado de carga completa
+        //Assigns a value to chargeNeeded based on battery level and full charge status
         if (!chargeState && battLvl <= BATT_THRESHOLD)
-            chargeNeeded = 1; // La batería necesita ser cargada
+            chargeNeeded = 1; //The battery needs to be charged
         else if (fullBatt)
-            chargeNeeded = -1; // La batería está completamente cargada
+            chargeNeeded = -1; //The battery is fully charged
         else
-            chargeNeeded = 0; // La batería no necesita ser cargada
+            chargeNeeded = 0; //The battery does not need to be charged
 
         switch (chargeNeeded)
         {
-        case 1: // La batería necesita ser cargada
-            // Incrementa el contador de lecturas
+        case 1: //The battery needs to be charged
+            //Increment the read counter
             readCount++;
-            // Imprime un mensaje de depuración con el contador de lecturas
+            //Print a debugging message with the read count
             debuglnD("Retries count for charge: " +  String(readCount));
-            // Verifica si se ha alcanzado el número máximo de lecturas
+            //Check if the maximum number of reads has been reached
             if (readCount >= MAX_READS)
             {
-                // Activa la carga usando la función definida
+                //Activate the charge using the defined function
                 setChargeState(true);
-                // Reinicia el contador de lecturas
+                //Reset the reading counter
                 readCount = 0;
             }
             break;
-        case -1: // La batería está completamente cargada
-            // Incrementa el contador de lecturas
+        case -1: //The battery is fully charged
+            //Increment the read counter
             readCount++;
-            // Imprime un mensaje de depuración con el contador de lecturas
+            //Print a debugging message with the read count
             debuglnD("Retries count for full charge: " +  String(readCount));
-            // Verifica si se ha alcanzado el número máximo de lecturas
+            //Check if the maximum number of reads has been reached
             if (readCount >= FULL_READS)
             {
-                // Desactiva la carga usando la función definida
+                //Turn off charge using the defined function
                 setChargeState(false);
-                // Reinicia el contador de lecturas
+                //Reset the reading counter
                 readCount = 0;
             }
             break;
-        default: // La batería no necesita ser cargada
-            // Reinicia el contador de lecturas
+        default: //The battery does not need to be charged
+            //Reset the reading counter
             readCount = 0;
             break;
         }
@@ -767,6 +767,37 @@ void initWebSocket()
     debuglnD("WebSocket server started");
 }
 
+//-----------------------------------------------------------------------------
+// DHT initialization
+//-----------------------------------------------------------------------------
+void readSensor()
+{
+    // Get temperature event and print its value.
+    sensors_event_t event;
+    dht.temperature().getEvent(&event);
+    if (isnan(event.temperature))
+    {
+        Serial.println(F("Error reading temperature!"));
+    }
+    else
+    {
+        Serial.print(F("Temperature: "));
+        Serial.print(event.temperature);
+        Serial.println(F("°C"));
+    }
+    // Get humidity event and print its value.
+    dht.humidity().getEvent(&event);
+    if (isnan(event.relative_humidity))
+    {
+        Serial.println(F("Error reading humidity!"));
+    }
+    else
+    {
+        Serial.print(F("Humidity: "));
+        Serial.print(event.relative_humidity);
+        Serial.println(F("%"));
+    }
+}
 // ----------------------------------------------------------------------------
 // Initialization
 // ----------------------------------------------------------------------------
@@ -787,6 +818,16 @@ void setup()
 
     Serial.begin(115200);
 
+    // Initialize device.
+    dht.begin();
+    // Print temperature sensor details.
+    sensor_t sensor;
+    dht.temperature().getSensor(&sensor);
+    debuglnD("----------------------------------------------------\nTemperature Sensor\nSensor Type: " + String(sensor.name) + "\nDriver Ver: " + String(sensor.version) + "\nUnique ID: " + String(sensor.sensor_id) + "\nMax Value: " + String(sensor.max_value) + "°C\nMin Value: " + String(sensor.min_value) + "°C\nResolution: " + String(sensor.resolution) + "°C\n----------------------------------------------------");
+    // Print humidity sensor details.
+    dht.humidity().getSensor(&sensor);
+    debuglnD("----------------------------------------------------\nHumidity Sensor\nSensor Type: " + String(sensor.name) + "\nDriver Ver: " + String(sensor.version) + "\nUnique ID: " + String(sensor.sensor_id) + "\nMax Value: " + String(sensor.max_value) + "%\nMin Value: " + String(sensor.min_value) + "%\nResolution: " + String(sensor.resolution) + "%\n----------------------------------------------------");
+    
     FastLED.addLeds<LED_TYPE, STRIP_PIN, COLOR_ORDER>(leds, N_PIXELS).setCorrection(TypicalLEDStrip);
     FastLED.setMaxPowerInVoltsAndMilliamps(VOLTS, MAX_MILLIAMPS);
     FastLED.setBrightness(brightness);
@@ -819,15 +860,11 @@ void loop()
 {
     ws.cleanupClients();
 
-#if defined(ESP8266)
-    MDNS.update();
-#endif
-
     stripLed.powerState ? (brightness = stripLed.brightness, stripLed.update(), delay(6)) : stripLed.clear();
 
     onboard_led.on = millis() % 1000 < 50;
     onboard_led.update();
 
     currentMillis = millis();
-    (currentMillis - startMillis >= refresh) ? (batt.battMonitor(), notifyClients(), startMillis = currentMillis) : 0;
+    (currentMillis - startMillis >= refresh) ? (batt.battMonitor(), notifyClients(), readSensor(), startMillis = currentMillis) : 0;
 }

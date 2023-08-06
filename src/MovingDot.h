@@ -1,4 +1,3 @@
-#include "Arduino.h"
 
 class MovingDot {
   public:
