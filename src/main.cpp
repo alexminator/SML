@@ -70,7 +70,7 @@ AsyncWebSocket ws("/ws");
 // ----------------------------------------------------------------------------
 
 // DHT Sensor
-#define DHTPIN 2     // Digital pin connected to the DHT sensor
+#define DHTPIN 23     // Digital pin connected to the DHT sensor
 // Uncomment the type of sensor in use:
 //#define DHTTYPE   DHT11     // DHT 11
 #define DHTTYPE DHT22     // DHT 22 (AM2302)
@@ -89,9 +89,9 @@ bool lampState = false;
 #define READS 30
 #define MAXV  4.08
 #define MINV  3.20
-#define BATT_THRESHOLD 30 // Defines a symbolic constant for the battery threshold in %
-#define MAX_READS 10      // Defines a symbolic constant for the maximum number of readings when the battery reaches the threshold
-#define FULL_READS 10     // Defines a symbolic constant for the maximum number of readings when the battery is full
+#define BATT_THRESHOLD 30 // Defines battery threshold in %
+#define MAX_READS 10      // Defines the maximum number of readings when the battery reaches the threshold
+#define FULL_READS 10     // Defines the maximum number of readings when the battery is full
 double battVolts;
 int battLvl;
 int readCount = 0;
@@ -798,6 +798,7 @@ void readSensor()
         Serial.println(F("%"));
     }
 }
+
 // ----------------------------------------------------------------------------
 // Initialization
 // ----------------------------------------------------------------------------
@@ -818,7 +819,7 @@ void setup()
 
     Serial.begin(115200);
 
-    // Initialize device.
+    // Initialize DHT22 device.
     dht.begin();
     // Print temperature sensor details.
     sensor_t sensor;

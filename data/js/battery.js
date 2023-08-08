@@ -80,7 +80,7 @@ function initBattery(batt) {
               batteryStatus.innerHTML = `Full battery <span class="fa fa-battery-full green-color"></span>`;
               batteryLiquid.style.height = '103%'; /* To hide the ellipse */
           }
-          else if (level <= 20 & !batt.charging) { /* We validate if battery is low */
+          else if (level <= 40 & !batt.charging) { /* We validate if battery is low */
               batteryStatus.innerHTML = `Low battery <span class="fa fa-plug animated-red"></span>`;      
           }
           else if (batt.charging){ /* We validate if battery its charging */

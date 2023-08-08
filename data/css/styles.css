@@ -86,7 +86,7 @@ body {
 }
 
 .wrap {
-    max-width: 350px;
+    max-width: 480px;
 	margin: 20px auto;
     position: relative;
 }
@@ -124,7 +124,7 @@ ul.tabs {
     list-style: none;
     display: grid;
     grid-template:
-        "lamp music battery";
+        "lamp music weather battery";
 }
 
 ul.tabs li a {
@@ -329,7 +329,7 @@ ul.tabs li a .tab-text {
 
 /*=============== BREAKPOINTS ===============*/
 /* For small devices */
-@media screen and (max-width: 360px) {
+@media screen and (max-width: 420px) {
     .battery__card{
         zoom: .8;
     }
@@ -350,7 +350,7 @@ ul.tabs li a .tab-text {
 }
 
 /* For medium devices */
-@media screen and (min-width: 430px) {
+@media screen and (min-width: 480px) {
     .battery__card{
         width: 312px;
     }
