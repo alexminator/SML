@@ -6,25 +6,6 @@ const config = {
   minTemp: -20,
   maxTemp: 50,
   unit: "Celcius" };
-
-// Change min and max temperature values
-
-const tempValueInputs = document.querySelectorAll("input[type='text']");
-
-tempValueInputs.forEach(input => {
-  input.addEventListener("change", event => {
-    const newValue = event.target.value;
-
-    if (isNaN(newValue)) {
-      return input.value = config[input.id];
-    } else {
-      config[input.id] = input.value;
-      range[input.id.slice(0, 3)] = config[input.id]; // Update range
-      return setTemperature(); // Update temperature
-    }
-  });
-});
-
 // Switch unit of temperature
 
 const unitP = document.getElementById("unit");

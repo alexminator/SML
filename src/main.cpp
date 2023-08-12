@@ -455,6 +455,38 @@ StripLed stripLed = {r, g, b, brightness, effectId, false};
 Led onboard_led = {LED_BUILTIN, false};
 Battery batt = {battVolts, battLvl, false, false};
 
+//-----------------------------------------------------------------------------
+// DHT initialization
+//-----------------------------------------------------------------------------
+void readSensor()
+{
+    // Get temperature event and print its value.
+    sensors_event_t event;
+    dht.temperature().getEvent(&event);
+    if (isnan(event.temperature))
+    {
+        Serial.println(F("Error reading temperature!"));
+    }
+    else
+    {
+        Serial.print(F("Temperature: "));
+        Serial.print(event.temperature);
+        Serial.println(F("°C"));
+    }
+    // Get humidity event and print its value.
+    dht.humidity().getEvent(&event);
+    if (isnan(event.relative_humidity))
+    {
+        Serial.println(F("Error reading humidity!"));
+    }
+    else
+    {
+        Serial.print(F("Humidity: "));
+        Serial.print(event.relative_humidity);
+        Serial.println(F("%"));
+    }
+}
+
 // ----------------------------------------------------------------------------
 // SPIFFS initialization
 // ----------------------------------------------------------------------------
@@ -635,13 +667,14 @@ String bars()
 
 void notifyClients()
 {
-    // debuglnD(batt.chargeState);
-    const int size = JSON_OBJECT_SIZE(26); // Remember change the number of member object
+    const int size = JSON_OBJECT_SIZE(28); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["bars"] = bars();
     json["battVoltage"] = String(batt.battVolts, 3);
     json["level"] = String(batt.battLvl);
     json["charging"] = batt.chargeState;
+    json["temperature"] = dht.temperature();
+    json["humidity"] = dht.humidity();
     json["lampstatus"] = lampState ? "on" : "off";
     json["neostatus"] = stripLed.powerState ? "on" : "off";
     json["neobrightness"] = stripLed.brightness;
@@ -663,7 +696,7 @@ void notifyClients()
     json["threebarsVUStatus"] = stripLed.effectId == 15 && stripLed.powerState ? "on" : "off";
     json["oceanVUStatus"] = stripLed.effectId == 16 && stripLed.powerState ? "on" : "off";
     json["blendingVUStatus"] = stripLed.effectId == 17 && stripLed.powerState ? "on" : "off";
-    char buffer[530];                         // the sum of all character {"stripledStatus":"off"}
+    char buffer[540];                         // the sum of all character {"stripledStatus":"off"}
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
 }
@@ -765,38 +798,6 @@ void initWebSocket()
     ws.onEvent(onWsEvent);
     server.addHandler(&ws);
     debuglnD("WebSocket server started");
-}
-
-//-----------------------------------------------------------------------------
-// DHT initialization
-//-----------------------------------------------------------------------------
-void readSensor()
-{
-    // Get temperature event and print its value.
-    sensors_event_t event;
-    dht.temperature().getEvent(&event);
-    if (isnan(event.temperature))
-    {
-        Serial.println(F("Error reading temperature!"));
-    }
-    else
-    {
-        Serial.print(F("Temperature: "));
-        Serial.print(event.temperature);
-        Serial.println(F("°C"));
-    }
-    // Get humidity event and print its value.
-    dht.humidity().getEvent(&event);
-    if (isnan(event.relative_humidity))
-    {
-        Serial.println(F("Error reading humidity!"));
-    }
-    else
-    {
-        Serial.print(F("Humidity: "));
-        Serial.print(event.relative_humidity);
-        Serial.println(F("%"));
-    }
 }
 
 // ----------------------------------------------------------------------------

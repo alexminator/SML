@@ -104,6 +104,7 @@ function onMessage(event) {
     batt.charging = data.charging;
         initBattery(batt);
     document.getElementById('battVolt').innerHTML = data.battVoltage + ' V';
+    
     document.getElementById('Signal').className = data.bars;
     document.getElementById("Neo").className = data.neostatus;
     document.getElementById("lamp").className = data.lampstatus;

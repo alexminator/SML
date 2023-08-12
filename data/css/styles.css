@@ -41,9 +41,6 @@
 
 /*=============== BASE ===============*/
 * {
-    /*box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    -webkit-box-sizing: border-box;*/
     margin: 0;
     padding: 0;
 }
@@ -87,7 +84,7 @@ body {
     position: relative;
 }
 
-#tab-lamp, #tab-music {
+#tab-lamp, #tab-music, #status {
     text-align: center;
 }
 
@@ -329,7 +326,7 @@ ul.tabs li a .tab-text {
 
 /*=============== BREAKPOINTS ===============*/
 /* For small devices */
-@media screen and (max-width: 420px) {
+@media screen and (max-width: 450px) {
     .battery__card{
         zoom: .8;
     }
@@ -933,3 +930,17 @@ slider span.fa-sun-o {
   }
 
   /* END Button */
+
+  .details {
+	box-shadow: 0px 0px 15px 2px rgba(0, 0, 0, 0.07);
+	background: rgba(253, 253, 253, 0.04);
+    text-align: center;
+}
+
+.date {
+	padding: 20px;
+}
+
+.date span {
+	padding: 0 5px;
+}
