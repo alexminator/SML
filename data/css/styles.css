@@ -157,10 +157,6 @@ ul.tabs li a .tab-text {
 .sections h1 {
     padding: 10px;
 }
-    
-.sections p {
-    width: 90%;
-}
 
 .power-button {
     display: grid;
@@ -930,17 +926,47 @@ slider span.fa-sun-o {
   }
 
   /* END Button */
-
-  .details {
-	box-shadow: 0px 0px 15px 2px rgba(0, 0, 0, 0.07);
-	background: rgba(253, 253, 253, 0.04);
-    text-align: center;
+  /* Date */
+.contenedor {
+  position: relative;
+  margin: auto;
+  background: #ccc;
+}
+.widget {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+}
+.widget p {
+  display: inline-block;
+  line-height: 1em;
+}
+.fecha {
+  font-family: arial;
+  text-align: center;
+  font-size: 1.0em;
+  margin-bottom: 5px;
+  background: rgba(0,0,0,.5);
+}
+.reloj {
+  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  text-align: center;
+  background: rgba(0,0,0,.5);
+}
+.reloj .cajaSegundos {
+  display: inline-block;  
+}
+.reloj .ampm, .reloj .segundos{
+  display: block;
+  font-size: 1.5rem;
 }
 
-.date {
-	padding: 20px;
+#time-icon {
+    font-size: 1.5em;
 }
-
-.date span {
-	padding: 0 5px;
+#horas, #minutos, .reloj p {
+    font-size: 3em;
 }
