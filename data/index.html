@@ -11,7 +11,8 @@
   <link rel="icon" type="image/x-icon" href="SML.ico">
   <!--=============== CSS ===============-->
   <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="css/font-awesome.min.css">
+  <link rel="stylesheet" href="css/fontawesome.css">
+  <link rel="stylesheet" href="css/solid.css">
   <link rel="stylesheet" href="css/battstyles.css">
   <link rel="stylesheet" href="css/dht.css">
   <!--=============== MAIN JS ===============-->
@@ -48,17 +49,17 @@
         
     <div class="wrap">
       <ul class="tabs">
-        <li><a href="#tab-lamp"><span class="fa fa-lightbulb-o"></span><span class="tab-text">Lamp</span></a></li>
-        <li><a href="#tab-music"><span class="fa fa-music"></span><span class="tab-text">Music</span></a></li>
-        <li><a href="#tab-temp"><span class="fa fa-thermometer"></span><span class="tab-text">Weather</span></a></li>
-        <li><a href="#tab-battery"><span class="fa fa-battery"></span><span class="tab-text">Battery</span></a></li>
+        <li><a href="#tab-lamp"><span class="fas fa-lightbulb"></span><span class="tab-text">Lamp</span></a></li>
+        <li><a href="#tab-music"><span class="fas fa-music"></span><span class="tab-text">Music</span></a></li>
+        <li><a href="#tab-temp"><span class="fas fa-thermometer-half"></span><span class="tab-text">Weather</span></a></li>
+        <li><a href="#tab-battery"><span class="fas fa-battery"></span><span class="tab-text">Battery</span></a></li>
       </ul>
 
       <div class="sections">
         
         <div id="tab-lamp">
           <div class="power-button">
-            <h2 class="power-label">Power <span class="fa fa-power-off"></span></h2>
+            <h2 class="power-label">Power <span class="fas fa-power-off"></span></h2>
             <h4 class="power-lamp">Lamp</h4>
             <div id="lamp" class="%LAMP%">
               <span class="button">
@@ -75,7 +76,7 @@
           </div>
 
           <picker>
-            <h2 class="colorpicker">Color <span class="fa fa-paint-brush"></span></h2>
+            <h2 class="colorpicker">Color <span class="fas fa-paint-brush"></span></h2>
             <div class="picker-container">
               <div class="ColorPicker" id="wheelPicker"></div>
             </div>
@@ -83,7 +84,7 @@
           </picker>
 
           <slider>  
-              <h2 class="brigthness">Brightness <span class="fa fa-sun-o"></span></h2>
+              <h2 class="brigthness">Brightness <span class="fas fa-sun"></span></h2>
             <div class="range">
               <div class="sliderValue">
                 <span id="textSliderValue" class="mark">%BRIGHTNESS%</span>
@@ -97,7 +98,7 @@
           </slider>  
 
           <div class="effects-button">
-            <h2 class="power-label">Effects <span class="fa fa-magic"></span></h2>
+            <h2 class="power-label">Effects <span class="fas fa-wand-sparkles"></span></h2>
             <h3 class="fire">Fire</h3>
             <div id="Firebutton" class="%FIRE_STATE%">
               <span class="button">
@@ -162,7 +163,7 @@
         </div>
 
         <div id="tab-music">
-          <h2 class="power-label">VU Meter <span class="fa fa-tachometer"></span></h2>
+          <h2 class="power-label">VU Meter <span class="fas fa-tachometer"></span></h2>
           <div class="effects-vu">
             <h3 class="rainbowVU">Rainbow</h3>
             <div id="RainbowVU" class="%VU1%">
@@ -213,9 +214,14 @@
         <div id="tab-temp">
           <div class="details">
             <div class="date">
-              <span id="time-icon"><i class="fa fa-clock-o"></i></span><span id="time">15:30</span><span id="date">19/8/2016</span>
+              <span id="time-icon"><i class="fas fa-clock"></i></span><span id="time">15:30</span><span id="date">19/8/2016</span>
             </div>
           </div>
+
+          <div class="humidity">
+            <p><i class="fas fa-droplet"></i><span id="humidity">N/A</span>%</p>
+          </div>
+
           <div id="wrapper">	
             <div id="termometer">
               <div id="temperature" style="height:0" data-value="0°C"></div>
