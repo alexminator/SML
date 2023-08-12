@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/font-awesome.min.css">
   <link rel="stylesheet" href="css/battstyles.css">
+  <link rel="stylesheet" href="css/dht.css">
   <!--=============== MAIN JS ===============-->
   <script src="js/iro.min.js"></script>
   <script src="js/battery.js"></script>
@@ -210,7 +211,12 @@
         </div>
 
         <div id="tab-temp">
-
+          <div id="wrapper">	
+            <div id="termometer">
+              <div id="temperature" style="height:0" data-value="0°C"></div>
+              <div id="graduations"></div>
+            </div>
+          </div>
         </div>
 
         <div id="tab-battery">
@@ -254,5 +260,6 @@
     <p id="status">Disconnected</p>
     <div id="indicator"></div>
 </footer>
+<script src="js/dht.js"></script>
 </body>
 </html>
