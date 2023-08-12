@@ -1,6 +1,4 @@
-#wrapper {
-  margin: auto;
-  display: grid;
+.wrapper {
   align-items: center;
 }
 

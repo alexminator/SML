@@ -319,7 +319,6 @@ ul.tabs li a .tab-text {
     }
 }
 
-
 /*=============== BREAKPOINTS ===============*/
 /* For small devices */
 @media screen and (max-width: 450px) {
@@ -926,36 +925,22 @@ slider span.fa-sun-o {
   }
 
   /* END Button */
+
   /* Date */
-.contenedor {
-  position: relative;
-  margin: auto;
-  background: #ccc;
-}
 .widget {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    position: relative;
     margin: auto;
+    text-align: center;
 }
 .widget p {
   display: inline-block;
   line-height: 1em;
 }
 .fecha {
-  font-family: arial;
-  text-align: center;
   font-size: 1.0em;
   margin-bottom: 5px;
-  background: rgba(0,0,0,.5);
 }
-.reloj {
-  font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
-  text-align: center;
-  background: rgba(0,0,0,.5);
-}
+
 .reloj .cajaSegundos {
   display: inline-block;  
 }
@@ -969,4 +954,30 @@ slider span.fa-sun-o {
 }
 #horas, #minutos, .reloj p {
     font-size: 3em;
+}
+
+.weather {
+    display: grid;
+    grid-template: 
+    "temp temp wrapper"   0.3fr
+    "humidity humidity wrapper"  0.3fr
+    "widget widget wrapper"  0.5fr; 
+	grid-gap: 0.5rem;
+    padding: 10px;
+}
+
+.temp {
+    grid-area: temp;
+}
+
+.wrapper {
+    grid-area: wrapper;
+}
+
+.humidity {
+    grid-area: humidity;
+}
+
+.widget {
+    grid-area: widget;
 }

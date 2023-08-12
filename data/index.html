@@ -46,7 +46,7 @@
   </header>
 
   <main class="main">
-        
+
     <div class="wrap">
       <ul class="tabs">
         <li><a href="#tab-lamp"><span class="fas fa-lightbulb"></span><span class="tab-text">Lamp</span></a></li>
@@ -56,7 +56,7 @@
       </ul>
 
       <div class="sections">
-        
+
         <div id="tab-lamp">
           <div class="power-button">
             <h2 class="power-label">Power <span class="fas fa-power-off"></span></h2>
@@ -83,8 +83,8 @@
             <span id="picker_bridge" class='%COLOR%'></span>
           </picker>
 
-          <slider>  
-              <h2 class="brigthness">Brightness <span class="fas fa-sun"></span></h2>
+          <slider>
+            <h2 class="brigthness">Brightness <span class="fas fa-sun"></span></h2>
             <div class="range">
               <div class="sliderValue">
                 <span id="textSliderValue" class="mark">%BRIGHTNESS%</span>
@@ -95,7 +95,7 @@
                 <div class="value right">255</div>
               </div>
             </div>
-          </slider>  
+          </slider>
 
           <div class="effects-button">
             <h2 class="power-label">Effects <span class="fas fa-wand-sparkles"></span></h2>
@@ -188,19 +188,19 @@
               <span class="button">
                 <span class="slide"></span>
               </span>
-            </div> 
+            </div>
             <h3 class="barsVU">3 bars</h3>
             <div id="ThreebarsVU" class="%VU5%">
               <span class="button">
                 <span class="slide"></span>
               </span>
-            </div> 
+            </div>
             <h3 class="oceanVU">Ocean</h3>
             <div id="OceanVU" class="%VU6%">
               <span class="button">
                 <span class="slide"></span>
               </span>
-            </div> 
+            </div>
           </div>
 
           <h3 class="blendingVU">Blending</h3>
@@ -208,76 +208,83 @@
             <span class="button">
               <span class="slide"></span>
             </span>
-          </div>  
+          </div>
         </div>
 
         <div id="tab-temp">
-          
-            <div class="contenedor">
-              <div class="widget">
-                <div class="fecha">
-                  <p id="diaSemana" class="diaSemana"></p>
-                  <p id="dia" class="dia"></p>
-                  <p>de</p>
-                  <p id="mes" class="mes"></p>
-                  <p>del</p>
-                  <p id="anio" class="anio"></p>
+          <div class="weather">
+
+            <div class="temp">
+              <h1 id="temperature">%TEMPERATURE%</h1>
+            </div>
+
+            <div class="wrapper">
+              <div id="termometer">
+                <div id="temperature" style="height:0" data-value="0°C"></div>
+                <div id="graduations"></div>
+              </div>
+              </div>
+
+              <div class="humidity">
+                <p><i class="fas fa-droplet"></i><span id="humidity">%HUMIDITY%</span>%</p>
                 </div>
-                <div class="reloj">
-                  <span id="time-icon"><i class="fas fa-clock"></i></span>
-                  <p id="horas" class="horas"></p>
-                  <p>:</p>
-                  <p id="minutos" class="minutos"></p>
-                  <div class="cajaSegundos">
-                    <p id="ampm" class="ampm"></p>
-                    <p id="segundos" class="segundos"></p>
-                  </div>
+      
+
+            <div class="widget">
+              <div class="fecha">
+                <p id="diaSemana" class="diaSemana"></p>
+                <p id="dia" class="dia"></p>
+                <p>de</p>
+                <p id="mes" class="mes"></p>
+                <p>del</p>
+                <p id="anio" class="anio"></p>
+              </div>
+              <div class="reloj">
+                <span id="time-icon"><i class="fas fa-clock"></i></span>
+                <p id="horas" class="horas"></p>
+                <p>:</p>
+                <p id="minutos" class="minutos"></p>
+                <div class="cajaSegundos">
+                  <p id="ampm" class="ampm"></p>
+                  <p id="segundos" class="segundos"></p>
                 </div>
               </div>
             </div>
-          
 
-          <div class="humidity">
-            <p><i class="fas fa-droplet"></i><span id="humidity">N/A</span>%</p>
-          </div>
 
-          <div id="wrapper">	
-            <div id="termometer">
-              <div id="temperature" style="height:0" data-value="0°C"></div>
-              <div id="graduations"></div>
-            </div>
+
           </div>
         </div>
 
         <div id="tab-battery">
           <section class="battery">
             <div class="battery__card">
-               <div class="battery__data">
-                   <p class="battery__text">Battery</p>
-                   <p id="battVolt">%BATTVOLTAGE%</p>
-                   <h1 id="battlevel" class="battery__percentage"></h1>
-                   <p id="battCharge" class="battery__status">
-                      Low Battery <span class="fa fa-plug"></span>
-                   </p>
-               </div>
-               <div class="battery__pill">
-                   <div class="battery__level">
-                      <div class="battery__liquid"></div>
-                      <div class="bubbles battery-bubbles">
-                        <span>&nbsp;</span>
-                      </div>
-                   </div>
-               </div> 
+              <div class="battery__data">
+                <p class="battery__text">Battery</p>
+                <p id="battVolt">%BATTVOLTAGE%</p>
+                <h1 id="battlevel" class="battery__percentage"></h1>
+                <p id="battCharge" class="battery__status">
+                  Low Battery <span class="fa fa-plug"></span>
+                </p>
+              </div>
+              <div class="battery__pill">
+                <div class="battery__level">
+                  <div class="battery__liquid"></div>
+                  <div class="bubbles battery-bubbles">
+                    <span>&nbsp;</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
         </div>
       </div>
 
     </div>
-    
+
   </main>
 
- <footer class="footer">
+  <footer class="footer">
     <div id="Signal" class="%BARS%">
       <div class="wv4 wave">
         <div class="wv3 wave">
@@ -289,8 +296,9 @@
     </div>
     <p id="status">Disconnected</p>
     <div id="indicator"></div>
-</footer>
-<script src="js/dht.js"></script>
-<script src="js/date.js"></script>
+  </footer>
+  <script src="js/dht.js"></script>
+  <script src="js/date.js"></script>
 </body>
+
 </html>
