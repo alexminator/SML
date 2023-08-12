@@ -471,10 +471,8 @@ void readSensor()
     }
     else
     {
-        Serial.print(F("Temperature: "));
         temp = event.temperature;
-        Serial.print(temp);
-        Serial.println(F("°C"));
+        debuglnD("Temperature: " +  temp + "°C");
     }
     // Get humidity event and print its value.
     dht.humidity().getEvent(&event);
@@ -484,10 +482,8 @@ void readSensor()
     }
     else
     {
-        Serial.print(F("Humidity: "));
         hum = event.relative_humidity;
-        Serial.print(hum);
-        Serial.println(F("%"));
+        debuglnD("Humidity: " +  hum + "%");
     }
 }
 
@@ -671,7 +667,7 @@ String bars()
 
 void notifyClients()
 {
-    const int size = JSON_OBJECT_SIZE(29); // Remember change the number of member object
+    const int size = JSON_OBJECT_SIZE(29); // Remember change the number of member object. Real object + 1
     StaticJsonDocument<size> json;
     json["bars"] = bars();
     json["battVoltage"] = String(batt.battVolts, 3);
@@ -700,7 +696,7 @@ void notifyClients()
     json["threebarsVUStatus"] = stripLed.effectId == 15 && stripLed.powerState ? "on" : "off";
     json["oceanVUStatus"] = stripLed.effectId == 16 && stripLed.powerState ? "on" : "off";
     json["blendingVUStatus"] = stripLed.effectId == 17 && stripLed.powerState ? "on" : "off";
-    char buffer[560];                         // the sum of all character {"stripledStatus":"off"}
+    char buffer[560];                         // the sum of all character of json send {"stripledStatus":"off"}
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
 }

@@ -4,10 +4,20 @@ let brightness = "";
 const json = {
     'action': '',
     'effectId': 0,
-    'color' : { 'r': 0, 'g': 0, 'b': 0 },
+    'color': { 'r': 0, 'g': 0, 'b': 0 },
     'brightness': 0
 };
-const batt = {"level": 0, "charging": false};
+
+const units = {
+    Celcius: "°C",
+    Fahrenheit: "°F" };
+  
+  const config = {
+    minTemp: 0,
+    maxTemp: 50,
+    unit: "Celcius" };
+
+const batt = { "level": 0, "charging": false };
 
 document.addEventListener('DOMContentLoaded', function () {
     const tabs = document.querySelectorAll('ul.tabs li a');
@@ -40,13 +50,13 @@ window.onload = function () {
     // Create a new color picker instance
     var colorPicker = new iro.ColorPicker("#wheelPicker", {
         width: 250,
-        color: {r: colorR, g: colorG, b: colorB},
+        color: { r: colorR, g: colorG, b: colorB },
         borderWidth: 2,
         borderColor: "#fff",
-        layout: [{component: iro.ui.Wheel, },]
+        layout: [{ component: iro.ui.Wheel, },]
     });
-    
-    colorPicker.on('color:change', function(color) {
+
+    colorPicker.on('color:change', function (color) {
         document.getElementById("butterfly").style.setProperty('--butterfly-color', color.hexString);
         json.action = 'picker';
         json.color = [color.red, color.green, color.blue];
@@ -70,7 +80,7 @@ window.addEventListener('load', onLoad);
 function onLoad(event) {
     initWebSocket();
     initButton();
-    
+
 }
 
 function initWebSocket() {
@@ -102,10 +112,14 @@ function onMessage(event) {
     //BATT
     batt.level = data.level;
     batt.charging = data.charging;
-        initBattery(batt);
+    initBattery(batt);
+    // DHT
+    const externalTemperature = data.temperature;
+    temperature.style.height = (externalTemperature - config.minTemp) / (config.maxTemp - config.minTemp) * 100 + "%";
+    temperature.dataset.value = externalTemperature + units[config.unit];
     document.getElementById('battVolt').innerHTML = data.battVoltage + ' V';
-    document.getElementById('temperature').innerHTML = data.temperature + ' &deg;';
-    document.getElementById('humidity').innerHTML = data.humidity + ' %';
+    document.getElementById('temp').innerHTML = data.temperature + ' &deg;';
+    document.getElementById('hum').innerHTML = data.humidity + ' %';
     document.getElementById('Signal').className = data.bars;
     document.getElementById("Neo").className = data.neostatus;
     document.getElementById("lamp").className = data.lampstatus;
@@ -149,6 +163,8 @@ function setStatus() {
         lvl.className = "no-signal";
     }
 }
+
+
 
 // ----------------------------------------------------------------------------
 // Button handling
