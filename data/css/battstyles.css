@@ -19,6 +19,10 @@
     margin-bottom: 1rem;
 }
 
+.battery__data {
+    justify-self: center;
+}
+
 .battery__percentage {
     font-size: var(--biggest-font-size);
 }
@@ -29,7 +33,7 @@
     display: flex;
     column-gap: .5rem;
     font-size: var(--smaller-font-size);
-    left: 30px;
+    left: 50px;
 }
 
 .battery__status span {
@@ -45,7 +49,7 @@
                 inset -4px 12px 48px hsl(0, 0%, 56%),
                 5px 10px 8px var(--container-color);   
     border-radius: 3rem;
-    justify-self: flex-end;
+    justify-self: center;
 }
 
 .battery__level {

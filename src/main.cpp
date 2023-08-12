@@ -76,6 +76,8 @@ AsyncWebSocket ws("/ws");
 #define DHTTYPE DHT22     // DHT 22 (AM2302)
 //#define DHTTYPE   DHT21     // DHT 21 (AM2301)
 DHT_Unified dht(DHTPIN, DHTTYPE);
+String temp;
+String hum;
 
 // Lamp Switch
 #define LAMP_PIN 32 // Pin to command LAMP
@@ -470,7 +472,8 @@ void readSensor()
     else
     {
         Serial.print(F("Temperature: "));
-        Serial.print(event.temperature);
+        temp = event.temperature;
+        Serial.print(temp);
         Serial.println(F("°C"));
     }
     // Get humidity event and print its value.
@@ -482,7 +485,8 @@ void readSensor()
     else
     {
         Serial.print(F("Humidity: "));
-        Serial.print(event.relative_humidity);
+        hum = event.relative_humidity;
+        Serial.print(hum);
         Serial.println(F("%"));
     }
 }
@@ -667,14 +671,14 @@ String bars()
 
 void notifyClients()
 {
-    const int size = JSON_OBJECT_SIZE(28); // Remember change the number of member object
+    const int size = JSON_OBJECT_SIZE(29); // Remember change the number of member object
     StaticJsonDocument<size> json;
     json["bars"] = bars();
     json["battVoltage"] = String(batt.battVolts, 3);
     json["level"] = String(batt.battLvl);
     json["charging"] = batt.chargeState;
-    json["temperature"] = dht.temperature();
-    json["humidity"] = dht.humidity();
+    json["temperature"] = temp;
+    json["humidity"] = hum;
     json["lampstatus"] = lampState ? "on" : "off";
     json["neostatus"] = stripLed.powerState ? "on" : "off";
     json["neobrightness"] = stripLed.brightness;
@@ -696,7 +700,7 @@ void notifyClients()
     json["threebarsVUStatus"] = stripLed.effectId == 15 && stripLed.powerState ? "on" : "off";
     json["oceanVUStatus"] = stripLed.effectId == 16 && stripLed.powerState ? "on" : "off";
     json["blendingVUStatus"] = stripLed.effectId == 17 && stripLed.powerState ? "on" : "off";
-    char buffer[540];                         // the sum of all character {"stripledStatus":"off"}
+    char buffer[560];                         // the sum of all character {"stripledStatus":"off"}
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
 }
