@@ -76,8 +76,8 @@ AsyncWebSocket ws("/ws");
 #define DHTTYPE DHT22     // DHT 22 (AM2302)
 //#define DHTTYPE   DHT21     // DHT 21 (AM2301)
 DHT_Unified dht(DHTPIN, DHTTYPE);
-String temp;
-String hum;
+float temp;
+float hum;
 
 // Lamp Switch
 #define LAMP_PIN 32 // Pin to command LAMP
@@ -472,7 +472,7 @@ void readSensor()
     else
     {
         temp = event.temperature;
-        debuglnD("Temperature: " +  temp + "°C");
+        debuglnD("Temperature: " +  String(temp) + "°C");
     }
     // Get humidity event and print its value.
     dht.humidity().getEvent(&event);
@@ -483,7 +483,7 @@ void readSensor()
     else
     {
         hum = event.relative_humidity;
-        debuglnD("Humidity: " +  hum + "%");
+        debuglnD("Humidity: " +  String(hum) + "%");
     }
 }
 
@@ -673,8 +673,8 @@ void notifyClients()
     json["battVoltage"] = String(batt.battVolts, 3);
     json["level"] = String(batt.battLvl);
     json["charging"] = batt.chargeState;
-    json["temperature"] = temp;
-    json["humidity"] = hum;
+    json["temperature"] = String(temp, 1);
+    json["humidity"] = String(hum, 1);
     json["lampstatus"] = lampState ? "on" : "off";
     json["neostatus"] = stripLed.powerState ? "on" : "off";
     json["neobrightness"] = stripLed.brightness;

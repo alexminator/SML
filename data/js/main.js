@@ -113,14 +113,16 @@ function onMessage(event) {
     batt.level = data.level;
     batt.charging = data.charging;
     initBattery(batt);
+    document.getElementById('battVolt').innerHTML = data.battVoltage + ' V';
     // DHT
     const externalTemperature = data.temperature;
     temperature.style.height = (externalTemperature - config.minTemp) / (config.maxTemp - config.minTemp) * 100 + "%";
     temperature.dataset.value = externalTemperature + units[config.unit];
-    document.getElementById('battVolt').innerHTML = data.battVoltage + ' V';
-    document.getElementById('temp').innerHTML = data.temperature + ' &deg;';
+    document.getElementById('temp').innerHTML = data.temperature + ' &deg; C';
     document.getElementById('hum').innerHTML = data.humidity + ' %';
+    // WiFi
     document.getElementById('Signal').className = data.bars;
+    // Neo Effects
     document.getElementById("Neo").className = data.neostatus;
     document.getElementById("lamp").className = data.lampstatus;
     document.getElementById("picker_bridge").className = data.color;
@@ -163,8 +165,6 @@ function setStatus() {
         lvl.className = "no-signal";
     }
 }
-
-
 
 // ----------------------------------------------------------------------------
 // Button handling

@@ -34,7 +34,7 @@
 /*========== Font and typography ==========*/
     /*.5rem = 8px | 1rem = 16px ...*/
     --body-font: "Public Sans", sans-serif;
-    --biggest-font-size: 3.5rem;
+    --biggest-font-size: 2rem;
     --normal-font-size: 1.2rem;
     --smaller-font-size: .9rem;
 }
@@ -958,16 +958,25 @@ slider span.fa-sun-o {
 
 .weather {
     display: grid;
-    grid-template: 
-    "temp temp wrapper"   0.3fr
+    grid-template:
+    "weather-label weather-label wrapper" 0.3fr 
+    "temp temp wrapper" 0.3fr
     "humidity humidity wrapper"  0.3fr
     "widget widget wrapper"  0.5fr; 
 	grid-gap: 0.5rem;
     padding: 10px;
 }
 
+.weather-label {
+    grid-area: weather-label;
+    font-size: 3rem;
+    text-align: center;
+}
+
 .temp {
     grid-area: temp;
+    font-size: var(--biggest-font-size);
+    text-align: center;
 }
 
 .wrapper {
@@ -976,8 +985,11 @@ slider span.fa-sun-o {
 
 .humidity {
     grid-area: humidity;
+    text-align: center;
+    font-size: var(--biggest-font-size);
 }
 
 .widget {
     grid-area: widget;
 }
+
