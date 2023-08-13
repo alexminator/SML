@@ -42,8 +42,8 @@
 
 .battery__pill {
     position: relative;
-    width: 75px;
-    height: 180px;
+    width: 95px;
+    height: 200px;
     background-color: var(--container-color);
     box-shadow: inset 20px 0 48px hsl(0, 0%, 16%),
                 inset -4px 12px 48px hsl(0, 0%, 56%),

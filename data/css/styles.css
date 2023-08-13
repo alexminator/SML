@@ -140,7 +140,7 @@ ul.tabs li a.active{
     border-top-right-radius: 1.5rem;
 }
 
-ul.tabs li a .tab-text {
+ul.tabs li a .tab-text{
     font-family: Impactreg;
     margin-left: 10px;
     font-size: 1.5rem;
@@ -314,18 +314,14 @@ ul.tabs li a .tab-text {
 @media screen and (min-width: 968px) {
     :root {
       --biggest-font-size: 2.75rem;
-      --normal-font-size: 1rem;
-      --smaller-font-size: .813rem;
+      --normal-font-size: 1.5rem;
+      --smaller-font-size: 1rem;
     }
 }
 
 /*=============== BREAKPOINTS ===============*/
 /* For small devices */
-@media screen and (max-width: 450px) {
-    .battery__card{
-        zoom: .8;
-    }
-
+@media screen and (max-width: 400px) {
     .wrap {
         margin: 10px auto;
         width: 100%;
@@ -341,15 +337,8 @@ ul.tabs li a .tab-text {
     }
 }
 
-/* For medium devices */
-@media screen and (min-width: 480px) {
-    .battery__card{
-        width: 312px;
-    }
-}
-
 /* For large devices */
-@media screen and (min-width: 1024px) {
+@media screen and (min-width: 968px) {
     .battery__card{
         zoom: 1.5;
     }
@@ -780,7 +769,7 @@ slider span.fa-sun-o {
 .range {
     grid-area: range;
     height: 60px;
-    width: 300px;
+    width: 260px;
     border-radius: 10px;
     padding: 0 60px 0 40px;
     border: 3px solid var(--text-color);

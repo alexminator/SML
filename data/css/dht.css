@@ -9,12 +9,6 @@ p {
   user-select: none;
 }
 
-#info {
-  opacity: 0.2;
-  margin: 0;
-  text-align: center;
-}
-
 #termometer {
   width: 25px;
   background: #38383f;
@@ -74,25 +68,5 @@ p {
 #termometer #temperature, #termometer #temperature:before, #termometer #temperature:after {
   position: absolute;
 }
-#termometer #temperature:before {
-  content: attr(data-value);
-  background: rgba(0, 0, 0, 0.7);
-  color: white;
-  z-index: 2;
-  padding: 5px 10px;
-  border-radius: 5px;
-  font-size: 1em;
-  line-height: 1;
-  transform: translateY(50%);
-  left: calc(100% + 1em / 1.5);
-  top: calc(-1em + 5px - 5px * 2);
-}
-#termometer #temperature:after {
-  content: "";
-  border-top: 0.4545454545em solid transparent;
-  border-bottom: 0.4545454545em solid transparent;
-  border-right: 0.6666666667em solid rgba(0, 0, 0, 0.7);
-  left: 100%;
-  top: calc(-1em / 2.2 + 5px);
-}
+
 
