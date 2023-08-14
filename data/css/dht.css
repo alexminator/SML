@@ -18,6 +18,9 @@ p {
   border-radius: 20px;
   z-index: 1;
   margin-bottom: 50px;
+  box-shadow: inset 20px 0 48px hsl(0, 0%, 16%),
+                inset -4px 12px 48px hsl(0, 0%, 56%),
+                5px 10px 8px var(--container-color);
 }
 #termometer:before, #termometer:after {
   position: absolute;
@@ -40,6 +43,7 @@ p {
   border: 9px solid #2a2a2e;
   z-index: -3;
   left: 50%;
+  box-shadow: 5px 10px 8px var(--container-color);
 }
 #termometer #graduations {
   height: 59%;

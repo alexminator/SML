@@ -118,7 +118,7 @@ function onMessage(event) {
     const externalTemperature = data.temperature;
     temperature.style.height = (externalTemperature - config.minTemp) / (config.maxTemp - config.minTemp) * 100 + "%";
     temperature.dataset.value = externalTemperature + units[config.unit];
-    document.getElementById('temp').innerHTML = data.temperature + ' &deg; C';
+    document.getElementById('temp').innerHTML = data.temperature + ' &deg;C';
     document.getElementById('hum').innerHTML = data.humidity + ' %';
     // WiFi
     document.getElementById('Signal').className = data.bars;
