@@ -983,7 +983,6 @@ slider span.fa-sun-o {
 .humidity {
     grid-area: humidity;
     text-align: center;
-    font-size: var(--biggest-font-size);
 }
 
 .widget {
