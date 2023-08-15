@@ -10,7 +10,7 @@ class OceanVU {
 };
 
 void sndwave() {
-  int n = analogRead(AUDIO_IN_PIN) / 4 ;
+  int n = analogRead(AUDIO_IN_PIN);
   int sampleLeft = abs(n - BIAS - DC_OFFSET);
   leds[N_PIXELS_HALF] = ColorFromPalette(currentPalette, sampleLeft, sampleLeft * 2, LINEARBLEND); // Put the sample into the center
   

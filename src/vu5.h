@@ -23,7 +23,6 @@ void ThreebarsVU::runPattern() {
   
   int intensity = auxReading(0);
   
-  //// Update Origin ////
   // detect peak change and save origin at curve vertex
   if (growing && intensity < last_intensity) {
     growing = false;

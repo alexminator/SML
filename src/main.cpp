@@ -36,13 +36,13 @@
 // VU
 #define AUDIO_IN_PIN 36    // Aux in signal
 #define DC_OFFSET 0        // DC offset in aux signal [0]
-#define NOISE 20           // Noise/hum/interference in aux signal [10]
+#define NOISE 30           // Noise/hum/interference in aux signal [10]
 #define SAMPLES 60         // Length of buffer for dynamic level adjustment [60]
 #define TOP (N_PIXELS + 2) // Allow dot to go slightly off scale [(N_PIXELS + 2)]
 #define PEAK_FALL 20       // Rate of peak falling dot [20]
 #define N_PIXELS_HALF (N_PIXELS / 2)
-#define BIAS 512 // ADC value for HALF of 3.22V VCC
-// Effects
+#define BIAS 1850   //ADC value for HALF of 3.22V VCC. Hint: Take the analog reading without signal
+//Effects
 #define GRAVITY -1  // Downward (negative) acceleration of gravity in m/s^2
 #define h0 1        // Starting height, in meters, of the ball (strip length)
 #define NUM_BALLS 3 // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way)
