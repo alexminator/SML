@@ -14,7 +14,7 @@ uint16_t auxReading(uint8_t channel) {
 
   if(channel == 0) {
     int n = analogRead(AUDIO_IN_PIN); // Raw reading from left line in
-    debuglnD("Salida analoga es: " + String(n));
+    //debuglnD("Salida analoga es: " + String(n));
     n = abs(n - BIAS - DC_OFFSET); // Center on zero
     n = (n <= NOISE) ? 0 : (n - NOISE); // Remove noise/hum
     lvlLeft = ((lvlLeft * 7) + n) >> 3; // "Dampened" reading else looks twitchy (>>3 is divide by 8)

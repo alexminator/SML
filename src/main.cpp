@@ -80,7 +80,7 @@ float temp;
 float hum;
 
 //Power Switch for Bluetooth Module
-#define SWITCH_PIN 5            // Pin to command relay
+#define SWITCH_PIN 22            // Pin to command relay
 bool bt_powerState = false;
 
 // Lamp Switch
@@ -732,28 +732,13 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         if (strcmp(action, "toggle") == 0)
         {
             stripLed.powerState = !stripLed.powerState;
-            if (stripLed.powerState)
-            {
-                stripLed.update();
-            }
-            else
-            {
-                stripLed.clear();
-            }
+            stripLed.powerState ? stripLed.update() : stripLed.clear();
         }
         else if (strcmp(action, "lamp") == 0)
         {
             lampState = !lampState;
-            if (lampState)
-            {
-                digitalWrite(LAMP_PIN, LOW);
-                debuglnD("Lampara ON");
-            }
-            else
-            {
-                digitalWrite(LAMP_PIN, HIGH);
-                debuglnD("Lampara OFF");
-            }
+            digitalWrite(LAMP_PIN, lampState ? LOW : HIGH); 
+            debuglnD(lampState ? "Lampara ON" : "Lampara OFF");
         }
         else if (strcmp(action, "animation") == 0 || strcmp(action, "vu") == 0)
         {
@@ -779,18 +764,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         else if (strcmp(action, "music") == 0)
         {
             bt_powerState = !bt_powerState;
-            if (bt_powerState)
-            {
-                digitalWrite(SWITCH_PIN,HIGH);
-                bt_powerState = true;
-                Serial.println("Encendido del modulo BT");
-            }
-            else
-            {
-                digitalWrite(SWITCH_PIN,LOW);
-                bt_powerState = false;
-                Serial.println("Apagado del modulo BT");
-            }
+            digitalWrite(SWITCH_PIN, bt_powerState ? HIGH : LOW); 
+            bt_powerState ? Serial.println("Encendido del modulo BT") : Serial.println("Apagado del modulo BT"); 
         }
 
         notifyClients();
@@ -835,6 +810,7 @@ void setup()
     pinMode(onboard_led.pin, OUTPUT);
     pinMode(STRIP_PIN, OUTPUT);
     pinMode(LAMP_PIN, OUTPUT);
+    pinMode(SWITCH_PIN, OUTPUT);
     pinMode(CHARGE_PIN, OUTPUT);
     pinMode(ADC_PIN, INPUT);
     pinMode(FULL_CHARGE_PIN, INPUT);
@@ -842,6 +818,7 @@ void setup()
     // Init Rele on OFF
     digitalWrite(LAMP_PIN, HIGH);
     digitalWrite(CHARGE_PIN, HIGH);
+    digitalWrite(SWITCH_PIN, LOW);
 
     Serial.begin(115200);
 
