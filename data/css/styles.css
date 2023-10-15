@@ -269,9 +269,6 @@ ul.tabs li a .tab-text{
 }
 
 /* Tab music */
-.power-bt span.fa-bluetooth {
-    font-size: 25px;
-}
 
 .effects-vu {
     display: grid;
