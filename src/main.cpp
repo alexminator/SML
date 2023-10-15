@@ -79,10 +79,6 @@ DHT_Unified dht(DHTPIN, DHTTYPE);
 float temp;
 float hum;
 
-//Power Switch for Bluetooth Module
-#define SWITCH_PIN 22            // Pin to command relay
-bool bt_powerState = false;
-
 // Lamp Switch
 #define LAMP_PIN 32 // Pin to command LAMP
 bool lampState = false;
@@ -556,7 +552,6 @@ enum Status
     COMET_STATE,
     BRIGHTNESS,
     STRIPLED,
-    BLUETOOTH,
     VU1,
     VU2,
     VU3,
@@ -611,9 +606,6 @@ String processor(const String &var)
     case STRIPLED:
         return String(stripLed.powerState ? "on" : "off");
         break;
-    case BLUETOOTH:
-        return String(bt_powerState ? "on" : "off");
-        break;    
     default:
         return String();
     }
@@ -675,7 +667,7 @@ String bars()
 
 void notifyClients()
 {
-    const int size = JSON_OBJECT_SIZE(30); // Remember change the number of member object. Real object + 1
+    const int size = JSON_OBJECT_SIZE(29); // Remember change the number of member object. Real object + 1
     StaticJsonDocument<size> json;
     json["bars"] = bars();
     json["battVoltage"] = String(batt.battVolts, 3);
@@ -685,7 +677,6 @@ void notifyClients()
     json["humidity"] = String(hum, 1);
     json["lampstatus"] = lampState ? "on" : "off";
     json["neostatus"] = stripLed.powerState ? "on" : "off";
-    json["btstatus"] = bt_powerState ? "on" : "off";
     json["neobrightness"] = stripLed.brightness;
     json["fireStatus"] = stripLed.effectId == 1 && stripLed.powerState ? "on" : "off";
     json["movingdotStatus"] = stripLed.effectId == 2 && stripLed.powerState ? "on" : "off";
@@ -698,14 +689,14 @@ void notifyClients()
     json["sinelonStatus"] = stripLed.effectId == 9 && stripLed.powerState ? "on" : "off";
     json["cometStatus"] = stripLed.effectId == 10 && stripLed.powerState ? "on" : "off";
     // VU
-    json["rainbowVUStatus"] = stripLed.effectId == 11 && stripLed.powerState && bt_powerState ? "on" : "off";
-    json["oldVUStatus"] = stripLed.effectId == 12 && stripLed.powerState && bt_powerState ? "on" : "off";
-    json["rainbowHueVUStatus"] = stripLed.effectId == 13 && stripLed.powerState && bt_powerState ? "on" : "off";
-    json["rippleVUStatus"] = stripLed.effectId == 14 && stripLed.powerState && bt_powerState ? "on" : "off";
-    json["threebarsVUStatus"] = stripLed.effectId == 15 && stripLed.powerState && bt_powerState ? "on" : "off";
-    json["oceanVUStatus"] = stripLed.effectId == 16 && stripLed.powerState && bt_powerState ? "on" : "off";
-    json["blendingVUStatus"] = stripLed.effectId == 17 && stripLed.powerState && bt_powerState ? "on" : "off";
-    char buffer[575];                         // the sum of all character of json send {"stripledStatus":"off"}
+    json["rainbowVUStatus"] = stripLed.effectId == 11 && stripLed.powerState ? "on" : "off";
+    json["oldVUStatus"] = stripLed.effectId == 12 && stripLed.powerState ? "on" : "off";
+    json["rainbowHueVUStatus"] = stripLed.effectId == 13 && stripLed.powerState ? "on" : "off";
+    json["rippleVUStatus"] = stripLed.effectId == 14 && stripLed.powerState ? "on" : "off";
+    json["threebarsVUStatus"] = stripLed.effectId == 15 && stripLed.powerState ? "on" : "off";
+    json["oceanVUStatus"] = stripLed.effectId == 16 && stripLed.powerState ? "on" : "off";
+    json["blendingVUStatus"] = stripLed.effectId == 17 && stripLed.powerState ? "on" : "off";
+    char buffer[565];                         // the sum of all character of json send {"stripledStatus":"off"}
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
 }
@@ -761,12 +752,6 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             stripLed.B = b = color[2].as<int>();
             debuglnD("RGB: " + String(r) + ", " + String(g) + ", " + String(b));
         }
-        else if (strcmp(action, "music") == 0)
-        {
-            bt_powerState = !bt_powerState;
-            digitalWrite(SWITCH_PIN, bt_powerState ? HIGH : LOW); 
-            bt_powerState ? Serial.println("Encendido del modulo BT") : Serial.println("Apagado del modulo BT"); 
-        }
 
         notifyClients();
     }
@@ -810,7 +795,6 @@ void setup()
     pinMode(onboard_led.pin, OUTPUT);
     pinMode(STRIP_PIN, OUTPUT);
     pinMode(LAMP_PIN, OUTPUT);
-    pinMode(SWITCH_PIN, OUTPUT);
     pinMode(CHARGE_PIN, OUTPUT);
     pinMode(ADC_PIN, INPUT);
     pinMode(FULL_CHARGE_PIN, INPUT);
@@ -818,7 +802,6 @@ void setup()
     // Init Rele on OFF
     digitalWrite(LAMP_PIN, HIGH);
     digitalWrite(CHARGE_PIN, HIGH);
-    digitalWrite(SWITCH_PIN, LOW);
 
     Serial.begin(115200);
 

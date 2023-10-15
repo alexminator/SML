@@ -124,7 +124,6 @@ function onMessage(event) {
     document.getElementById('Signal').className = data.bars;
     // Neo Effects
     document.getElementById("Neo").className = data.neostatus;
-    document.getElementById("Bluetooth").className = data.btstatus;
     document.getElementById("lamp").className = data.lampstatus;
     document.getElementById("picker_bridge").className = data.color;
     document.getElementById("textSliderValue").innerHTML = data.neobrightness;
@@ -174,7 +173,6 @@ function setStatus() {
 function initButton() {
     document.getElementById('lamp').addEventListener('click', onToggleLamp);
     document.getElementById('Neo').addEventListener('click', onToggleNeo);
-    document.getElementById('Bluetooth').addEventListener('click', onToggleBt);
     document.getElementById('pwmSlider').addEventListener('change', onChangeBrightness);
     document.getElementById('Firebutton').addEventListener('click', onToggleFireEffect);
     document.getElementById('MovingDotbutton').addEventListener('click', onToggleMovingDotEffect);
@@ -216,18 +214,6 @@ function onToggleNeo(event) {
         toggle.className = "on";
     }
     json.action = 'toggle';
-    console.log(json);
-    websocket.send(JSON.stringify(json));
-}
-
-function onToggleBt(event) {
-    const toggle = document.getElementById("Bluetooth");
-    if (toggle.className == "on") {
-        toggle.className = "off";
-    } else {
-        toggle.className = "on";
-    }
-    json.action = 'music';
     console.log(json);
     websocket.send(JSON.stringify(json));
 }
