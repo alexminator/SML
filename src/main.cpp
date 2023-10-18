@@ -23,6 +23,12 @@
 // #define DEBUGLEVEL DEBUGLEVEL_NONE
 #include "debug.h"
 
+// Declare what message you want to display on the console.
+// User picks console message from this list
+// This selection will not be effective if DEBUGLEVEL is DEBUGLEVEL_NONE
+//#define DHT
+//#define BATTERY
+
 // ----------------------------------------------------------------------------
 // Definition of macros
 // ----------------------------------------------------------------------------
@@ -175,38 +181,34 @@ struct Battery
     
     void battMonitor()  //Define a function to read the state of the battery and charge
     {
-        debuglnD(chargeState ? "Cargador conectado" : "Cargador desconectado"); //Print the charger status
         int fullyCharge = digitalRead(FULL_CHARGE_PIN); //Read the pin that indicates if the battery is fully charged
-        debuglnD("Estado del pin carga: " +  String(fullyCharge));
         fullBatt = fullyCharge == LOW;  //Assign the value of fullBatt according to the read value
-        debuglnD("Batt al full: " +  String(fullBatt));
-        debuglnD(fullBatt ? "Batería completamente cargada" : "Batería usándose o cargándose");    //Print the battery status
-
         //Get the voltage and charge level of the battery using the Battery library
         battVolts = battery.getBatteryVolts();
         battLvl = battery.getBatteryChargeLevel(true);
 
         //Print the obtained values
+        #ifdef BATTERY
+        debuglnD(chargeState ? "Cargador conectado" : "Cargador desconectado"); //Print the charger status
+        debuglnD("Estado del pin carga: " +  String(fullyCharge));
+        debuglnD(fullBatt ? "Batería completamente cargada" : "Batería usándose o cargándose");    //Print the battery status
         debuglnD("Lectura promedio del pin: " + String(battery.pinRead()) + ", Voltaje: " + String(battVolts) + ", Nivel de carga: " + String(battLvl));
+        #endif
 
         //Define a local variable to indicate if the battery needs to be charged
         int chargeNeeded = 0;
 
         //Assigns a value to chargeNeeded based on battery level and full charge status
-        if (!chargeState && battLvl <= BATT_THRESHOLD)
-            chargeNeeded = 1; //The battery needs to be charged
-        else if (fullBatt)
-            chargeNeeded = -1; //The battery is fully charged
-        else
-            chargeNeeded = 0; //The battery does not need to be charged
+        //The battery needs to be charged. chargeNeeded = 1
+        //The battery is fully charged. chargeNeeded = -1
+        //The battery does not need to be charged. chargeNeeded = 0
+        chargeNeeded = (!chargeState && battLvl <= BATT_THRESHOLD) ? 1 : (fullBatt ? -1 : 0); 
 
         switch (chargeNeeded)
         {
         case 1: //The battery needs to be charged
             //Increment the read counter
             readCount++;
-            //Print a debugging message with the read count
-            debuglnD("Retries count for charge: " +  String(readCount));
             //Check if the maximum number of reads has been reached
             if (readCount >= MAX_READS)
             {
@@ -219,8 +221,6 @@ struct Battery
         case -1: //The battery is fully charged
             //Increment the read counter
             readCount++;
-            //Print a debugging message with the read count
-            debuglnD("Retries count for full charge: " +  String(readCount));
             //Check if the maximum number of reads has been reached
             if (readCount >= FULL_READS)
             {
@@ -472,7 +472,9 @@ void readSensor()
     else
     {
         temp = event.temperature;
+        #ifdef DHT
         debuglnD("Temperature: " +  String(temp) + "°C");
+        #endif
     }
     // Get humidity event and print its value.
     dht.humidity().getEvent(&event);
@@ -483,7 +485,9 @@ void readSensor()
     else
     {
         hum = event.relative_humidity;
+        #ifdef DHT
         debuglnD("Humidity: " +  String(hum) + "%");
+        #endif
     }
 }
 
@@ -854,4 +858,11 @@ void loop()
 
     currentMillis = millis();
     (currentMillis - startMillis >= refresh) ? (batt.battMonitor(), notifyClients(), readSensor(), startMillis = currentMillis) : 0;
+
+    // Check WiFi connection status
+    if (WiFi.status() != WL_CONNECTED)
+    {
+        // The ESP32 has been disconnected from the WiFi network
+        ESP.restart();  // Restart the esp32
+    } 
 }
