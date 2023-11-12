@@ -9,8 +9,6 @@
 #include <Arduino.h>
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
-#include <ESPAsyncWebServer.h>
-#include <AsyncElegantOTA.h>
 #include <FastLED.h>
 #include <Battery18650Stats.h>
 #include <Adafruit_Sensor.h>
@@ -65,8 +63,10 @@ CRGBPalette16 targetPalette;  // Define the target palette
 // WEB
 #define HTTP_PORT 80
 #include <WiFi.h>
+#include <AsyncTCP.h>
 #include <ESPmDNS.h>
-#include <Update.h>
+#include <ESPAsyncWebServer.h>
+#include <ElegantOTA.h>
 
 AsyncWebServer server(HTTP_PORT);
 AsyncWebSocket ws("/ws");
@@ -86,16 +86,16 @@ float temp;
 float hum;
 
 //Power Switch for Bluetooth Module
-#define SWITCH_PIN 22            // Pin to command relay
+#define SWITCH_PIN 18            // Pin to command relay. BT on/off
 bool bt_powerState = false;
 
 // Lamp Switch
-#define LAMP_PIN 32 // Pin to command LAMP
+#define LAMP_PIN 32 // Pin to command LAMP IN1 relay
 bool lampState = false;
-// Charge Switch
-#define CHARGE_PIN 18 // Pin to command Charge module
+// Charge Status
+#define CHARGE_PIN 34 // Pin to sense Charge mode, signal come from TP4056
 // Sensor Battery
-#define FULL_CHARGE_PIN 35 // Pin to stop charging, signal come from TP4056
+#define FULL_CHARGE_PIN 35 // Pin to sense full charge, signal come from TP4056
 #define ADC_PIN 33         // Pin to monitor Batt
 #define CONV_FACTOR 1.702
 #define READS 30
@@ -174,19 +174,14 @@ struct Battery
     bool fullBatt;
     bool chargeState;
     // methods for monitor battery
-    
-    void setChargeState(bool state) // Defines a function to enable or disable charging based on the given state
-    {
-        //Assign the value of chargeState using the given state
-        chargeState = state;
-        //Change the state of the charge pin based on the given state
-        digitalWrite(CHARGE_PIN, state ? LOW : HIGH);
-    }
-    
     void battMonitor()  //Define a function to read the state of the battery and charge
     {
-        int fullyCharge = digitalRead(FULL_CHARGE_PIN); //Read the pin that indicates if the battery is fully charged
-        fullBatt = fullyCharge == LOW;  //Assign the value of fullBatt according to the read value
+        //Read the state of the charge signal came from pin 7 of TP4056. Low level means charging mode
+        int isCharging = digitalRead(CHARGE_PIN);
+        chargeState = isCharging == LOW;    //If "isCharging" is equal to "LOW", then "chargeState" is set to true, indicating that the battery is charging
+        //Read the state of the charge signal came from pin 6 of TP4056. Low level means Full Battery charge
+        int fullyCharge = digitalRead(FULL_CHARGE_PIN); 
+        fullBatt = fullyCharge == LOW;  //If "fullyCharge" is equal to "LOW", then "fullBatt" is set to true, indicating that the battery is fully charged
         //Get the voltage and charge level of the battery using the Battery library
         battVolts = battery.getBatteryVolts();
         battLvl = battery.getBatteryChargeLevel(true);
@@ -198,47 +193,6 @@ struct Battery
         debuglnD(fullBatt ? "Batería completamente cargada" : "Batería usándose o cargándose");    //Print the battery status
         debuglnD("Lectura promedio del pin: " + String(battery.pinRead()) + ", Voltaje: " + String(battVolts) + ", Nivel de carga: " + String(battLvl));
         #endif
-
-        //Define a local variable to indicate if the battery needs to be charged
-        int chargeNeeded = 0;
-
-        //Assigns a value to chargeNeeded based on battery level and full charge status
-        //The battery needs to be charged. chargeNeeded = 1
-        //The battery is fully charged. chargeNeeded = -1
-        //The battery does not need to be charged. chargeNeeded = 0
-        chargeNeeded = (!chargeState && battLvl <= BATT_THRESHOLD) ? 1 : (fullBatt ? -1 : 0); 
-
-        switch (chargeNeeded)
-        {
-        case 1: //The battery needs to be charged
-            //Increment the read counter
-            readCount++;
-            //Check if the maximum number of reads has been reached
-            if (readCount >= MAX_READS)
-            {
-                //Activate the charge using the defined function
-                setChargeState(true);
-                //Reset the reading counter
-                readCount = 0;
-            }
-            break;
-        case -1: //The battery is fully charged
-            //Increment the read counter
-            readCount++;
-            //Check if the maximum number of reads has been reached
-            if (readCount >= FULL_READS)
-            {
-                //Turn off charge using the defined function
-                setChargeState(false);
-                //Reset the reading counter
-                readCount = 0;
-            }
-            break;
-        default: //The battery does not need to be charged
-            //Reset the reading counter
-            readCount = 0;
-            break;
-        }
     }
 };
 
@@ -632,8 +586,7 @@ void onRootRequest(AsyncWebServerRequest *request)
 void initWebServer()
 {
     server.on("/", onRootRequest);
-    server.on("/wifi-info", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
+    server.on("/wifi-info", HTTP_GET, [](AsyncWebServerRequest *request) {
       AsyncResponseStream *response = request->beginResponseStream("application/json");
       DynamicJsonDocument json(1024);
       json["status"] = "ok";
@@ -646,7 +599,7 @@ void initWebServer()
     server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
     server.onNotFound([](AsyncWebServerRequest *request)
                       { request->send(400, "text/plain", "Not found"); });
-    AsyncElegantOTA.begin(&server); // Start ElegantOTA
+    ElegantOTA.begin(&server); // Start ElegantOTA
     server.begin();
     debuglnD("HTTP server started");
     MDNS.addService("http", "tcp", 80);
@@ -709,7 +662,7 @@ void notifyClients()
     json["threebarsVUStatus"] = stripLed.effectId == 15 && stripLed.powerState ? "on" : "off";
     json["oceanVUStatus"] = stripLed.effectId == 16 && stripLed.powerState ? "on" : "off";
     json["blendingVUStatus"] = stripLed.effectId == 17 && stripLed.powerState ? "on" : "off";
-    char buffer[565];                         // the sum of all character of json send {"stripledStatus":"off"}
+    char buffer[570];                         // the sum of all character of json send {"stripledStatus":"off"}
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
 }
@@ -768,7 +721,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         else if (strcmp(action, "music") == 0)
         {
             bt_powerState = !bt_powerState;
-            digitalWrite(SWITCH_PIN, bt_powerState ? HIGH : LOW); 
+            digitalWrite(SWITCH_PIN, bt_powerState ? LOW : HIGH); 
             bt_powerState ? Serial.println("Encendido del modulo BT") : Serial.println("Apagado del modulo BT"); 
         }
 
@@ -815,14 +768,13 @@ void setup()
     pinMode(STRIP_PIN, OUTPUT);
     pinMode(LAMP_PIN, OUTPUT);
     pinMode(SWITCH_PIN, OUTPUT);
-    pinMode(CHARGE_PIN, OUTPUT);
+    pinMode(CHARGE_PIN, INPUT);
     pinMode(ADC_PIN, INPUT);
     pinMode(FULL_CHARGE_PIN, INPUT);
 
     // Init Rele on OFF
     digitalWrite(LAMP_PIN, HIGH);
-    digitalWrite(CHARGE_PIN, HIGH);
-    digitalWrite(SWITCH_PIN, LOW);
+    digitalWrite(SWITCH_PIN, HIGH);
     
     Serial.begin(115200);
 
