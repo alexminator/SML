@@ -85,10 +85,14 @@ DHT_Unified dht(DHTPIN, DHTTYPE);
 float temp;
 float hum;
 
-//Power Switch for Bluetooth Module
+// Power Switch for Bluetooth Module
 #define SWITCH_PIN 18            // Pin to command relay. BT on/off
 bool bt_powerState = false;
-
+// Volumen Button
+#define VOLUMENUP_PIN 5        // Pin to command Mosfet to emulate a BT button Volumen UP and FF.
+#define VOLUMENDOWN_PIN 19     // Pin to command Mosfet to emulate a BT button Volumen DOWN and REW. 
+const unsigned long volumen_delay = 1000;     // More than 1s (Volumen + -)
+const unsigned long direction_delay = 100;     // Short time (FF and RW)
 // Lamp Switch
 #define LAMP_PIN 32 // Pin to command LAMP IN1 relay
 bool lampState = false;
@@ -99,7 +103,7 @@ bool lampState = false;
 #define ADC_PIN 33         // Pin to monitor Batt
 #define CONV_FACTOR 1.702
 #define READS 30
-#define MAXV  4.08
+#define MAXV  4.00
 #define MINV  3.20
 #define BATT_THRESHOLD 30 // Defines battery threshold in %
 #define MAX_READS 10      // Defines the maximum number of readings when the battery reaches the threshold
@@ -112,7 +116,7 @@ Battery18650Stats battery(ADC_PIN, CONV_FACTOR, READS, MAXV, MINV);
 // Web signal info
 unsigned long startMillis;
 unsigned long currentMillis;
-const unsigned long refresh = 3000; // 3 seg
+const unsigned long refresh = 3000UL; // 3 seg Unsigned long
 String strength;
 
 // Strip LED
@@ -160,7 +164,7 @@ bool is_centered = false; // For VU1 effects
 #include "vu3.h"
 #include "vu4.h"
 #include "vu5.h"
-#include "vu7.h"
+//#include "vu7.h"
 #include "vu6.h"
 // ----------------------------------------------------------------------------
 // Definition of Battery component
@@ -331,11 +335,11 @@ struct StripLed
         VU6.runPattern();
     }
 
-    void runBlendingVU()
+    /*void runBlendingVU()
     {
         BlendingVU VU7 = BlendingVU();
         VU7.runPattern();
-    }
+    }*/
 
     void update()
     {
@@ -392,9 +396,9 @@ struct StripLed
         case 16:
             runOceanVU();
             break;
-        case 17:
-            runBlendingVU();
-            break;
+        //case 17:
+        //    runBlendingVU();
+        //    break;
         default:
             break;
         }
@@ -521,7 +525,7 @@ enum Status
     VU4,
     VU5,
     VU6,
-    VU7,
+    //VU7,
     LAMP
 } status;
 
@@ -557,7 +561,7 @@ String processor(const String &var)
     case VU4:
     case VU5:
     case VU6:
-    case VU7:
+    //case VU7:
         return String("off");
         break;
     case LAMP:
@@ -632,7 +636,7 @@ String bars()
 
 void notifyClients()
 {
-    const int size = JSON_OBJECT_SIZE(30); // Remember change the number of member object. Real object + 1
+    const int size = JSON_OBJECT_SIZE(29); // Remember change the number of member object. Real object + 1
     StaticJsonDocument<size> json;
     json["bars"] = bars();
     json["battVoltage"] = String(batt.battVolts, 3);
@@ -661,7 +665,7 @@ void notifyClients()
     json["rippleVUStatus"] = stripLed.effectId == 14 && stripLed.powerState ? "on" : "off";
     json["threebarsVUStatus"] = stripLed.effectId == 15 && stripLed.powerState ? "on" : "off";
     json["oceanVUStatus"] = stripLed.effectId == 16 && stripLed.powerState ? "on" : "off";
-    json["blendingVUStatus"] = stripLed.effectId == 17 && stripLed.powerState ? "on" : "off";
+    //json["blendingVUStatus"] = stripLed.effectId == 17 && stripLed.powerState ? "on" : "off";
     char buffer[570];                         // the sum of all character of json send {"stripledStatus":"off"}
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
@@ -672,7 +676,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
     {
-        const uint8_t size = JSON_OBJECT_SIZE(4) + JSON_ARRAY_SIZE(3);
+        const uint8_t size = JSON_OBJECT_SIZE(5) + JSON_ARRAY_SIZE(3);
         StaticJsonDocument<size> json;
         DeserializationError err = deserializeJson(json, data);
         if (err)
@@ -724,7 +728,24 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             digitalWrite(SWITCH_PIN, bt_powerState ? LOW : HIGH); 
             bt_powerState ? Serial.println("Encendido del modulo BT") : Serial.println("Apagado del modulo BT"); 
         }
-
+        else if (strcmp(action, "volup") == 0)
+        {
+            currentMillis = millis();
+            //Simulate a button press
+            digitalWrite(VOLUMENUP_PIN, HIGH);  // Activate Mosfet, push a button
+            while (currentMillis - startMillis < volumen_delay) { }
+            digitalWrite(VOLUMENUP_PIN, LOW);   // Deactivate Mosfet, release button
+            startMillis = currentMillis;
+        }
+        else if (strcmp(action, "voldown") == 0)
+        {
+            currentMillis = millis();
+            //Simulate a button press
+            digitalWrite(VOLUMENDOWN_PIN, HIGH);  // Activate Mosfet, push a button
+            while (currentMillis - startMillis < direction_delay) { }
+            digitalWrite(VOLUMENDOWN_PIN, LOW);   // Deactivate Mosfet, release button
+            startMillis = currentMillis;
+        }
         notifyClients();
     }
 }
@@ -771,11 +792,17 @@ void setup()
     pinMode(CHARGE_PIN, INPUT);
     pinMode(ADC_PIN, INPUT);
     pinMode(FULL_CHARGE_PIN, INPUT);
+    pinMode(VOLUMENUP_PIN, OUTPUT);
+    pinMode(VOLUMENDOWN_PIN, OUTPUT);
 
     // Init Rele on OFF
     digitalWrite(LAMP_PIN, HIGH);
     digitalWrite(SWITCH_PIN, HIGH);
     
+    // Init Mosfet Volumen UP on OFF. Emulate Button not pressed
+    digitalWrite(VOLUMENUP_PIN, LOW);
+    digitalWrite(VOLUMENDOWN_PIN, LOW);
+
     Serial.begin(115200);
 
     // Initialize DHT22 device.
@@ -805,6 +832,8 @@ void setup()
         tCycle[i] = 0;
         COR[i] = 0.90 - float(i) / pow(NUM_BALLS, 2);
     }
+
+    startMillis = millis();  //initial start time
 
     initSPIFFS();
     initWiFi();
