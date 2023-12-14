@@ -8,6 +8,9 @@ const controlBtn = document.querySelector(".btn-overlay");
 
 //Play Button
 play.addEventListener("click", function () {
+  json.action = 'play-pause';
+  console.log(json);
+  websocket.send(JSON.stringify(json));
 });
 
 play.addEventListener("mousedown", function () {

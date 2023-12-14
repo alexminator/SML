@@ -88,11 +88,12 @@ float hum;
 // Power Switch for Bluetooth Module
 #define SWITCH_PIN 18            // Pin to command relay. BT on/off
 bool bt_powerState = false;
-// Volumen Button
+// Emulate BT Button
 #define VOLUMENUP_PIN 5        // Pin to command Mosfet to emulate a BT button Volumen UP and FF.
 #define VOLUMENDOWN_PIN 19     // Pin to command Mosfet to emulate a BT button Volumen DOWN and REW. 
-const unsigned long volumen_delay = 1500;     // More than 1s (Volumen + -)
-const unsigned long direction_delay = 100;     // Short time (FF and RW)
+#define PLAY_PIN 21            // Pin to command Mosfet to emulate a BT button PLAY AND PAUSE. 
+const unsigned long long_delay = 1000;     // More than 1s (Volumen + -)
+const unsigned long short_delay = 200;     // Short time (FF, RW, PLAY and PAUSE)
 // Lamp Switch
 #define LAMP_PIN 32 // Pin to command LAMP IN1 relay
 bool lampState = false;
@@ -636,7 +637,7 @@ String bars()
 
 void notifyClients()
 {
-    const int size = JSON_OBJECT_SIZE(29); // Remember change the number of member object. Real object + 1
+    const int size = JSON_OBJECT_SIZE(26); // Remember change the number of member object. See https://arduinojson.org/v5/assistant/
     StaticJsonDocument<size> json;
     json["bars"] = bars();
     json["battVoltage"] = String(batt.battVolts, 3);
@@ -665,7 +666,7 @@ void notifyClients()
     json["rippleVUStatus"] = stripLed.effectId == 14 && stripLed.powerState ? "on" : "off";
     json["threebarsVUStatus"] = stripLed.effectId == 15 && stripLed.powerState ? "on" : "off";
     json["oceanVUStatus"] = stripLed.effectId == 16 && stripLed.powerState ? "on" : "off";
-    char buffer[570];                         // the sum of all character of json send {"stripledStatus":"off"}
+    char buffer[560];                         // the sum of all character of json send {"stripledStatus":"off"}
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
 }
@@ -675,7 +676,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
     {
-        const uint8_t size = JSON_OBJECT_SIZE(7) + JSON_ARRAY_SIZE(3);
+        const uint8_t size = JSON_OBJECT_SIZE(3) + JSON_ARRAY_SIZE(4) + 66;     //See https://arduinojson.org/v5/assistant/
         StaticJsonDocument<size> json;
         DeserializationError err = deserializeJson(json, data);
         if (err)
@@ -731,33 +732,37 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         {
             //Simulate a button press
             digitalWrite(VOLUMENUP_PIN, HIGH);  // Activate Mosfet, push a button
-            delay(volumen_delay);
+            delay(long_delay);
             digitalWrite(VOLUMENUP_PIN, LOW);   // Deactivate Mosfet, release button
             Serial.println("Volumen up---------------------------");
         }
         else if (strcmp(action, "voldown") == 0)
         {
-            //Simulate a button press
-            digitalWrite(VOLUMENDOWN_PIN, HIGH);  // Activate Mosfet, push a button
-            delay(volumen_delay);
-            digitalWrite(VOLUMENDOWN_PIN, LOW);   // Deactivate Mosfet, release button
+            digitalWrite(VOLUMENDOWN_PIN, HIGH);  
+            delay(long_delay);
+            digitalWrite(VOLUMENDOWN_PIN, LOW);   
             Serial.println("Volumen down---------------------------");
         }
         else if (strcmp(action, "skipL") == 0)
         {
-            //Simulate a button press
-            digitalWrite(VOLUMENDOWN_PIN, HIGH);  // Activate Mosfet, push a button
-            delay(direction_delay);
-            digitalWrite(VOLUMENDOWN_PIN, LOW);   // Deactivate Mosfet, release button
-            Serial.println("Skip Left FF---------------------------");
+            digitalWrite(VOLUMENDOWN_PIN, HIGH);  
+            delay(short_delay);
+            digitalWrite(VOLUMENDOWN_PIN, LOW);   
+            Serial.println("Skip Left REW---------------------------");
         }
         else if (strcmp(action, "skipR") == 0)
         {
-            //Simulate a button press
-            digitalWrite(VOLUMENUP_PIN, HIGH);  // Activate Mosfet, push a button
-            delay(direction_delay);
-            digitalWrite(VOLUMENUP_PIN, LOW);   // Deactivate Mosfet, release button
-            Serial.println("Skip Right REW---------------------------");
+            digitalWrite(VOLUMENUP_PIN, HIGH);  
+            delay(short_delay);
+            digitalWrite(VOLUMENUP_PIN, LOW);   
+            Serial.println("Skip Right FF---------------------------");
+        }
+        else if (strcmp(action, "play-pause") == 0)
+        {
+            digitalWrite(PLAY_PIN, HIGH);  
+            delay(short_delay);
+            digitalWrite(PLAY_PIN, LOW);
+            Serial.println("Play Pause---------------------------");
         }
         notifyClients();
     }
@@ -807,6 +812,7 @@ void setup()
     pinMode(FULL_CHARGE_PIN, INPUT);
     pinMode(VOLUMENUP_PIN, OUTPUT);
     pinMode(VOLUMENDOWN_PIN, OUTPUT);
+    pinMode(PLAY_PIN, OUTPUT);
 
     // Init Rele on OFF
     digitalWrite(LAMP_PIN, HIGH);
@@ -815,6 +821,7 @@ void setup()
     // Init Mosfet on OFF. Emulate Button not pressed
     digitalWrite(VOLUMENUP_PIN, LOW);
     digitalWrite(VOLUMENDOWN_PIN, LOW);
+    digitalWrite(PLAY_PIN, LOW);
 
     Serial.begin(115200);
 
