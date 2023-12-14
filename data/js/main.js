@@ -193,15 +193,6 @@ function initButton() {
     document.getElementById('RippleVU').addEventListener('click', onToggleRippleVU);
     document.getElementById('ThreebarsVU').addEventListener('click', onToggle3barsVU);
     document.getElementById('OceanVU').addEventListener('click', onToggleOceanVU);
-    //document.getElementById('BlendingVU').addEventListener('click', onToggleBlendingVU);
-    //Volumen
-    document.getElementById('VolumenUP').addEventListener('click', onClickVolumen);
-}
-
-function onClickVolumen(event) {
-    json.action = 'volup';
-    console.log(json);
-    websocket.send(JSON.stringify(json));
 }
 
 function onToggleLamp(event) {
@@ -490,17 +481,3 @@ function onToggleOceanVU(event) {
     websocket.send(JSON.stringify(json));
 }
 
-/*function onToggleBlendingVU(event) {
-    const toggle = document.getElementById("BlendingVU");
-    if (toggle.className == "on") {
-        isOn = 0;
-        toggle.className = "off";
-    } else {
-        isOn = 17;
-        toggle.className = "on";
-    }
-    json.action = 'vu';
-    json.effectId = isOn;
-    console.log(json);
-    websocket.send(JSON.stringify(json));
-}*/

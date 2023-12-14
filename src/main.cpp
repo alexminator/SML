@@ -91,7 +91,7 @@ bool bt_powerState = false;
 // Volumen Button
 #define VOLUMENUP_PIN 5        // Pin to command Mosfet to emulate a BT button Volumen UP and FF.
 #define VOLUMENDOWN_PIN 19     // Pin to command Mosfet to emulate a BT button Volumen DOWN and REW. 
-const unsigned long volumen_delay = 1000;     // More than 1s (Volumen + -)
+const unsigned long volumen_delay = 1500;     // More than 1s (Volumen + -)
 const unsigned long direction_delay = 100;     // Short time (FF and RW)
 // Lamp Switch
 #define LAMP_PIN 32 // Pin to command LAMP IN1 relay
@@ -665,7 +665,6 @@ void notifyClients()
     json["rippleVUStatus"] = stripLed.effectId == 14 && stripLed.powerState ? "on" : "off";
     json["threebarsVUStatus"] = stripLed.effectId == 15 && stripLed.powerState ? "on" : "off";
     json["oceanVUStatus"] = stripLed.effectId == 16 && stripLed.powerState ? "on" : "off";
-    //json["blendingVUStatus"] = stripLed.effectId == 17 && stripLed.powerState ? "on" : "off";
     char buffer[570];                         // the sum of all character of json send {"stripledStatus":"off"}
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
@@ -676,7 +675,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
     {
-        const uint8_t size = JSON_OBJECT_SIZE(5) + JSON_ARRAY_SIZE(3);
+        const uint8_t size = JSON_OBJECT_SIZE(7) + JSON_ARRAY_SIZE(3);
         StaticJsonDocument<size> json;
         DeserializationError err = deserializeJson(json, data);
         if (err)
@@ -730,21 +729,35 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         }
         else if (strcmp(action, "volup") == 0)
         {
-            currentMillis = millis();
             //Simulate a button press
             digitalWrite(VOLUMENUP_PIN, HIGH);  // Activate Mosfet, push a button
-            while (currentMillis - startMillis < volumen_delay) { }
+            delay(volumen_delay);
             digitalWrite(VOLUMENUP_PIN, LOW);   // Deactivate Mosfet, release button
-            startMillis = currentMillis;
+            Serial.println("Volumen up---------------------------");
         }
         else if (strcmp(action, "voldown") == 0)
         {
-            currentMillis = millis();
             //Simulate a button press
             digitalWrite(VOLUMENDOWN_PIN, HIGH);  // Activate Mosfet, push a button
-            while (currentMillis - startMillis < direction_delay) { }
+            delay(volumen_delay);
             digitalWrite(VOLUMENDOWN_PIN, LOW);   // Deactivate Mosfet, release button
-            startMillis = currentMillis;
+            Serial.println("Volumen down---------------------------");
+        }
+        else if (strcmp(action, "skipL") == 0)
+        {
+            //Simulate a button press
+            digitalWrite(VOLUMENDOWN_PIN, HIGH);  // Activate Mosfet, push a button
+            delay(direction_delay);
+            digitalWrite(VOLUMENDOWN_PIN, LOW);   // Deactivate Mosfet, release button
+            Serial.println("Skip Left FF---------------------------");
+        }
+        else if (strcmp(action, "skipR") == 0)
+        {
+            //Simulate a button press
+            digitalWrite(VOLUMENUP_PIN, HIGH);  // Activate Mosfet, push a button
+            delay(direction_delay);
+            digitalWrite(VOLUMENUP_PIN, LOW);   // Deactivate Mosfet, release button
+            Serial.println("Skip Right REW---------------------------");
         }
         notifyClients();
     }
@@ -799,7 +812,7 @@ void setup()
     digitalWrite(LAMP_PIN, HIGH);
     digitalWrite(SWITCH_PIN, HIGH);
     
-    // Init Mosfet Volumen UP on OFF. Emulate Button not pressed
+    // Init Mosfet on OFF. Emulate Button not pressed
     digitalWrite(VOLUMENUP_PIN, LOW);
     digitalWrite(VOLUMENDOWN_PIN, LOW);
 
