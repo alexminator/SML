@@ -165,7 +165,6 @@ bool is_centered = false; // For VU1 effects
 #include "vu3.h"
 #include "vu4.h"
 #include "vu5.h"
-//#include "vu7.h"
 #include "vu6.h"
 // ----------------------------------------------------------------------------
 // Definition of Battery component

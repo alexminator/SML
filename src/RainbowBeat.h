@@ -12,6 +12,5 @@ void RainbowBeat::runPattern() {
   uint16_t beatB = beatsin16(20, 0, 255);
   fill_rainbow(leds, N_PIXELS, (beatA+beatB)/2, 8);
 
-  //btn.tick();
   FastLED.show();
 }

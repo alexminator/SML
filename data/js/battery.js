@@ -95,17 +95,14 @@ function initBattery(batt) {
           if(level <= 20) {
               batteryLiquid.classList.add('gradient-color-red');
               batteryLiquid.classList.remove('gradient-color-orange','gradient-color-yellow','gradient-color-green');
-              //document.querySelectorAll('.bubbles').style.display = 'none';
           }
           else if (level <= 40) {
               batteryLiquid.classList.add('gradient-color-orange');
               batteryLiquid.classList.remove('gradient-color-red','gradient-color-yellow','gradient-color-green');
-              //document.querySelectorAll('.bubbles').style.display = 'none';
           }
           else if (level <= 80) {
               batteryLiquid.classList.add('gradient-color-yellow');
               batteryLiquid.classList.remove('gradient-color-red','gradient-color-orange','gradient-color-green');    
-              //document.querySelectorAll('.bubbles').style.display = 'none';
           }
           else {
               batteryLiquid.classList.add('gradient-color-green');

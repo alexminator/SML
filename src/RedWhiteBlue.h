@@ -18,6 +18,5 @@ void RedWhiteBlue::runPattern() {
   
   fadeToBlackBy(leds, N_PIXELS, 10);
 
-  //btn.tick();
   FastLED.show();
 }

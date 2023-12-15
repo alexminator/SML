@@ -50,7 +50,6 @@ void ThreebarsVU::runPattern() {
     }
   }
   
-  //// Assign draw values ///
   // draw amplitue as 1/2 intensity both directions from origin
   int min_lit = origin - (intensity / 2);
   int max_lit = origin + (intensity / 2);
@@ -72,7 +71,6 @@ void ThreebarsVU::runPattern() {
     }
   }
 
-  //// Write Segmented ////
   int seg_len = N_PIXELS / SEGMENTS;
 
   for (int s = 0; s < SEGMENTS; s++) {
