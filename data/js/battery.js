@@ -1,6 +1,6 @@
-// Bubbles charging
-// Array with size of bubble
-sArray = [4, 6, 8, 10];
+/*=============== BUBBLES ===============*/
+  // Array with size of bubble
+  var sArray = [4, 6, 8, 10];
 
   // Helper function to get a random value from an array
 function randomValue(arr) {
@@ -76,11 +76,11 @@ function initBattery(batt) {
           batteryLiquid.style.height = `${batt.level}%`;
           
           /* 3. We validate full battery, low battery and if it is charging or not */
-          if(level == 100){ /* We validate if battery is full */
+          if(level == 100 && !batt.charging){ /* We validate if battery is full */
               batteryStatus.innerHTML = `Full battery <span class="fas fa-battery-full green-color"></span>`;
               batteryLiquid.style.height = '103%'; /* To hide the ellipse */
           }
-          else if (level <= 40) { /* We validate if battery is low */
+          else if (level <= 30) { /* We validate if battery is low */
               batteryStatus.innerHTML = `Low battery <span class="fas fa-plug animated-red"></span>`;      
           }
           else if (batt.charging){ /* We validate if battery its charging */

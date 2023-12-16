@@ -320,7 +320,7 @@ struct StripLed
     void runRippleVU()
     {
         RippleVU VU4 = RippleVU();
-        VU4.runPattern(false);
+        VU4.runPattern(true);
     }
 
     void runThreebarsVU()
@@ -334,12 +334,6 @@ struct StripLed
         OceanVU VU6 = OceanVU();
         VU6.runPattern();
     }
-
-    /*void runBlendingVU()
-    {
-        BlendingVU VU7 = BlendingVU();
-        VU7.runPattern();
-    }*/
 
     void update()
     {

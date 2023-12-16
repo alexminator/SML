@@ -64,6 +64,7 @@ window.onload = function () {
         console.log(json);
         websocket.send(JSON.stringify(json));
     });
+
 }
 // ----------------------------------------------------------------------------
 // WebSocket handling
@@ -80,7 +81,6 @@ window.addEventListener('load', onLoad);
 function onLoad(event) {
     initWebSocket();
     initButton();
-
 }
 
 function initWebSocket() {
@@ -146,7 +146,6 @@ function onMessage(event) {
     document.getElementById('RippleVU').className = data.rippleVUStatus;
     document.getElementById('ThreebarsVU').className = data.threebarsVUStatus;
     document.getElementById('OceanVU').className = data.oceanVUStatus;
-    //document.getElementById('BlendingVU').className = data.blendingVUStatus;
 }
 
 function onError(event) {
