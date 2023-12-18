@@ -1,14 +1,15 @@
+<!DOCTYPE html>
+<html>
 <h1 align="center">
-  
   <img alt="ALT logo" src="https://github.com/alexminator/SML/blob/master/img/SML.png" width="300px"/><br/><strong>SML</strong>
   <style>
     body {
   background-color: #111;
   color: #FFF;
   padding: 140px 0px 0px 0px;
-}
+  }
 
-h1 {
+  h1 {
   background-color: rgba(256,256,256,.03);
   background-image: -webkit-linear-gradient(top, #111, #0c0c0c);
   background-image: -moz-linear-gradient(top, #111, #0c0c0c);
@@ -21,102 +22,102 @@ h1 {
   text-transform: uppercase;
   letter-spacing: .3em;
   white-space:nowrap;
-}
+  }
 
-span {
+  span {
   color: #000;
   font-family: 'Caesar Dressing', cursive;
   font-size: 5em;
   text-transform: lowercase;
   vertical-align: middle;
   letter-spacing: .2em;
-}
+  }
 
-.fire {
+  .fire {
   animation: animation 1s ease-in-out infinite alternate;
   -moz-animation: animation 1s ease-in-out infinite alternate;
   -webkit-animation: animation 1s ease-in-out infinite alternate;
   -o-animation: animation 1s ease-in-out infinite alternate;
-}
+  }
 
-.burn {
+  .burn {
   animation: animation .65s ease-in-out infinite alternate;
   -moz-animation: animation .65s ease-in-out infinite alternate;
   -webkit-animation: animation .65s ease-in-out infinite alternate;
   -o-animation: animation .65s ease-in-out infinite alternate;
-}
+  }
 
-@keyframes animation
-{
-0% {text-shadow: 0 0 20px #fefcc9,
+  @keyframes animation
+  {
+  0% {text-shadow: 0 0 20px #fefcc9,
   10px -10px 30px #feec85,
   -20px -20px 40px #ffae34,
   20px -40px 50px #ec760c,
   -20px -60px 60px #cd4606,
   0 -80px 70px #973716,
   10px -90px 80px #451b0e;}
-100% {text-shadow: 0 0 20px #fefcc9,
+  100% {text-shadow: 0 0 20px #fefcc9,
   10px -10px 30px #fefcc9,
   -20px -20px 40px #feec85,
   22px -42px 60px #ffae34,
   -22px -58px 50px #ec760c,
   0 -82px 80px #cd4606,
   10px -90px 80px  #973716;}
-}
+  }
 
-@-moz-keyframes animation
-{
-0% {text-shadow: 0 0 20px #fefcc9,
+  @-moz-keyframes animation
+  {
+  0% {text-shadow: 0 0 20px #fefcc9,
   10px -10px 30px #feec85,
   -20px -20px 40px #ffae34,
   20px -40px 50px #ec760c,
   -20px -60px 60px #cd4606,
   0 -80px 70px #973716,
   10px -90px 80px #451b0e;}
-100% {text-shadow: 0 0 20px #fefcc9,
+  100% {text-shadow: 0 0 20px #fefcc9,
   10px -10px 30px #fefcc9,
   -20px -20px 40px #feec85,
   22px -42px 60px #ffae34,
   -22px -58px 50px #ec760c,
   0 -82px 80px #cd4606,
   10px -90px 80px  #973716;}
-}
+  }
 
-@-webkit-keyframes animation
-{
-0% {text-shadow: 0 0 20px #fefcc9,
+  @-webkit-keyframes animation
+  {
+  0% {text-shadow: 0 0 20px #fefcc9,
   10px -10px 30px #feec85,
   -20px -20px 40px #ffae34,
   20px -40px 50px #ec760c,
   -20px -60px 60px #cd4606,
   0 -80px 70px #973716,
   10px -90px 80px #451b0e;}
-100% {text-shadow: 0 0 20px #fefcc9,
+  100% {text-shadow: 0 0 20px #fefcc9,
   10px -10px 30px #fefcc9,
   -20px -20px 40px #feec85,
   22px -42px 60px #ffae34,
   -22px -58px 50px #ec760c,
   0 -82px 80px #cd4606,
   10px -90px 80px  #973716;}
-}
+  }
 
-@-o-keyframes animation
-{
-0% {text-shadow: 0 0 20px #fefcc9,
+  @-o-keyframes animation
+  {
+  0% {text-shadow: 0 0 20px #fefcc9,
   10px -10px 30px #feec85,
   -20px -20px 40px #ffae34,
   20px -40px 50px #ec760c,
   -20px -60px 60px #cd4606,
   0 -80px 70px #973716,
   10px -90px 80px #451b0e;}
-100% {text-shadow: 0 0 20px #fefcc9,
+  100% {text-shadow: 0 0 20px #fefcc9,
   10px -10px 30px #fefcc9,
   -20px -20px 40px #feec85,
   22px -42px 60px #ffae34,
   -22px -58px 50px #ec760c,
   0 -82px 80px #cd4606,
   10px -90px 80px  #973716;}
-}
+  }
   </style>
   <span class="fire">S</span><span class="burn">M</span><span class="fire">L</span>
   
@@ -180,3 +181,4 @@ System status can be monitored via an LCD display and a buzzer sounds when the l
 **You can view the demo [here](https://wokwi.com/projects/356392498196222977).**
 > **Warning** :
 Once inside of WOKWI web press the PLAY button to start the simulation. Click on the ultrasonic sensor and a slider will appear to simulate the reading values of the sensor. Vary the values between 25 and 104 cm to see the tank fill animation. Where 25 cm is a full tank and 104 cm (tank height) is totally empty. The JSN-SR04T sensor has a dead zone of 25 cm.
+</html>
