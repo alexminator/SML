@@ -23,3 +23,31 @@
 </h1> 
 
 <h4 align="center">:star: Give me one star — it will motivate me to keep improving it!!</h4>
+
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of contents</summary>
+  <ol>
+    <li>
+      <a href="#about-the-project">About the Project</a>
+      <ul>
+        <li><a href="#goals-of-this-project-">Goals of this project</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#getting-started">Getting Started</a>
+      <ul>
+        <li><a href="#component">Component</a></li>
+        <li><a href="#instalation">Instalation</a></li>
+        <li><a href="#diagram">Diagram</a></li>
+        <li><a href="#code">Code</a></li>
+      </ul>
+    </li>
+    <li><a href="#to-do">To do</a></li>
+    <li><a href="#collaborator">Collaborator</a></li>
+    <li><a href="#license">License</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="#open-source-programs">Open Source Programs</a></li>
+    <li><a href="#special-thanks">Special thanks</a></li>
+  </ol>
+</details>
