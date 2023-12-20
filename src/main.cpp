@@ -630,7 +630,7 @@ String bars()
 
 void notifyClients()
 {
-    const int size = JSON_OBJECT_SIZE(26); // Remember change the number of member object. See https://arduinojson.org/v5/assistant/
+    const int size = JSON_OBJECT_SIZE(29); // Remember change the number of member object. See https://arduinojson.org/v5/assistant/
     StaticJsonDocument<size> json;
     json["bars"] = bars();
     json["battVoltage"] = String(batt.battVolts, 3);
