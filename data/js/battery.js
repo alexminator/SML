@@ -83,12 +83,15 @@ function initBattery(batt) {
           else if (level <= 30) { /* We validate if battery is low */
               batteryStatus.innerHTML = `Low battery <span class="fas fa-plug animated-red"></span>`;      
           }
+          else if (batt.fullbatt){ /* We validate if an external power source is used */
+              batteryStatus.innerHTML = `Power in use... <span class="fas fa-plug animated-green"></span>`;
+          } 
           else if (batt.charging){ /* We validate if battery its charging */
               batteryStatus.innerHTML = `Charging... <span class="fas fa-bolt-lightning animated-green"></span>`;
               startBubbles();
           } 
           else { /* If its not loading, show battery in use. */
-              batteryStatus.innerHTML = `In use... <span class="fas fa-battery-quarter animated-green"></span>`;
+              batteryStatus.innerHTML = `Battery in use... <span class="fas fa-battery-quarter animated-green"></span>`;
           }
           
           /* 4. We change the colors of the battery and remove the other colors */

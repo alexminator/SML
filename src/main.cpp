@@ -630,12 +630,13 @@ String bars()
 
 void notifyClients()
 {
-    const int size = JSON_OBJECT_SIZE(29); // Remember change the number of member object. See https://arduinojson.org/v5/assistant/
+    const int size = JSON_OBJECT_SIZE(30); // Remember change the number of member object. See https://arduinojson.org/v5/assistant/
     StaticJsonDocument<size> json;
     json["bars"] = bars();
     json["battVoltage"] = String(batt.battVolts, 3);
     json["level"] = String(batt.battLvl);
     json["charging"] = batt.chargeState;
+    json["fullbatt"] = batt.fullBatt;
     json["temperature"] = String(temp, 1);
     json["humidity"] = String(hum, 1);
     json["lampstatus"] = lampState ? "on" : "off";
@@ -659,7 +660,7 @@ void notifyClients()
     json["rippleVUStatus"] = stripLed.effectId == 14 && stripLed.powerState ? "on" : "off";
     json["threebarsVUStatus"] = stripLed.effectId == 15 && stripLed.powerState ? "on" : "off";
     json["oceanVUStatus"] = stripLed.effectId == 16 && stripLed.powerState ? "on" : "off";
-    char buffer[560];                         // the sum of all character of json send {"stripledStatus":"off"}
+    char buffer[565];                         // the sum of all character of json send {"stripledStatus":"off"}
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
 }

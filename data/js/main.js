@@ -112,6 +112,7 @@ function onMessage(event) {
     //BATT
     batt.level = data.level;
     batt.charging = data.charging;
+    batt.fullbatt = data.fullbatt;
     initBattery(batt);
     document.getElementById('battVolt').innerHTML = data.battVoltage + ' V';
     // DHT
