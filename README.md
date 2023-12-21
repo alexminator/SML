@@ -1,6 +1,5 @@
 <h1 align="center">
   <img alt="SML logo" src="https://github.com/alexminator/SML/blob/master/img/SML.png" width="300px"/><br/>
-
   ${\color{#ff0000}S}{\color{#ff6e00}m}{\color{#ffdd00}a}{\color{#b2ff00}r}{\color{#48ff00}t}\ {\color{#00ff26}M}{\color{#00ff95}u}{\color{#00fbff}s}{\color{#0091ff}i}{\color{#0022ff}c}\ {\color{#4d00ff}L}{\color{#b700ff}a}{\color{#ff00d9}m}{\color{#ff006a}p} $
 </h1>
 <h4 align="center">
