@@ -1,5 +1,6 @@
 <h1 align="center">
-  <img alt="SML logo" src="https://github.com/alexminator/SML/blob/master/img/SML.png" width="300px"/><br/><strong>SML</strong>
+  <img alt="SML logo" src="https://github.com/alexminator/SML/blob/master/img/SML.png" width="300px"/><br/>
+	<span class="block-line"><span><span style="color:#ff0000;">S</span><span style="color:#ff6e00;">m</span><span style="color:#ffdd00;">a</span><span style="color:#b2ff00;">r</span><span style="color:#48ff00;">t&nbsp;</span></span><span><span style="color:#00ff26;">M</span><span style="color:#00ff95;">u</span><span style="color:#00fbff;">s</span><span style="color:#0091ff;">i</span><span style="color:#0022ff;">c&nbsp;</span></span><span><span style="color:#4d00ff;">L</span><span style="color:#b700ff;">a</span><span style="color:#ff00d9;">m</span><span style="color:#ff006a;">p</span></span></span>
     
   <a href="https://github.com/alexminator/SML/blob/master/README_es.md">
     <img height="20px" src="https://img.shields.io/badge/ES-flag.svg?color=555555&style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3NTAgNTAwIj4NCjxwYXRoIGZpbGw9IiNjNjBiMWUiIGQ9Im0wLDBoNzUwdjUwMGgtNzUweiIvPg0KPHBhdGggZmlsbD0iI2ZmYzQwMCIgZD0ibTAsMTI1aDc1MHYyNTBoLTc1MHoiLz4NCjwvc3ZnPg0K">
