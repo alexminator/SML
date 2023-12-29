@@ -91,7 +91,7 @@ function initBattery(batt) {
               startBubbles();
           } 
           else if (!batt.charging && !batt.fullbatt){ /* If its not AC power, show battery in use. */
-              batteryStatus.innerHTML = `Battery in use... <span class="fas fa-battery-quarter animated-green"></span>`;
+              batteryStatus.innerHTML = `In use... <span class="fas fa-battery-quarter animated-green"></span>`;
           }
           
           /* 4. We change the colors of the battery and remove the other colors */
