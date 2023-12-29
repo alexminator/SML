@@ -90,7 +90,7 @@ function initBattery(batt) {
               batteryStatus.innerHTML = `Charging... <span class="fas fa-bolt-lightning animated-green"></span>`;
               startBubbles();
           } 
-          else { /* If its not loading, show battery in use. */
+          else if (!batt.charging && !batt.fullbatt){ /* If its not AC power, show battery in use. */
               batteryStatus.innerHTML = `Battery in use... <span class="fas fa-battery-quarter animated-green"></span>`;
           }
           

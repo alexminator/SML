@@ -728,35 +728,30 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             digitalWrite(VOLUMENUP_PIN, HIGH);  // Activate Mosfet, push a button
             delay(long_delay);
             digitalWrite(VOLUMENUP_PIN, LOW);   // Deactivate Mosfet, release button
-            Serial.println("Volumen up---------------------------");
         }
         else if (strcmp(action, "voldown") == 0)
         {
             digitalWrite(VOLUMENDOWN_PIN, HIGH);  
             delay(long_delay);
             digitalWrite(VOLUMENDOWN_PIN, LOW);   
-            Serial.println("Volumen down---------------------------");
         }
         else if (strcmp(action, "skipL") == 0)
         {
             digitalWrite(VOLUMENDOWN_PIN, HIGH);  
             delay(short_delay);
             digitalWrite(VOLUMENDOWN_PIN, LOW);   
-            Serial.println("Skip Left REW---------------------------");
         }
         else if (strcmp(action, "skipR") == 0)
         {
             digitalWrite(VOLUMENUP_PIN, HIGH);  
             delay(short_delay);
             digitalWrite(VOLUMENUP_PIN, LOW);   
-            Serial.println("Skip Right FF---------------------------");
         }
         else if (strcmp(action, "play-pause") == 0)
         {
             digitalWrite(PLAY_PIN, HIGH);  
             delay(short_delay);
             digitalWrite(PLAY_PIN, LOW);
-            Serial.println("Play Pause---------------------------");
         }
         notifyClients();
     }
