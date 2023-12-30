@@ -82,7 +82,7 @@ Implementé un sistema de alimentación dual *(fuente y batería)* que permite s
 - **_Control vía web de los botones físicos del altavoz bluetooth_**
 - **_Implementación de una web embebida para el control en tiempo real desde el móvil_**
 
-<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/ALT_nano/blob/master/img/up_arrow.png" width="22" ></a>
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 
 ---
 
