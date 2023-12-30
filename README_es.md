@@ -1,0 +1,65 @@
+<h1 align="center">
+  <img alt="SML logo" src="https://github.com/alexminator/SML/blob/master/img/SML.png" width="300px"/><br/>
+  ${\color{#ff0000}S}{\color{#ff6e00}m}{\color{#ffdd00}a}{\color{#b2ff00}r}{\color{#48ff00}t}\ {\color{#00ff26}M}{\color{#00ff95}u}{\color{#00fbff}s}{\color{#0091ff}i}{\color{#0022ff}c}\ {\color{#4d00ff}L}{\color{#b700ff}a}{\color{#ff00d9}m}{\color{#ff006a}p} $
+</h1>
+<h4 align="center">
+  <a href="https://github.com/alexminator/SML/blob/master/README_es.md">
+    <img height="20px" src="https://img.shields.io/badge/ES-flag.svg?color=555555&style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3NTAgNTAwIj4NCjxwYXRoIGZpbGw9IiNjNjBiMWUiIGQ9Im0wLDBoNzUwdjUwMGgtNzUweiIvPg0KPHBhdGggZmlsbD0iI2ZmYzQwMCIgZD0ibTAsMTI1aDc1MHYyNTBoLTc1MHoiLz4NCjwvc3ZnPg0K">
+  </a>
+  <a href="https://github.com/alexminator/SML/blob/master/README.md">
+    <img height="20px" src="https://img.shields.io/badge/EN-flag.svg?color=555555&style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2aWV3Qm94PSIwIDAgNjAgMzAiIGhlaWdodD0iNjAwIj4NCjxkZWZzPg0KPGNsaXBQYXRoIGlkPSJ0Ij4NCjxwYXRoIGQ9Im0zMCwxNWgzMHYxNXp2MTVoLTMwemgtMzB2LTE1enYtMTVoMzB6Ii8+DQo8L2NsaXBQYXRoPg0KPC9kZWZzPg0KPHBhdGggZmlsbD0iIzAwMjQ3ZCIgZD0ibTAsMHYzMGg2MHYtMzB6Ii8+DQo8cGF0aCBzdHJva2U9IiNmZmYiIHN0cm9rZS13aWR0aD0iNiIgZD0ibTAsMGw2MCwzMG0wLTMwbC02MCwzMCIvPg0KPHBhdGggc3Ryb2tlPSIjY2YxNDJiIiBzdHJva2Utd2lkdGg9IjQiIGQ9Im0wLDBsNjAsMzBtMC0zMGwtNjAsMzAiIGNsaXAtcGF0aD0idXJsKCN0KSIvPg0KPHBhdGggc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjEwIiBkPSJtMzAsMHYzMG0tMzAtMTVoNjAiLz4NCjxwYXRoIHN0cm9rZT0iI2NmMTQyYiIgc3Ryb2tlLXdpZHRoPSI2IiBkPSJtMzAsMHYzMG0tMzAtMTVoNjAiLz4NCjwvc3ZnPg0K">
+  </a>
+</h4>
+
+<a name="readme-top"></a>
+
+<h1 align="center">
+  
+[![GitHub repo size](https://img.shields.io/github/repo-size/alexminator/SML?logo=github&style=plastic)](https://github.com/alexminator/SML/)
+[![GitHub License](https://img.shields.io/github/license/alexminator/SML.svg?logo=github&style=plastic&colorB=68B7EB)](https://github.com/alexminator/SML/blob/master/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/alexminator/SML.svg?style=plastic&logo=github&color=yellow)](https://github.com/alexminator/SML/stargazers) 
+[![GitHub forks](https://img.shields.io/github/forks/alexminator/SML.svg?logo=github&color=teal&style=plastic)](https://github.com/alexminator/SML/network/members)
+[![GitHub top language](https://img.shields.io/github/languages/top/alexminator/SML?logo=github&style=plastic&color=blueviolet)](https://github.com/alexminator/SML/)
+[![GitHub contributors](https://img.shields.io/github/contributors/alexminator/SML?logo=github&style=plastic)](https://github.com/alexminator/SML/)
+[![Watchers](https://img.shields.io/github/watchers/alexminator/SML?logo=github&color=teal&style=plastic)](https://github.com/alexminator/SML/watchers)  
+</h1> 
+
+<h4 align="center">:star: Dame una estrella — me motivará a seguir mejorándolo!</h4>
+
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Tabla de Contenido</summary>
+  <ol>
+    <li>
+      <a href="#sobre-el-proyecto">Sobre el proyecto</a>
+      <ul>
+        <li><a href="#metas">Metas</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#comencemos">Comencemos</a>
+      <ul>
+        <li><a href="#componentes">Componentes</a></li>
+        <li><a href="#instalación">Instalación</a></li>
+        <li><a href="#diagrama">Diagrama</a></li>
+        <li><a href="#código">Código</a></li>
+      </ul>
+    </li>
+    <li><a href="#por-hacer">Por hacer</a></li>
+    <li><a href="#colaboradores">Colaboradores</a></li>
+    <li><a href="#licencia">Licencia</a></li>
+    <li><a href="#contacto">Contacto</a></li>
+    <li><a href="#programas">Programas</a></li>
+    <li><a href="#agradecimientos">Agradecimientos</a></li>
+  </ol>
+</details>
+
+<!-- ABOUT THE PROJECT -->
+## Sobre el proyecto
+
+*SML (Smart Music Lamp) es un proyecto que surgió con la idea de crear una lámpara controlada por wifi. El proyecto se inició con la intención de hacer una versión personal de un sonoff y controlar una lámpara led vía Wifi desde el móvil a través de una web. Para ello, se debía usar un MCU que soportara conexión Wifi. Se decidió usar el esp32, cuya potencia era más que suficiente para la tarea.
+Pensándolo mejor, era una pena desperdiciar tanta potencia en una simple tarea de encender y apagar una lámpara. ¿Entonces qué debía agregar para explotar realmente el esp32 y me quedara un producto más completo y funcional?
+Al ver a mi mujer cocinando y oyendo música desde el móvil, el cual dejaba en cualquier lado, me vino la idea de dotar a la lámpara de un sistema de audio (speaker bluetooth). Le dije, no sería genial cocinar oyendo música sin tener que dejar el móvil regado en cualquier parte. Solo tendrías que encender la lámpara de la cocina y conectarte a ella vía wifi desde el móvil. Podrás controlar el encendido de la lámpara y a la vez pasar la música desde el móvil vía bluetooth a la lámpara y tener música en la cocina.
+Si ya tengo una lámpara que reproduce música, ¿por qué no hacerla más alegre y dotarla de colores? Para ello, agregué una tira de neopixels que también son controlados vía web desde el móvil, dando la posibilidad de efectos de luces incluyendo efectos al compás de la música que reproduce la lámpara.
+No contento aun, agregué un sensor de temperatura y humedad para tener esos datos reflejados en la web embebida en el esp32.
+Como vivo en un país que los cortes de energía son muy comunes y tenía la posibilidad de reproducir música en la lámpara, ¿por qué no aprovecharlo? Implementé un sistema de alimentación dual (fuente y batería) que me permite seguir controlando la lámpara vía web y escuchar música por varias horas luego de un corte de energía. Como es lógico, no podría usar los neopixels ya que consumen mucho.*
