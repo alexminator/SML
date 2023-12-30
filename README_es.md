@@ -57,7 +57,7 @@
 <!-- ABOUT THE PROJECT -->
 ## Sobre el proyecto
 
-${\color{#ff0000}S}{\color{#ff6e00}M}{\color{#ffdd00}L}$ *(Smart Music Lamp)* es un proyecto que surgió con la idea de crear una lámpara controlada por wifi y termino convirtiendose en mucho mas que eso. Se inició con la intención de hacer una versión personal de un sonoff y se decidió usar el esp32, cuya potencia era más que suficiente para la tarea.
+${\color{#ff0000}S}{\color{#ff6e00}M}{\color{#ffdd00}L}$ *(Smart Music Lamp)* es un proyecto que surgió con la idea de crear una lámpara controlada por wifi y termino convirtiéndose en mucho más que eso. Se inició con la intención de hacer una versión personal de un sonoff y se decidió usar el esp32, cuya potencia era más que suficiente para la tarea.
 Pensándolo mejor, era una pena desperdiciar tanta potencia en una simple tarea de encender y apagar una lámpara.
 
 ¿Entonces qué debía agregar para explotar realmente el esp32 y me quedara un producto más completo y funcional?
@@ -72,3 +72,19 @@ No contento aun, agregué un sensor de temperatura y humedad para tener esos dat
 Como vivo en un país que los cortes de energía son muy comunes y tenía la posibilidad de reproducir música en la lámpara, ¿por qué no aprovecharlo?
 
 Implementé un sistema de alimentación dual *(fuente y batería)* que permite seguir controlando la lámpara vía web y escuchar música luego de un corte de energía. Como es lógico, no podría usar los neopixels ya que consumen mucho.
+
+### Metas 
+
+- **_Control de encendido de la lampara desde el móvil_**
+- **_Reproducción de música en la lampara vía bluetooth desde el móvil_**
+- **_Control de la tira neopixel para los diferentes efectos de luces_**
+- **_Monitoreo de la carga y el uso de la batería_**
+- **_Control vía web de los botones físicos del altavoz bluetooth_**
+- **_Implementación de una web embebida para el control en tiempo real desde el móvil_**
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/ALT_nano/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
+<!-- GETTING STARTED -->
+## Comencemos
