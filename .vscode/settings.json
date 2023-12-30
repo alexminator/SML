@@ -15,5 +15,5 @@
   },
   "liveServer.settings.port": 5501,
   "commentTranslate.hover.enabled": true,
-  "editor.inlineSuggest.showToolbar": "onHover"
+  "editor.inlineSuggest.showToolbar": "always"
 }
