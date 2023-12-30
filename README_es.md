@@ -55,7 +55,7 @@
 </details>
 
 <!-- ABOUT THE PROJECT -->
-## Sobre el proyecto
+## ${\color{#ff6e00}Sobre el proyecto}$ 
 
 ${\color{#ff0000}S}{\color{#ff6e00}M}{\color{#ffdd00}L}$ *(Smart Music Lamp)* es un proyecto que surgió con la idea de crear una lámpara controlada por wifi y termino convirtiéndose en mucho más que eso. Se inició con la intención de hacer una versión personal de un sonoff y se decidió usar el esp32, cuya potencia era más que suficiente para la tarea.
 Pensándolo mejor, era una pena desperdiciar tanta potencia en una simple tarea de encender y apagar una lámpara.
