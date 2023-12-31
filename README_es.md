@@ -55,7 +55,7 @@
 </details>
 
 <!-- ABOUT THE PROJECT -->
-## ${\color{#ffdd00} Sobre \space el \space proyecto}$ 
+## Sobre el proyecto 
 
 ${\color{#ff0000}S}{\color{#ff6e00}M}{\color{#ffdd00}L}$ *(**Smart Music Lamp**)* es un proyecto que surgió con la idea de crear una lámpara controlada por wifi y termino convirtiéndose en mucho más que eso. Se inició con la intención de hacer una versión personal de un sonoff y se decidió usar el esp32, cuya potencia era más que suficiente para la tarea.
 Pensándolo mejor, era una pena desperdiciar tanta potencia en una simple tarea de encender y apagar una lámpara.
@@ -73,7 +73,7 @@ Como vivo en un país que los cortes de energía son muy comunes y tenía la pos
 
 Implementé un sistema de alimentación dual *(fuente y batería)* que permite seguir controlando la lámpara vía web y escuchar música luego de un corte de energía. Como es lógico, no podría usar los **neopixels** ya que consumen mucho.
 
-### ${\color{#ffdd00} Metas}$ 
+### Metas  
 
 - **_Control de encendido de la lampara desde el móvil._**
 - **_Reproducción de música en la lampara vía bluetooth desde el móvil._**
@@ -87,13 +87,13 @@ Implementé un sistema de alimentación dual *(fuente y batería)* que permite s
 ---
 
 <!-- GETTING STARTED -->
-## ${\color{#ffdd00} Comencemos}$ 
+## Comencemos 
 
 [![Arduino](https://img.shields.io/badge/ESP32-Project-teal.svg?colorA=teal&colorB=red&style=for-the-badge)](https://github.com/alexminator/SML/)
 
 Poner aqui un video del sml en accion
 
-### ${\color{#ffdd00} Componentes}$
+### Componentes
 
 Para este proyecto se eligio el esp32 por su potencia, cantidad de entradas analogicas y conexion Wifi.
 El mismo tendra una alimentacion dual, empleandose una fuente de 5v y una bateria de 3.7 v. Un cargador con proteccion sera el encargado de cargar la bateria y un convertidor DC-DC step up de elevar el voltaje de la misma a 5V para alimentar el esp32 y el resto de los modulos menos la tira de neopixels que se alimentara siempre de la fuente.
