@@ -116,6 +116,7 @@ Los componentes necesarios son:
 - **Bateria LiPo 3.7v o 18650 3.7v Li-Ion**
 
 ![LiPo](https://github.com/alexminator/SML/blob/master/img/Lipo.jpg?raw=true)
+![18650](https://github.com/alexminator/SML/blob/master/img/18650.png?raw=true)
 
 - **Sensor de temperatura y humedad [DHT22](https://www.sparkfun.com/datasheets/Sensors/Temperature/DHT22.pdf)**
 
