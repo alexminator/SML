@@ -79,6 +79,7 @@ Implementé un sistema de alimentación dual *(fuente y batería)* que permite s
 - **_Reproducción de música en la lampara vía bluetooth desde el móvil._**
 - **_Control de la tira neopixel para los diferentes efectos de luces._**
 - **_Monitoreo de la carga y el uso de la batería._**
+- **_Monitoreo de la temperatura y humedad._**
 - **_Control vía web de los botones físicos del altavoz bluetooth._**
 - **_Implementación de una web embebida para el control en tiempo real desde el móvil._**
 
@@ -95,12 +96,12 @@ Poner aqui un video del sml en accion
 
 ### Componentes
 
-Para este proyecto se eligio el esp32 por su potencia, cantidad de entradas analogicas y conexion Wifi.
-El mismo tendra una alimentacion dual, empleandose una fuente de 5v y una bateria de 3.7 v. Un cargador con proteccion sera el encargado de cargar la bateria y un convertidor DC-DC step up de elevar el voltaje de la misma a 5V para alimentar el esp32 y el resto de los modulos menos la tira de neopixels que se alimentara siempre de la fuente.
+Para este proyecto se eligió el esp32 por su potencia, cantidad de entradas analógicas y conexión Wifi.
+El mismo tendrá una alimentación dual, empleándose una fuente de 5v y una batería de 3.7 v. Un cargador con protección será el encargado de cargar la batería y un convertidor DC-DC step up de elevar el voltaje de la misma a 5V para alimentar el esp32 y el resto de los módulos menos la tira de neopixels que se alimentará siempre de la fuente.
 
-Un modulo relay dual sera el encargado de controlar el encendido de la lampara led y del modulo bluetooth. Un sensor DHT22 para la medicion de la temperatura y humedad. Un grupo de piezas para la implementacion de pequeños circuitos de apoyo.
+Un módulo relé dual será el encargado de controlar el encendido de la lampará led y del módulo bluetooth. Un sensor DHT22 para la medición de la temperatura y humedad. Un grupo de piezas para la implementación de pequeños circuitos de apoyo.
 
-Para la reproduccion de musica utilice uno de esos altavoces bluetooth portatiles muy comunes que se pueden encontrar muy baratos como los de la siguiente imagen
+Para la reproducción de música utilice uno de esos altavoces bluetooth portátiles muy comunes que se pueden encontrar muy baratos como los de la siguiente imagen
 
 ![BTspeaker](https://github.com/alexminator/SML/blob/master/img/speakerBT.jpg?raw=true)
 
