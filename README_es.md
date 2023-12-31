@@ -114,9 +114,9 @@ Los componentes necesarios son:
 
 ![tp4056](https://github.com/alexminator/SML/blob/master/img/tp4056.png?raw=true)
 
-- **Modulo Boost converter dc-dc step up**
+- **Mini módulo elevador/impulsor DC-DC MT3608**
 
-![mt3608](https://github.com/alexminator/SML/blob/master/img/tp4056.png?raw=true)
+![mt3608](https://github.com/alexminator/SML/blob/master/img/stepUP.png?raw=true)
 
 - **Fuente de 5v**
 
