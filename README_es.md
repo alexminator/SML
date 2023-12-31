@@ -97,15 +97,24 @@ Poner aqui un video del sml en accion
 
 Para este proyecto se eligio el esp32 por su potencia, cantidad de entradas analogicas y conexion Wifi.
 El mismo tendra una alimentacion dual, empleandose una fuente de 5v y una bateria de 3.7 v. Un cargador con proteccion sera el encargado de cargar la bateria y un convertidor DC-DC step up de elevar el voltaje de la misma a 5V para alimentar el esp32 y el resto de los modulos menos la tira de neopixels que se alimentara siempre de la fuente.
-Un modulo relay dual sera el encargado de controlar el encendido de la lampara led y del modulo bluetooth. Para la reproduccion de musica utilice uno de esos altavoces bluetooth portatiles muy comunes que se pueden encontrar muy baratos como los de la siguiente imagen
+
+Un modulo relay dual sera el encargado de controlar el encendido de la lampara led y del modulo bluetooth. Un sensor DHT22 para la medicion de la temperatura y humedad. Un grupo de piezas para la implementacion de pequeños circuitos de apoyo.
+
+Para la reproduccion de musica utilice uno de esos altavoces bluetooth portatiles muy comunes que se pueden encontrar muy baratos como los de la siguiente imagen
 
 ![BTspeaker](https://github.com/alexminator/SML/blob/master/img/speakerBT.jpg?raw=true)
 
 Los componentes necesarios son:
 
-- **Arduino Nano**
-- **Pantalla LCD 20x4**
-- **Botón**
-- **Zumbador**
-- **Resistencia valor 10K**
-- **Sensor ultrasónico a prueba de agua [JSN-SR04T](https://naylampmechatronics.com/img/cms/Datasheets/JSN-SR04T-2-0.pdf)**
+- **Esp32, cualquier variante**
+- **Modulo de carga de bateria TP4056**
+- **Modulo Boost converter dc-dc step up**
+- **Fuente de 5v**
+- **Modulo rele dual**
+- **Sensor DHT22**
+- **Tira led neopixel 24 leds**
+- **Bateria LiPo 3.7v o 18650 3.7v Li-Ion**
+- **Sensor de temperatura y humedad [DHT22](https://www.sparkfun.com/datasheets/Sensors/Temperature/DHT22.pdf)**
+
+![DHT22](https://github.com/alexminator/SML/blob/master/img/DHT22.jpg?raw=true)
+
