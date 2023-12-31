@@ -107,12 +107,29 @@ Para la reproduccion de musica utilice uno de esos altavoces bluetooth portatile
 Los componentes necesarios son:
 
 - **Esp32, cualquier variante**
-- **Modulo de carga de bateria TP4056**
+
+![esp32](https://github.com/alexminator/SML/blob/master/img/esp32.png?raw=true)
+
+- **Módulo de cargador de batería, TP4056 5V 1A con protección**
+
+![tp4056](https://github.com/alexminator/SML/blob/master/img/tp4056.png?raw=true)
+
 - **Modulo Boost converter dc-dc step up**
+
+![mt3608](https://github.com/alexminator/SML/blob/master/img/tp4056.png?raw=true)
+
 - **Fuente de 5v**
+
+![power](https://github.com/alexminator/SML/blob/master/img/tp4056.png?raw=true)
+
 - **Modulo rele dual**
-- **Sensor DHT22**
+
+![relay](https://github.com/alexminator/SML/blob/master/img/tp4056.png?raw=true)
+
 - **Tira led neopixel 24 leds**
+
+![neopixel](https://github.com/alexminator/SML/blob/master/img/tp4056.png?raw=true)
+
 - **Bateria LiPo 3.7v o 18650 3.7v Li-Ion**
 
 ![LiPo](https://github.com/alexminator/SML/blob/master/img/Lipo.png?raw=true)
