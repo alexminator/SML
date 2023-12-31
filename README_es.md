@@ -114,6 +114,9 @@ Los componentes necesarios son:
 - **Sensor DHT22**
 - **Tira led neopixel 24 leds**
 - **Bateria LiPo 3.7v o 18650 3.7v Li-Ion**
+
+![LiPo](https://github.com/alexminator/SML/blob/master/img/Lipo.jpg?raw=true)
+
 - **Sensor de temperatura y humedad [DHT22](https://www.sparkfun.com/datasheets/Sensors/Temperature/DHT22.pdf)**
 
 ![DHT22](https://github.com/alexminator/SML/blob/master/img/DHT22.jpg?raw=true)
