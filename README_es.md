@@ -95,9 +95,10 @@ Poner aqui un video del sml en accion
 
 ### ${\color{#ffdd00} Componentes}$
 
-Para este proyecto se eligio el esp32 por su potencia, cantidad de entradas analagicas y conexion Wifi.
+Para este proyecto se eligio el esp32 por su potencia, cantidad de entradas analogicas y conexion Wifi.
 El mismo tendra una alimentacion dual, empleandose una fuente de 5v y una bateria de 3.7 v. Un cargador con proteccion sera el encargado de cargar la bateria y un convertidor DC-DC step up de elevar el voltaje de la misma a 5V para alimentar el esp32 y el resto de los modulos menos la tira de neopixels que se alimentara siempre de la fuente.
 Un modulo relay dual sera el encargado de controlar el encendido de la lampara led y del modulo bluetooth. Para la reproduccion de musica utilice uno de esos altavoces bluetooth portatiles muy comunes que se pueden encontrar muy baratos como los de la siguiente imagen
+
 ![BTspeaker](https://github.com/alexminator/SML/blob/master/img/speakerBT.jpg?raw=true)
 
 Los componentes necesarios son:
