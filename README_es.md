@@ -182,4 +182,18 @@ A continuación se muestra una tabla con los pines del esp32 que se conectarán 
 |  33- `D33`   | `ADC_PIN`         | Monitor de Batería           |
 |  34- `D34`   | `CHARGE_PIN`      | Señal de Batería cargando    |
 |  35- `D35`   | `FULL_CHARGE_PIN` | Señal de Batería cargada     |
-|  36- `D36`   | `AUDIO_IN_PIN`    | Entrada de audio             |
+|  36- `VP`    | `AUDIO_IN_PIN`    | Entrada de audio             |
+
+> **Nota** :
+Como se esta usando la conexion Wifi del esp32 no podremos usar ningun pin perteneciente al ADC2 para lecturas analógicas.
+
+El siguiente esquema ilustra las conexiones para la alimentacion del proyecto.
+
+![smlpower](https://github.com/alexminator/SML/blob/master/img/SML_power.png?raw=true)
+
+> **Nota** : 
+El voltaje de salida de la fuente original de la lámpara que alimenta sus leds blancos de alto brillo no es el reflejado en el esquema es mucho mas alto. No es importante saberlo para este proyecto.
+
+Para un mejor entendimiento de la alimentacion dual **(load sharing)** que se uso, les adjunto el siguiente esquema.
+
+![loadsharing](https://github.com/alexminator/SML/blob/master/img/load-sharing.png?raw=true)
