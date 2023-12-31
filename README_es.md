@@ -89,7 +89,7 @@ Implementé un sistema de alimentación dual *(fuente y batería)* que permite s
 <!-- GETTING STARTED -->
 ## ${\color{#ffdd00} Comencemos}$ 
 
-[![Arduino](https://img.shields.io/badge/Arduino-Project-teal.svg?colorA=teal&colorB=red&style=for-the-badge)](https://github.com/alexminator/SML/)
+[![Arduino](https://img.shields.io/badge/ESP32-Project-teal.svg?colorA=teal&colorB=red&style=for-the-badge)](https://github.com/alexminator/SML/)
 
 Poner aqui un video del sml en accion
 
