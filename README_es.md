@@ -119,16 +119,13 @@ Los componentes necesarios son:
 ![mt3608](https://github.com/alexminator/SML/blob/master/img/stepUP.png?raw=true)
 
 - **Fuente de 5v**
-
-![power](https://github.com/alexminator/SML/blob/master/img/tp4056.png?raw=true)
-
 - **Modulo rele dual**
 
-![relay](https://github.com/alexminator/SML/blob/master/img/tp4056.png?raw=true)
+![relay](https://github.com/alexminator/SML/blob/master/img/relay.png?raw=true)
 
-- **Tira led neopixel 24 leds**
+- **Tira led neopixel WS2812B 24 leds**
 
-![neopixel](https://github.com/alexminator/SML/blob/master/img/tp4056.png?raw=true)
+![neopixel](https://github.com/alexminator/SML/blob/master/img/neopixel.png?raw=true)
 
 - **Bateria LiPo 3.7v o 18650 3.7v Li-Ion**
 
