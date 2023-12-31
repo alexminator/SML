@@ -107,33 +107,50 @@ Para la reproducción de música utilice uno de esos altavoces bluetooth portát
 
 Los componentes necesarios son:
 
-- **Esp32, cualquier variante**
+1. **Esp32, cualquier variante**
 
 ![esp32](https://github.com/alexminator/SML/blob/master/img/esp32.png?raw=true)
 
-- **Módulo de cargador de batería, TP4056 5V 1A con protección**
+2. **Módulo de cargador de batería, TP4056 5V 1A con protección**
 
 ![tp4056](https://github.com/alexminator/SML/blob/master/img/tp4056.png?raw=true)
 
-- **Mini módulo elevador/impulsor DC-DC MT3608**
+3. **Mini módulo elevador/impulsor DC-DC MT3608**
 
 ![mt3608](https://github.com/alexminator/SML/blob/master/img/stepUP.png?raw=true)
 
-- **Fuente de 5v**
-- **Modulo rele dual**
+4. **Fuente de 5v**
+5. **Modulo rele dual**
 
 ![relay](https://github.com/alexminator/SML/blob/master/img/relay.png?raw=true)
 
-- **Tira led neopixel WS2812B 24 leds**
+6. **Tira led neopixel WS2812B 24 leds**
 
 ![neopixel](https://github.com/alexminator/SML/blob/master/img/neopixel.png?raw=true)
 
-- **Bateria LiPo 3.7v o 18650 3.7v Li-Ion**
+7. **Bateria LiPo 3.7v o 18650 3.7v Li-Ion**
 
 ![LiPo](https://github.com/alexminator/SML/blob/master/img/Lipo.png?raw=true)
 ![18650](https://github.com/alexminator/SML/blob/master/img/18650.png?raw=true)
 
-- **Sensor de temperatura y humedad [DHT22](https://www.sparkfun.com/datasheets/Sensors/Temperature/DHT22.pdf)**
+8. **Sensor de temperatura y humedad [DHT22](https://www.sparkfun.com/datasheets/Sensors/Temperature/DHT22.pdf)**
 
 ![DHT22](https://github.com/alexminator/SML/blob/master/img/DHT22.png?raw=true)
 
+10. **Resistencias:**
+   * 5 x 1K
+   * 3 x 10K
+   * 2 x 4.7K
+   * 1 x 220 ohm           
+
+11. **Condensadores:** 
+   * 2 x 0.1 uF
+   * 1 x 1 uF /10v
+
+12. **Diodos:**
+   * 2 x 1N4148
+   * 1 x 1N581x schottky   
+
+13. **Transistores Mosfets**
+   * 1 x Mosfet Canal P
+   * 3 x Mosfet Canal N
