@@ -57,7 +57,7 @@
 <!-- ABOUT THE PROJECT -->
 ## ${\color{#ffdd00} Sobre \space el \space proyecto}$ 
 
-${\color{#ff0000}S}{\color{#ff6e00}M}{\color{#ffdd00}L}$ *(Smart Music Lamp)* es un proyecto que surgió con la idea de crear una lámpara controlada por wifi y termino convirtiéndose en mucho más que eso. Se inició con la intención de hacer una versión personal de un sonoff y se decidió usar el esp32, cuya potencia era más que suficiente para la tarea.
+${\color{#ff0000}S}{\color{#ff6e00}M}{\color{#ffdd00}L}$ *(**Smart Music Lamp**)* es un proyecto que surgió con la idea de crear una lámpara controlada por wifi y termino convirtiéndose en mucho más que eso. Se inició con la intención de hacer una versión personal de un sonoff y se decidió usar el esp32, cuya potencia era más que suficiente para la tarea.
 Pensándolo mejor, era una pena desperdiciar tanta potencia en una simple tarea de encender y apagar una lámpara.
 
 ¿Entonces qué debía agregar para explotar realmente el esp32 y me quedara un producto más completo y funcional?
@@ -66,21 +66,21 @@ Al ver a mi mujer cocinando y oyendo música desde el móvil, el cual dejaba en 
 
 Si ya tengo una lámpara que reproduce música, ¿por qué no hacerla más alegre y dotarla de colores?
 
-Para ello, agregué una tira de neopixels que también son controlados vía web desde el móvil, dando la posibilidad de efectos de luces incluyendo efectos al compás de la música que reproduce la lámpara.
+Para ello, agregué una tira de **neopixels** que también son controlados vía web desde el móvil, dando la posibilidad de efectos de luces incluyendo efectos al compás de la música que reproduce la lámpara.
 No contento aun, agregué un sensor de temperatura y humedad para tener esos datos reflejados en la web embebida en el esp32.
 
 Como vivo en un país que los cortes de energía son muy comunes y tenía la posibilidad de reproducir música en la lámpara, ¿por qué no aprovecharlo?
 
-Implementé un sistema de alimentación dual *(fuente y batería)* que permite seguir controlando la lámpara vía web y escuchar música luego de un corte de energía. Como es lógico, no podría usar los neopixels ya que consumen mucho.
+Implementé un sistema de alimentación dual *(fuente y batería)* que permite seguir controlando la lámpara vía web y escuchar música luego de un corte de energía. Como es lógico, no podría usar los **neopixels** ya que consumen mucho.
 
 ### ${\color{#ffdd00} Metas}$ 
 
-- **_Control de encendido de la lampara desde el móvil_**
-- **_Reproducción de música en la lampara vía bluetooth desde el móvil_**
-- **_Control de la tira neopixel para los diferentes efectos de luces_**
-- **_Monitoreo de la carga y el uso de la batería_**
-- **_Control vía web de los botones físicos del altavoz bluetooth_**
-- **_Implementación de una web embebida para el control en tiempo real desde el móvil_**
+- **_Control de encendido de la lampara desde el móvil._**
+- **_Reproducción de música en la lampara vía bluetooth desde el móvil._**
+- **_Control de la tira neopixel para los diferentes efectos de luces._**
+- **_Monitoreo de la carga y el uso de la batería._**
+- **_Control vía web de los botones físicos del altavoz bluetooth._**
+- **_Implementación de una web embebida para el control en tiempo real desde el móvil._**
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 
@@ -88,3 +88,23 @@ Implementé un sistema de alimentación dual *(fuente y batería)* que permite s
 
 <!-- GETTING STARTED -->
 ## ${\color{#ffdd00} Comencemos}$ 
+
+[![Arduino](https://img.shields.io/badge/Arduino-Project-teal.svg?colorA=teal&colorB=red&style=for-the-badge)](https://github.com/alexminator/SML/)
+
+Poner aqui un video del sml en accion
+
+### ${\color{#ffdd00} Componentes}$
+
+Para este proyecto se eligio el esp32 por su potencia, cantidad de entradas analagicas y conexion Wifi.
+El mismo tendra una alimentacion dual, empleandose una fuente de 5v y una bateria de 3.7 v. Un cargador con proteccion sera el encargado de cargar la bateria y un convertidor DC-DC step up de elevar el voltaje de la misma a 5V para alimentar el esp32 y el resto de los modulos menos la tira de neopixels que se alimentara siempre de la fuente.
+Un modulo relay dual sera el encargado de controlar el encendido de la lampara led y del modulo bluetooth. Para la reproduccion de musica utilice uno de esos altavoces bluetooth portatiles muy comunes que se pueden encontrar muy baratos como los de la siguiente imagen
+![BTspeaker](https://github.com/alexminator/SML/blob/master/img/speakerBT.jpg?raw=true)
+
+Los componentes necesarios son:
+
+- **Arduino Nano**
+- **Pantalla LCD 20x4**
+- **Botón**
+- **Zumbador**
+- **Resistencia valor 10K**
+- **Sensor ultrasónico a prueba de agua [JSN-SR04T](https://naylampmechatronics.com/img/cms/Datasheets/JSN-SR04T-2-0.pdf)**
