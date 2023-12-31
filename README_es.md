@@ -75,8 +75,8 @@ Implementé un sistema de alimentación dual *(fuente y batería)* que permite s
 
 ### Metas  
 
-- **_Control de encendido de la lampara desde el móvil._**
-- **_Reproducción de música en la lampara vía bluetooth desde el móvil._**
+- **_Control de encendido de la lámpara desde el móvil._**
+- **_Reproducción de música en la lámpara vía bluetooth desde el móvil._**
 - **_Control de la tira neopixel para los diferentes efectos de luces._**
 - **_Monitoreo de la carga y el uso de la batería._**
 - **_Monitoreo de la temperatura y humedad._**
@@ -154,3 +154,32 @@ Los componentes necesarios son:
 13. **Transistores Mosfets**
    * 1 x Mosfet Canal P
    * 3 x Mosfet Canal N
+
+14. **Placa control de altavoz Bluetooth con su Bocina**
+
+15. **Lámpara led de techo, la cual queremos transformar**
+
+> **Nota** :
+Para este proyecto use una lampara led circular por considerarlo más estético y elegante. Ustedes podrán hacerlo con cualquier lampara que se acomode a sus necesidades y gusto.
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
+### Instalación 
+
+A continuación se muestra una tabla con los pines del esp32 que se conectarán y su denominación.
+
+| ESP32 PINS   | NOMBRE            | FUNCION                      |
+| ------------ | -----------       | ------------                 | 
+|  4-  `D4`    | `STRIP_PIN`       | Control tira led             | 
+|  5-  `D5`    | `VOLUMENUP_PIN`   | Botón V+/FF Bluetooth        |
+|  18- `D18`   | `SWITCH_PIN`      | Control encendido Bluetooth  |
+|  19- `D19`   | `VOLUMENDOWN_PIN` | Botón V-/REW Bluetooth       |
+|  21- `D21`   | `PLAY_PIN`        | Botón Play/Pause Bluetooth   |
+|  23- `D23`   | `DHTPIN`          | Control sensor DHT           |
+|  32- `D32`   | `LAMP_PIN`        | Control encendido de Lámpara |
+|  33- `D33`   | `ADC_PIN`         | Monitor de Batería           |
+|  34- `D34`   | `CHARGE_PIN`      | Señal de Batería cargando    |
+|  35- `D35`   | `FULL_CHARGE_PIN` | Señal de Batería cargada     |
+|  36- `D36`   | `AUDIO_IN_PIN`    | Entrada de audio             |
