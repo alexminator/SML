@@ -157,7 +157,7 @@ Los componentes necesarios son:
 
 14. **Placa control de altavoz Bluetooth con su Bocina**
 
-15. **Lámpara led de techo, la cual queremos transformar**
+15. **Lámpara led que queremos transformar**
 
 > **Nota** :
 Para este proyecto use una lampara led circular por considerarlo más estético y elegante. Ustedes podrán hacerlo con cualquier lampara que se acomode a sus necesidades y gusto.
@@ -192,8 +192,17 @@ El siguiente esquema ilustra las conexiones para la alimentacion del proyecto.
 ![smlpower](https://github.com/alexminator/SML/blob/master/img/SML_power.png?raw=true)
 
 > **Nota** : 
-El voltaje de salida de la fuente original de la lámpara que alimenta sus leds blancos de alto brillo no es el reflejado en el esquema es mucho mas alto. No es importante saberlo para este proyecto.
+El voltaje de salida de la fuente de la lámpara que alimenta los leds blancos de alto brillo no es el reflejado en el esquema, es mucho mas alto. No es importante saberlo para este proyecto.
 
-Para un mejor entendimiento de la alimentacion dual **(load sharing)** que se uso, les adjunto el siguiente esquema.
+Para un mejor entendimiento de la alimentación dual **(load sharing)** que se uso, les adjunto el siguiente esquema.
 
 ![loadsharing](https://github.com/alexminator/SML/blob/master/img/load-sharing.png?raw=true)
+
+Cuando se aplica alimentación de la fuente de 5v, este circuito apagará el Mosfet y detendrá el flujo de corriente desde la batería a la carga (Modulo DC-DC), desconectando efectivamente la batería. Siempre que el **voltaje de entrada menos la caída en el diodo schottky** esté por encima del **voltaje de la batería menos la caída de voltaje entre drenaje y fuente**, la carga utilizará energía de la fuente de 5v a través del diodo schottky.  Esto permite que la batería se cargue normalmente sin perturbaciones externas.
+
+El MOSFET que elija debe tener un RDS (encendido) lo más bajo posible para minimizar la pérdida de energía, debe poder manejar la corriente que su circuito va a consumir de la batería y tiene un VGS (th) entre 0 V y -2,4 V.
+
+El diodo es para evitar que la corriente fluya desde la batería hacia la fuente de alimentación de 5v.  Debe ser un diodo Schottky que pueda manejar el consumo máximo de corriente de las cargas. **RG(10K)** debe asegurarse de que el Mosfet se encienda y conecte la batería a la carga cuando se retire la fuente de alimentación de 5v.
+
+El módulo DC-DC boost converter deberá ajustarse para que su voltaje de salida sea de 5v ya sea con entrada de fuente o batería.
+
