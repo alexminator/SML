@@ -120,7 +120,7 @@ Los componentes necesarios son:
 ![mt3608](https://github.com/alexminator/SML/blob/master/img/stepUP.png?raw=true)
 
 4. **Fuente de 5v**
-5. **Modulo rele dual**
+5. **Módulo rele dual**
 
 ![relay](https://github.com/alexminator/SML/blob/master/img/relay.png?raw=true)
 
@@ -198,11 +198,22 @@ Para un mejor entendimiento de la alimentación dual **(load sharing)** que se u
 
 ![loadsharing](https://github.com/alexminator/SML/blob/master/img/load-sharing.png?raw=true)
 
-Cuando se aplica alimentación de la fuente de 5v, este circuito apagará el Mosfet y detendrá el flujo de corriente desde la batería a la carga (Modulo DC-DC), desconectando efectivamente la batería. Siempre que el **voltaje de entrada menos la caída en el diodo schottky** esté por encima del **voltaje de la batería menos la caída de voltaje entre drenaje y fuente**, la carga utilizará energía de la fuente de 5v a través del diodo schottky.  Esto permite que la batería se cargue normalmente sin perturbaciones externas.
+Cuando se aplica alimentación de la fuente de 5v, este circuito apagará el Mosfet y detendrá el flujo de corriente desde la batería a la carga (Módulo DC-DC), desconectando efectivamente la batería. Siempre que el ${\color{#ffdd00}voltaje\space de\space entrada\space menos\space la\space caída\space en\space el\space diodo\space schottky}$ esté por encima del ${\color{#ffdd00}voltaje\space de\space la\space batería\space menos\space la\space caída\space de\space voltaje\space entre\space drenaje\space y\space fuente}$, la carga utilizará energía de la fuente de 5v a través del diodo schottky.  Esto permite que la batería se cargue normalmente sin perturbaciones externas.
 
-El MOSFET que elija debe tener un RDS (encendido) lo más bajo posible para minimizar la pérdida de energía, debe poder manejar la corriente que su circuito va a consumir de la batería y tiene un VGS (th) entre 0 V y -2,4 V.
+El MOSFET que elija debe tener un RDS (on) lo más bajo posible para minimizar la pérdida de energía, debe poder manejar la corriente que su circuito va a consumir de la batería y tiene un VGS (th) entre 0 V y -2,4 V.
 
-El diodo es para evitar que la corriente fluya desde la batería hacia la fuente de alimentación de 5v.  Debe ser un diodo Schottky que pueda manejar el consumo máximo de corriente de las cargas. **RG(10K)** debe asegurarse de que el Mosfet se encienda y conecte la batería a la carga cuando se retire la fuente de alimentación de 5v.
+El diodo es para evitar que la corriente fluya desde la batería hacia la fuente de alimentación de 5v.  Debe ser un diodo Schottky que pueda manejar el consumo máximo de corriente de las cargas. **La resistencia RG(10K)** debe asegurarse de que el Mosfet se encienda y conecte la batería a la carga cuando se retire la fuente de alimentación de 5v.
 
 El módulo DC-DC boost converter deberá ajustarse para que su voltaje de salida sea de 5v ya sea con entrada de fuente o batería.
 
+Para monitorear el voltaje de la batería colocaremos un divisor resistivo a la salida del modulo cargador TP4056 y su salida al pin D33 del esp32. 
+
+![battmon](https://github.com/alexminator/SML/blob/master/img/battmon.png?raw=true)
+
+Con la fabulosa libreria de [danilopinotti/Battery18650Stats](https://github.com/danilopinotti/Battery18650Stats) se lee el voltaje de la bateria y se expresa en porciento. Como las baterías, cuando son de uso su voltaje máximo no es siempre el ideal de 4.2v, la libreria de **danilopinotti** no me daba valores practicos. Me di a la tarea de modificar la libreria para incluir en sus parametros los valores máximo y mínimo de voltaje para hacer mas exacto los valores en porciento.
+
+El módulo TP4056 posee 2 leds señalizadores, uno para indicar que esta cargando ${\color{#ff0000}(rojo)}$ y otro para indicar que la batería esta completamente cargada ${\color{#0022ff}(azul)}$. Analizando el diagrama del módulo se puede notar que dichos leds van a los pines 6 **(standby)** y 7 **(charge)**del IC TP4056. Para activar los leds la salida de dichos pines deben mostrar un cero logico, el cual vamos a detectar en nuestro esp32 y asi sabremos el estado del cargador. Para lograr detectar un cero implementaremos el siguiente circuito.
+
+![zero](https://github.com/alexminator/SML/blob/master/img/zero-detect.png?raw=true)
+
+Como se aprecia en el diagrama si los pines 6 o 7 dan una salida mayor de 0v los leds estaran apagados y el diodo (D17) no conducira por lo que los 3.3v estarian llegando a la entrada del esp32. Si se cumple que el modulo esta cargando o la bateria se cargo habra un 0 logico en dichos pines. Encendera el led correspondiente y el diodo (D17) conducira reflejando un nivel bajo en el pin del esp32. En el codigo estaria representado por las variables booleanas **isCharging (esta cargando)** y **fullyCharge (bateria completamente cargada).**
