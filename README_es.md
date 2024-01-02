@@ -190,12 +190,16 @@ A continuación se muestra una tabla con los pines del esp32 que se conectarán 
 > **Nota** :
 Como se esta usando la conexion Wifi del esp32 no podremos usar ningun pin perteneciente al ADC2 para lecturas analógicas.
 
+### Diagrama
+
 El siguiente esquema ilustra las conexiones para la alimentacion del proyecto.
 
 ![smlpower](https://github.com/alexminator/SML/blob/master/img/SML_power.png?raw=true)
 
 > **Nota** : 
 El voltaje de salida de la fuente de la lámpara que alimenta los leds blancos de alto brillo no es el reflejado en el esquema, es mucho mas alto. No es importante saberlo para este proyecto.
+
+> ### :point_right: Puede encontrar el esquema [aquí](https://github.com/alexminator/SML/blob/master/img/SML_power.fzz). :star:
 
 Para un mejor entendimiento de la alimentación dual **(load sharing)** que se uso, les adjunto el siguiente esquema.
 
@@ -231,4 +235,10 @@ En el siguiente esquema se aprecia la solución empleada.
 La solución básicamente consiste en usar mosfets como conmutadores simples, al activarse pondrán a tierra el pin del IC del bluetooh. En este modelo de altavoz bluetooh cada botón tiene doble función en dependencia de la duración de la pulsación, esto también será emulado por código. Nos bastara solamente controlar 3 botones **Volumen+(FF)**, **Volumen-(REW)** y **Play(Pause)**. Desde el código controlando la duración del pulso al gate del mosfet simularemos el tiempo de pulsación del botón.
 En el esquema además apreciamos como tomar la muestra de audio desde la salida de audio del módulo. Para ellos se implementa un circuito divisor de voltaje y la muestra pasa por una resistencia y un condensador electrolítico hasta el pin **D36(VP)**.
 
-Como se vio en el esquema anterior de las conexiones de alimentación, encender y apagar el bluetooh es a través de un relé (IN2) que está controlado por el esp32 desde el **pin D18**.
+Como se vio en el esquema anterior de las conexiones de alimentación, encender y apagar el bluetooh es a través de un relé **(IN2)** que está controlado por el esp32 desde el **pin D18**.
+
+Por último, quedaría la conexión del sensor de temperatura y humedad DHT22 el cual se hará desde el pin **D23**. Este sensor puede ser alimentado con 5 o 3v así que no tendremos problemas en elegir. Para un mejor monitoreo de la temperatura y humedad se recomienda que el sensor este en contacto con el exterior así que deberán exponerlo.
+A continuación algunas fotos de la lámpara ya terminada:
+
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
