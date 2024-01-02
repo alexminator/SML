@@ -128,6 +128,9 @@ Los componentes necesarios son:
 
 ![neopixel](https://github.com/alexminator/SML/blob/master/img/neopixel.png?raw=true)
 
+> **Nota** :
+La cantidad de leds a usar dependerá del tamaño de la lámpara y la potencia de la fuente. Se puede cambiar el valor en el código.
+
 7. **Bateria LiPo 3.7v o 18650 3.7v Li-Ion**
 
 ![LiPo](https://github.com/alexminator/SML/blob/master/img/Lipo.png?raw=true)
@@ -217,3 +220,10 @@ El módulo TP4056 posee 2 leds señalizadores, uno para indicar que está cargan
 ![zero](https://github.com/alexminator/SML/blob/master/img/zero-detect.png?raw=true)
 
 Como se aprecia en el diagrama si los pines 6 o 7 dan una salida mayor de 0v los leds estarán apagados y el diodo (D17) no conducirá por lo que los 3.3v estarían llegando a la entrada del esp32. Si se cumple que el módulo está cargando o la batería se cargó habrá un 0 lógico en dichos pines. Encenderá el led correspondiente y el diodo (D17) conducirá reflejando un nivel bajo en el pin del esp32. En el código estaría representado por las variables booleanas ${\color{#ffdd00}isCharging}$ **(está cargando)** y ${\color{#ffdd00}fullyCharge}$ **(batería completamente cargada).**
+
+Durante las pruebas que hice me enfrenté a otro reto, al activar el bluetooth del altavoz el volumen siempre estará a la mitad. Esto parece ser el comportamiento normal de estos altavoces bluetooth, por lo que si queremos controlar el volumen tendremos que usar los botones físicos que trae. Pero como la lámpara estará en un lugar inaccesible no podremos. Y aunque subamos el volumen de nuestro móvil al máximo puede que no logremos el nivel deseado. ¿Entonces cómo podemos controlar remotamente botones físicos?
+
+Analizando el esquema de algunos altavoces bluetooh más comunes del mercado **(chinos)**, note que los botones hacen conmutación de tierra (GND) a un pin del IC. Esto nos facilita la tarea de emular un botón usando el esp32.
+En el siguiente esquema se aprecia la solución empleada.
+
+![bt](https://github.com/alexminator/SML/blob/master/img/BT_conn.png?raw=true)
