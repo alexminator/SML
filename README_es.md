@@ -227,3 +227,8 @@ Analizando el esquema de algunos altavoces bluetooh más comunes del mercado **(
 En el siguiente esquema se aprecia la solución empleada.
 
 ![bt](https://github.com/alexminator/SML/blob/master/img/BT_conn.png?raw=true)
+
+La solución básicamente consiste en usar mosfets como conmutadores simples, al activarse pondrán a tierra el pin del IC del bluetooh. En este modelo de altavoz bluetooh cada botón tiene doble función en dependencia de la duración de la pulsación, esto también será emulado por código. Nos bastara solamente controlar 3 botones **Volumen+(FF)**, **Volumen-(REW)** y **Play(Pause)**. Desde el código controlando la duración del pulso al gate del mosfet simularemos el tiempo de pulsación del botón.
+En el esquema además apreciamos como tomar la muestra de audio desde la salida de audio del módulo. Para ellos se implementa un circuito divisor de voltaje y la muestra pasa por una resistencia y un condensador electrolítico hasta el pin **D36(VP)**.
+
+Como se vio en el esquema anterior de las conexiones de alimentación, encender y apagar el bluetooh es a través de un relé (IN2) que está controlado por el esp32 desde el **pin D18**.
