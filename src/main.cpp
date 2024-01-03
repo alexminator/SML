@@ -194,7 +194,7 @@ struct Battery
         #ifdef BATTERY
         debuglnD(chargeState ? "Cargador conectado" : "Cargador desconectado"); //Print the charger status
         debuglnD("Estado del pin carga: " +  String(fullyCharge));
-        debuglnD(fullBatt ? "Batería completamente cargada" : "Batería usándose o cargándose");    //Print the battery status
+        debuglnD(!fullBatt && !chargeState ? "Batería usándose" : (fullBatt ? "Batería completamente cargada" : "Batería cargándose"));   //Print the battery status
         debuglnD("Lectura promedio del pin: " + String(battery.pinRead()) + ", Voltaje: " + String(battVolts) + ", Nivel de carga: " + String(battLvl));
         #endif
     }

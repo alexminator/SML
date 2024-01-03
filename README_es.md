@@ -242,3 +242,41 @@ A continuación algunas fotos de la lámpara ya terminada:
 
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+## Código
+
+El proyecto básicamente se resume a controlar la lámpara vía web desde cualquier dispositivo que se conecte a ella. El esp32 se mantiene en modo estación en espera de que otro dispositivo entre en modo AP (punto de acceso portátil) con las credenciales correctas para conectarse a él. ¿Por qué elegí el modo estación?
+
+En la web notaran en la parte inferior derecha los niveles de señales Wifi a los cuales se conecta nuestro dispositivo con la lámpara. Esto solo puede ser logrado si el esp32 está en modo estación. 
+El esp32 crea un servidor asíncrono (**[ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer.git)**), es decir, que es capaz de atender a varios clientes de forma simultánea **(8)** y envía datos en formato json mediante websocket. Con esta configuración se logra atender a 8 dispositivos que estén conectados a la lámpara en tiempo real y los cambios se verán reflejados en todos a la vez.
+
+El esp32 contara con una web embebida en la memoria **SPIFFS**, el contenido de dicha web se encuentra en la carpeta ${\color{#ffdd00}data}$ del proyecto. El código está fuertemente comentado así que les hare un resumen del mismo.
+
+Son creados 3 objetos:
+  * `StripLed` Control de la tira neopixel
+  * `Led` Control del led onboard del esp32
+  * `Battery` Control y monitoreo de la batería
+
+El resto de las librerías son para el manejo de los efectos de luces y efectos al compás de la música **(VU)**. Además de las librerías para la creación de un servidor web, monitoreo de la batería y manejo del sensor DHT22. A continuación les muestro las variables más importantes que pudieran variar para acomodarlo a sus necesidades.
+1. Variables de depuración
+  * `#define DEBUGLEVEL` establecer en **DEBUGLEVEL_DEBUGGING** si desea depurar por consola
+  * `#define DHT` comentar con **(//)** sino desea mostrar mensajes referido al sensor DHT22
+  * `#define BATTERY` comentar con **(//)** sino desea mostrar mensajes referido al monitoreo de la batería
+
+> **Nota** :
+Existen mensajes de depuración obligatorios como los de conexión y servicios web.  
+
+2. Variables de la tira neopixels
+  * `#define N_PIXELS` establecer la cantidad de leds que tiene la tira usada.
+  * `int brightness` establecer el brillo inicial, por defecto 130 un poco más de la mitad del brillo
+
+3. Variables del manejo de la batería
+  * `#define MAXV`  Máximo voltaje con la batería completamente cargada.
+  * `#define MINV`  Mínimo voltaje a considerar para comenzar a cargar, por defecto 3.2v
+
+ > **Nota** :
+ Para mayor exactitud en estos valores cargue la batería usando el módulo de carga TP4056. Cuando el led de carga completa encienda mida el valor de la batería y tómelo como valor máximo. Para el caso del valor mínimo el módulo DC-DC step up trae en sus especificaciones que para lograr una salida de 5v a la entrada debe de haber un mínimo de 2v. Pero por seguridad se recomienda 3.2v
+
+4. Variables web
+  * `const unsigned long refresh` tiempo de demora para el envío de información, 3 segundos por defecto
+
