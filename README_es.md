@@ -240,11 +240,12 @@ Como se vio en el esquema anterior de las conexiones de alimentación, encender 
 Por último, quedaría la conexión del sensor de temperatura y humedad DHT22 el cual se hará desde el pin **D23**. Este sensor puede ser alimentado con 5 o 3v así que no tendremos problemas en elegir. Para un mejor monitoreo de la temperatura y humedad se recomienda que el sensor este en contacto con el exterior así que deberán exponerlo.
 A continuación algunas fotos de la lámpara ya terminada:
 
-
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
 ---
 
 ## Código
+
 El proyecto básicamente se resume a controlar la lámpara vía web desde cualquier dispositivo que se conecte a ella. El esp32 se mantiene en modo estación en espera de que otro dispositivo entre en modo AP (punto de acceso portátil) con las credenciales correctas para conectarse a él. ¿Por qué elegí el modo estación?
 
 En la web notaran en la parte inferior derecha los niveles de señales Wifi a los cuales se conecta nuestro dispositivo con la lámpara. Esto solo puede ser logrado si el esp32 está en modo estación. 
