@@ -103,42 +103,42 @@ Un módulo relé dual será el encargado de controlar el encendido de la lampar�
 
 Para la reproducción de música utilice uno de esos altavoces bluetooth portátiles muy comunes que se pueden encontrar muy baratos como los de la siguiente imagen
 
-![BTspeaker](https://github.com/alexminator/SML/blob/master/img/speakerBT.jpg?raw=true)
+![BTspeaker](https://github.com/alexminator/SML/blob/master/img/speakerBT.jpg)
 
 Los componentes necesarios son:
 
 1. **Esp32, cualquier variante**
 
-![esp32](https://github.com/alexminator/SML/blob/master/img/esp32.png?raw=true)
+![esp32](https://github.com/alexminator/SML/blob/master/img/esp32.png)
 
 2. **Módulo de cargador de batería, TP4056 5V 1A con protección**
 
-![tp4056](https://github.com/alexminator/SML/blob/master/img/tp4056.png?raw=true)
+![tp4056](https://github.com/alexminator/SML/blob/master/img/tp4056.png)
 
 3. **Mini módulo elevador/impulsor DC-DC MT3608**
 
-![mt3608](https://github.com/alexminator/SML/blob/master/img/stepUP.png?raw=true)
+![mt3608](https://github.com/alexminator/SML/blob/master/img/stepUP.png)
 
 4. **Fuente de 5v**
 5. **Módulo rele dual**
 
-![relay](https://github.com/alexminator/SML/blob/master/img/relay.png?raw=true)
+![relay](https://github.com/alexminator/SML/blob/master/img/relay.png)
 
 6. **Tira led neopixel WS2812B 24 leds**
 
-![neopixel](https://github.com/alexminator/SML/blob/master/img/neopixel.png?raw=true)
+![neopixel](https://github.com/alexminator/SML/blob/master/img/neopixel.png)
 
 > **Nota** :
 La cantidad de leds a usar dependerá del tamaño de la lámpara y la potencia de la fuente. Se puede cambiar el valor en el código.
 
 7. **Bateria LiPo 3.7v o 18650 3.7v Li-Ion**
 
-![LiPo](https://github.com/alexminator/SML/blob/master/img/Lipo.png?raw=true)
-![18650](https://github.com/alexminator/SML/blob/master/img/18650.png?raw=true)
+![LiPo](https://github.com/alexminator/SML/blob/master/img/Lipo.png)
+![18650](https://github.com/alexminator/SML/blob/master/img/18650.png)
 
 8. **Sensor de temperatura y humedad [DHT22](https://www.sparkfun.com/datasheets/Sensors/Temperature/DHT22.pdf)**
 
-![DHT22](https://github.com/alexminator/SML/blob/master/img/DHT22.png?raw=true)
+![DHT22](https://github.com/alexminator/SML/blob/master/img/DHT22.png)
 
 10. **Resistencias:**
    * 5 x 1K
@@ -194,7 +194,7 @@ Como se esta usando la conexion Wifi del esp32 no podremos usar ningun pin perte
 
 El siguiente esquema ilustra las conexiones para la alimentacion del proyecto.
 
-![smlpower](https://github.com/alexminator/SML/blob/master/img/SML_power.png?raw=true)
+![smlpower](https://github.com/alexminator/SML/blob/master/img/SML_power.png)
 
 > **Nota** : 
 El voltaje de salida de la fuente de la lámpara que alimenta los leds blancos de alto brillo no es el reflejado en el esquema, es mucho mas alto. No es importante saberlo para este proyecto.
@@ -203,7 +203,7 @@ El voltaje de salida de la fuente de la lámpara que alimenta los leds blancos d
 
 Para un mejor entendimiento de la alimentación dual **(load sharing)** que se uso, les adjunto el siguiente esquema.
 
-![loadsharing](https://github.com/alexminator/SML/blob/master/img/load-sharing.png?raw=true)
+![loadsharing](https://github.com/alexminator/SML/blob/master/img/load-sharing.png)
 
 Cuando se aplica alimentación de la fuente de 5v, este circuito apagará el Mosfet y detendrá el flujo de corriente desde la batería a la carga (Módulo DC-DC), desconectando efectivamente la batería. Siempre que el ${\color{#ffdd00}voltaje\space de\space entrada\space menos\space la\space caída\space en\space el\space diodo\space schottky}$ esté por encima del ${\color{#ffdd00}voltaje\space de\space la\space batería\space menos\space la\space caída\space de\space voltaje\space entre\space drenaje\space y\space fuente}$, la carga utilizará energía de la fuente de 5v a través del diodo schottky.  Esto permite que la batería se cargue normalmente sin perturbaciones externas.
 
@@ -215,13 +215,13 @@ El módulo DC-DC boost converter deberá ajustarse para que su voltaje de salida
 
 Para monitorear el voltaje de la batería colocaremos un divisor resistivo a la salida del módulo cargador TP4056 y su salida al pin D33 del esp32. 
 
-![battmon](https://github.com/alexminator/SML/blob/master/img/battmon.png?raw=true)
+![battmon](https://github.com/alexminator/SML/blob/master/img/battmon.png)
 
 Con la fabulosa librería de [danilopinotti/Battery18650Stats](https://github.com/danilopinotti/Battery18650Stats) se lee el voltaje de la batería y se expresa en porciento. Como las baterías, cuando son de uso su voltaje máximo no es siempre el ideal de 4.2v, la librería de **danilopinotti** no me daba valores prácticos. Me di a la tarea de modificar la librería para incluir en sus parámetros los valores máximo y mínimo de voltaje para hacer más exacto los valores en porciento.
 
 El módulo TP4056 posee 2 leds señalizadores, uno para indicar que está cargando ${\color{#ff0000}(rojo)}$ y otro para indicar que la batería está completamente cargada ${\color{#0022ff}(azul)}$. Analizando el diagrama del módulo se puede notar que dichos leds van a los pines 6 **(standby)** y 7 **(charge)** del IC TP4056. Para activar los leds la salida de dichos pines debe mostrar unos cero lógicos, el cual vamos a detectar en nuestro esp32 y así sabremos el estado del cargador. Para lograr detectar un cero implementaremos el siguiente circuito.
 
-![zero](https://github.com/alexminator/SML/blob/master/img/zero-detect.png?raw=true)
+![zero](https://github.com/alexminator/SML/blob/master/img/zero-detect.png)
 
 Como se aprecia en el diagrama si los pines 6 o 7 dan una salida mayor de 0v los leds estarán apagados y el diodo (D17) no conducirá por lo que los 3.3v estarían llegando a la entrada del esp32. Si se cumple que el módulo está cargando o la batería se cargó habrá un 0 lógico en dichos pines. Encenderá el led correspondiente y el diodo (D17) conducirá reflejando un nivel bajo en el pin del esp32. En el código estaría representado por las variables ${\color{#ffdd00}isCharging}$ **(está cargando)** y ${\color{#ffdd00}fullyCharge}$ **(batería completamente cargada).**
 
@@ -230,7 +230,7 @@ Durante las pruebas que hice me enfrenté a otro reto, al activar el bluetooth d
 Analizando el esquema de algunos altavoces bluetooh más comunes del mercado **(chinos)**, note que los botones hacen conmutación de tierra (GND) a un pin del IC. Esto nos facilita la tarea de emular un botón usando el esp32.
 En el siguiente esquema se aprecia la solución empleada.
 
-![bt](https://github.com/alexminator/SML/blob/master/img/BT_conn.png?raw=true)
+![bt](https://github.com/alexminator/SML/blob/master/img/BT_conn.png)
 
 La solución básicamente consiste en usar mosfets como conmutadores simples, al activarse pondrán a tierra el pin del IC del bluetooh. En este modelo de altavoz bluetooh cada botón tiene doble función en dependencia de la duración de la pulsación, esto también será emulado por código. Nos bastara solamente controlar 3 botones **Volumen+(FF)**, **Volumen-(REW)** y **Play(Pause)**. Desde el código controlando la duración del pulso al gate del mosfet simularemos el tiempo de pulsación del botón.
 En el esquema además apreciamos como tomar la muestra de audio desde la salida de audio del módulo. Para ellos se implementa un circuito divisor de voltaje y la muestra pasa por una resistencia y un condensador electrolítico hasta el pin **D36(VP)**.
@@ -240,9 +240,9 @@ Como se vio en el esquema anterior de las conexiones de alimentación, encender 
 Por último, quedaría la conexión del sensor de temperatura y humedad DHT22 el cual se hará desde el pin **D23**. Este sensor puede ser alimentado con 5 o 3v así que no tendremos problemas en elegir. Para un mejor monitoreo de la temperatura y humedad se recomienda que el sensor este en contacto con el exterior así que deberán exponerlo.
 A continuación algunas fotos de la lámpara ya terminada:
 
-![lamp](https://github.com/alexminator/SML/blob/master/img/lamp.png?raw=true)
-![indicator](https://github.com/alexminator/SML/blob/master/img/indicator.png?raw=true)
-![inside](https://github.com/alexminator/SML/blob/master/img/inside.png?raw=true)
+![lamp](https://github.com/alexminator/SML/blob/master/img/lamp.png)
+![indicator](https://github.com/alexminator/SML/blob/master/img/indicator.png)
+![inside](https://github.com/alexminator/SML/blob/master/img/inside.png)
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 
