@@ -240,6 +240,10 @@ Como se vio en el esquema anterior de las conexiones de alimentación, encender 
 Por último, quedaría la conexión del sensor de temperatura y humedad DHT22 el cual se hará desde el pin **D23**. Este sensor puede ser alimentado con 5 o 3v así que no tendremos problemas en elegir. Para un mejor monitoreo de la temperatura y humedad se recomienda que el sensor este en contacto con el exterior así que deberán exponerlo.
 A continuación algunas fotos de la lámpara ya terminada:
 
+![lamp](https://github.com/alexminator/SML/blob/master/img/lamp.png?raw=true)
+![indicator](https://github.com/alexminator/SML/blob/master/img/indicator.png?raw=true)
+![inside](https://github.com/alexminator/SML/blob/master/img/inside.png?raw=true)
+
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 
 ---
