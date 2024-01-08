@@ -332,7 +332,17 @@ struct StripLed
     void automode() {
         effectId = random(1, 9);
         Serial.println(effectId);
-        update();
+        void (StripLed::*effectId[])() = {
+            &StripLed::runFire,
+            &StripLed::runMovingDot,
+            &StripLed::runRainbowBeat,
+            &StripLed::runComet,
+            &StripLed::runRipple,
+            &StripLed::runTwinkle,
+            &StripLed::runBalls,
+            &StripLed::runJuggle,
+            &StripLed::runSinelon 
+        };
 
     }
 
