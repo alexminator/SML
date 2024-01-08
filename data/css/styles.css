@@ -207,19 +207,19 @@ ul.tabs li a .tab-text{
         "power-label power-label power-label"   0.3fr
         "fire movingdot rainbow"  0.3fr
         "Firebutton MovingDotbutton RainbowBeatbutton"  0.5fr
-        "rwb ripple twinkle"    0.3fr
-        "RWBbutton Ripplebutton Twinklebutton"  0.5fr
+        "comet ripple twinkle"    0.3fr
+        "Cometbutton Ripplebutton Twinklebutton"  0.5fr
         "balls juggle sinelon"  0.3fr
         "Ballsbutton Jugglebutton Sinelonbutton"    0.5fr
-        "comet comet comet" 0.3fr
-        ". cometbutton ."   0.5fr  /
+        "automode automode automode" 0.3fr
+        ". autobutton ."   0.5fr  /
         1fr 1fr 1fr;
 	grid-gap: 0.5rem;
     padding: 20px;
 }
 
-#Cometbutton{
-    grid-area: cometbutton;
+#Autobutton{
+    grid-area: autobutton;
 }
 
 .effects-button span.fa-magic {
@@ -242,8 +242,8 @@ ul.tabs li a .tab-text{
     grid-area: rainbow;
 }
 
-.effects-button h3.rwb {
-    grid-area: rwb;
+.effects-button h3.comet {
+    grid-area: comet;
 }
 
 .effects-button h3.ripple {
@@ -266,8 +266,8 @@ ul.tabs li a .tab-text{
     grid-area: sinelon;
 }
 
-.effects-button h3.comet {
-    grid-area: comet;
+.effects-button h3.automode {
+    grid-area: automode;
 }
 
 /* Tab music */

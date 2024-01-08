@@ -133,13 +133,14 @@ function onMessage(event) {
     document.getElementById('Firebutton').className = data.fireStatus;
     document.getElementById('MovingDotbutton').className = data.movingdotStatus;
     document.getElementById('RainbowBeatbutton').className = data.rainbowbeatStatus;
-    document.getElementById('RWBbutton').className = data.rwbStatus;
+    document.getElementById('Cometbutton').className = data.cometStatus;
     document.getElementById('Ripplebutton').className = data.rippleStatus;
     document.getElementById('Twinklebutton').className = data.twinkleStatus;
     document.getElementById('Ballsbutton').className = data.ballsStatus;
     document.getElementById('Jugglebutton').className = data.juggleStatus;
     document.getElementById('Sinelonbutton').className = data.sinelonStatus;
-    document.getElementById('Cometbutton').className = data.cometStatus;
+    document.getElementById('Autobutton').className = data.automodeStatus;
+    
     //VU
     document.getElementById('RainbowVU').className = data.rainbowVUStatus;
     document.getElementById('Old-skoolVU').className = data.oldVUStatus;
@@ -179,13 +180,13 @@ function initButton() {
     document.getElementById('Firebutton').addEventListener('click', onToggleFireEffect);
     document.getElementById('MovingDotbutton').addEventListener('click', onToggleMovingDotEffect);
     document.getElementById('RainbowBeatbutton').addEventListener('click', onToggleRainbowBeatEffect);
-    document.getElementById('RWBbutton').addEventListener('click', onToggleRWBEffect);
+    document.getElementById('Cometbutton').addEventListener('click', onToggleCometeffect);
     document.getElementById('Ripplebutton').addEventListener('click', onToggleRippleffect);
     document.getElementById('Twinklebutton').addEventListener('click', onToggleTwinkleffect);
     document.getElementById('Ballsbutton').addEventListener('click', onToggleBallseffect);
     document.getElementById('Jugglebutton').addEventListener('click', onToggleJuggleeffect);
     document.getElementById('Sinelonbutton').addEventListener('click', onToggleSineloneffect);
-    document.getElementById('Cometbutton').addEventListener('click', onToggleCometeffect);
+    document.getElementById('Autobutton').addEventListener('click', onToggleAutoeffect);
     //VU
     document.getElementById('RainbowVU').addEventListener('click', onToggleRainbowVU);
     document.getElementById('Old-skoolVU').addEventListener('click', onToggleOldVU);
@@ -286,8 +287,8 @@ function onToggleRainbowBeatEffect(event) {
     websocket.send(JSON.stringify(json));
 }
 
-function onToggleRWBEffect(event) {
-    const toggle = document.getElementById("RWBbutton");
+function onToggleCometeffect(event) {
+    const toggle = document.getElementById("Cometbutton");
     if (toggle.className == "on") {
         isOn = 0;
         toggle.className = "off";
@@ -376,8 +377,8 @@ function onToggleSineloneffect(event) {
     websocket.send(JSON.stringify(json));
 }
 
-function onToggleCometeffect(event) {
-    const toggle = document.getElementById("Cometbutton");
+function onToggleAutoeffect(event) {
+    const toggle = document.getElementById("Autobutton");
     if (toggle.className == "on") {
         isOn = 0;
         toggle.className = "off";

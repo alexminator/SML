@@ -50,6 +50,7 @@
 #define GRAVITY -1  // Downward (negative) acceleration of gravity in m/s^2
 #define h0 1        // Starting height, in meters, of the ball (strip length)
 #define NUM_BALLS 3 // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way)
+#define EFFECT_DURATION 30000 // 30seg
 
 uint8_t volCount = 0; // Frame counter for storing past volume data
 int vol[SAMPLES];     // Collection of prior volume samples
@@ -150,7 +151,6 @@ bool is_centered = false; // For VU1 effects
 // Effects library
 #include "MovingDot.h"
 #include "RainbowBeat.h"
-#include "RedWhiteBlue.h"
 #include "Ripple.h"
 #include "Fire.h"
 #include "Twinkle.h"
@@ -257,12 +257,6 @@ struct StripLed
         rainbowBeat.runPattern();
     }
 
-    void runRedWhiteBlue()
-    {
-        RedWhiteBlue redWhiteBlue = RedWhiteBlue();
-        redWhiteBlue.runPattern();
-    }
-
     void runRipple()
     {
         Ripple ripple = Ripple();
@@ -335,6 +329,13 @@ struct StripLed
         VU6.runPattern();
     }
 
+    void automode() {
+        effectId = random(1, 9);
+        Serial.println(effectId);
+        update();
+
+    }
+
     void update()
     {
         switch (effectId)
@@ -343,34 +344,43 @@ struct StripLed
             simpleColor(r, g, b, brightness);
             break;
         case 1:
+            Serial.println("fuego");
             runFire();
             break;
         case 2:
+            Serial.println("Dot");
             runMovingDot();
             break;
         case 3:
+            Serial.println("Arcoiris");
             runRainbowBeat();
             break;
         case 4:
-            runRedWhiteBlue();
+            Serial.println("Cometa");
+            runComet();
             break;
         case 5:
+            Serial.println("Ripple");
             runRipple();
             break;
         case 6:
+            Serial.println("twinkle");
             runTwinkle();
             break;
         case 7:
+            Serial.println("balls");
             runBalls();
             break;
         case 8:
+            Serial.println("Juggle");
             runJuggle();
             break;
         case 9:
+            Serial.println("Sinelon");
             runSinelon();
             break;
         case 10:
-            runComet();
+            automode();
             break;
         case 11:
             runRainbowVU();
@@ -390,9 +400,9 @@ struct StripLed
         case 16:
             runOceanVU();
             break;
-        //case 17:
-        //    runBlendingVU();
-        //    break;
+        case 17:
+            //automodeVU();
+            break;
         default:
             break;
         }
@@ -503,13 +513,13 @@ enum Status
     FIRE_STATE,
     MOVINGDOT_STATE,
     RAINBOWBEAT_STATE,
-    RWB_STATE,
+    COMET_STATE,
     RIPPLE_STATE,
     TWINKLE_STATE,
     BALLS_STATE,
     JUGGLE_STATE,
     SINELON_STATE,
-    COMET_STATE,
+    AUTO_STATE,
     BRIGHTNESS,
     STRIPLED,
     BLUETOOTH,
@@ -519,7 +529,6 @@ enum Status
     VU4,
     VU5,
     VU6,
-    //VU7,
     LAMP
 } status;
 
@@ -542,20 +551,19 @@ String processor(const String &var)
     case FIRE_STATE:
     case MOVINGDOT_STATE:
     case RAINBOWBEAT_STATE:
-    case RWB_STATE:
+    case COMET_STATE:
     case RIPPLE_STATE:
     case TWINKLE_STATE:
     case BALLS_STATE:
     case JUGGLE_STATE:
     case SINELON_STATE:
-    case COMET_STATE:
+    case AUTO_STATE:
     case VU1:
     case VU2:
     case VU3:
     case VU4:
     case VU5:
     case VU6:
-    //case VU7:
         return String("off");
         break;
     case LAMP:
@@ -646,13 +654,13 @@ void notifyClients()
     json["fireStatus"] = stripLed.effectId == 1 && stripLed.powerState ? "on" : "off";
     json["movingdotStatus"] = stripLed.effectId == 2 && stripLed.powerState ? "on" : "off";
     json["rainbowbeatStatus"] = stripLed.effectId == 3 && stripLed.powerState ? "on" : "off";
-    json["rwbStatus"] = stripLed.effectId == 4 && stripLed.powerState ? "on" : "off";
+    json["cometStatus"] = stripLed.effectId == 4 && stripLed.powerState ? "on" : "off";
     json["rippleStatus"] = stripLed.effectId == 5 && stripLed.powerState ? "on" : "off";
     json["twinkleStatus"] = stripLed.effectId == 6 && stripLed.powerState ? "on" : "off";
     json["ballsStatus"] = stripLed.effectId == 7 && stripLed.powerState ? "on" : "off";
     json["juggleStatus"] = stripLed.effectId == 8 && stripLed.powerState ? "on" : "off";
     json["sinelonStatus"] = stripLed.effectId == 9 && stripLed.powerState ? "on" : "off";
-    json["cometStatus"] = stripLed.effectId == 10 && stripLed.powerState ? "on" : "off";
+    json["automodeStatus"] = stripLed.effectId == 10 && stripLed.powerState ? "on" : "off";
     // VU
     json["rainbowVUStatus"] = stripLed.effectId == 11 && stripLed.powerState ? "on" : "off";
     json["oldVUStatus"] = stripLed.effectId == 12 && stripLed.powerState ? "on" : "off";
@@ -660,7 +668,7 @@ void notifyClients()
     json["rippleVUStatus"] = stripLed.effectId == 14 && stripLed.powerState ? "on" : "off";
     json["threebarsVUStatus"] = stripLed.effectId == 15 && stripLed.powerState ? "on" : "off";
     json["oceanVUStatus"] = stripLed.effectId == 16 && stripLed.powerState ? "on" : "off";
-    char buffer[565];                         // the sum of all character of json send {"stripledStatus":"off"}
+    char buffer[570];                         // the sum of all character of json send {"stripledStatus":"off"}
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
 }
