@@ -24,8 +24,8 @@
 // Declare what message you want to display on the console.
 // User picks console message from this list
 // This selection will not be effective if DEBUGLEVEL is DEBUGLEVEL_NONE
-//#define DHT
-//#define BATTERY
+// #define DHT
+// #define BATTERY
 
 // ----------------------------------------------------------------------------
 // Definition of macros
@@ -45,8 +45,8 @@
 #define TOP (N_PIXELS + 2) // Allow dot to go slightly off scale [(N_PIXELS + 2)]
 #define PEAK_FALL 20       // Rate of peak falling dot [20]
 #define N_PIXELS_HALF (N_PIXELS / 2)
-#define BIAS 1850   //ADC value for HALF of 3.22V VCC. Hint: Take the analog reading without signal
-//Effects
+#define BIAS 1850 // ADC value for HALF of 3.22V VCC. Hint: Take the analog reading without signal
+// Effects
 #define GRAVITY -1  // Downward (negative) acceleration of gravity in m/s^2
 #define h0 1        // Starting height, in meters, of the ball (strip length)
 #define NUM_BALLS 3 // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way)
@@ -76,24 +76,24 @@ AsyncWebSocket ws("/ws");
 // ----------------------------------------------------------------------------
 
 // DHT Sensor
-#define DHTPIN 23     // Digital pin connected to the DHT sensor
+#define DHTPIN 23 // Digital pin connected to the DHT sensor
 // Uncomment the type of sensor in use:
-//#define DHTTYPE   DHT11     // DHT 11
-#define DHTTYPE DHT22     // DHT 22 (AM2302)
-//#define DHTTYPE   DHT21     // DHT 21 (AM2301)
+// #define DHTTYPE   DHT11     // DHT 11
+#define DHTTYPE DHT22 // DHT 22 (AM2302)
+// #define DHTTYPE   DHT21     // DHT 21 (AM2301)
 DHT_Unified dht(DHTPIN, DHTTYPE);
 float temp;
 float hum;
 
 // Power Switch for Bluetooth Module
-#define SWITCH_PIN 18            // Pin to command relay. BT on/off
+#define SWITCH_PIN 18 // Pin to command relay. BT on/off
 bool bt_powerState = false;
 // Emulate BT Button
-#define VOLUMENUP_PIN 5        // Pin to command Mosfet to emulate a BT button Volumen UP and FF.
-#define VOLUMENDOWN_PIN 19     // Pin to command Mosfet to emulate a BT button Volumen DOWN and REW. 
-#define PLAY_PIN 21            // Pin to command Mosfet to emulate a BT button PLAY AND PAUSE. 
-const unsigned long long_delay = 1000;     // More than 1s (Volumen + -)
-const unsigned long short_delay = 200;     // Short time (FF, RW, PLAY and PAUSE)
+#define VOLUMENUP_PIN 5                // Pin to command Mosfet to emulate a BT button Volumen UP and FF.
+#define VOLUMENDOWN_PIN 19             // Pin to command Mosfet to emulate a BT button Volumen DOWN and REW.
+#define PLAY_PIN 21                    // Pin to command Mosfet to emulate a BT button PLAY AND PAUSE.
+const unsigned long long_delay = 1000; // More than 1s (Volumen + -)
+const unsigned long short_delay = 200; // Short time (FF, RW, PLAY and PAUSE)
 // Lamp Switch
 #define LAMP_PIN 32 // Pin to command LAMP IN1 relay
 bool lampState = false;
@@ -104,8 +104,8 @@ bool lampState = false;
 #define ADC_PIN 33         // Pin to monitor Batt
 #define CONV_FACTOR 1.702
 #define READS 30
-#define MAXV  4.00
-#define MINV  3.20
+#define MAXV 4.00
+#define MINV 3.20
 #define BATT_THRESHOLD 30 // Defines battery threshold in %
 #define MAX_READS 10      // Defines the maximum number of readings when the battery reaches the threshold
 #define FULL_READS 10     // Defines the maximum number of readings when the battery is full
@@ -178,25 +178,25 @@ struct Battery
     bool fullBatt;
     bool chargeState;
     // methods for monitor battery
-    void battMonitor()  //Define a function to read the state of the battery and charge
+    void battMonitor() // Define a function to read the state of the battery and charge
     {
-        //Read the state of the charge signal came from pin 7 of TP4056. Low level means charging mode
+        // Read the state of the charge signal came from pin 7 of TP4056. Low level means charging mode
         int isCharging = digitalRead(CHARGE_PIN);
-        chargeState = isCharging == LOW;    //If "isCharging" is equal to "LOW", then "chargeState" is set to true, indicating that the battery is charging
-        //Read the state of the charge signal came from pin 6 of TP4056. Low level means Full Battery charge
-        int fullyCharge = digitalRead(FULL_CHARGE_PIN); 
-        fullBatt = fullyCharge == LOW;  //If "fullyCharge" is equal to "LOW", then "fullBatt" is set to true, indicating that the battery is fully charged
-        //Get the voltage and charge level of the battery using the Battery library
+        chargeState = isCharging == LOW; // If "isCharging" is equal to "LOW", then "chargeState" is set to true, indicating that the battery is charging
+        // Read the state of the charge signal came from pin 6 of TP4056. Low level means Full Battery charge
+        int fullyCharge = digitalRead(FULL_CHARGE_PIN);
+        fullBatt = fullyCharge == LOW; // If "fullyCharge" is equal to "LOW", then "fullBatt" is set to true, indicating that the battery is fully charged
+        // Get the voltage and charge level of the battery using the Battery library
         battVolts = battery.getBatteryVolts();
         battLvl = battery.getBatteryChargeLevel(true);
 
-        //Print the obtained values
-        #ifdef BATTERY
-        debuglnD(chargeState ? "Cargador conectado" : "Cargador desconectado"); //Print the charger status
-        debuglnD("Estado del pin carga: " +  String(fullyCharge));
-        debuglnD(!fullBatt && !chargeState ? "Batería usándose" : (fullBatt ? "Batería completamente cargada" : "Batería cargándose"));   //Print the battery status
+// Print the obtained values
+#ifdef BATTERY
+        debuglnD(chargeState ? "Cargador conectado" : "Cargador desconectado"); // Print the charger status
+        debuglnD("Estado del pin carga: " + String(fullyCharge));
+        debuglnD(!fullBatt && !chargeState ? "Batería usándose" : (fullBatt ? "Batería completamente cargada" : "Batería cargándose")); // Print the battery status
         debuglnD("Lectura promedio del pin: " + String(battery.pinRead()) + ", Voltaje: " + String(battVolts) + ", Nivel de carga: " + String(battLvl));
-        #endif
+#endif
     }
 };
 
@@ -390,9 +390,9 @@ struct StripLed
         case 16:
             runOceanVU();
             break;
-        //case 17:
-        //    runBlendingVU();
-        //    break;
+        // case 17:
+        //     runBlendingVU();
+        //     break;
         default:
             break;
         }
@@ -428,9 +428,9 @@ void readSensor()
     else
     {
         temp = event.temperature;
-        #ifdef DHT
-        debuglnD("Temperature: " +  String(temp) + "°C");
-        #endif
+#ifdef DHT
+        debuglnD("Temperature: " + String(temp) + "°C");
+#endif
     }
     // Get humidity event and print its value.
     dht.humidity().getEvent(&event);
@@ -441,9 +441,9 @@ void readSensor()
     else
     {
         hum = event.relative_humidity;
-        #ifdef DHT
-        debuglnD("Humidity: " +  String(hum) + "%");
-        #endif
+#ifdef DHT
+        debuglnD("Humidity: " + String(hum) + "%");
+#endif
     }
 }
 
@@ -519,7 +519,7 @@ enum Status
     VU4,
     VU5,
     VU6,
-    //VU7,
+    // VU7,
     LAMP
 } status;
 
@@ -555,7 +555,7 @@ String processor(const String &var)
     case VU4:
     case VU5:
     case VU6:
-    //case VU7:
+        // case VU7:
         return String("off");
         break;
     case LAMP:
@@ -569,7 +569,7 @@ String processor(const String &var)
         break;
     case BLUETOOTH:
         return String(bt_powerState ? "on" : "off");
-        break;    
+        break;
     default:
         return String();
     }
@@ -584,19 +584,20 @@ void onRootRequest(AsyncWebServerRequest *request)
 void initWebServer()
 {
     server.on("/", onRootRequest);
-    server.on("/wifi-info", HTTP_GET, [](AsyncWebServerRequest *request) {
+    server.on("/wifi-info", HTTP_GET, [](AsyncWebServerRequest *request)
+    {
       AsyncResponseStream *response = request->beginResponseStream("application/json");
-      DynamicJsonDocument json(1024);
-      json["status"] = "ok";
-      json["ssid"] = WiFi.SSID();
-      json["ip"] = WiFi.localIP().toString();
-      json["rssi"] = WiFi.RSSI();
-      serializeJson(json, *response);
-      request->send(response); });
+    DynamicJsonDocument json(1024);
+    json["status"] = "ok";
+    json["ssid"] = WiFi.SSID();
+    json["ip"] = WiFi.localIP().toString();
+    json["rssi"] = WiFi.RSSI();
+    serializeJson(json, *response);
+    request->send(response); });
 
     server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
     server.onNotFound([](AsyncWebServerRequest *request)
-                      { request->send(400, "text/plain", "Not found"); });
+                    { request->send(400, "text/plain", "Not found"); });
     ElegantOTA.begin(&server); // Start ElegantOTA
     server.begin();
     debuglnD("HTTP server started");
@@ -670,7 +671,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
     {
-        const uint8_t size = JSON_OBJECT_SIZE(3) + JSON_ARRAY_SIZE(4) + 66;     //See https://arduinojson.org/v5/assistant/
+        const uint8_t size = JSON_OBJECT_SIZE(3) + JSON_ARRAY_SIZE(4) + 66; // See https://arduinojson.org/v5/assistant/
         StaticJsonDocument<size> json;
         DeserializationError err = deserializeJson(json, data);
         if (err)
@@ -692,7 +693,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         else if (strcmp(action, "lamp") == 0)
         {
             lampState = !lampState;
-            digitalWrite(LAMP_PIN, lampState ? LOW : HIGH); 
+            digitalWrite(LAMP_PIN, lampState ? LOW : HIGH);
             debuglnD(lampState ? "Lampara ON" : "Lampara OFF");
         }
         else if (strcmp(action, "animation") == 0 || strcmp(action, "vu") == 0)
@@ -719,37 +720,37 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         else if (strcmp(action, "music") == 0)
         {
             bt_powerState = !bt_powerState;
-            digitalWrite(SWITCH_PIN, bt_powerState ? LOW : HIGH); 
-            bt_powerState ? Serial.println("Encendido del modulo BT") : Serial.println("Apagado del modulo BT"); 
+            digitalWrite(SWITCH_PIN, bt_powerState ? LOW : HIGH);
+            bt_powerState ? Serial.println("Encendido del modulo BT") : Serial.println("Apagado del modulo BT");
         }
         else if (strcmp(action, "volup") == 0)
         {
-            //Simulate a button press
-            digitalWrite(VOLUMENUP_PIN, HIGH);  // Activate Mosfet, push a button
+            // Simulate a button press
+            digitalWrite(VOLUMENUP_PIN, HIGH); // Activate Mosfet, push a button
             delay(long_delay);
-            digitalWrite(VOLUMENUP_PIN, LOW);   // Deactivate Mosfet, release button
+            digitalWrite(VOLUMENUP_PIN, LOW); // Deactivate Mosfet, release button
         }
         else if (strcmp(action, "voldown") == 0)
         {
-            digitalWrite(VOLUMENDOWN_PIN, HIGH);  
+            digitalWrite(VOLUMENDOWN_PIN, HIGH);
             delay(long_delay);
-            digitalWrite(VOLUMENDOWN_PIN, LOW);   
+            digitalWrite(VOLUMENDOWN_PIN, LOW);
         }
         else if (strcmp(action, "skipL") == 0)
         {
-            digitalWrite(VOLUMENDOWN_PIN, HIGH);  
+            digitalWrite(VOLUMENDOWN_PIN, HIGH);
             delay(short_delay);
-            digitalWrite(VOLUMENDOWN_PIN, LOW);   
+            digitalWrite(VOLUMENDOWN_PIN, LOW);
         }
         else if (strcmp(action, "skipR") == 0)
         {
-            digitalWrite(VOLUMENUP_PIN, HIGH);  
+            digitalWrite(VOLUMENUP_PIN, HIGH);
             delay(short_delay);
-            digitalWrite(VOLUMENUP_PIN, LOW);   
+            digitalWrite(VOLUMENUP_PIN, LOW);
         }
         else if (strcmp(action, "play-pause") == 0)
         {
-            digitalWrite(PLAY_PIN, HIGH);  
+            digitalWrite(PLAY_PIN, HIGH);
             delay(short_delay);
             digitalWrite(PLAY_PIN, LOW);
         }
@@ -806,7 +807,7 @@ void setup()
     // Init Rele on OFF
     digitalWrite(LAMP_PIN, HIGH);
     digitalWrite(SWITCH_PIN, HIGH);
-    
+
     // Init Mosfet on OFF. Emulate Button not pressed
     digitalWrite(VOLUMENUP_PIN, LOW);
     digitalWrite(VOLUMENDOWN_PIN, LOW);
@@ -823,7 +824,7 @@ void setup()
     // Print humidity sensor details.
     dht.humidity().getSensor(&sensor);
     debuglnD("----------------------------------------------------\nHumidity Sensor\nSensor Type: " + String(sensor.name) + "\nDriver Ver: " + String(sensor.version) + "\nUnique ID: " + String(sensor.sensor_id) + "\nMax Value: " + String(sensor.max_value) + "%\nMin Value: " + String(sensor.min_value) + "%\nResolution: " + String(sensor.resolution) + "%\n----------------------------------------------------");
-    
+
     FastLED.addLeds<LED_TYPE, STRIP_PIN, COLOR_ORDER>(leds, N_PIXELS).setCorrection(TypicalLEDStrip);
     FastLED.setMaxPowerInVoltsAndMilliamps(VOLTS, MAX_MILLIAMPS);
     FastLED.setBrightness(brightness);
@@ -842,7 +843,7 @@ void setup()
         COR[i] = 0.90 - float(i) / pow(NUM_BALLS, 2);
     }
 
-    startMillis = millis();  //initial start time
+    startMillis = millis(); // initial start time
 
     initSPIFFS();
     initWiFi();
@@ -870,6 +871,6 @@ void loop()
     if (WiFi.status() != WL_CONNECTED)
     {
         // The ESP32 has been disconnected from the WiFi network
-        ESP.restart();  // Restart the esp32
-    } 
+        ESP.restart(); // Restart the esp32
+    }
 }
