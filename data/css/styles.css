@@ -275,10 +275,10 @@ ul.tabs li a .tab-text{
 .music {
     display: grid;
     grid-template:
-    "power-music" 0.3fr 
-    "power-label" 0.3fr
-    "vu-buttons"  0.3fr
-    "button-controls"  0.5fr; 
+    "power-music"  
+    "power-label" 
+    "vu-buttons"  
+    "button-controls"; 
 	grid-gap: 0.5rem;
     justify-items: center;
 }
