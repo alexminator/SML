@@ -390,9 +390,6 @@ struct StripLed
         case 16:
             runOceanVU();
             break;
-        // case 17:
-        //     runBlendingVU();
-        //     break;
         default:
             break;
         }
