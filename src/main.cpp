@@ -158,6 +158,7 @@ bool is_centered = false; // For VU1 effects
 #include "Juggle.h"
 #include "Sinelon.h"
 #include "Comet.h"
+#include "Temp.h"
 // VU
 #include "common.h"
 #include "vu1.h"
@@ -516,7 +517,6 @@ enum Status
     VU4,
     VU5,
     VU6,
-    // VU7,
     LAMP
 } status;
 
