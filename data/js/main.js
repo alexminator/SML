@@ -22,12 +22,13 @@ const batt = { "level": 0, "charging": false };
 document.addEventListener('DOMContentLoaded', function () {
     const tabs = document.querySelectorAll('ul.tabs li a');
     const sections = document.querySelectorAll('.sections > div');
+    let activeTabIndex = 0; // Variable para almacenar el índice de la pestaña activa
 
     tabs[0].classList.add('active');
     sections.forEach(section => section.style.display = 'none');
     sections[0].style.display = 'block';
 
-    tabs.forEach(tab => {
+    tabs.forEach((tab, index) => {
         tab.addEventListener('click', function (event) {
             event.preventDefault();
             tabs.forEach(tab => tab.classList.remove('active'));
@@ -35,6 +36,13 @@ document.addEventListener('DOMContentLoaded', function () {
             sections.forEach(section => section.style.display = 'none');
             const activeTab = document.querySelector(this.getAttribute('href'));
             activeTab.style.display = 'block';
+
+            // Actualizar el índice de la pestaña activa
+            activeTabIndex = index;
+
+            // Mostrar en la consola qué tab y sección están activas
+            console.log(`Tab seleccionada: ${this.textContent.trim()}`);
+            console.log(`Sección activa: ${activeTab.id}`);
         });
     });
 });

@@ -1,9 +1,7 @@
-class temperature
-{
+class Temperature {
 public:
-  TempNeo() {};
+  Temperature() {};
   void runPattern();
-
 private:
 };
 
@@ -14,20 +12,21 @@ CRGB wheel(byte WheelPos)
   {
     return CRGB(255 - WheelPos * 3, 0, WheelPos * 3);
   }
-  else if (WheelPos < 170)
+  else if (WheelPos < 205)
   {
     WheelPos -= 85;
     return CRGB(0, WheelPos * 3, 255 - WheelPos * 3);
   }
   else
   {
-    WheelPos -= 170;
+    WheelPos -= 205;
     return CRGB(WheelPos * 3, 255 - WheelPos * 3, 0);
   }
-};
+}
 
-void TempNeo::runPattern()
+void Temperature::runPattern()
 {
+  
   int t = map(temp, 20, 70, 0, N_PIXELS);
 
   for (uint16_t L = 0; L < t; L++)
@@ -36,4 +35,4 @@ void TempNeo::runPattern()
   }
   FastLED.show();
   delay(50);
-};
+}

@@ -336,6 +336,12 @@ struct StripLed
         VU6.runPattern();
     }
 
+    void runTemperature()
+    {
+        Temperature temp = Temperature();
+        temp.runPattern();
+    }
+
     void update()
     {
         switch (effectId)
@@ -391,6 +397,9 @@ struct StripLed
         case 16:
             runOceanVU();
             break;
+        case 17:
+            runTemperature();
+            break;    
         default:
             break;
         }
@@ -552,7 +561,6 @@ String processor(const String &var)
     case VU4:
     case VU5:
     case VU6:
-        // case VU7:
         return String("off");
         break;
     case LAMP:
