@@ -20,12 +20,12 @@
 #define DEBUGLEVEL DEBUGLEVEL_DEBUGGING
 // #define DEBUGLEVEL DEBUGLEVEL_NONE
 #include "debug.h"
-
 // Declare what message you want to display on the console.
 // User picks console message from this list
 // This selection will not be effective if DEBUGLEVEL is DEBUGLEVEL_NONE
 // #define DHT
 // #define BATTERY
+#define INDICATOR
 
 // ----------------------------------------------------------------------------
 // Definition of macros
@@ -167,6 +167,7 @@ bool is_centered = false; // For VU1 effects
 #include "vu4.h"
 #include "vu5.h"
 #include "vu6.h"
+
 // ----------------------------------------------------------------------------
 // Definition of Battery component
 // ----------------------------------------------------------------------------
@@ -526,7 +527,8 @@ enum Status
     VU4,
     VU5,
     VU6,
-    LAMP
+    LAMP,
+    TEMPNEO
 } status;
 
 String processor(const String &var)
@@ -561,6 +563,7 @@ String processor(const String &var)
     case VU4:
     case VU5:
     case VU6:
+    case TEMPNEO:
         return String("off");
         break;
     case LAMP:
@@ -636,7 +639,7 @@ String bars()
 
 void notifyClients()
 {
-    const int size = JSON_OBJECT_SIZE(30); // Remember change the number of member object. See https://arduinojson.org/v5/assistant/
+    const int size = JSON_OBJECT_SIZE(31); // Remember change the number of member object. See https://arduinojson.org/v5/assistant/
     StaticJsonDocument<size> json;
     json["bars"] = bars();
     json["battVoltage"] = String(batt.battVolts, 3);
@@ -666,7 +669,9 @@ void notifyClients()
     json["rippleVUStatus"] = stripLed.effectId == 14 && stripLed.powerState ? "on" : "off";
     json["threebarsVUStatus"] = stripLed.effectId == 15 && stripLed.powerState ? "on" : "off";
     json["oceanVUStatus"] = stripLed.effectId == 16 && stripLed.powerState ? "on" : "off";
-    char buffer[565];                         // the sum of all character of json send {"stripledStatus":"off"}
+    // Indicators
+    json["tempNEOStatus"] = stripLed.effectId == 17 && stripLed.powerState ? "on" : "off";
+    char buffer[590];                         // the sum of all character of json send {"stripledStatus":"off"}
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
 }
@@ -701,7 +706,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             digitalWrite(LAMP_PIN, lampState ? LOW : HIGH);
             debuglnD(lampState ? "Lampara ON" : "Lampara OFF");
         }
-        else if (strcmp(action, "animation") == 0 || strcmp(action, "vu") == 0)
+        else if (strcmp(action, "animation") == 0 || strcmp(action, "vu") == 0 || strcmp(action, "indicator") == 0)
         {
             if (stripLed.powerState)
             {
@@ -829,7 +834,8 @@ void setup()
     // Print humidity sensor details.
     dht.humidity().getSensor(&sensor);
     debuglnD("----------------------------------------------------\nHumidity Sensor\nSensor Type: " + String(sensor.name) + "\nDriver Ver: " + String(sensor.version) + "\nUnique ID: " + String(sensor.sensor_id) + "\nMax Value: " + String(sensor.max_value) + "%\nMin Value: " + String(sensor.min_value) + "%\nResolution: " + String(sensor.resolution) + "%\n----------------------------------------------------");
-
+    
+    // For FASTLED library
     FastLED.addLeds<LED_TYPE, STRIP_PIN, COLOR_ORDER>(leds, N_PIXELS).setCorrection(TypicalLEDStrip);
     FastLED.setMaxPowerInVoltsAndMilliamps(VOLTS, MAX_MILLIAMPS);
     FastLED.setBrightness(brightness);

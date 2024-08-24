@@ -155,6 +155,8 @@ function onMessage(event) {
     document.getElementById('RippleVU').className = data.rippleVUStatus;
     document.getElementById('ThreebarsVU').className = data.threebarsVUStatus;
     document.getElementById('OceanVU').className = data.oceanVUStatus;
+    //Indicators
+    document.getElementById('TempNEO').className = data.tempNEOStatus;
 }
 
 function onError(event) {
@@ -201,6 +203,8 @@ function initButton() {
     document.getElementById('RippleVU').addEventListener('click', onToggleRippleVU);
     document.getElementById('ThreebarsVU').addEventListener('click', onToggle3barsVU);
     document.getElementById('OceanVU').addEventListener('click', onToggleOceanVU);
+    //Indicators
+    document.getElementById('TempNEO').addEventListener('click', onToggleTempNEO);
 }
 
 function onToggleLamp(event) {
@@ -489,3 +493,17 @@ function onToggleOceanVU(event) {
     websocket.send(JSON.stringify(json));
 }
 
+function onToggleTempNEO(event) {
+    const toggle = document.getElementById("TempNEO");
+    if (toggle.className == "on") {
+        isOn = 0;
+        toggle.className = "off";
+    } else {
+        isOn = 17;
+        toggle.className = "on";
+    }
+    json.action = 'indicator';
+    json.effectId = isOn;
+    console.log(json);
+    websocket.send(JSON.stringify(json));
+}
