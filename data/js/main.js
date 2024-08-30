@@ -157,6 +157,7 @@ function onMessage(event) {
     document.getElementById('OceanVU').className = data.oceanVUStatus;
     //Indicators
     document.getElementById('TempNEO').className = data.tempNEOStatus;
+    document.getElementById('BattNEO').className = data.battNEOStatus;
 }
 
 function onError(event) {
@@ -205,6 +206,7 @@ function initButton() {
     document.getElementById('OceanVU').addEventListener('click', onToggleOceanVU);
     //Indicators
     document.getElementById('TempNEO').addEventListener('click', onToggleTempNEO);
+    document.getElementById('BattNEO').addEventListener('click', onToggleBattNEO);
 }
 
 function onToggleLamp(event) {
@@ -500,6 +502,21 @@ function onToggleTempNEO(event) {
         toggle.className = "off";
     } else {
         isOn = 17;
+        toggle.className = "on";
+    }
+    json.action = 'indicator';
+    json.effectId = isOn;
+    console.log(json);
+    websocket.send(JSON.stringify(json));
+}
+
+function onToggleBattNEO(event) {
+    const toggle = document.getElementById("BattNEO");
+    if (toggle.className == "on") {
+        isOn = 0;
+        toggle.className = "off";
+    } else {
+        isOn = 18;
         toggle.className = "on";
     }
     json.action = 'indicator';

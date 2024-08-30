@@ -25,7 +25,6 @@
 // This selection will not be effective if DEBUGLEVEL is DEBUGLEVEL_NONE
 // #define DHT
 // #define BATTERY
-#define INDICATOR
 
 // ----------------------------------------------------------------------------
 // Definition of macros
@@ -50,7 +49,7 @@
 #define GRAVITY -1  // Downward (negative) acceleration of gravity in m/s^2
 #define h0 1        // Starting height, in meters, of the ball (strip length)
 #define NUM_BALLS 3 // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way)
-
+#define FADE_RATE 2 // How long should the trails be. Very low value = longer trails.
 uint8_t volCount = 0; // Frame counter for storing past volume data
 int vol[SAMPLES];     // Collection of prior volume samples
 int lvl = 0;          // Current "dampened" audio level
@@ -59,6 +58,15 @@ int maxLvlAvg = 512;
 
 CRGBPalette16 currentPalette; // Define the current palette
 CRGBPalette16 targetPalette;  // Define the target palette
+
+int brightness = 130;
+int effectId = 0;
+uint8_t myhue = 0;           // hue 0. red color
+uint8_t r = 255;
+uint8_t g = 255;
+uint8_t b = 255;
+CRGB leds[N_PIXELS];        //  for FASTLED
+
 
 // WEB
 #define HTTP_PORT 80
@@ -112,6 +120,7 @@ bool lampState = false;
 double battVolts;
 int battLvl;
 int readCount = 0;
+int lvlCharge;
 Battery18650Stats battery(ADC_PIN, CONV_FACTOR, READS, MAXV, MINV);
 
 // Web signal info
@@ -119,16 +128,6 @@ unsigned long startMillis;
 unsigned long currentMillis;
 const unsigned long refresh = 3000UL; // 3 seg Unsigned long
 String strength;
-
-// Strip LED
-int brightness = 130;
-int effectId = 0;
-CRGB leds[N_PIXELS];
-uint8_t myhue = 0;           // hue 0. red color
-const uint8_t FADE_RATE = 2; // How long should the trails be. Very low value = longer trails.
-uint8_t r = 255;
-uint8_t g = 255;
-uint8_t b = 255;
 
 // balls effect
 float h[NUM_BALLS];                       // An array of heights
@@ -148,6 +147,7 @@ int maxLvlAvgLeft = 512;
 bool is_centered = false; // For VU1 effects
 
 // Effects library
+#include "common.h"
 #include "MovingDot.h"
 #include "RainbowBeat.h"
 #include "RedWhiteBlue.h"
@@ -159,8 +159,8 @@ bool is_centered = false; // For VU1 effects
 #include "Sinelon.h"
 #include "Comet.h"
 #include "Temp.h"
+#include "Battery.h"
 // VU
-#include "common.h"
 #include "vu1.h"
 #include "vu2.h"
 #include "vu3.h"
@@ -343,6 +343,12 @@ struct StripLed
         temp.runPattern();
     }
 
+    void runBattery()
+    {
+        Charge batt = Charge();
+        batt.runPattern(lvlCharge);
+    }
+
     void update()
     {
         switch (effectId)
@@ -400,7 +406,10 @@ struct StripLed
             break;
         case 17:
             runTemperature();
-            break;    
+            break;
+        case 18:
+            runBattery();
+            break;        
         default:
             break;
         }
@@ -639,7 +648,7 @@ String bars()
 
 void notifyClients()
 {
-    const int size = JSON_OBJECT_SIZE(31); // Remember change the number of member object. See https://arduinojson.org/v5/assistant/
+    const int size = JSON_OBJECT_SIZE(32); // !Remember change the number of member object. See https://arduinojson.org/v5/assistant/
     StaticJsonDocument<size> json;
     json["bars"] = bars();
     json["battVoltage"] = String(batt.battVolts, 3);
@@ -671,7 +680,8 @@ void notifyClients()
     json["oceanVUStatus"] = stripLed.effectId == 16 && stripLed.powerState ? "on" : "off";
     // Indicators
     json["tempNEOStatus"] = stripLed.effectId == 17 && stripLed.powerState ? "on" : "off";
-    char buffer[590];                         // the sum of all character of json send {"stripledStatus":"off"}
+    json["battNEOStatus"] = stripLed.effectId == 18 && stripLed.powerState ? "on" : "off";
+    char buffer[610];                         // the sum of all character of json send {"stripledStatus":"off"}
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
 }
@@ -869,6 +879,7 @@ void setup()
 void loop()
 {
     ws.cleanupClients();
+    lvlCharge=batt.battLvl;
 
     stripLed.powerState ? (brightness = stripLed.brightness, stripLed.update(), delay(6)) : stripLed.clear();
 
