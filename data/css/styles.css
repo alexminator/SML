@@ -335,6 +335,8 @@ ul.tabs li a .tab-text{
     grid-area: oceanL;
 }
 
+
+
 /* Responsive typography */
 @media screen and (min-width: 968px) {
     :root {
@@ -364,10 +366,6 @@ ul.tabs li a .tab-text{
 
 /* For large devices */
 @media screen and (min-width: 968px) {
-    .battery__card{
-        zoom: 1.5;
-    }
-
     ul.tabs li {
         width: none;
         flex-basis: 0;
@@ -986,9 +984,15 @@ slider span.fa-sun-o {
 
 .weather-label {
     grid-area: weather-label;
-    font-size: 3rem;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
+.weather-text {
+    margin-right: 10px;
+} 
 
 .temp {
     grid-area: temp;
@@ -1143,4 +1147,10 @@ slider span.fa-sun-o {
     top: 85%;
     left: 50%;
     transform: translate(-50%, -50%);
+  }
+
+
+  #BattNEO {
+    margin-left: auto;
+    display: inline-block;
   }

@@ -14,8 +14,14 @@
     padding: 15px;
 }
 
+.battery__header {
+    display: flex;
+    align-items: center;
+  }
+
 .battery__text {
     margin-bottom: 1rem;
+    margin-right: 10px;
 }
 
 .battery__data {

@@ -18,7 +18,7 @@
   <!--=============== MAIN JS ===============-->
   <script src="js/main.js"></script>
   <script src="js/iro.min.js"></script>
-  
+
   <script src="js/slider.js" async></script>
 </head>
 
@@ -527,12 +527,13 @@
         <div id="tab-temp">
           <div class="weather">
             <div class="weather-label">
-              <span class="fas fa-cloud-sun"></span>
+              <h2 class="weather-text">Weather</h2>
               <div id="TempNEO" class="%TEMPNEO%">
                 <span class="button">
                   <span class="slide"></span>
                 </span>
               </div>
+
             </div>
 
             <div class="temp">
@@ -577,11 +578,13 @@
           <section class="battery">
             <div class="battery__card">
               <div class="battery__data">
-                <h2 class="battery__text">Battery</h2>
-                <div id="BattNEO" class="%BATTNEO%">
-                  <span class="button">
-                    <span class="slide"></span>
-                  </span>
+                <div class="battery__header">
+                  <h2 class="battery__text">Battery</h2>
+                  <div id="BattNEO" class="%BATTNEO%">
+                    <span class="button">
+                      <span class="slide"></span>
+                    </span>
+                  </div>
                 </div>
                 <p id="battVolt">%BATTVOLTAGE%</p>
                 <h1 id="battlevel" class="battery__percentage">0</h1>
