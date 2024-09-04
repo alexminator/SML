@@ -33,7 +33,7 @@
     --primary: #6d5dfc;
     --greyDark: #9baacf;
 /*========== Indicator color ==========*/
-    --sz: 3vmin;
+    --sz: 4vmin;
     --on: #03A9F4;
     --of: #fff0;
     --tr: all 0.5s ease 0s;
@@ -371,11 +371,14 @@ ul.tabs li a .tab-text{
 }
 
 /* For large devices */
-@media screen and (min-width: 968px) {
+@media screen and (min-width: 580px) {
     ul.tabs li {
         width: none;
         flex-basis: 0;
         flex-grow: 1;
+    }
+    .light {
+        zoom: 0.6;
     }
 }
 
