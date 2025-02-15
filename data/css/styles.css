@@ -755,7 +755,7 @@ ul.tabs li a .tab-text{
 
 /* END signal animation*/
 
-picker {
+.picker {
     display: grid;
     grid-template:
         "colorpicker" 0.1fr 
@@ -764,11 +764,11 @@ picker {
     justify-content: center;
 }
 
-picker span.fa-paint-brush {
+.picker span.fa-paint-brush {
     font-size: 25px;
 }
 
-picker h2.colorpicker{
+.picker h2.colorpicker{
     grid-area: colorpicker;
 }
 
@@ -785,7 +785,7 @@ picker h2.colorpicker{
 
 /* END picker color*/
 
-slider {
+.slider {
     display: grid;
     grid-template:
         "brightness"    0.3fr
@@ -794,7 +794,7 @@ slider {
     justify-content: center;    
 }
 
-slider span.fa-sun-o {
+.slider span.fa-sun-o {
     font-size: 25px;
 }
 
