@@ -39,12 +39,21 @@
     --tr: all 0.5s ease 0s;
     --lg: var(--of);
 
-/*========== Font and typography ==========*/
+/*==========Font and typography==========*/
     /*.5rem = 8px | 1rem = 16px ...*/
     --body-font: "Public Sans", sans-serif;
     --biggest-font-size: 2rem;
     --normal-font-size: 1.2rem;
     --smaller-font-size: .9rem;
+
+/*========== DHT info ==========*/
+    --termometer-bg: #38383f;
+    --termometer-border: #2a2a2e;
+    --termometer-shadow: inset 20px 0 48px hsl(0, 0%, 16%),
+                         inset -4px 12px 48px hsl(0, 0%, 56%),
+                         5px 10px 8px var(--container-color);
+    --termometer-bulb-bg: #3dcadf;
+    --temperature-gradient: linear-gradient(#f17a65, #3dcadf);
 }
 
 /*=============== BASE ===============*/
@@ -1211,6 +1220,274 @@ ul.tabs li a .tab-text{
     left: 50%;
     transform: translate(-50%, -50%);
   }
+/* End Player */
+/* DHT */
+.wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  p {
+    user-select: none;
+  }
+  
+  #termometer {
+    width: 25px;
+    height: 240px;
+    position: relative;
+    background: var(--termometer-bg);
+    border: 9px solid var(--termometer-border);
+    border-radius: 20px;
+    box-shadow: var(--termometer-shadow);
+    margin-bottom: 50px;
+    z-index: 1;
+  }
+  
+  #termometer:before,
+  #termometer:after {
+    position: absolute;
+    content: "";
+    border-radius: 50%;
+  }
+  
+  #termometer:before {
+    width: 100%;
+    height: 34px;
+    bottom: 9px;
+    background: var(--termometer-bg);
+    z-index: -1;
+  }
+  
+  #termometer:after {
+    width: 50px;
+    height: 50px;
+    background-color: var(--termometer-bulb-bg);
+    border: 9px solid var(--termometer-border);
+    bottom: -41px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: -3;
+    box-shadow: 5px 10px 8px var(--container-color);
+  }
+  
+  #termometer #graduations {
+    position: absolute;
+    height: 59%;
+    top: 20%;
+    width: 50%;
+    border-top: 2px solid rgba(0, 0, 0, 0.5);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.5);
+  }
+  
+  #termometer #graduations:before {
+    content: "";
+    position: absolute;
+    height: 34%;
+    width: 100%;
+    top: 32%;
+    border-top: 2px solid rgba(0, 0, 0, 0.5);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.5);
+  }
+  
+  #termometer #temperature {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: var(--temperature-gradient) no-repeat bottom;
+    background-size: 100% 240px;
+    border-radius: 20px;
+    transition: all 0.2s ease-in-out;
+  }
+/* End DHT */
 
+/*=============== BATTERY ===============*/
+.battery {
+    place-items: center;
+    width: 100%;
+}
 
+.battery__card {
+    position: relative;
+    height: 240px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    align-items: center;
+    padding: 15px;
+}
 
+.battery__header {
+    display: flex;
+    align-items: center;
+  }
+
+.battery__text {
+    margin-bottom: 1rem;
+    margin-right: 10px;
+}
+
+.battery__data {
+    justify-self: center;
+}
+
+.battery__percentage {
+    font-size: 2.5em;
+}
+
+.battery__status {
+    position: absolute;
+    bottom: 1.5rem;
+    display: flex;
+    column-gap: .5rem;
+    font-size: var(--smaller-font-size);
+    left: 50px;
+}
+
+.battery__status span {
+    font-size: 1rem;
+}
+
+.battery__pill {
+    position: relative;
+    width: 95px;
+    height: 200px;
+    background-color: var(--container-color);
+    box-shadow: inset 20px 0 48px hsl(0, 0%, 16%),
+                inset -4px 12px 48px hsl(0, 0%, 56%),
+                5px 10px 8px var(--container-color);   
+    border-radius: 3rem;
+    justify-self: center;
+}
+
+.battery__level {
+    position: absolute;
+    inset: 2px;
+    border-radius: 3rem;
+    overflow: hidden;
+}
+
+.battery__liquid {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 36px;
+    background: var(--gradient-color-red);
+    box-shadow: inset -10px 0 12px hsla(0, 0%, 0%, .1),
+                inset 12px 0 12px hsla(0, 0%, 0%, .15);
+    transition: .3s
+}
+
+.battery__liquid::after {
+    content: '';
+    position: absolute;
+    height: 8px;
+    background: var(--gradient-color-red);
+    box-shadow: inset 0 -3px 6px hsla(0, 0%, 0%, .2);
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    top: -4px;
+    border-radius: 50%;
+}
+
+/* Full battery icon color */
+.green-color {
+    background: var(--gradient-color-green);
+}
+
+/* Battery charging animation */
+.animated-green {
+    background: var(--gradient-color-green);
+    animation: animated-chargin-battery 1.2s infinite alternate;
+}
+
+/* Low battery animation */
+.animated-red {
+    background: var(--gradient-color-red);
+    animation: animated-chargin-battery 1.2s infinite alternate;
+}
+.animated-green,
+.animated-red,
+.green-color {
+   -webkit-background-clip: text;
+    color: transparent;
+}
+
+@keyframes animated-chargin-battery {
+    0% {
+        text-shadow: none;
+    }
+    100% {
+        text-shadow: 0 0 6px hsl(92, 90%, 68%);
+    }
+}
+
+@keyframes animated-low-battery {
+    0% {
+        text-shadow: none;
+    }
+    100% {
+        text-shadow: 0 0 8px hsl(7, 89%, 46%);
+    }
+}
+
+/* Liquid battery with gradient color */
+.gradient-color-red,
+.gradient-color-red::after{
+    background: var(--gradient-color-red);
+}
+
+.gradient-color-orange,
+.gradient-color-orange::after{
+    background: var(--gradient-color-orange);
+}
+
+.gradient-color-yellow,
+.gradient-color-yellow::after{
+    background: var(--gradient-color-yellow);
+}
+
+.gradient-color-green,
+.gradient-color-green::after{
+    background: var(--gradient-color-green);
+}
+
+/*charging animation bubbles*/
+
+.bubbles {
+    display: inline-block;
+    position: relative;
+}
+.battery-bubbles {
+    width: 69px;
+    left: calc(50% - 35px);
+    height: 149px;
+}
+
+.bubbles span {
+    position: relative;
+    margin: 3em 0 0; /* Height bubbles rise to */
+    color: #fff;
+    z-index: 2;
+}
+.individual-bubble {
+    position: absolute;
+    border-radius: 100%;
+    bottom: 0;
+    background-color: hsl(92, 89%, 46%);
+    animation: animated-charging-bubble 1.2s infinite alternate;
+    z-index: 1;
+}
+
+@keyframes animated-charging-bubble {
+    0% {
+        box-shadow: none;
+    }
+    100% {
+        box-shadow: 0 0 6px hsl(92, 90%, 68%);
+    }
+}
+
+/* Animating the top property in Microsoft Edge does not work so prevent animating it */
+_:-ms-lang(x), _:-webkit-full-screen, .individual-bubble { top: inherit !important }
