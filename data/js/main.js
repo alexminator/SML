@@ -1,11 +1,10 @@
-var connected = false;
-var isOn;
+let connected = false;
 let brightness = "";
 const json = {
-    'action': '',
-    'effectId': 0,
-    'color': { 'r': 0, 'g': 0, 'b': 0 },
-    'brightness': 0
+    action: '',
+    effectId: 0,
+    color: { r: 0, g: 0, b: 0 },
+    brightness: 0
 };
 
 const units = {
@@ -19,15 +18,16 @@ const units = {
 
 const batt = { "level": 0, "charging": false };
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
     const tabs = document.querySelectorAll('ul.tabs li a');
     const sections = document.querySelectorAll('.sections > div');
+    let activeTabIndex = 0; // Variable to store the index of the active tab
 
     tabs[0].classList.add('active');
     sections.forEach(section => section.style.display = 'none');
     sections[0].style.display = 'block';
 
-    tabs.forEach(tab => {
+    tabs.forEach((tab, index) => {
         tab.addEventListener('click', function (event) {
             event.preventDefault();
             tabs.forEach(tab => tab.classList.remove('active'));
@@ -35,42 +35,44 @@ document.addEventListener('DOMContentLoaded', function () {
             sections.forEach(section => section.style.display = 'none');
             const activeTab = document.querySelector(this.getAttribute('href'));
             activeTab.style.display = 'block';
+
+            // Update active tab index
+            activeTabIndex = index;
+
+            // Show in the console which tab and section are active
+            console.log(`Tab seleccionada: ${this.textContent.trim()}`);
+            console.log(`Sección activa: ${activeTab.id}`);
         });
     });
 });
 
 window.onload = function () {
     brightness = parseInt(document.getElementById("pwmSlider").value);
-    var colors = document.getElementById("picker_bridge").className;
-    const json_colors = colors;
-    const obj = JSON.parse(json_colors);
-    json.color.r = colorR = obj.color.r;
-    json.color.g = colorG = obj.color.g;
-    json.color.b = colorB = obj.color.b;
+    const colors = document.getElementById("picker_bridge").className;
+    const obj = JSON.parse(colors);
+    json.color = { r: obj.color.r, g: obj.color.g, b: obj.color.b };
     // Create a new color picker instance
     var colorPicker = new iro.ColorPicker("#wheelPicker", {
         width: 250,
-        color: { r: colorR, g: colorG, b: colorB },
+        color: json.color,
         borderWidth: 2,
         borderColor: "#fff",
-        layout: [{ component: iro.ui.Wheel, },]
+        layout: [{ component: iro.ui.Wheel }]
     });
 
-    colorPicker.on('color:change', function (color) {
+    colorPicker.on('color:change', (color) => {
         document.getElementById("butterfly").style.setProperty('--butterfly-color', color.hexString);
         json.action = 'picker';
         json.color = [color.red, color.green, color.blue];
         json.brightness = brightness;
-        console.log(json);
-        websocket.send(JSON.stringify(json));
+        sendJson();
     });
-
 }
 // ----------------------------------------------------------------------------
 // WebSocket handling
 // ----------------------------------------------------------------------------
-var gateway = `ws://${window.location.hostname}/ws`;
-var websocket;
+const gateway = `ws://${window.location.hostname}/ws`;
+let websocket;
 
 // ----------------------------------------------------------------------------
 // Initialization
@@ -92,23 +94,23 @@ function initWebSocket() {
     websocket.onerror = onError;
 }
 
-function onOpen(event) {
+function onOpen() {
     console.log('Connection opened');
     connected = true;
     setStatus();
 }
 
-function onClose(event) {
+function onClose() {
     console.log('Connection closed');
     setTimeout(initWebSocket, 2000);
     connected = false;
     setStatus();
 }
 
-function onMessage(event) {
+function onMessage(evt) {
     // Print out our received message
-    console.log("Received: " + event.data);
-    var data = JSON.parse(event.data);
+    console.log("Received: " + evt.data);
+    const data = JSON.parse(evt.data);
     //BATT
     batt.level = data.level;
     batt.charging = data.charging;
@@ -130,33 +132,37 @@ function onMessage(event) {
     document.getElementById("picker_bridge").className = data.color;
     document.getElementById("textSliderValue").innerHTML = data.neobrightness;
     document.getElementById("pwmSlider").value = data.neobrightness;
-    document.getElementById('Firebutton').className = data.fireStatus;
-    document.getElementById('MovingDotbutton').className = data.movingdotStatus;
-    document.getElementById('RainbowBeatbutton').className = data.rainbowbeatStatus;
-    document.getElementById('RWBbutton').className = data.rwbStatus;
-    document.getElementById('Ripplebutton').className = data.rippleStatus;
-    document.getElementById('Twinklebutton').className = data.twinkleStatus;
-    document.getElementById('Ballsbutton').className = data.ballsStatus;
-    document.getElementById('Jugglebutton').className = data.juggleStatus;
-    document.getElementById('Sinelonbutton').className = data.sinelonStatus;
-    document.getElementById('Cometbutton').className = data.cometStatus;
-    //VU
-    document.getElementById('RainbowVU').className = data.rainbowVUStatus;
-    document.getElementById('Old-skoolVU').className = data.oldVUStatus;
-    document.getElementById('RainbowHueVU').className = data.rainbowHueVUStatus;
-    document.getElementById('RippleVU').className = data.rippleVUStatus;
-    document.getElementById('ThreebarsVU').className = data.threebarsVUStatus;
-    document.getElementById('OceanVU').className = data.oceanVUStatus;
+    //Buttons effects
+    updateButtonStatus('Firebutton', data.fireStatus);
+    updateButtonStatus('MovingDotbutton', data.movingdotStatus);
+    updateButtonStatus('RainbowBeatbutton', data.rainbowbeatStatus);
+    updateButtonStatus('RWBbutton', data.rwbStatus);
+    updateButtonStatus('Ripplebutton', data.rippleStatus);
+    updateButtonStatus('Twinklebutton', data.twinkleStatus);
+    updateButtonStatus('Ballsbutton', data.ballsStatus);
+    updateButtonStatus('Jugglebutton', data.juggleStatus);
+    updateButtonStatus('Sinelonbutton', data.sinelonStatus);
+    updateButtonStatus('Cometbutton', data.cometStatus);
+    //Buttons VU
+    updateButtonStatus('RainbowVU', data.rainbowVUStatus);
+    updateButtonStatus('OldSkoolVU', data.oldVUStatus);
+    updateButtonStatus('RainbowHueVU', data.rainbowHueVUStatus);
+    updateButtonStatus('RippleVU', data.rippleVUStatus);
+    updateButtonStatus('ThreebarsVU', data.threebarsVUStatus);
+    updateButtonStatus('OceanVU', data.oceanVUStatus);
+    //Buttons Indicators
+    updateButtonStatus('TempNEO', data.tempNEOStatus);
+    updateButtonStatus('BattNEO', data.battNEOStatus);
 }
 
-function onError(event) {
+function onError(error) {
     console.log('WebSocket Error ', error);
 }
 
 function setStatus() {
-    var stat = document.getElementById('status');
-    var ind = document.getElementById('indicator');
-    var lvl = document.getElementById('Signal');
+    const stat = document.getElementById('status');
+    const ind = document.getElementById('indicator');
+    const lvl = document.getElementById('Signal');
     if (connected) {
         stat.innerHTML = "Connected";
         ind.style.backgroundColor = '#0f0';
@@ -172,312 +178,92 @@ function setStatus() {
 // ----------------------------------------------------------------------------
 
 function initButton() {
-    document.getElementById('lamp').addEventListener('click', onToggleLamp);
-    document.getElementById('Neo').addEventListener('click', onToggleNeo);
-    document.getElementById('Bluetooth').addEventListener('click', onToggleBt);
+    const buttons = [
+        'lamp', 'Neo', 'Bluetooth', 'Firebutton', 'MovingDotbutton', 'RainbowBeatbutton',
+        'RWBbutton', 'Ripplebutton', 'Twinklebutton', 'Ballsbutton', 'Jugglebutton',
+        'Sinelonbutton', 'Cometbutton', 'RainbowVU', 'OldSkoolVU', 'RainbowHueVU',
+        'RippleVU', 'ThreebarsVU', 'OceanVU', 'TempNEO', 'BattNEO'
+    ];
+
+    buttons.forEach(buttonId => {
+        document.getElementById(buttonId).addEventListener('click', () => handleButtonClick(buttonId));
+    });
+
     document.getElementById('pwmSlider').addEventListener('change', onChangeBrightness);
-    document.getElementById('Firebutton').addEventListener('click', onToggleFireEffect);
-    document.getElementById('MovingDotbutton').addEventListener('click', onToggleMovingDotEffect);
-    document.getElementById('RainbowBeatbutton').addEventListener('click', onToggleRainbowBeatEffect);
-    document.getElementById('RWBbutton').addEventListener('click', onToggleRWBEffect);
-    document.getElementById('Ripplebutton').addEventListener('click', onToggleRippleffect);
-    document.getElementById('Twinklebutton').addEventListener('click', onToggleTwinkleffect);
-    document.getElementById('Ballsbutton').addEventListener('click', onToggleBallseffect);
-    document.getElementById('Jugglebutton').addEventListener('click', onToggleJuggleeffect);
-    document.getElementById('Sinelonbutton').addEventListener('click', onToggleSineloneffect);
-    document.getElementById('Cometbutton').addEventListener('click', onToggleCometeffect);
-    //VU
-    document.getElementById('RainbowVU').addEventListener('click', onToggleRainbowVU);
-    document.getElementById('Old-skoolVU').addEventListener('click', onToggleOldVU);
-    document.getElementById('RainbowHueVU').addEventListener('click', onToggleRainbowHueVU);
-    document.getElementById('RippleVU').addEventListener('click', onToggleRippleVU);
-    document.getElementById('ThreebarsVU').addEventListener('click', onToggle3barsVU);
-    document.getElementById('OceanVU').addEventListener('click', onToggleOceanVU);
 }
 
-function onToggleLamp(event) {
-    const toggle = document.getElementById("lamp");
-    if (toggle.className == "on") {
-        toggle.className = "off";
-    } else {
-        toggle.className = "on";
+// Mapeo de efectos para cada botón
+const effectMap = {
+    Firebutton: 1,
+    MovingDotbutton: 2,
+    RainbowBeatbutton: 3,
+    RWBbutton: 4,
+    Ripplebutton: 5,
+    Twinklebutton: 6,
+    Ballsbutton: 7,
+    Jugglebutton: 8,
+    Sinelonbutton: 9,
+    Cometbutton: 10,
+    RainbowVU: 11,
+    OldSkoolVU: 12,
+    RainbowHueVU: 13,
+    RippleVU: 14,
+    ThreebarsVU: 15,
+    OceanVU: 16,
+    TempNEO: 17,
+    BattNEO: 18
+};
+
+function handleButtonClick(buttonId) {
+    const toggle = document.getElementById(buttonId);
+    const isOn = toggle.className === "on" ? 0 : effectMap[buttonId] || 0; // Usar el valor del mapeo o 0 si no existe
+    toggle.className = isOn ? "on" : "off";
+
+    json.action = getActionFromButtonId(buttonId);
+    json.effectId = isOn;
+    sendJson();
+}
+
+function getActionFromButtonId(buttonId) {
+    switch (buttonId) {
+        case 'lamp': return 'lamp';
+        case 'Neo': return 'toggle';
+        case 'Bluetooth': return 'music';
+        case 'Firebutton': return 'animation';
+        case 'MovingDotbutton': return 'animation';
+        case 'RainbowBeatbutton': return 'animation';
+        case 'RWBbutton': return 'animation';
+        case 'Ripplebutton': return 'animation';
+        case 'Twinklebutton': return 'animation';
+        case 'Ballsbutton': return 'animation';
+        case 'Jugglebutton': return 'animation';
+        case 'Sinelonbutton': return 'animation';
+        case 'Cometbutton': return 'animation';
+        case 'RainbowVU': return 'vu';
+        case 'OldSkoolVU': return 'vu';
+        case 'RainbowHueVU': return 'vu';
+        case 'RippleVU': return 'vu';
+        case 'ThreebarsVU': return 'vu';
+        case 'OceanVU': return 'vu';
+        case 'TempNEO': return 'indicator';
+        case 'BattNEO': return 'indicator';
+        default: return '';
     }
-    json.action = 'lamp';
-    console.log(json);
-    websocket.send(JSON.stringify(json));
 }
 
-function onToggleNeo(event) {
-    const toggle = document.getElementById("Neo");
-    if (toggle.className == "on") {
-        toggle.className = "off";
-    } else {
-        toggle.className = "on";
-    }
-    json.action = 'toggle';
-    console.log(json);
-    websocket.send(JSON.stringify(json));
-}
-
-function onToggleBt(event) {
-    const toggle = document.getElementById("Bluetooth");
-    if (toggle.className == "on") {
-        toggle.className = "off";
-    } else {
-        toggle.className = "on";
-    }
-    json.action = 'music';
-    console.log(json);
-    websocket.send(JSON.stringify(json));
-}
-
-function onChangeBrightness(event) {
+function onChangeBrightness() {
     brightness = document.getElementById("pwmSlider").value;
     document.getElementById("textSliderValue").innerHTML = brightness;
-    console.log(brightness);
     json.action = 'slider';
     json.brightness = brightness;
+    sendJson();
+}
+
+function sendJson() {
     console.log(json);
     websocket.send(JSON.stringify(json));
 }
 
-function onToggleFireEffect(event) {
-    const toggle = document.getElementById("Firebutton");
-    if (toggle.className == "on") {
-        isOn = 0;
-        toggle.className = "off";
-    } else {
-        isOn = 1;
-        toggle.className = "on";
-    }
-    json.action = 'animation';
-    json.effectId = isOn;
-    console.log(json);
-    websocket.send(JSON.stringify(json));
+function updateButtonStatus(buttonId, status) {
+    document.getElementById(buttonId).className = status;
 }
-
-function onToggleMovingDotEffect(event) {
-    const toggle = document.getElementById("MovingDotbutton");
-    if (toggle.className == "on") {
-        isOn = 0;
-        toggle.className = "off";
-    } else {
-        isOn = 2;
-        toggle.className = "on";
-    }
-    json.action = 'animation';
-    json.effectId = isOn;
-    console.log(json);
-    websocket.send(JSON.stringify(json));
-}
-
-function onToggleRainbowBeatEffect(event) {
-    const toggle = document.getElementById("RainbowBeatbutton");
-    if (toggle.className == "on") {
-        isOn = 0;
-        toggle.className = "off";
-    } else {
-        isOn = 3;
-        toggle.className = "on";
-    }
-    json.action = 'animation';
-    json.effectId = isOn;
-    console.log(json);
-    websocket.send(JSON.stringify(json));
-}
-
-function onToggleRWBEffect(event) {
-    const toggle = document.getElementById("RWBbutton");
-    if (toggle.className == "on") {
-        isOn = 0;
-        toggle.className = "off";
-    } else {
-        isOn = 4;
-        toggle.className = "on";
-    }
-    json.action = 'animation';
-    json.effectId = isOn;
-    console.log(json);
-    websocket.send(JSON.stringify(json));
-}
-
-function onToggleRippleffect(event) {
-    const toggle = document.getElementById("Ripplebutton");
-    if (toggle.className == "on") {
-        isOn = 0;
-        toggle.className = "off";
-    } else {
-        isOn = 5;
-        toggle.className = "on";
-    }
-    json.action = 'animation';
-    json.effectId = isOn;
-    console.log(json);
-    websocket.send(JSON.stringify(json));
-}
-
-function onToggleTwinkleffect(event) {
-    const toggle = document.getElementById("Twinklebutton");
-    if (toggle.className == "on") {
-        isOn = 0;
-        toggle.className = "off";
-    } else {
-        isOn = 6;
-        toggle.className = "on";
-    }
-    json.action = 'animation';
-    json.effectId = isOn;
-    console.log(json);
-    websocket.send(JSON.stringify(json));
-}
-
-function onToggleBallseffect(event) {
-    const toggle = document.getElementById("Ballsbutton");
-    if (toggle.className == "on") {
-        isOn = 0;
-        toggle.className = "off";
-    } else {
-        isOn = 7;
-        toggle.className = "on";
-    }
-    json.action = 'animation';
-    json.effectId = isOn;
-    console.log(json);
-    websocket.send(JSON.stringify(json));
-}
-
-function onToggleJuggleeffect(event) {
-    const toggle = document.getElementById("Jugglebutton");
-    if (toggle.className == "on") {
-        isOn = 0;
-        toggle.className = "off";
-    } else {
-        isOn = 8;
-        toggle.className = "on";
-    }
-    json.action = 'animation';
-    json.effectId = isOn;
-    console.log(json);
-    websocket.send(JSON.stringify(json));
-}
-
-function onToggleSineloneffect(event) {
-    const toggle = document.getElementById("Sinelonbutton");
-    if (toggle.className == "on") {
-        isOn = 0;
-        toggle.className = "off";
-    } else {
-        isOn = 9;
-        toggle.className = "on";
-    }
-    json.action = 'animation';
-    json.effectId = isOn;
-    console.log(json);
-    websocket.send(JSON.stringify(json));
-}
-
-function onToggleCometeffect(event) {
-    const toggle = document.getElementById("Cometbutton");
-    if (toggle.className == "on") {
-        isOn = 0;
-        toggle.className = "off";
-    } else {
-        isOn = 10;
-        toggle.className = "on";
-    }
-    json.action = 'animation';
-    json.effectId = isOn;
-    console.log(json);
-    websocket.send(JSON.stringify(json));
-}
-
-function onToggleRainbowVU(event) {
-    const toggle = document.getElementById("RainbowVU");
-    if (toggle.className == "on") {
-        isOn = 0;
-        toggle.className = "off";
-    } else {
-        isOn = 11;
-        toggle.className = "on";
-    }
-    json.action = 'vu';
-    json.effectId = isOn;
-    console.log(json);
-    websocket.send(JSON.stringify(json));
-}
-
-function onToggleOldVU(event) {
-    const toggle = document.getElementById("Old-skoolVU");
-    if (toggle.className == "on") {
-        isOn = 0;
-        toggle.className = "off";
-    } else {
-        isOn = 12;
-        toggle.className = "on";
-    }
-    json.action = 'vu';
-    json.effectId = isOn;
-    console.log(json);
-    websocket.send(JSON.stringify(json));
-}
-
-function onToggleRainbowHueVU(event) {
-    const toggle = document.getElementById("RainbowHueVU");
-    if (toggle.className == "on") {
-        isOn = 0;
-        toggle.className = "off";
-    } else {
-        isOn = 13;
-        toggle.className = "on";
-    }
-    json.action = 'vu';
-    json.effectId = isOn;
-    console.log(json);
-    websocket.send(JSON.stringify(json));
-}
-
-function onToggleRippleVU(event) {
-    const toggle = document.getElementById("RippleVU");
-    if (toggle.className == "on") {
-        isOn = 0;
-        toggle.className = "off";
-    } else {
-        isOn = 14;
-        toggle.className = "on";
-    }
-    json.action = 'vu';
-    json.effectId = isOn;
-    console.log(json);
-    websocket.send(JSON.stringify(json));
-}
-
-function onToggle3barsVU(event) {
-    const toggle = document.getElementById("ThreebarsVU");
-    if (toggle.className == "on") {
-        isOn = 0;
-        toggle.className = "off";
-    } else {
-        isOn = 15;
-        toggle.className = "on";
-    }
-    json.action = 'vu';
-    json.effectId = isOn;
-    console.log(json);
-    websocket.send(JSON.stringify(json));
-}
-
-function onToggleOceanVU(event) {
-    const toggle = document.getElementById("OceanVU");
-    if (toggle.className == "on") {
-        isOn = 0;
-        toggle.className = "off";
-    } else {
-        isOn = 16;
-        toggle.className = "on";
-    }
-    json.action = 'vu';
-    json.effectId = isOn;
-    console.log(json);
-    websocket.send(JSON.stringify(json));
-}
-

@@ -1,85 +1,46 @@
-document.addEventListener("DOMContentLoaded", function() {
-  var actualizarHora = function() {
-    var fecha = new Date(),
-      hora = fecha.getHours(),
-      minutos = fecha.getMinutes(),
-      segundos = fecha.getSeconds(),
-      diaSemana = fecha.getDay(),
-      dia = fecha.getDate(),
-      mes = fecha.getMonth(),
-      anio = fecha.getFullYear(),
-      ampm;
+document.addEventListener('DOMContentLoaded', () => {
+  const pHoras = document.querySelector('#horas');
+  const pMinutos = document.querySelector('#minutos');
+  const pSegundos = document.querySelector('#segundos');
+  const pAMPM = document.querySelector('#ampm');
+  const pDiaSemana = document.querySelector('#diaSemana');
+  const pDia = document.querySelector('#dia');
+  const pMes = document.querySelector('#mes');
+  const pAnio = document.querySelector('#anio');
 
-    var pHoras = document.querySelector("#horas"),
-      pSegundos = document.querySelector("#segundos"),
-      pMinutos = document.querySelector("#minutos"),
-      pAMPM = document.querySelector("#ampm"),
-      pDiaSemana = document.querySelector("#diaSemana"),
-      pDia = document.querySelector("#dia"),
-      pMes = document.querySelector("#mes"),
-      pAnio = document.querySelector("#anio");
+  const semana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+  const meses = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
 
-    var semana = [
-      "Domingo",
-      "Lunes",
-      "Martes",
-      "Miércoles",
-      "Jueves",
-      "Viernes",
-      "Sábado"
-    ];
-    var meses = [
-      "Enero",
-      "Febrero",
-      "Marzo",
-      "Abril",
-      "Mayo",
-      "Junio",
-      "Julio",
-      "Agosto",
-      "Septiembre",
-      "Octubre",
-      "Noviembre",
-      "Diciembre"
-    ];
+  const formatNumber = (number) => (number < 10 ? `0${number}` : number);
 
-    pDiaSemana.textContent = semana[diaSemana];
-    pDia.textContent = dia;
-    pMes.textContent = meses[mes];
-    pAnio.textContent = anio;
+  const actualizarHora = () => {
+    const fecha = new Date();
+    let hora = fecha.getHours();
+    const minutos = fecha.getMinutes();
+    const segundos = fecha.getSeconds();
+    const ampm = hora >= 12 ? 'PM' : 'AM';
 
-    if (hora >= 12) {
-      hora = hora - 12;
-      ampm = "PM";
-    } else {
-      ampm = "AM";
-    }
+    // Convertir a formato de 12 horas
+    hora = hora % 12 || 12;
 
-    if (hora == 0) {
-      hora = 12;
-    }
+    // Actualizar el DOM
+    pDiaSemana.textContent = semana[fecha.getDay()];
+    pDia.textContent = fecha.getDate();
+    pMes.textContent = meses[fecha.getMonth()];
+    pAnio.textContent = fecha.getFullYear();
 
-    if (hora < 10) {
-      pHoras.textContent = "0" + hora;
-    } else {
-      pHoras.textContent = hora;
-    }
-
-    if (minutos < 10) {
-      pMinutos.textContent = "0" + minutos;
-    } else {
-      pMinutos.textContent = minutos;
-    }
-
-    if (segundos < 10) {
-      pSegundos.textContent = "0" + segundos;
-    } else {
-      pSegundos.textContent = segundos;
-    }
-
+    pHoras.textContent = formatNumber(hora);
+    pMinutos.textContent = formatNumber(minutos);
+    pSegundos.textContent = formatNumber(segundos);
     pAMPM.textContent = ampm;
+
+    // Llamar a la función nuevamente después de 1 segundo
+    setTimeout(actualizarHora, 1000);
   };
 
+  // Iniciar la actualización de la hora
   actualizarHora();
-  var intervalo = setInterval(actualizarHora, 1000);
 });

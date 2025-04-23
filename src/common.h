@@ -71,3 +71,24 @@ void addGlitter( fract8 chanceOfGlitter) {             // Let's add some glitter
     leds[random16(N_PIXELS)] += CRGB::White;
   }
 } 
+
+CRGB wheel(byte WheelPos)
+{
+
+  if (WheelPos < 85)
+  {
+    return CRGB(WheelPos * 3, 255 - WheelPos * 3, 0);
+  }
+  else if (WheelPos < 205)
+  {
+    WheelPos -= 85;
+    return CRGB(255 - WheelPos * 3, 0, WheelPos * 3);
+  }
+  else
+  {
+    WheelPos -= 205;
+    return CRGB(0, WheelPos * 3, 255 - WheelPos * 3);
+  }
+}
+
+
