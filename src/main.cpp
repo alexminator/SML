@@ -807,6 +807,74 @@ void initWebSocket()
 }
 
 // ----------------------------------------------------------------------------
+// RTOS Tasks
+// ----------------------------------------------------------------------------
+
+TaskHandle_t TaskWebSocketHandle;
+TaskHandle_t TaskBatteryMonitorHandle;
+TaskHandle_t TaskLEDControlHandle;
+TaskHandle_t TaskWiFiMonitorHandle;
+TaskHandle_t TaskSensorHandle;
+
+void TaskWebSocket(void *pvParameters)
+{
+    while (true)
+    {
+        ws.cleanupClients();
+        notifyClients();
+        vTaskDelay(pdMS_TO_TICKS(200));
+    }
+}
+
+void TaskBatteryMonitor(void *pvParameters)
+{
+    while (true)
+    {
+        batt.battMonitor();
+        lvlCharge = batt.battLvl;
+        vTaskDelay(pdMS_TO_TICKS(3000));
+    }
+}
+
+void TaskLEDControl(void *pvParameters)
+{
+    while (true)
+    {
+        if (stripLed.powerState)
+        {
+            brightness = stripLed.brightness;
+            stripLed.update();
+        }
+        else
+        {
+            stripLed.clear();
+        }
+        vTaskDelay(pdMS_TO_TICKS(6));
+    }
+}
+
+void TaskWiFiMonitor(void *pvParameters)
+{
+    while (true)
+    {
+        if (WiFi.status() != WL_CONNECTED)
+        {
+            ESP.restart();
+        }
+        vTaskDelay(pdMS_TO_TICKS(5000));
+    }
+}
+
+void TaskSensor(void *pvParameters)
+{
+    while (true)
+    {
+        readSensor();
+        vTaskDelay(pdMS_TO_TICKS(3000));
+    }
+}
+
+// ----------------------------------------------------------------------------
 // Initialization
 // ----------------------------------------------------------------------------
 
@@ -870,6 +938,12 @@ void setup()
     initWiFi();
     initWebSocket();
     initWebServer();
+
+    xTaskCreatePinnedToCore(TaskWebSocket, "WebSocketTask", 4096, NULL, 1, &TaskWebSocketHandle, 0);
+    xTaskCreatePinnedToCore(TaskBatteryMonitor, "BatteryMonitorTask", 2048, NULL, 1, &TaskBatteryMonitorHandle, 1);
+    xTaskCreatePinnedToCore(TaskLEDControl, "LEDControlTask", 2048, NULL, 1, &TaskLEDControlHandle, 0);
+    xTaskCreatePinnedToCore(TaskWiFiMonitor, "WiFiMonitorTask", 2048, NULL, 1, &TaskWiFiMonitorHandle, 1);
+    xTaskCreatePinnedToCore(TaskSensor, "SensorTask", 2048, NULL, 1, &TaskSensorHandle, 1);
 }
 
 // ----------------------------------------------------------------------------
@@ -878,21 +952,5 @@ void setup()
 
 void loop()
 {
-    ws.cleanupClients();
-    lvlCharge=batt.battLvl;
 
-    stripLed.powerState ? (brightness = stripLed.brightness, stripLed.update(), delay(6)) : stripLed.clear();
-
-    onboard_led.on = millis() % 1000 < 50;
-    onboard_led.update();
-
-    currentMillis = millis();
-    (currentMillis - startMillis >= refresh) ? (batt.battMonitor(), notifyClients(), readSensor(), startMillis = currentMillis) : 0;
-
-    // Check WiFi connection status
-    if (WiFi.status() != WL_CONNECTED)
-    {
-        // The ESP32 has been disconnected from the WiFi network
-        ESP.restart(); // Restart the esp32
-    }
 }
