@@ -815,6 +815,7 @@ TaskHandle_t TaskBatteryMonitorHandle;
 TaskHandle_t TaskLEDControlHandle;
 TaskHandle_t TaskWiFiMonitorHandle;
 TaskHandle_t TaskSensorHandle;
+TaskHandle_t TaskOnboardLEDHandle;
 
 void TaskWebSocket(void *pvParameters)
 {
@@ -871,6 +872,16 @@ void TaskSensor(void *pvParameters)
     {
         readSensor();
         vTaskDelay(pdMS_TO_TICKS(3000));
+    }
+}
+
+void TaskOnboardLED(void *pvParameters)
+{
+    while (true)
+    {
+        onboard_led.on = millis() % 1000 < 500; // Blink every 1000 ms (on for 500 ms)
+        onboard_led.update();
+        vTaskDelay(pdMS_TO_TICKS(100)); // Update every 100 ms
     }
 }
 
@@ -944,6 +955,7 @@ void setup()
     xTaskCreatePinnedToCore(TaskLEDControl, "LEDControlTask", 2048, NULL, 1, &TaskLEDControlHandle, 0);
     xTaskCreatePinnedToCore(TaskWiFiMonitor, "WiFiMonitorTask", 2048, NULL, 1, &TaskWiFiMonitorHandle, 1);
     xTaskCreatePinnedToCore(TaskSensor, "SensorTask", 2048, NULL, 1, &TaskSensorHandle, 1);
+    xTaskCreatePinnedToCore(TaskOnboardLED, "LEDOnboardTask", 2048, NULL, 1, &TaskOnboardLEDHandle, 1);
 }
 
 // ----------------------------------------------------------------------------
