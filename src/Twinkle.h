@@ -15,5 +15,5 @@ void Twinkle::runPattern() {
   fadeToBlackBy(leds, N_PIXELS, FADE_RATE);
 
   FastLED.show();
-  delay(10);
+  vTaskDelay(pdMS_TO_TICKS(10));;
 }

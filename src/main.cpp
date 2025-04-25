@@ -53,8 +53,6 @@
 uint8_t volCount = 0; // Frame counter for storing past volume data
 int vol[SAMPLES];     // Collection of prior volume samples
 int lvl = 0;          // Current "dampened" audio level
-int minLvlAvg = 0;    // For dynamic adjustment of graph low & high
-int maxLvlAvg = 512;
 
 CRGBPalette16 currentPalette; // Define the current palette
 CRGBPalette16 targetPalette;  // Define the target palette
@@ -122,12 +120,6 @@ int battLvl;
 int readCount = 0;
 int lvlCharge;
 Battery18650Stats battery(ADC_PIN, CONV_FACTOR, READS, MAXV, MINV);
-
-// Web signal info
-unsigned long startMillis;
-unsigned long currentMillis;
-const unsigned long refresh = 3000UL; // 3 seg Unsigned long
-String strength;
 
 // balls effect
 float h[NUM_BALLS];                       // An array of heights
@@ -507,7 +499,7 @@ void initWiFi()
     while (WiFi.status() != WL_CONNECTED)
     {
         Serial.print(".");
-        delay(500);
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
     Serial.printf(" %s\n", WiFi.localIP().toString().c_str());
     Serial.printf("Listo!\nAbre http://%s.local en navegador\n", WEB_NAME);
@@ -519,7 +511,7 @@ void initWiFi()
         debuglnD("Error configurando mDNS!");
         while (1)
         {
-            delay(1000);
+            vTaskDelay(pdMS_TO_TICKS(1000));
         }
     }
     debuglnD("mDNS configurado");
@@ -761,31 +753,31 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         {
             // Simulate a button press
             digitalWrite(VOLUMENUP_PIN, HIGH); // Activate Mosfet, push a button
-            delay(long_delay);
+            vTaskDelay(pdMS_TO_TICKS(long_delay));
             digitalWrite(VOLUMENUP_PIN, LOW); // Deactivate Mosfet, release button
         }
         else if (strcmp(action, "voldown") == 0)
         {
             digitalWrite(VOLUMENDOWN_PIN, HIGH);
-            delay(long_delay);
+            vTaskDelay(pdMS_TO_TICKS(long_delay));
             digitalWrite(VOLUMENDOWN_PIN, LOW);
         }
         else if (strcmp(action, "skipL") == 0)
         {
             digitalWrite(VOLUMENDOWN_PIN, HIGH);
-            delay(short_delay);
+            vTaskDelay(pdMS_TO_TICKS(short_delay));
             digitalWrite(VOLUMENDOWN_PIN, LOW);
         }
         else if (strcmp(action, "skipR") == 0)
         {
             digitalWrite(VOLUMENUP_PIN, HIGH);
-            delay(short_delay);
+            vTaskDelay(pdMS_TO_TICKS(short_delay));
             digitalWrite(VOLUMENUP_PIN, LOW);
         }
         else if (strcmp(action, "play-pause") == 0)
         {
             digitalWrite(PLAY_PIN, HIGH);
-            delay(short_delay);
+            vTaskDelay(pdMS_TO_TICKS(short_delay));
             digitalWrite(PLAY_PIN, LOW);
         }
         notifyClients();
@@ -958,8 +950,6 @@ void setup()
         tCycle[i] = 0;
         COR[i] = 0.90 - float(i) / pow(NUM_BALLS, 2);
     }
-
-    startMillis = millis(); // initial start time
 
     initSPIFFS();
     initWiFi();

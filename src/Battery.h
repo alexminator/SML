@@ -82,7 +82,7 @@ void Charge::meteorRain(byte red, byte green, byte blue, byte meteorSize, byte m
     }
    
     FastLED.show();
-    delay(SpeedDelay);
+    vTaskDelay(pdMS_TO_TICKS(SpeedDelay));
   }
 }
 
