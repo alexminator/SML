@@ -435,32 +435,46 @@ Battery batt = {battVolts, battLvl, false, false};
 //-----------------------------------------------------------------------------
 void readSensor()
 {
-    // Get temperature event and print its value.
     sensors_event_t event;
-    dht.temperature().getEvent(&event);
-    if (isnan(event.temperature))
+    int retryCount = 0;
+    const int maxRetries = 3; // Maximum number of retries
+    const unsigned long retryDelay = 2000; // Delay between retries (2 seconds)
+    while (retryCount < maxRetries)
     {
-        Serial.println(F("Error reading temperature!"));
+        dht.temperature().getEvent(&event);
+        if (!isnan(event.temperature))
+        {
+            temp = event.temperature;
+            #ifdef DHT
+            debuglnD("Temperature: " + String(temp) + "°C");
+            #endif
+            break; // Exit loop on success
+        }
+        else
+        {
+            debuglnD("Error reading temperature! Retrying...");
+            retryCount++;
+            vTaskDelay(pdMS_TO_TICKS(retryDelay)); // Wait before retrying
+        }
     }
-    else
+    retryCount = 0; // Reset retry count for humidity reading
+    while (retryCount < maxRetries)
     {
-        temp = event.temperature;
-#ifdef DHT
-        debuglnD("Temperature: " + String(temp) + "°C");
-#endif
-    }
-    // Get humidity event and print its value.
-    dht.humidity().getEvent(&event);
-    if (isnan(event.relative_humidity))
-    {
-        Serial.println(F("Error reading humidity!"));
-    }
-    else
-    {
-        hum = event.relative_humidity;
-#ifdef DHT
-        debuglnD("Humidity: " + String(hum) + "%");
-#endif
+        dht.humidity().getEvent(&event);
+        if (!isnan(event.relative_humidity))
+        {
+            hum = event.relative_humidity;
+            #ifdef DHT
+            debuglnD("Humidity: " + String(hum) + "%");
+            #endif
+            break; // Exit loop on success
+        }
+        else
+        {
+            debuglnD("Error reading humidity! Retrying...");
+            retryCount++;
+            vTaskDelay(pdMS_TO_TICKS(retryDelay)); // Wait before retrying
+        }
     }
 }
 
@@ -823,7 +837,7 @@ void TaskWebSocket(void *pvParameters)
     {
         ws.cleanupClients();
         notifyClients();
-        vTaskDelay(pdMS_TO_TICKS(200));
+        vTaskDelay(pdMS_TO_TICKS(3000));
     }
 }
 
@@ -871,7 +885,9 @@ void TaskSensor(void *pvParameters)
     while (true)
     {
         readSensor();
-        vTaskDelay(pdMS_TO_TICKS(3000));
+        //UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(TaskSensorHandle); // give me a mark of 716
+        //Serial.printf("TaskSensor stack high water mark: %u\n", highWaterMark);
+        vTaskDelay(pdMS_TO_TICKS(5000));
     }
 }
 
@@ -919,10 +935,10 @@ void setup()
     // Print temperature sensor details.
     sensor_t sensor;
     dht.temperature().getSensor(&sensor);
-    debuglnD("----------------------------------------------------\nTemperature Sensor\nSensor Type: " + String(sensor.name) + "\nDriver Ver: " + String(sensor.version) + "\nUnique ID: " + String(sensor.sensor_id) + "\nMax Value: " + String(sensor.max_value) + "°C\nMin Value: " + String(sensor.min_value) + "°C\nResolution: " + String(sensor.resolution) + "°C\n----------------------------------------------------");
+    debuglnD("Temperature Sensor\nSensor Type: " + String(sensor.name) + "\nDriver Ver: " + String(sensor.version) + "\nUnique ID: " + String(sensor.sensor_id) + "\nMax Value: " + String(sensor.max_value) + "°C\nMin Value: " + String(sensor.min_value) + "°C\nResolution: " + String(sensor.resolution) + "°C\n----------------------------------------------------");
     // Print humidity sensor details.
     dht.humidity().getSensor(&sensor);
-    debuglnD("----------------------------------------------------\nHumidity Sensor\nSensor Type: " + String(sensor.name) + "\nDriver Ver: " + String(sensor.version) + "\nUnique ID: " + String(sensor.sensor_id) + "\nMax Value: " + String(sensor.max_value) + "%\nMin Value: " + String(sensor.min_value) + "%\nResolution: " + String(sensor.resolution) + "%\n----------------------------------------------------");
+    debuglnD("Humidity Sensor\nSensor Type: " + String(sensor.name) + "\nDriver Ver: " + String(sensor.version) + "\nUnique ID: " + String(sensor.sensor_id) + "\nMax Value: " + String(sensor.max_value) + "%\nMin Value: " + String(sensor.min_value) + "%\nResolution: " + String(sensor.resolution) + "%\n----------------------------------------------------");
     
     // For FASTLED library
     FastLED.addLeds<LED_TYPE, STRIP_PIN, COLOR_ORDER>(leds, N_PIXELS).setCorrection(TypicalLEDStrip);
@@ -954,7 +970,7 @@ void setup()
     xTaskCreatePinnedToCore(TaskBatteryMonitor, "BatteryMonitorTask", 2048, NULL, 1, &TaskBatteryMonitorHandle, 1);
     xTaskCreatePinnedToCore(TaskLEDControl, "LEDControlTask", 2048, NULL, 1, &TaskLEDControlHandle, 0);
     xTaskCreatePinnedToCore(TaskWiFiMonitor, "WiFiMonitorTask", 2048, NULL, 1, &TaskWiFiMonitorHandle, 1);
-    xTaskCreatePinnedToCore(TaskSensor, "SensorTask", 2048, NULL, 1, &TaskSensorHandle, 1);
+    xTaskCreatePinnedToCore(TaskSensor, "SensorTask", 2048, NULL, 1, &TaskSensorHandle, 0);
     xTaskCreatePinnedToCore(TaskOnboardLED, "LEDOnboardTask", 2048, NULL, 1, &TaskOnboardLEDHandle, 1);
 }
 
