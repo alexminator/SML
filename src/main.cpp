@@ -543,7 +543,8 @@ enum Status
     VU5,
     VU6,
     LAMP,
-    TEMPNEO
+    TEMPNEO,
+    BATTNEO
 } status;
 
 String processor(const String &var)
@@ -552,16 +553,15 @@ String processor(const String &var)
     {
     case COLOR:
     {
-        const uint8_t array_size = JSON_ARRAY_SIZE(4);
-        StaticJsonDocument<array_size> doc;
+        StaticJsonDocument<JSON_ARRAY_SIZE(4)> doc;
         doc["color"]["r"] = stripLed.R;
         doc["color"]["g"] = stripLed.G;
         doc["color"]["b"] = stripLed.B;
-        char buffer_size[40];
-        serializeJson(doc, buffer_size);
-        return String(buffer_size);
+        char buffer[40];
+        serializeJson(doc, buffer);
+        return String(buffer);
     }
-    break;
+    
     case FIRE_STATE:
     case MOVINGDOT_STATE:
     case RAINBOWBEAT_STATE:
@@ -579,20 +579,15 @@ String processor(const String &var)
     case VU5:
     case VU6:
     case TEMPNEO:
-        return String("off");
-        break;
+    case BATTNEO:
     case LAMP:
-        return String("off");
-        break;
+        return "off"; 
     case BRIGHTNESS:
         return String(brightness);
-        break;
     case STRIPLED:
-        return String(stripLed.powerState ? "on" : "off");
-        break;
+        return stripLed.powerState ? "on" : "off";
     case BLUETOOTH:
-        return String(bt_powerState ? "on" : "off");
-        break;
+        return bt_powerState ? "on" : "off";
     default:
         return String();
     }
