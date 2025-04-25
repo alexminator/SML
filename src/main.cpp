@@ -481,7 +481,7 @@ void initSPIFFS()
         debuglnD("Cannot mount SPIFFS volume...");
         while (1)
         {
-            onboard_led.on = millis() % 200 < 50;
+            onboard_led.on = millis() % 200 < 50; // LED flashes, lighting for 50 ms and turning off for 150 ms in a 200 ms cycle. Indicates error when mounting volume
             onboard_led.update();
         }
     }
