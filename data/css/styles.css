@@ -226,11 +226,19 @@ ul.tabs li a .tab-text{
         "RWBbutton Ripplebutton Twinklebutton"  0.5fr
         "balls juggle sinelon"  0.3fr
         "Ballsbutton Jugglebutton Sinelonbutton"    0.5fr
-        "comet comet comet" 0.3fr
-        ". cometbutton ."   0.5fr  /
+        "comet random ." 0.3fr
+        "cometbutton randeffect ."   0.5fr  /
         1fr 1fr 1fr;
 	grid-gap: 0.5rem;
     padding: 20px;
+}
+
+#RandomEffectButton {
+    grid-area: randeffect;
+}
+
+.effects-button h3.random {
+    grid-area: random;
 }
 
 #Cometbutton{
@@ -312,11 +320,21 @@ ul.tabs li a .tab-text{
         "rainbowL oldL hueL"   0.3fr
         "rainbowvu oldvu huevu"   0.5fr
         "rippleL barsL oceanL"    0.3fr
-        "ripplevu barsvu oceanvu"    0.5fr  /
+        "ripplevu barsvu oceanvu"    0.5fr  
+        ". random-vuL ."    0.3fr
+        ". random-vu ." 0.5fr /
         1fr 1.5fr 1fr;
     grid-gap: 0.8rem;
     padding: 10px;
     grid-area: vu-buttons;
+}
+
+#RandomVUButton {
+    grid-area: random-vu;
+}
+
+.random-vu {
+    grid-area: random-vuL;
 }
 
 .rainbowVU {

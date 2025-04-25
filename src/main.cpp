@@ -138,6 +138,23 @@ int minLvlAvgLeft = 0;    // For dynamic adjustment of graph low & high
 int maxLvlAvgLeft = 512;
 bool is_centered = false; // For VU1 effects
 
+// Variables globales para modos aleatorios
+volatile bool randomMode = false;
+volatile bool randomVUMode = false;
+
+// ----------------------------------------------------------------------------
+// RTOS Tasks
+// ----------------------------------------------------------------------------
+
+TaskHandle_t TaskWebSocketHandle;
+TaskHandle_t TaskBatteryMonitorHandle;
+TaskHandle_t TaskLEDControlHandle;
+TaskHandle_t TaskWiFiMonitorHandle;
+TaskHandle_t TaskSensorHandle;
+TaskHandle_t TaskOnboardLEDHandle;
+TaskHandle_t TaskRandomEffectHandle = nullptr;
+TaskHandle_t TaskRandomVUHandle = nullptr;
+
 // Effects library
 #include "common.h"
 #include "MovingDot.h"
@@ -649,7 +666,7 @@ String bars()
 
 void notifyClients()
 {
-    const int size = JSON_OBJECT_SIZE(32); // !Remember change the number of member object. See https://arduinojson.org/v5/assistant/
+    const int size = JSON_OBJECT_SIZE(34); // !Remember change the number of member object. See https://arduinojson.org/v5/assistant/
     StaticJsonDocument<size> json;
     json["bars"] = bars();
     json["battVoltage"] = String(batt.battVolts, 3);
@@ -682,9 +699,40 @@ void notifyClients()
     // Indicators
     json["tempNEOStatus"] = stripLed.effectId == 17 && stripLed.powerState ? "on" : "off";
     json["battNEOStatus"] = stripLed.effectId == 18 && stripLed.powerState ? "on" : "off";
-    char buffer[610];                         // the sum of all character of json send {"stripledStatus":"off"}
+    // Random
+    json["randomMode"] = randomMode;
+    json["randomVUMode"] = randomVUMode;
+    char buffer[650];                         // the sum of all character of json send {"stripledStatus":"off"}
     size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
     ws.textAll(buffer, len);
+}
+
+// Tarea para efectos aleatorios normales
+void TaskRandomEffect(void *pvParameters) {
+    while (randomMode) {
+        int randomEffect = random(1, 11); // Efectos normales: 1 a 10 (ajusta según tus efectos)
+        stripLed.effectId = randomEffect;
+        stripLed.powerState = true;
+        stripLed.update();
+        notifyClients();
+        vTaskDelay(pdMS_TO_TICKS(10000)); // 10 segundos
+    }
+    TaskRandomEffectHandle = nullptr;
+    vTaskDelete(NULL);
+}
+
+// Tarea para efectos aleatorios VU
+void TaskRandomVU(void *pvParameters) {
+    while (randomVUMode) {
+        int randomEffect = random(11, 17); // Efectos VU: 11 a 16 (ajusta según tus efectos)
+        stripLed.effectId = randomEffect;
+        stripLed.powerState = true;
+        stripLed.update();
+        notifyClients();
+        vTaskDelay(pdMS_TO_TICKS(10000)); // 10 segundos
+    }
+    TaskRandomVUHandle = nullptr;
+    vTaskDelete(NULL);
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
@@ -775,6 +823,24 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             vTaskDelay(pdMS_TO_TICKS(short_delay));
             digitalWrite(PLAY_PIN, LOW);
         }
+        if (strcmp(action, "random") == 0) {
+            randomMode = !randomMode;
+            if (randomMode && TaskRandomEffectHandle == nullptr) {
+                xTaskCreatePinnedToCore(TaskRandomEffect, "RandomEffectTask", 2048, NULL, 1, &TaskRandomEffectHandle, 1);
+            } else if (!randomMode && TaskRandomEffectHandle != nullptr) {
+                vTaskDelete(TaskRandomEffectHandle);
+                TaskRandomEffectHandle = nullptr;
+            }
+        }
+        else if (strcmp(action, "random_vu") == 0) {
+            randomVUMode = !randomVUMode;
+            if (randomVUMode && TaskRandomVUHandle == nullptr) {
+                xTaskCreatePinnedToCore(TaskRandomVU, "RandomVUTask", 2048, NULL, 1, &TaskRandomVUHandle, 1);
+            } else if (!randomVUMode && TaskRandomVUHandle != nullptr) {
+                vTaskDelete(TaskRandomVUHandle);
+                TaskRandomVUHandle = nullptr;
+            }
+        }
         notifyClients();
     }
 }
@@ -806,17 +872,6 @@ void initWebSocket()
     server.addHandler(&ws);
     debuglnD("WebSocket server started");
 }
-
-// ----------------------------------------------------------------------------
-// RTOS Tasks
-// ----------------------------------------------------------------------------
-
-TaskHandle_t TaskWebSocketHandle;
-TaskHandle_t TaskBatteryMonitorHandle;
-TaskHandle_t TaskLEDControlHandle;
-TaskHandle_t TaskWiFiMonitorHandle;
-TaskHandle_t TaskSensorHandle;
-TaskHandle_t TaskOnboardLEDHandle;
 
 void TaskWebSocket(void *pvParameters)
 {
@@ -916,6 +971,8 @@ void setup()
     digitalWrite(PLAY_PIN, LOW);
 
     Serial.begin(115200);
+
+    randomSeed(esp_random());
 
     // Initialize DHT22 device.
     dht.begin();

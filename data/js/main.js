@@ -153,6 +153,13 @@ function onMessage(evt) {
     //Buttons Indicators
     updateButtonStatus('TempNEO', data.tempNEOStatus);
     updateButtonStatus('BattNEO', data.battNEOStatus);
+    // Random
+    if (typeof data.randomMode !== "undefined") {
+        updateButtonStatus('RandomEffectButton', data.randomMode ? "on" : "off");
+    }
+    if (typeof data.randomVUMode !== "undefined") {
+        updateButtonStatus('RandomVUButton', data.randomVUMode ? "on" : "off");
+    }
 }
 
 function onError(error) {
@@ -191,6 +198,25 @@ function initButton() {
 
     document.getElementById('pwmSlider').addEventListener('change', onChangeBrightness);
 }
+
+        // Agrega los listeners para los botones random
+        const randomEffectBtn = document.getElementById('RandomEffectButton');
+        if (randomEffectBtn) {
+            randomEffectBtn.addEventListener('click', () => {
+                const isActive = randomEffectBtn.className === "on";
+                randomEffectBtn.className = isActive ? "off" : "on";
+                websocket.send(JSON.stringify({ action: "random" }));
+            });
+        }
+    
+        const randomVUBtn = document.getElementById('RandomVUButton');
+        if (randomVUBtn) {
+            randomVUBtn.addEventListener('click', () => {
+                const isActive = randomVUBtn.className === "on";
+                randomVUBtn.className = isActive ? "off" : "on";
+                websocket.send(JSON.stringify({ action: "random_vu" }));
+            });
+        }
 
 // Mapeo de efectos para cada botón
 const effectMap = {
