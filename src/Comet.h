@@ -32,5 +32,5 @@ void Comet::runPattern()
       leds[j] = leds[j].fadeToBlackBy(fadeAmt);
 
   FastLED.show();
-  delay(50);
+  vTaskDelay(pdMS_TO_TICKS(50));
 }

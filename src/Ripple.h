@@ -51,7 +51,7 @@ void Ripple::runPattern() {
   }
 
   FastLED.show();
-  delay(50);
+  vTaskDelay(pdMS_TO_TICKS(50));
 }
 
 

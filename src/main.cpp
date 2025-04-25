@@ -53,8 +53,6 @@
 uint8_t volCount = 0; // Frame counter for storing past volume data
 int vol[SAMPLES];     // Collection of prior volume samples
 int lvl = 0;          // Current "dampened" audio level
-int minLvlAvg = 0;    // For dynamic adjustment of graph low & high
-int maxLvlAvg = 512;
 
 CRGBPalette16 currentPalette; // Define the current palette
 CRGBPalette16 targetPalette;  // Define the target palette
@@ -122,12 +120,6 @@ int battLvl;
 int readCount = 0;
 int lvlCharge;
 Battery18650Stats battery(ADC_PIN, CONV_FACTOR, READS, MAXV, MINV);
-
-// Web signal info
-unsigned long startMillis;
-unsigned long currentMillis;
-const unsigned long refresh = 3000UL; // 3 seg Unsigned long
-String strength;
 
 // balls effect
 float h[NUM_BALLS];                       // An array of heights
@@ -435,32 +427,46 @@ Battery batt = {battVolts, battLvl, false, false};
 //-----------------------------------------------------------------------------
 void readSensor()
 {
-    // Get temperature event and print its value.
     sensors_event_t event;
-    dht.temperature().getEvent(&event);
-    if (isnan(event.temperature))
+    int retryCount = 0;
+    const int maxRetries = 3; // Maximum number of retries
+    const unsigned long retryDelay = 2000; // Delay between retries (2 seconds)
+    while (retryCount < maxRetries)
     {
-        Serial.println(F("Error reading temperature!"));
+        dht.temperature().getEvent(&event);
+        if (!isnan(event.temperature))
+        {
+            temp = event.temperature;
+            #ifdef DHT
+            debuglnD("Temperature: " + String(temp) + "°C");
+            #endif
+            break; // Exit loop on success
+        }
+        else
+        {
+            debuglnD("Error reading temperature! Retrying...");
+            retryCount++;
+            vTaskDelay(pdMS_TO_TICKS(retryDelay)); // Wait before retrying
+        }
     }
-    else
+    retryCount = 0; // Reset retry count for humidity reading
+    while (retryCount < maxRetries)
     {
-        temp = event.temperature;
-#ifdef DHT
-        debuglnD("Temperature: " + String(temp) + "°C");
-#endif
-    }
-    // Get humidity event and print its value.
-    dht.humidity().getEvent(&event);
-    if (isnan(event.relative_humidity))
-    {
-        Serial.println(F("Error reading humidity!"));
-    }
-    else
-    {
-        hum = event.relative_humidity;
-#ifdef DHT
-        debuglnD("Humidity: " + String(hum) + "%");
-#endif
+        dht.humidity().getEvent(&event);
+        if (!isnan(event.relative_humidity))
+        {
+            hum = event.relative_humidity;
+            #ifdef DHT
+            debuglnD("Humidity: " + String(hum) + "%");
+            #endif
+            break; // Exit loop on success
+        }
+        else
+        {
+            debuglnD("Error reading humidity! Retrying...");
+            retryCount++;
+            vTaskDelay(pdMS_TO_TICKS(retryDelay)); // Wait before retrying
+        }
     }
 }
 
@@ -475,7 +481,7 @@ void initSPIFFS()
         debuglnD("Cannot mount SPIFFS volume...");
         while (1)
         {
-            onboard_led.on = millis() % 200 < 50;
+            onboard_led.on = millis() % 200 < 50; // LED flashes, lighting for 50 ms and turning off for 150 ms in a 200 ms cycle. Indicates error when mounting volume
             onboard_led.update();
         }
     }
@@ -493,7 +499,7 @@ void initWiFi()
     while (WiFi.status() != WL_CONNECTED)
     {
         Serial.print(".");
-        delay(500);
+        vTaskDelay(pdMS_TO_TICKS(500));
     }
     Serial.printf(" %s\n", WiFi.localIP().toString().c_str());
     Serial.printf("Listo!\nAbre http://%s.local en navegador\n", WEB_NAME);
@@ -505,7 +511,7 @@ void initWiFi()
         debuglnD("Error configurando mDNS!");
         while (1)
         {
-            delay(1000);
+            vTaskDelay(pdMS_TO_TICKS(1000));
         }
     }
     debuglnD("mDNS configurado");
@@ -747,31 +753,31 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         {
             // Simulate a button press
             digitalWrite(VOLUMENUP_PIN, HIGH); // Activate Mosfet, push a button
-            delay(long_delay);
+            vTaskDelay(pdMS_TO_TICKS(long_delay));
             digitalWrite(VOLUMENUP_PIN, LOW); // Deactivate Mosfet, release button
         }
         else if (strcmp(action, "voldown") == 0)
         {
             digitalWrite(VOLUMENDOWN_PIN, HIGH);
-            delay(long_delay);
+            vTaskDelay(pdMS_TO_TICKS(long_delay));
             digitalWrite(VOLUMENDOWN_PIN, LOW);
         }
         else if (strcmp(action, "skipL") == 0)
         {
             digitalWrite(VOLUMENDOWN_PIN, HIGH);
-            delay(short_delay);
+            vTaskDelay(pdMS_TO_TICKS(short_delay));
             digitalWrite(VOLUMENDOWN_PIN, LOW);
         }
         else if (strcmp(action, "skipR") == 0)
         {
             digitalWrite(VOLUMENUP_PIN, HIGH);
-            delay(short_delay);
+            vTaskDelay(pdMS_TO_TICKS(short_delay));
             digitalWrite(VOLUMENUP_PIN, LOW);
         }
         else if (strcmp(action, "play-pause") == 0)
         {
             digitalWrite(PLAY_PIN, HIGH);
-            delay(short_delay);
+            vTaskDelay(pdMS_TO_TICKS(short_delay));
             digitalWrite(PLAY_PIN, LOW);
         }
         notifyClients();
@@ -804,6 +810,87 @@ void initWebSocket()
     ws.onEvent(onWsEvent);
     server.addHandler(&ws);
     debuglnD("WebSocket server started");
+}
+
+// ----------------------------------------------------------------------------
+// RTOS Tasks
+// ----------------------------------------------------------------------------
+
+TaskHandle_t TaskWebSocketHandle;
+TaskHandle_t TaskBatteryMonitorHandle;
+TaskHandle_t TaskLEDControlHandle;
+TaskHandle_t TaskWiFiMonitorHandle;
+TaskHandle_t TaskSensorHandle;
+TaskHandle_t TaskOnboardLEDHandle;
+
+void TaskWebSocket(void *pvParameters)
+{
+    while (true)
+    {
+        ws.cleanupClients();
+        notifyClients();
+        vTaskDelay(pdMS_TO_TICKS(3000));
+    }
+}
+
+void TaskBatteryMonitor(void *pvParameters)
+{
+    while (true)
+    {
+        batt.battMonitor();
+        lvlCharge = batt.battLvl;
+        vTaskDelay(pdMS_TO_TICKS(3000));
+    }
+}
+
+void TaskLEDControl(void *pvParameters)
+{
+    while (true)
+    {
+        if (stripLed.powerState)
+        {
+            brightness = stripLed.brightness;
+            stripLed.update();
+        }
+        else
+        {
+            stripLed.clear();
+        }
+        vTaskDelay(pdMS_TO_TICKS(6));
+    }
+}
+
+void TaskWiFiMonitor(void *pvParameters)
+{
+    while (true)
+    {
+        if (WiFi.status() != WL_CONNECTED)
+        {
+            ESP.restart();
+        }
+        vTaskDelay(pdMS_TO_TICKS(5000));
+    }
+}
+
+void TaskSensor(void *pvParameters)
+{
+    while (true)
+    {
+        readSensor();
+        //UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(TaskSensorHandle); // give me a mark of 716
+        //Serial.printf("TaskSensor stack high water mark: %u\n", highWaterMark);
+        vTaskDelay(pdMS_TO_TICKS(5000));
+    }
+}
+
+void TaskOnboardLED(void *pvParameters)
+{
+    while (true)
+    {
+        onboard_led.on = millis() % 1000 < 500; // Blink every 1000 ms (on for 500 ms)
+        onboard_led.update();
+        vTaskDelay(pdMS_TO_TICKS(100)); // Update every 100 ms
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -840,10 +927,10 @@ void setup()
     // Print temperature sensor details.
     sensor_t sensor;
     dht.temperature().getSensor(&sensor);
-    debuglnD("----------------------------------------------------\nTemperature Sensor\nSensor Type: " + String(sensor.name) + "\nDriver Ver: " + String(sensor.version) + "\nUnique ID: " + String(sensor.sensor_id) + "\nMax Value: " + String(sensor.max_value) + "°C\nMin Value: " + String(sensor.min_value) + "°C\nResolution: " + String(sensor.resolution) + "°C\n----------------------------------------------------");
+    debuglnD("Temperature Sensor\nSensor Type: " + String(sensor.name) + "\nDriver Ver: " + String(sensor.version) + "\nUnique ID: " + String(sensor.sensor_id) + "\nMax Value: " + String(sensor.max_value) + "°C\nMin Value: " + String(sensor.min_value) + "°C\nResolution: " + String(sensor.resolution) + "°C\n----------------------------------------------------");
     // Print humidity sensor details.
     dht.humidity().getSensor(&sensor);
-    debuglnD("----------------------------------------------------\nHumidity Sensor\nSensor Type: " + String(sensor.name) + "\nDriver Ver: " + String(sensor.version) + "\nUnique ID: " + String(sensor.sensor_id) + "\nMax Value: " + String(sensor.max_value) + "%\nMin Value: " + String(sensor.min_value) + "%\nResolution: " + String(sensor.resolution) + "%\n----------------------------------------------------");
+    debuglnD("Humidity Sensor\nSensor Type: " + String(sensor.name) + "\nDriver Ver: " + String(sensor.version) + "\nUnique ID: " + String(sensor.sensor_id) + "\nMax Value: " + String(sensor.max_value) + "%\nMin Value: " + String(sensor.min_value) + "%\nResolution: " + String(sensor.resolution) + "%\n----------------------------------------------------");
     
     // For FASTLED library
     FastLED.addLeds<LED_TYPE, STRIP_PIN, COLOR_ORDER>(leds, N_PIXELS).setCorrection(TypicalLEDStrip);
@@ -864,12 +951,17 @@ void setup()
         COR[i] = 0.90 - float(i) / pow(NUM_BALLS, 2);
     }
 
-    startMillis = millis(); // initial start time
-
     initSPIFFS();
     initWiFi();
     initWebSocket();
     initWebServer();
+
+    xTaskCreatePinnedToCore(TaskWebSocket, "WebSocketTask", 4096, NULL, 1, &TaskWebSocketHandle, 0);
+    xTaskCreatePinnedToCore(TaskBatteryMonitor, "BatteryMonitorTask", 2048, NULL, 1, &TaskBatteryMonitorHandle, 1);
+    xTaskCreatePinnedToCore(TaskLEDControl, "LEDControlTask", 2048, NULL, 1, &TaskLEDControlHandle, 0);
+    xTaskCreatePinnedToCore(TaskWiFiMonitor, "WiFiMonitorTask", 2048, NULL, 1, &TaskWiFiMonitorHandle, 1);
+    xTaskCreatePinnedToCore(TaskSensor, "SensorTask", 2048, NULL, 1, &TaskSensorHandle, 0);
+    xTaskCreatePinnedToCore(TaskOnboardLED, "LEDOnboardTask", 2048, NULL, 1, &TaskOnboardLEDHandle, 1);
 }
 
 // ----------------------------------------------------------------------------
@@ -878,21 +970,5 @@ void setup()
 
 void loop()
 {
-    ws.cleanupClients();
-    lvlCharge=batt.battLvl;
 
-    stripLed.powerState ? (brightness = stripLed.brightness, stripLed.update(), delay(6)) : stripLed.clear();
-
-    onboard_led.on = millis() % 1000 < 50;
-    onboard_led.update();
-
-    currentMillis = millis();
-    (currentMillis - startMillis >= refresh) ? (batt.battMonitor(), notifyClients(), readSensor(), startMillis = currentMillis) : 0;
-
-    // Check WiFi connection status
-    if (WiFi.status() != WL_CONNECTED)
-    {
-        // The ESP32 has been disconnected from the WiFi network
-        ESP.restart(); // Restart the esp32
-    }
 }
