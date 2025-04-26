@@ -152,8 +152,6 @@ TaskHandle_t TaskLEDControlHandle;
 TaskHandle_t TaskWiFiMonitorHandle;
 TaskHandle_t TaskSensorHandle;
 TaskHandle_t TaskOnboardLEDHandle;
-TaskHandle_t TaskRandomEffectHandle = nullptr;
-TaskHandle_t TaskRandomVUHandle = nullptr;
 
 // Effects library
 #include "common.h"
@@ -707,34 +705,6 @@ void notifyClients()
     ws.textAll(buffer, len);
 }
 
-// Tarea para efectos aleatorios normales
-void TaskRandomEffect(void *pvParameters) {
-    while (randomMode) {
-        int randomEffect = random(1, 11); // Efectos normales: 1 a 10 (ajusta según tus efectos)
-        stripLed.effectId = randomEffect;
-        stripLed.powerState = true;
-        stripLed.update();
-        notifyClients();
-        vTaskDelay(pdMS_TO_TICKS(10000)); // 10 segundos
-    }
-    TaskRandomEffectHandle = nullptr;
-    vTaskDelete(NULL);
-}
-
-// Tarea para efectos aleatorios VU
-void TaskRandomVU(void *pvParameters) {
-    while (randomVUMode) {
-        int randomEffect = random(11, 17); // Efectos VU: 11 a 16 (ajusta según tus efectos)
-        stripLed.effectId = randomEffect;
-        stripLed.powerState = true;
-        stripLed.update();
-        notifyClients();
-        vTaskDelay(pdMS_TO_TICKS(10000)); // 10 segundos
-    }
-    TaskRandomVUHandle = nullptr;
-    vTaskDelete(NULL);
-}
-
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 {
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
@@ -825,21 +795,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         }
         if (strcmp(action, "random") == 0) {
             randomMode = !randomMode;
-            if (randomMode && TaskRandomEffectHandle == nullptr) {
-                xTaskCreatePinnedToCore(TaskRandomEffect, "RandomEffectTask", 2048, NULL, 1, &TaskRandomEffectHandle, 1);
-            } else if (!randomMode && TaskRandomEffectHandle != nullptr) {
-                vTaskDelete(TaskRandomEffectHandle);
-                TaskRandomEffectHandle = nullptr;
-            }
         }
         else if (strcmp(action, "random_vu") == 0) {
             randomVUMode = !randomVUMode;
-            if (randomVUMode && TaskRandomVUHandle == nullptr) {
-                xTaskCreatePinnedToCore(TaskRandomVU, "RandomVUTask", 2048, NULL, 1, &TaskRandomVUHandle, 1);
-            } else if (!randomVUMode && TaskRandomVUHandle != nullptr) {
-                vTaskDelete(TaskRandomVUHandle);
-                TaskRandomVUHandle = nullptr;
-            }
         }
         notifyClients();
     }
@@ -943,6 +901,38 @@ void TaskOnboardLED(void *pvParameters)
     }
 }
 
+// Tarea para efectos aleatorios normales (siempre corriendo)
+void TaskRandomEffect(void *pvParameters) {
+    while (true) {
+        if (randomMode) {
+            int randomEffect = random(1, 11); // Efectos normales: 1 a 10
+            stripLed.effectId = randomEffect;
+            stripLed.powerState = true;
+            stripLed.update();
+            notifyClients();
+            vTaskDelay(pdMS_TO_TICKS(10000)); // 10 segundos
+        } else {
+            vTaskDelay(pdMS_TO_TICKS(200)); // Espera corta si no está activo
+        }
+    }
+}
+
+// Tarea para efectos aleatorios VU (siempre corriendo)
+void TaskRandomVU(void *pvParameters) {
+    while (true) {
+        if (randomVUMode) {
+            int randomEffect = random(11, 17); // Efectos VU: 11 a 16
+            stripLed.effectId = randomEffect;
+            stripLed.powerState = true;
+            stripLed.update();
+            notifyClients();
+            vTaskDelay(pdMS_TO_TICKS(10000)); // 10 segundos
+        } else {
+            vTaskDelay(pdMS_TO_TICKS(200)); // Espera corta si no está activo
+        }
+    }
+}
+
 // ----------------------------------------------------------------------------
 // Initialization
 // ----------------------------------------------------------------------------
@@ -1014,6 +1004,8 @@ void setup()
     xTaskCreatePinnedToCore(TaskWiFiMonitor, "WiFiMonitorTask", 2048, NULL, 1, &TaskWiFiMonitorHandle, 1);
     xTaskCreatePinnedToCore(TaskSensor, "SensorTask", 2048, NULL, 1, &TaskSensorHandle, 0);
     xTaskCreatePinnedToCore(TaskOnboardLED, "LEDOnboardTask", 2048, NULL, 1, &TaskOnboardLEDHandle, 1);
+    xTaskCreatePinnedToCore(TaskRandomEffect, "RandomEffectTask", 2048, NULL, 1, NULL, 0);
+    xTaskCreatePinnedToCore(TaskRandomVU, "RandomVUTask", 2048, NULL, 1, NULL, 1);
 }
 
 // ----------------------------------------------------------------------------
