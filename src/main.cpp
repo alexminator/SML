@@ -7,7 +7,7 @@
  */
 
 #include <Arduino.h>
-#include <SPIFFS.h>
+#include <LittleFS.h>
 #include <ArduinoJson.h>
 #include <FastLED.h>
 #include <Battery18650Stats.h>
@@ -474,11 +474,11 @@ void readSensor()
 // SPIFFS initialization
 // ----------------------------------------------------------------------------
 
-void initSPIFFS()
+void initLittleFS()
 {
-    if (!SPIFFS.begin())
+    if (!LittleFS.begin())
     {
-        debuglnD("Cannot mount SPIFFS volume...");
+        debuglnD("Cannot mount LittleFS volume...");
         while (1)
         {
             onboard_led.on = millis() % 200 < 50; // LED flashes, lighting for 50 ms and turning off for 150 ms in a 200 ms cycle. Indicates error when mounting volume
@@ -595,7 +595,7 @@ String processor(const String &var)
 
 void onRootRequest(AsyncWebServerRequest *request)
 {
-    request->send(SPIFFS, "/index.html", "text/html", false, processor);
+    request->send(LittleFS, "/index.html", "text/html", false, processor);
 }
 
 // Initialize webserver URLs
@@ -613,7 +613,7 @@ void initWebServer()
     serializeJson(json, *response);
     request->send(response); });
 
-    server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
+    server.serveStatic("/", LittleFS, "/").setDefaultFile("index.html");
     server.onNotFound([](AsyncWebServerRequest *request)
                     { request->send(400, "text/plain", "Not found"); });
     ElegantOTA.begin(&server); // Start ElegantOTA
@@ -946,7 +946,7 @@ void setup()
         COR[i] = 0.90 - float(i) / pow(NUM_BALLS, 2);
     }
 
-    initSPIFFS();
+    initLittleFS();
     initWiFi();
     initWebSocket();
     initWebServer();
