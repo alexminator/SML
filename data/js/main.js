@@ -1,22 +1,17 @@
 let connected = false;
-let brightness = "";
+let colorPicker;
+let isRemoteUpdate = false; // Flag para evitar bucles
+let brightness = 0;
 const json = {
     action: '',
     effectId: 0,
-    color: { r: 0, g: 0, b: 0 },
+    color: { r: 255, g: 255, b: 255 },
     brightness: 0
 };
 
-const units = {
-    Celcius: "°C",
-    Fahrenheit: "°F" };
-  
-  const config = {
-    minTemp: 0,
-    maxTemp: 50,
-    unit: "Celcius" };
-
-const batt = { "level": 0, "charging": false };
+const units = { Celcius: "°C", Fahrenheit: "°F" };
+const config = { minTemp: 0, maxTemp: 50, unit: "Celcius" };
+const batt = { level: 0, charging: false, fullbatt: false };
 
 document.addEventListener('DOMContentLoaded', () => {
     const tabs = document.querySelectorAll('ul.tabs li a');
@@ -48,11 +43,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.onload = function () {
     brightness = parseInt(document.getElementById("pwmSlider").value);
-    const colors = document.getElementById("picker_bridge").className;
-    const obj = JSON.parse(colors);
-    json.color = { r: obj.color.r, g: obj.color.g, b: obj.color.b };
+
+    // Color inicial desde data-color
+    let colorObj = { r: 255, g: 255, b: 255 };
+    try {
+        const colorStr = document.getElementById("picker_bridge").getAttribute("data-color");
+        if (colorStr) colorObj = JSON.parse(colorStr);
+    } catch (e) {}
+    json.color = colorObj;
+
     // Create a new color picker instance
-    var colorPicker = new iro.ColorPicker("#wheelPicker", {
+    colorPicker = new iro.ColorPicker("#wheelPicker", {
         width: 250,
         color: json.color,
         borderWidth: 2,
@@ -61,9 +62,10 @@ window.onload = function () {
     });
 
     colorPicker.on('color:change', (color) => {
+        if (isRemoteUpdate) return;
         document.getElementById("butterfly").style.setProperty('--butterfly-color', color.hexString);
         json.action = 'picker';
-        json.color = [color.red, color.green, color.blue];
+        json.color = { r: color.red, g: color.green, b: color.blue };
         json.brightness = brightness;
         sendJson();
     });
@@ -108,51 +110,76 @@ function onClose() {
 }
 
 function onMessage(evt) {
-    // Print out our received message
-    console.log("Received: " + evt.data);
-    const data = JSON.parse(evt.data);
-    //BATT
-    batt.level = data.level;
-    batt.charging = data.charging;
-    batt.fullbatt = data.fullbatt;
-    initBattery(batt);
-    document.getElementById('battVolt').innerHTML = data.battVoltage + ' V';
-    // DHT
-    const externalTemperature = data.temperature;
-    temperature.style.height = (externalTemperature - config.minTemp) / (config.maxTemp - config.minTemp) * 100 + "%";
-    temperature.dataset.value = externalTemperature + units[config.unit];
-    document.getElementById('temp').innerHTML = data.temperature + ' &deg;C';
-    document.getElementById('hum').innerHTML = data.humidity + ' %';
-    // WiFi
-    document.getElementById('Signal').className = data.bars;
-    // Neo Effects
-    document.getElementById("Neo").className = data.neostatus;
-    document.getElementById("Bluetooth").className = data.btstatus;
-    document.getElementById("lamp").className = data.lampstatus;
-    document.getElementById("picker_bridge").className = data.color;
-    document.getElementById("textSliderValue").innerHTML = data.neobrightness;
-    document.getElementById("pwmSlider").value = data.neobrightness;
-    //Buttons effects
-    updateButtonStatus('Firebutton', data.fireStatus);
-    updateButtonStatus('MovingDotbutton', data.movingdotStatus);
-    updateButtonStatus('RainbowBeatbutton', data.rainbowbeatStatus);
-    updateButtonStatus('RWBbutton', data.rwbStatus);
-    updateButtonStatus('Ripplebutton', data.rippleStatus);
-    updateButtonStatus('Twinklebutton', data.twinkleStatus);
-    updateButtonStatus('Ballsbutton', data.ballsStatus);
-    updateButtonStatus('Jugglebutton', data.juggleStatus);
-    updateButtonStatus('Sinelonbutton', data.sinelonStatus);
-    updateButtonStatus('Cometbutton', data.cometStatus);
-    //Buttons VU
-    updateButtonStatus('RainbowVU', data.rainbowVUStatus);
-    updateButtonStatus('OldSkoolVU', data.oldVUStatus);
-    updateButtonStatus('RainbowHueVU', data.rainbowHueVUStatus);
-    updateButtonStatus('RippleVU', data.rippleVUStatus);
-    updateButtonStatus('ThreebarsVU', data.threebarsVUStatus);
-    updateButtonStatus('OceanVU', data.oceanVUStatus);
-    //Buttons Indicators
-    updateButtonStatus('TempNEO', data.tempNEOStatus);
-    updateButtonStatus('BattNEO', data.battNEOStatus);
+  // Print out our received message
+  let data;
+    try {
+        console.log("Received: " + evt.data);
+        data = JSON.parse(evt.data);
+    } catch (e) {
+        console.error("JSON parse error:", e, evt.data);
+        return;
+    }
+    // Color picker sync
+    if (colorPicker && data.color && typeof data.color === "object") {
+        const { r, g, b } = Array.isArray(data.color)
+            ? { r: data.color[0], g: data.color[1], b: data.color[2] }
+            : data.color;
+        if (
+            colorPicker.color.red !== r ||
+            colorPicker.color.green !== g ||
+            colorPicker.color.blue !== b
+        ) {
+            isRemoteUpdate = true;
+            colorPicker.color.rgb = { r, g, b };
+            setTimeout(() => { isRemoteUpdate = false; }, 50);
+        }
+  }
+  //BATT
+  batt.level = data.level;
+  batt.charging = data.charging;
+  batt.fullbatt = data.fullbatt;
+  if (typeof initBattery === "function") initBattery(batt);
+  document.getElementById("battVolt").innerHTML = data.battVoltage + " V";
+  // DHT
+  const externalTemperature = data.temperature;
+  temperature.style.height =
+    ((externalTemperature - config.minTemp) /
+      (config.maxTemp - config.minTemp)) *
+      100 +
+    "%";
+  temperature.dataset.value = externalTemperature + units[config.unit];
+  document.getElementById("temp").innerHTML = data.temperature + " &deg;C";
+  document.getElementById("hum").innerHTML = data.humidity + " %";
+  // WiFi
+  document.getElementById("Signal").className = data.bars;
+  // Neo Effects
+  document.getElementById("Neo").className = data.neostatus;
+  document.getElementById("Bluetooth").className = data.btstatus;
+  document.getElementById("lamp").className = data.lampstatus;
+  document.getElementById("picker_bridge").setAttribute("data-color", JSON.stringify(data.color));
+  document.getElementById("textSliderValue").innerHTML = data.neobrightness;
+  document.getElementById("pwmSlider").value = data.neobrightness;
+  //Buttons effects
+  updateButtonStatus("Firebutton", data.fireStatus);
+  updateButtonStatus("MovingDotbutton", data.movingdotStatus);
+  updateButtonStatus("RainbowBeatbutton", data.rainbowbeatStatus);
+  updateButtonStatus("RWBbutton", data.rwbStatus);
+  updateButtonStatus("Ripplebutton", data.rippleStatus);
+  updateButtonStatus("Twinklebutton", data.twinkleStatus);
+  updateButtonStatus("Ballsbutton", data.ballsStatus);
+  updateButtonStatus("Jugglebutton", data.juggleStatus);
+  updateButtonStatus("Sinelonbutton", data.sinelonStatus);
+  updateButtonStatus("Cometbutton", data.cometStatus);
+  //Buttons VU
+  updateButtonStatus("RainbowVU", data.rainbowVUStatus);
+  updateButtonStatus("OldSkoolVU", data.oldVUStatus);
+  updateButtonStatus("RainbowHueVU", data.rainbowHueVUStatus);
+  updateButtonStatus("RippleVU", data.rippleVUStatus);
+  updateButtonStatus("ThreebarsVU", data.threebarsVUStatus);
+  updateButtonStatus("OceanVU", data.oceanVUStatus);
+  //Buttons Indicators
+  updateButtonStatus("TempNEO", data.tempNEOStatus);
+  updateButtonStatus("BattNEO", data.battNEOStatus);
 }
 
 function onError(error) {
@@ -218,7 +245,6 @@ function handleButtonClick(buttonId) {
     const toggle = document.getElementById(buttonId);
     const isOn = toggle.className === "on" ? 0 : effectMap[buttonId] || 0; // Usar el valor del mapeo o 0 si no existe
     toggle.className = isOn ? "on" : "off";
-
     json.action = getActionFromButtonId(buttonId);
     json.effectId = isOn;
     sendJson();

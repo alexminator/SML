@@ -65,7 +65,6 @@ uint8_t g = 255;
 uint8_t b = 255;
 CRGB leds[N_PIXELS];        //  for FASTLED
 
-
 // WEB
 #define HTTP_PORT 80
 #include <WiFi.h>
@@ -649,8 +648,7 @@ String bars()
 
 void notifyClients()
 {
-    const int size = JSON_OBJECT_SIZE(32); // !Remember change the number of member object. See https://arduinojson.org/v5/assistant/
-    StaticJsonDocument<size> json;
+    StaticJsonDocument<JSON_OBJECT_SIZE(36)> json;      // !Remember change the number of member object. See https://arduinojson.org/v5/assistant/
     json["bars"] = bars();
     json["battVoltage"] = String(batt.battVolts, 3);
     json["level"] = String(batt.battLvl);
@@ -662,28 +660,24 @@ void notifyClients()
     json["neostatus"] = stripLed.powerState ? "on" : "off";
     json["btstatus"] = bt_powerState ? "on" : "off";
     json["neobrightness"] = stripLed.brightness;
-    json["fireStatus"] = stripLed.effectId == 1 && stripLed.powerState ? "on" : "off";
-    json["movingdotStatus"] = stripLed.effectId == 2 && stripLed.powerState ? "on" : "off";
-    json["rainbowbeatStatus"] = stripLed.effectId == 3 && stripLed.powerState ? "on" : "off";
-    json["rwbStatus"] = stripLed.effectId == 4 && stripLed.powerState ? "on" : "off";
-    json["rippleStatus"] = stripLed.effectId == 5 && stripLed.powerState ? "on" : "off";
-    json["twinkleStatus"] = stripLed.effectId == 6 && stripLed.powerState ? "on" : "off";
-    json["ballsStatus"] = stripLed.effectId == 7 && stripLed.powerState ? "on" : "off";
-    json["juggleStatus"] = stripLed.effectId == 8 && stripLed.powerState ? "on" : "off";
-    json["sinelonStatus"] = stripLed.effectId == 9 && stripLed.powerState ? "on" : "off";
-    json["cometStatus"] = stripLed.effectId == 10 && stripLed.powerState ? "on" : "off";
-    // VU
-    json["rainbowVUStatus"] = stripLed.effectId == 11 && stripLed.powerState ? "on" : "off";
-    json["oldVUStatus"] = stripLed.effectId == 12 && stripLed.powerState ? "on" : "off";
-    json["rainbowHueVUStatus"] = stripLed.effectId == 13 && stripLed.powerState ? "on" : "off";
-    json["rippleVUStatus"] = stripLed.effectId == 14 && stripLed.powerState ? "on" : "off";
-    json["threebarsVUStatus"] = stripLed.effectId == 15 && stripLed.powerState ? "on" : "off";
-    json["oceanVUStatus"] = stripLed.effectId == 16 && stripLed.powerState ? "on" : "off";
-    // Indicators
-    json["tempNEOStatus"] = stripLed.effectId == 17 && stripLed.powerState ? "on" : "off";
-    json["battNEOStatus"] = stripLed.effectId == 18 && stripLed.powerState ? "on" : "off";
-    char buffer[610];                         // the sum of all character of json send {"stripledStatus":"off"}
-    size_t len = serializeJson(json, buffer); // serialize the json+array and send the result to buffer
+
+    // Añade el color actual
+    JsonObject color = json.createNestedObject("color");
+    color["r"] = stripLed.R;
+    color["g"] = stripLed.G;
+    color["b"] = stripLed.B;
+
+    // Efectos y VU
+    const char *effectNames[] = {
+        "fireStatus", "movingdotStatus", "rainbowbeatStatus", "rwbStatus", "rippleStatus",
+        "twinkleStatus", "ballsStatus", "juggleStatus", "sinelonStatus", "cometStatus",
+        "rainbowVUStatus", "oldVUStatus", "rainbowHueVUStatus", "rippleVUStatus",
+        "threebarsVUStatus", "oceanVUStatus", "tempNEOStatus", "battNEOStatus"};
+    for (uint8_t i = 0; i < 18; ++i)
+        json[effectNames[i]] = (stripLed.effectId == i + 1 && stripLed.powerState) ? "on" : "off";
+
+    char buffer[650];                                  // the sum of all character of json send {"stripledStatus":"off"}
+    size_t len = serializeJson(json, buffer);         // serialize the json+array and send the result to buffer     
     ws.textAll(buffer, len);
 }
 
@@ -732,10 +726,10 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         }
         else if (strcmp(action, "picker") == 0)
         {
-            JsonArray color = json["color"];
-            stripLed.R = r = color[0].as<int>();
-            stripLed.G = g = color[1].as<int>();
-            stripLed.B = b = color[2].as<int>();
+            JsonObject color = json["color"];
+            stripLed.R = r = color["r"].as<int>();
+            stripLed.G = g = color["g"].as<int>();
+            stripLed.B = b = color["b"].as<int>();
             debuglnD("RGB: " + String(r) + ", " + String(g) + ", " + String(b));
         }
         else if (strcmp(action, "music") == 0)
@@ -851,7 +845,7 @@ void TaskLEDControl(void *pvParameters)
         {
             stripLed.clear();
         }
-        vTaskDelay(pdMS_TO_TICKS(6));
+        vTaskDelay(pdMS_TO_TICKS(20));
     }
 }
 
