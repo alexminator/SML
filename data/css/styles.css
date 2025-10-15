@@ -167,7 +167,7 @@
 * {
     margin: 0;
     padding: 0;
-    box-sizing: border-box; /* Added for better layout consistency */
+    /*box-sizing: border-box; /* Added for better layout consistency */
 }
 
 html {
@@ -247,14 +247,27 @@ ul.tabs {
     display: grid;
     grid-template-columns: repeat(4, 1fr); /* Simplified grid-template */
 }
-
+/*
 ul.tabs li a {
-    color: #ccc; /* Changed from --body-color for better visibility on dark tab */
+    color: var(--body-color);
     text-decoration: none;
     font-size: 2rem;
     display: block;
-    padding: 20px 0px;
+    padding: 20px 5px;
     text-align: center;
+}
+*/
+
+ul.tabs li a {
+    color: var(--body-color);
+    text-decoration: none;
+    font-size: 2rem;
+    display: flex; /* <-- Convertimos el enlace en un contenedor flex */
+    align-items: center; /* <-- Alineamos verticalmente el icono y el texto */
+    justify-content: center; /* <-- Centramos el contenido horizontalmente */
+    gap: 8px; /* <-- Creamos un espacio fijo entre el icono y el texto */
+    padding: 20px 7px;
+    white-space: nowrap; /* <-- Evita que el texto se parta en dos líneas */
 }
 
 ul.tabs li a.active{
@@ -266,8 +279,8 @@ ul.tabs li a.active{
 
 ul.tabs li a .tab-text{
     font-family: Impactreg;
-    margin-left: 10px;
-    font-size: 1.5rem;
+    /*margin-left: 10px;*/
+    font-size: 1.3rem;
     text-align: center;
     vertical-align: middle; /* Aligns text better with icon */
 }
@@ -288,7 +301,7 @@ ul.tabs li a .tab-text{
     grid-template: 
         ". power-label power-label ."   0.3fr
         ". power-lamp power-neo ."  0.3fr
-        ". lamp neo ."  0.5fr / 1fr auto auto 1fr; /* Defined columns for better alignment */
+        ". lamp neo ."  0.5fr; 
 	grid-gap: 0.5rem;
     padding: 10px;
 }
@@ -381,7 +394,7 @@ ul.tabs li a .tab-text{
 }
 
 /*=============== BREAKPOINTS ===============*/
-@media screen and (max-width: 400px) {
+@media screen and (max-width: 475px) {
     .wrap {
         margin: 10px auto;
         width: 100%;
@@ -397,12 +410,14 @@ ul.tabs li a .tab-text{
 
 @media screen and (min-width: 580px) {
     ul.tabs li {
-        width: auto; /* Corrected from 'none' */
+        /*width: auto; /* Corrected from 'none' */
+        width: none;
         flex-basis: 0;
         flex-grow: 1;
     }
     .light {
-        transform: scale(0.6); /* OPTIMIZED: Replaced non-standard 'zoom' */
+        zoom: 0.6;
+        /*transform: scale(0.6); /* OPTIMIZED: Replaced non-standard 'zoom' */
     }
 }
 
@@ -460,10 +475,15 @@ ul.tabs li a .tab-text{
 }
 
 /* Glowing SML header text*/
-.glowing {
-    display: flex; /* Use flex for centering */
+/*.glowing {
+    display: flex; 
     justify-content: center;
     align-items: center;
+    margin-left: 30px;
+}*/
+.glowing {
+    align-items: center;
+    align-content: center;
     margin-left: 30px;
 }
 .glowing span {
@@ -486,42 +506,6 @@ ul.tabs li a .tab-text{
 .glowing span:nth-child(1) { animation-delay: 0s; }
 .glowing span:nth-child(2) { animation-delay: 0.1s; }
 .glowing span:nth-child(3) { animation-delay: 0.2s; }
-
-
-/* Background Circles Animation */
-.circles {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    z-index: -1; /* Ensure circles are behind content */
-}
-.circles li {
-    position: absolute;
-    display: block;
-    list-style: none;
-    width: 20px;
-    height: 20px;
-    background: rgba(255, 255, 255, 0.2);
-    animation: animateCIRCLE 25s linear infinite;
-    bottom: -150px;
-}
-.circles li:nth-child(1) { left: 25%; width: 80px; height: 80px; animation-delay: 0s; }
-.circles li:nth-child(2) { left: 10%; width: 20px; height: 20px; animation-delay: 2s; animation-duration: 12s; }
-.circles li:nth-child(3) { left: 70%; width: 20px; height: 20px; animation-delay: 4s; }
-.circles li:nth-child(4) { left: 40%; width: 60px; height: 60px; animation-delay: 0s; animation-duration: 18s; }
-.circles li:nth-child(5) { left: 65%; width: 20px; height: 20px; animation-delay: 0s; }
-.circles li:nth-child(6) { left: 75%; width: 110px; height: 110px; animation-delay: 3s; }
-.circles li:nth-child(7) { left: 35%; width: 150px; height: 150px; animation-delay: 7s; }
-.circles li:nth-child(8) { left: 50%; width: 25px; height: 25px; animation-delay: 15s; animation-duration: 45s; }
-.circles li:nth-child(9) { left: 20%; width: 15px; height: 15px; animation-delay: 2s; animation-duration: 35s; }
-.circles li:nth-child(10) { left: 85%; width: 150px; height: 150px; animation-delay: 0s; animation-duration: 11s; }
-@keyframes animateCIRCLE {
-    0% { transform: translateY(0) rotate(0deg); opacity: 1; border-radius: 0; }
-    100% { transform: translateY(-1000px) rotate(720deg); opacity: 0; border-radius: 50%; }
-}
 
 /* WiFi Signal */
 #Signal {
@@ -762,6 +746,7 @@ ul.tabs li a .tab-text{
     padding: 10px;
     align-items: center; /* Better vertical alignment */
 }
+
 .weather-label {
     grid-area: weather-label;
     text-align: center;
