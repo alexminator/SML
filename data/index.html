@@ -1,298 +1,321 @@
-<!doctype html>
-<html lang=en>
+<!DOCTYPE html>
+<html lang="en">
+
 <head>
-<meta charset=UTF-8>
-<meta name=viewport content="width=device-width,initial-scale=1">
-<meta name=apple-mobile-web-app-capable content=yes>
-<meta name=author content=Alexminator>
-<meta name=description content="Smart Music Lamp">
-<title>Smart Music Lamp</title>
-<link rel=icon href=SML.ico type=image/x-icon>
-<link rel=stylesheet href=css/styles.css>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="author" content="Alexminator">
+  <meta name="description" content="Smart Music Lamp">
+  <title>Smart Music Lamp</title>
+  <link rel="icon" href="SML.ico" type="image/x-icon">
+  <!--=============== CSS ===============-->
+  <link rel="stylesheet" href="css/styles.css">
 </head>
-<body class=grid-container>
-<header class=header>
-<div id=butterfly>
-<div class=wings></div>
-</div>
-<div class=glowing><span>S</span><span>M</span><span>L</span></div>
-<p>Smart Music Lamp</p>
-</header>
-<main class=main>
-<div class=wrap>
-<ul class=tabs>
-<li><a href=#tab-lamp><span class="fas fa-lightbulb"></span><span class=tab-text>Lamp</span></a></li>
-<li><a href=#tab-music><span class="fas fa-music"></span><span class=tab-text>Music</span></a></li>
-<li><a href=#tab-temp><span class="fas fa-thermometer-half"></span><span class=tab-text>Weather</span></a></li>
-<li><a href=#tab-battery><span class="fas fa-battery"></span><span class=tab-text>Battery</span></a></li>
-</ul>
-<div class=sections>
-<div id=tab-lamp>
-<div class=power-button>
-<h2 class=power-label>Power <span class="fas fa-power-off"></span></h2>
-<h4 class=power-lamp>Lamp</h4>
-<div id=lamp class=%LAMP%>
-<span class=button>
-<span class=slide></span>
-</span>
-</div>
-<h4 class=power-neo>Neopixel</h4>
-<div id=Neo class=%STRIPLED%>
-<span class=button>
-<span class=slide></span>
-</span>
-</div>
-</div>
-<div class=picker>
-<h2 class=colorpicker>Color <span class="fas fa-paint-brush"></span></h2>
-<div class=picker-container>
-<div class=ColorPicker id=wheelPicker></div>
-</div>
-<span id=picker_bridge data-color='{"r":255,"g":255,"b":255}'></span>
-</div>
-<div class=slider>
-<h2 class=brigthness>Brightness <span class="fas fa-sun"></span></h2>
-<div class=range>
-<div class=sliderValue>
-<span id=textSliderValue class=mark>%BRIGHTNESS%</span>
-</div>
-<div class=field>
-<div class="value left">25</div>
-<input type=range id=pwmSlider min=25 max=255 value=%BRIGHTNESS% steps=1>
-<div class="value right">255</div>
-</div>
-</div>
-</div>
-<div class=effects-button>
-<h2 class=power-label>Effects <span class="fas fa-wand-sparkles"></span></h2>
-<h3 class=fire>Fire</h3>
-<div id=Firebutton class=%FIRE_STATE%>
-<span class=button>
-<span class=slide></span>
-</span>
-</div>
-<h3 class=movingdot>Dots</h3>
-<div id=MovingDotbutton class=%MOVINGDOT_STATE%>
-<span class=button>
-<span class=slide></span>
-</span>
-</div>
-<h3 class=rainbow>Rainbow</h3>
-<div id=RainbowBeatbutton class=%RAINBOWBEAT_STATE%>
-<span class=button>
-<span class=slide></span>
-</span>
-</div>
-<h3 class=rwb>RWB</h3>
-<div id=RWBbutton class=%RWB_STATE%>
-<span class=button>
-<span class=slide></span>
-</span>
-</div>
-<h3 class=ripple>Ripple</h3>
-<div id=Ripplebutton class=%RIPPLE_STATE%>
-<span class=button>
-<span class=slide></span>
-</span>
-</div>
-<h3 class=twinkle>Twinkle</h3>
-<div id=Twinklebutton class=%TWINKLE_STATE%>
-<span class=button>
-<span class=slide></span>
-</span>
-</div>
-<h3 class=balls>Balls</h3>
-<div id=Ballsbutton class=%BALLS_STATE%>
-<span class=button>
-<span class=slide></span>
-</span>
-</div>
-<h3 class=juggle>Juggle</h3>
-<div id=Jugglebutton class=%JUGGLE_STATE%>
-<span class=button>
-<span class=slide></span>
-</span>
-</div>
-<h3 class=sinelon>Sinelon</h3>
-<div id=Sinelonbutton class=%SINELON_STATE%>
-<span class=button>
-<span class=slide></span>
-</span>
-</div>
-<h3 class=comet>Comet</h3>
-<div id=Cometbutton class=%COMET_STATE%>
-<span class=button>
-<span class=slide></span>
-</span>
-</div>
-</div>
-</div>
-<div id=tab-music>
-<div class=music>
-<div class=power-music>
-<h2 class=power-bt>Bluetooth</h2>
-<div id=Bluetooth class=%BLUETOOTH%>
-<span class=button>
-<span class=slide></span>
-</span>
-</div>
-</div>
-<h2 class=power-label>VU Meter <span class="fas fa-tachometer"></span></h2>
-<div class=effects-vu>
-<h3 class=rainbowVU>Rainbow</h3>
-<div id=RainbowVU class=%VU1%>
-<span class=button>
-<span class=slide></span>
-</span>
-</div>
-<h3 class=oldskoolVU>Old</h3>
-<div id=OldSkoolVU class=%VU2%>
-<span class=button>
-<span class=slide></span>
-</span>
-</div>
-<h3 class=rainbowHueVU>Hue</h3>
-<div id=RainbowHueVU class=%VU3%>
-<span class=button>
-<span class=slide></span>
-</span>
-</div>
-<h3 class=rippleVU>Ripple</h3>
-<div id=RippleVU class=%VU4%>
-<span class=button>
-<span class=slide></span>
-</span>
-</div>
-<h3 class=barsVU>3 bars</h3>
-<div id=ThreebarsVU class=%VU5%>
-<span class=button>
-<span class=slide></span>
-</span>
-</div>
-<h3 class=oceanVU>Ocean</h3>
-<div id=OceanVU class=%VU6%>
-<span class=button>
-<span class=slide></span>
-</span>
-</div>
-</div>
-<div class=button-controls>
-<div class=btn-overlay>
-<div class=play-btn-shadow></div>
-<div class=play-btn>
-<div class=play-btn-overlay>
-<div class=play-icon>
-<img src="img/play button icon.svg" alt="Play Button" width=48 height=31>
-</div>
-</div>
-</div>
-<div class=skip-left>
-<img src="img/Skip Left Icon.svg" alt="Skip Left" width=40 height=25>
-</div>
-<div class=skip-right>
-<img src="img/Skip Right Icon.svg" alt="Skip Right" width=40 height=25>
-</div>
-<div class=vol-up>
-<img src="img/Volume Up Icon.svg" alt="Volume Up" width=32 height=31>
-</div>
-<div class=vol-down>
-<img src="img/Volume Down Icon.svg" alt="Volume Down" width=32 height=11>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div id=tab-temp>
-<div class=weather>
-<div class=weather-label>
-<h2 class=weather-text>Weather</h2>
-<div id=TempNEO class=%TEMPNEO%>
-<span class=button>
-<span class=slide></span>
-</span>
-<span class=light></span>
-</div>
-</div>
-<div class=temp>
-<h2 id=temp>%TEMPERATURE%</h2>
-</div>
-<div class=wrapper>
-<div id=termometer>
-<div id=temperature style=height:0 data-value=0°C></div>
-<div id=graduations></div>
-</div>
-</div>
-<div class=humidity>
-<i class="fas fa-droplet"></i> <span id=hum>%HUMIDITY%</span>
-</div>
-<div class=widget>
-<div class=fecha>
-<p id=diaSemana class=diaSemana></p>
-<p id=dia class=dia></p>
-<p>de</p>
-<p id=mes class=mes></p>
-<p>del</p>
-<p id=anio class=anio></p>
-</div>
-<div class=reloj>
-<span id=time-icon></span>
-<p id=horas class=horas></p>
-<p>:</p>
-<p id=minutos class=minutos></p>
-<div class=cajaSegundos>
-<p id=ampm class=ampm></p>
-<p id=segundos class=segundos></p>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div id=tab-battery>
-<section class=battery>
-<div class=battery__card>
-<div class=battery__data>
-<div class=battery__header>
-<h2 class=battery__text>Battery</h2>
-<div id=BattNEO class=%BATTNEO%>
-<span class=button>
-<span class=slide></span>
-</span>
-<span class=light></span>
-</div>
-</div>
-<p id=battVolt>%BATTVOLTAGE%</p>
-<h1 id=battlevel class=battery__percentage>0</h1>
-<p id=battCharge class=battery__status>
-Low Battery <span class="fas fa-plug"></span>
-</p>
-</div>
-<div class=battery__pill>
-<div class=battery__level>
-<div class=battery__liquid></div>
-<div class="bubbles battery-bubbles">
-<span>&nbsp;</span>
-</div>
-</div>
-</div>
-</div>
-</section>
-</div>
-</div>
-</div>
-</main>
-<footer class=footer>
-<div id=Signal class=%BARS%>
-<div class="wv4 wave">
-<div class="wv3 wave">
-<div class="wv2 wave">
-<div class="wv1 wave"></div>
-</div>
-</div>
-</div>
-</div>
-<p id=status>Disconnected</p>
-<div id=indicator></div>
-</footer>
-<script src=js/app.js defer></script>
+
+<body class="grid-container">
+
+  <header class="header">
+    <div id="butterfly">
+      <div class="wings"></div>
+    </div>
+    <div class="glowing"><span>S</span><span>M</span><span>L</span></div>
+    <p>Smart Music Lamp</p>
+  </header>
+
+  <main class="main">
+
+    <div class="wrap">
+      <ul class="tabs">
+        <li><a href="#tab-lamp"><span class="fas fa-lightbulb"></span><span class="tab-text">Lamp</span></a></li>
+        <li><a href="#tab-music"><span class="fas fa-music"></span><span class="tab-text">Music</span></a></li>
+        <li><a href="#tab-temp"><span class="fas fa-thermometer-half"></span><span class="tab-text">Weather</span></a></li>
+        <li><a href="#tab-battery"><span class="fas fa-battery"></span><span class="tab-text">Battery</span></a></li>
+      </ul>
+
+      <div class="sections">
+        <div id="tab-lamp">
+          <div class="power-button">
+            <h2 class="power-label">Power <span class="fas fa-power-off"></span></h2>
+            <h4 class="power-lamp">Lamp</h4>
+            <div id="lamp" class="%LAMP%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+
+            <h4 class="power-neo">Neopixel</h4>
+            <div id="Neo" class="%STRIPLED%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+          </div>
+
+          <div class="picker">
+            <h2 class="colorpicker">Color <span class="fas fa-paint-brush"></span></h2>
+            <div class="picker-container">
+              <div class="ColorPicker" id="wheelPicker"></div>
+            </div>
+            <span id="picker_bridge" data-color='{"r":255,"g":255,"b":255}'></span>
+          </div>
+
+          <div class="slider">
+            <h2 class="brigthness">Brightness <span class="fas fa-sun"></span></h2>
+            <div class="range">
+              <div class="sliderValue">
+                <span id="textSliderValue" class="mark">%BRIGHTNESS%</span>
+              </div>
+              <div class="field">
+                <div class="value left">25</div>
+                <input type="range" id="pwmSlider" min="25" max="255" value="%BRIGHTNESS%" steps="1">
+                <div class="value right">255</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="effects-button">
+            <h2 class="power-label">Effects <span class="fas fa-wand-sparkles"></span></h2>
+            <h3 class="fire">Fire</h3>
+            <div id="Firebutton" class="%FIRE_STATE%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+            <h3 class="movingdot">Dots</h3>
+            <div id="MovingDotbutton" class="%MOVINGDOT_STATE%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+            <h3 class="rainbow">Rainbow</h3>
+            <div id="RainbowBeatbutton" class="%RAINBOWBEAT_STATE%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+            <h3 class="rwb">RWB</h3>
+            <div id="RWBbutton" class="%RWB_STATE%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+            <h3 class="ripple">Ripple</h3>
+            <div id="Ripplebutton" class="%RIPPLE_STATE%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+            <h3 class="twinkle">Twinkle</h3>
+            <div id="Twinklebutton" class="%TWINKLE_STATE%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+            <h3 class="balls">Balls</h3>
+            <div id="Ballsbutton" class="%BALLS_STATE%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+            <h3 class="juggle">Juggle</h3>
+            <div id="Jugglebutton" class="%JUGGLE_STATE%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+            <h3 class="sinelon">Sinelon</h3>
+            <div id="Sinelonbutton" class="%SINELON_STATE%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+            <h3 class="comet">Comet</h3>
+            <div id="Cometbutton" class="%COMET_STATE%">
+              <span class="button">
+                <span class="slide"></span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-music">
+          <div class="music">
+            <div class="power-music">
+              <h2 class="power-bt">Bluetooth</h2>
+              <div id="Bluetooth" class="%BLUETOOTH%">
+                <span class="button">
+                  <span class="slide"></span>
+                </span>
+              </div>
+            </div>
+            <h2 class="power-label">VU Meter <span class="fas fa-tachometer"></span></h2>
+            <div class="effects-vu">
+              <h3 class="rainbowVU">Rainbow</h3>
+              <div id="RainbowVU" class="%VU1%">
+                <span class="button">
+                  <span class="slide"></span>
+                </span>
+              </div>
+              <h3 class="oldskoolVU">Old</h3>
+              <div id="OldSkoolVU" class="%VU2%">
+                <span class="button">
+                  <span class="slide"></span>
+                </span>
+              </div>
+              <h3 class="rainbowHueVU">Hue</h3>
+              <div id="RainbowHueVU" class="%VU3%">
+                <span class="button">
+                  <span class="slide"></span>
+                </span>
+              </div>
+              <h3 class="rippleVU">Ripple</h3>
+              <div id="RippleVU" class="%VU4%">
+                <span class="button">
+                  <span class="slide"></span>
+                </span>
+              </div>
+              <h3 class="barsVU">3 bars</h3>
+              <div id="ThreebarsVU" class="%VU5%">
+                <span class="button">
+                  <span class="slide"></span>
+                </span>
+              </div>
+              <h3 class="oceanVU">Ocean</h3>
+              <div id="OceanVU" class="%VU6%">
+                <span class="button">
+                  <span class="slide"></span>
+                </span>
+              </div>
+            </div>
+
+            <div class="button-controls">
+              <div class="btn-overlay">
+                <div class="play-btn-shadow"></div>
+                <div class="play-btn">
+                  <div class="play-btn-overlay">
+                    <div class="play-icon">
+                      <img src="img/play button icon.svg" alt="Play Button" width="48" height="31" />
+                    </div>
+                  </div>
+                </div>
+                <div class="skip-left">
+                  <img src="img/Skip Left Icon.svg" alt="Skip Left" width="40" height="25" />
+                </div>
+                <div class="skip-right">
+                  <img src="img/Skip Right Icon.svg" alt="Skip Right" width="40" height="25" />
+                </div>
+                <div class="vol-up">
+                  <img src="img/Volume Up Icon.svg" alt="Volume Up" width="32" height="31" />
+                </div>
+                <div class="vol-down">
+                  <img src="img/Volume Down Icon.svg" alt="Volume Down" width="32" height="11" />
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-temp">
+          <div class="weather">
+            <div class="weather-label">
+              <h2 class="weather-text">Weather</h2>
+              <div id="TempNEO" class="%TEMPNEO%">
+                <span class="button">
+                  <span class="slide"></span>
+                </span>
+                <span class="light"></span>
+              </div>
+
+            </div>
+
+            <div class="temp">
+              <h2 id="temp">%TEMPERATURE%</h2>
+            </div>
+
+            <div class="wrapper">
+              <div id="termometer">
+                <div id="temperature" style="height:0" data-value="0°C"></div>
+                <div id="graduations"></div>
+              </div>
+            </div>
+
+            <div class="humidity">
+              <i class="fas fa-droplet"></i> <span id="hum">%HUMIDITY%</span>
+            </div>
+
+            <div class="widget">
+              <div class="fecha">
+                <p id="diaSemana" class="diaSemana"></p>
+                <p id="dia" class="dia"></p>
+                <p>de</p>
+                <p id="mes" class="mes"></p>
+                <p>del</p>
+                <p id="anio" class="anio"></p>
+              </div>
+              <div class="reloj">
+                <span id="time-icon"></span>
+                <p id="horas" class="horas"></p>
+                <p>:</p>
+                <p id="minutos" class="minutos"></p>
+                <div class="cajaSegundos">
+                  <p id="ampm" class="ampm"></p>
+                  <p id="segundos" class="segundos"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-battery">
+          <section class="battery">
+            <div class="battery__card">
+              <div class="battery__data">
+                <div class="battery__header">
+                  <h2 class="battery__text">Battery</h2>
+                  <div id="BattNEO" class="%BATTNEO%">
+                    <span class="button">
+                      <span class="slide"></span>
+                    </span>
+                    <span class="light"></span>
+                  </div>
+                </div>
+                <p id="battVolt">%BATTVOLTAGE%</p>
+                <h1 id="battlevel" class="battery__percentage">0</h1>
+                <p id="battCharge" class="battery__status">
+                  Low Battery <span class="fas fa-plug"></span>
+                </p>
+              </div>
+              <div class="battery__pill">
+                <div class="battery__level">
+                  <div class="battery__liquid"></div>
+                  <div class="bubbles battery-bubbles">
+                    <span>&nbsp;</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div id="Signal" class="%BARS%">
+      <div class="wv4 wave">
+        <div class="wv3 wave">
+          <div class="wv2 wave">
+            <div class="wv1 wave"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p id="status">Disconnected</p>
+    <div id="indicator"></div>
+  </footer>
+  <script src="js/app.js" defer></script>
 </body>
+
 </html>
