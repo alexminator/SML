@@ -546,8 +546,9 @@ enum Status
     BATTNEO
 } status;
 
-String processor(const String &var)
+const char* processor(const String &var)
 {
+    static char buffer[40];
     switch (status)
     {
     case COLOR:
@@ -556,11 +557,16 @@ String processor(const String &var)
         doc["color"]["r"] = stripLed.R;
         doc["color"]["g"] = stripLed.G;
         doc["color"]["b"] = stripLed.B;
-        char buffer[40];
-        serializeJson(doc, buffer);
-        return String(buffer);
+        serializeJson(doc, buffer, sizeof(buffer));
+        return buffer;
     }
-    
+    case BRIGHTNESS:
+        snprintf(buffer, sizeof(buffer), "%d", brightness);
+        return buffer;
+    case STRIPLED:
+        return stripLed.powerState ? "on" : "off";
+    case BLUETOOTH:
+        return bt_powerState ? "on" : "off";
     case FIRE_STATE:
     case MOVINGDOT_STATE:
     case RAINBOWBEAT_STATE:
@@ -580,15 +586,10 @@ String processor(const String &var)
     case TEMPNEO:
     case BATTNEO:
     case LAMP:
-        return "off"; 
-    case BRIGHTNESS:
-        return String(brightness);
-    case STRIPLED:
-        return stripLed.powerState ? "on" : "off";
-    case BLUETOOTH:
-        return bt_powerState ? "on" : "off";
+        return "off";
     default:
-        return String();
+        buffer[0] = '\0';
+        return buffer;
     }
 }
 
@@ -624,38 +625,43 @@ void initWebServer()
 // ----------------------------------------------------------------------------
 // WebSocket initialization
 // ----------------------------------------------------------------------------
-String bars()
+const char* bars()
 {
     int signal = WiFi.RSSI();
-    switch (signal)
-    {
-    case -63 ... - 1:
+    if (signal >= -63 && signal <= -1)
         return "waveStrength-4";
-        break;
-    case -73 ... - 64:
+    else if (signal >= -73 && signal <= -64)
         return "waveStrength-3";
-        break;
-    case -83 ... - 74:
+    else if (signal >= -83 && signal <= -74)
         return "waveStrength-2";
-        break;
-    case -93 ... - 84:
+    else if (signal >= -93 && signal <= -84)
         return "waveStrength-1";
-        break;
-    default:
+    else
         return "no-signal";
-    }
 }
 
 void notifyClients()
 {
     StaticJsonDocument<JSON_OBJECT_SIZE(36)> json;      // !Remember change the number of member object. See https://arduinojson.org/v5/assistant/
+    
+    // Usar buffer char para conversiones numéricas
+    char battVoltageStr[10];
+    char levelStr[6];
+    char tempStr[8];
+    char humStr[8];
+
+    snprintf(battVoltageStr, sizeof(battVoltageStr), "%.3f", batt.battVolts);
+    snprintf(levelStr, sizeof(levelStr), "%d", batt.battLvl);
+    snprintf(tempStr, sizeof(tempStr), "%.1f", temp);
+    snprintf(humStr, sizeof(humStr), "%.1f", hum);
+
     json["bars"] = bars();
-    json["battVoltage"] = String(batt.battVolts, 3);
-    json["level"] = String(batt.battLvl);
+    json["battVoltage"] = battVoltageStr;
+    json["level"] = levelStr;
     json["charging"] = batt.chargeState;
     json["fullbatt"] = batt.fullBatt;
-    json["temperature"] = String(temp, 1);
-    json["humidity"] = String(hum, 1);
+    json["temperature"] = tempStr;
+    json["humidity"] = humStr;
     json["lampstatus"] = lampState ? "on" : "off";
     json["neostatus"] = stripLed.powerState ? "on" : "off";
     json["btstatus"] = bt_powerState ? "on" : "off";
