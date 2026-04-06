@@ -2,6 +2,7 @@ let connected = false;
 let colorPicker;
 let isRemoteUpdate = false; // Flag para evitar bucles
 let brightness = 0;
+let wifiData = { ssid: null, rssi: null, ip: null };
 const json = {
     action: '',
     effectId: 0,
@@ -12,6 +13,73 @@ const json = {
 const units = { Celcius: "°C", Fahrenheit: "°F" };
 const config = { minTemp: 0, maxTemp: 50, unit: "Celcius" };
 const batt = { level: 0, charging: false, fullbatt: false };
+
+// ----------------------------------------------------------------------------
+// WiFi Configuration Modal Functions
+// ----------------------------------------------------------------------------
+
+function openWiFiModal() {
+    const modal = document.getElementById('wifiModal');
+    modal.style.display = 'flex';
+
+    // Update WiFi info from data already received via WebSocket
+    document.getElementById('currentSSID').textContent = wifiData.ssid || 'Not available';
+    document.getElementById('currentSignal').textContent = wifiData.rssi !== undefined ? wifiData.rssi + ' dBm' : 'Not available';
+    document.getElementById('currentIP').textContent = wifiData.ip || 'Not available';
+
+    // Clear form
+    document.getElementById('newSSID').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('wifiStatus').textContent = '';
+    document.getElementById('wifiStatus').className = 'wifi-status';
+}
+
+function closeWiFiModal() {
+    document.getElementById('wifiModal').style.display = 'none';
+}
+
+function saveWiFiConfig(event) {
+    event.preventDefault();
+
+    const newSSID = document.getElementById('newSSID').value.trim();
+    const newPassword = document.getElementById('newPassword').value;
+    const statusDiv = document.getElementById('wifiStatus');
+
+    if (!newPassword) {
+        statusDiv.textContent = 'Password is required';
+        statusDiv.className = 'wifi-status wifi-error';
+        return;
+    }
+
+    if (newPassword.length < 8) {
+        statusDiv.textContent = 'Password must be at least 8 characters';
+        statusDiv.className = 'wifi-status wifi-error';
+        return;
+    }
+
+    // Show warning message IMMEDIATELY - don't wait for ESP32 response
+    statusDiv.innerHTML = `
+        <strong>⚠️ ESP32 se está reiniciando</strong><br><br>
+        Se generará una nueva IP. Para reconectar:<br><br>
+        📱 En PC: abre <strong>http://sml.local</strong><br>
+        📱 En Android: busca la nueva IP en tu router<br>
+        📱 O consulta la lista de dispositivos de tu red
+    `;
+    statusDiv.className = 'wifi-status wifi-success';
+
+    // Close WebSocket
+    if (websocket) websocket.close();
+
+    // Send request to ESP32 (don't wait for response)
+    fetch('/save-wifi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `ssid=${encodeURIComponent(newSSID)}&password=${encodeURIComponent(newPassword)}`
+    }).catch(error => {
+        // Ignore errors - ESP32 is restarting anyway
+        console.log('Request sent (ESP32 restarting)');
+    });
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const tabs = document.querySelectorAll('ul.tabs li a');
@@ -180,6 +248,14 @@ function onMessage(evt) {
   //Buttons Indicators
   updateButtonStatus("TempNEO", data.tempNEOStatus);
   updateButtonStatus("BattNEO", data.battNEOStatus);
+
+  // Store WiFi data for modal - always capture if available
+  if (data.ssid !== undefined) wifiData.ssid = data.ssid;
+  if (data.rssi !== undefined) wifiData.rssi = data.rssi;
+  if (data.ip !== undefined) wifiData.ip = data.ip;
+
+  // Debug log
+  console.log('WiFi Data updated:', wifiData);
 }
 
 function onError(error) {

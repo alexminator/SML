@@ -322,7 +322,7 @@
   </main>
 
   <footer class="footer">
-    <div id="Signal" class="%BARS%">
+    <div id="Signal" class="%BARS%" onclick="openWiFiModal()">
       <div class="wv4 wave">
         <div class="wv3 wave">
           <div class="wv2 wave">
@@ -334,6 +334,40 @@
     <p id="status">Disconnected</p>
     <div id="indicator"></div>
   </footer>
+
+  <!-- WiFi Configuration Modal -->
+  <div id="wifiModal" class="wifi-modal">
+    <div class="wifi-modal-content">
+      <div class="wifi-modal-header">
+        <h2>WiFi Configuration</h2>
+        <span class="wifi-close" onclick="closeWiFiModal()">&times;</span>
+      </div>
+      <div class="wifi-modal-body">
+        <div class="wifi-info">
+          <p><strong>SSID:</strong> <span id="currentSSID">-</span></p>
+          <p><strong>Signal:</strong> <span id="currentSignal">-</span></p>
+          <p><strong>IP:</strong> <span id="currentIP">-</span></p>
+        </div>
+        <form id="wifiConfigForm" onsubmit="saveWiFiConfig(event)">
+          <div class="form-group">
+            <label for="newSSID">New SSID <span class="optional">(optional)</span>:</label>
+            <input type="text" id="newSSID" name="ssid" placeholder="Leave empty to keep current SSID">
+            <small class="help-text">Leave empty to keep current WiFi name</small>
+          </div>
+          <div class="form-group">
+            <label for="newPassword"><span class="required">*</span> New Password:</label>
+            <input type="password" id="newPassword" name="password" required placeholder="Enter new WiFi password">
+            <small class="help-text">Minimum 8 characters</small>
+          </div>
+          <div class="wifi-modal-footer">
+            <button type="button" class="btn-cancel" onclick="closeWiFiModal()">Cancel</button>
+            <button type="submit" class="btn-save">Save & Restart</button>
+          </div>
+        </form>
+        <div id="wifiStatus" class="wifi-status"></div>
+      </div>
+    </div>
+  </div>
   <script src="js/battery.js" defer></script>
   <script src="js/date.js" defer></script>
   <script src="js/player.js" defer></script>

@@ -14,6 +14,7 @@
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
 #include <DHT_U.h>
+#include <Preferences.h>
 #include "data.h"
 
 // Declare the debugging level then include the header file
@@ -493,8 +494,23 @@ void initLittleFS()
 void initWiFi()
 {
     WiFi.mode(WIFI_STA);
-    WiFi.begin(WIFI_SSID, WIFI_PASS);
-    Serial.printf("Trying to connect [%s] ", WiFi.macAddress().c_str());
+
+    // Try to get saved credentials from Preferences
+    Preferences preferences;
+    preferences.begin("wifi", false);
+
+    String savedSSID = preferences.getString("ssid", "");
+    String savedPass = preferences.getString("password", "");
+
+    // Use saved credentials if available, otherwise use defaults
+    const char* ssid = (savedSSID.length() > 0) ? savedSSID.c_str() : WIFI_SSID;
+    const char* pass = (savedPass.length() > 0) ? savedPass.c_str() : WIFI_PASS;
+
+    preferences.end();
+
+    Serial.printf("Connecting to WiFi: %s\n", ssid);
+    WiFi.begin(ssid, pass);
+
     while (WiFi.status() != WL_CONNECTED)
     {
         Serial.print(".");
@@ -548,12 +564,12 @@ enum Status
 
 const char* processor(const String &var)
 {
-    static char buffer[40];
+    static char buffer[64];
     switch (status)
     {
     case COLOR:
     {
-        StaticJsonDocument<JSON_ARRAY_SIZE(4)> doc;
+        JsonDocument doc;  // Modern API - auto sizing
         doc["color"]["r"] = stripLed.R;
         doc["color"]["g"] = stripLed.G;
         doc["color"]["b"] = stripLed.B;
@@ -605,13 +621,44 @@ void initWebServer()
     server.on("/wifi-info", HTTP_GET, [](AsyncWebServerRequest *request)
     {
       AsyncResponseStream *response = request->beginResponseStream("application/json");
-    DynamicJsonDocument json(1024);
-    json["status"] = "ok";
-    json["ssid"] = WiFi.SSID();
-    json["ip"] = WiFi.localIP().toString();
-    json["rssi"] = WiFi.RSSI();
-    serializeJson(json, *response);
-    request->send(response); });
+      JsonDocument json;  // Modern API
+      json["status"] = "ok";
+      json["ssid"] = WiFi.SSID();
+      json["ip"] = WiFi.localIP().toString();
+      json["rssi"] = WiFi.RSSI();
+      serializeJson(json, *response);
+      request->send(response);
+    });
+
+    // Endpoint to save WiFi configuration and restart
+    server.on("/save-wifi", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+      // Get SSID and password from form data
+      String newSSID = request->getParam("ssid", true)->value();
+      String newPassword = request->getParam("password", true)->value();
+
+      // If SSID is empty, use current SSID
+      if (newSSID.length() == 0) {
+        newSSID = WiFi.SSID();
+      }
+
+      Serial.println("Saving WiFi credentials...");
+
+      // Save to Preferences
+      Preferences preferences;
+      preferences.begin("wifi", false);
+      preferences.putString("ssid", newSSID);
+      preferences.putString("password", newPassword);
+      preferences.end();
+
+      Serial.println("Saved. Restarting.");
+
+      // Send quick response
+      request->send(200, "application/json", "{\"status\":\"success\",\"message\":\"Saved\"}");
+
+      // Restart immediately
+      ESP.restart();
+    });
 
     server.serveStatic("/", LittleFS, "/").setDefaultFile("index.html").setTryGzipFirst(false);
     server.onNotFound([](AsyncWebServerRequest *request)
@@ -642,8 +689,8 @@ const char* bars()
 
 void notifyClients()
 {
-    StaticJsonDocument<JSON_OBJECT_SIZE(36)> json;      // !Remember change the number of member object. See https://arduinojson.org/v5/assistant/
-    
+    JsonDocument json;  // Modern API - auto sizing
+
     // Usar buffer char para conversiones numéricas
     char battVoltageStr[10];
     char levelStr[6];
@@ -667,8 +714,13 @@ void notifyClients()
     json["btstatus"] = bt_powerState ? "on" : "off";
     json["neobrightness"] = stripLed.brightness;
 
-    // Añade el color actual
-    JsonObject color = json.createNestedObject("color");
+    // WiFi information
+    json["ssid"] = WiFi.SSID();
+    json["ip"] = WiFi.localIP().toString();
+    json["rssi"] = WiFi.RSSI();
+
+    // Añade el color actual (modern API)
+    JsonObject color = json["color"].to<JsonObject>();
     color["r"] = stripLed.R;
     color["g"] = stripLed.G;
     color["b"] = stripLed.B;
@@ -682,8 +734,14 @@ void notifyClients()
     for (uint8_t i = 0; i < 18; ++i)
         json[effectNames[i]] = (stripLed.effectId == i + 1 && stripLed.powerState) ? "on" : "off";
 
-    char buffer[650];                                  // the sum of all character of json send {"stripledStatus":"off"}
-    size_t len = serializeJson(json, buffer);         // serialize the json+array and send the result to buffer     
+    char buffer[768];
+    size_t len = serializeJson(json, buffer, sizeof(buffer));
+
+    if (len >= sizeof(buffer)) {
+        Serial.println("ERROR: JSON buffer overflow!");
+        return;
+    }
+
     ws.textAll(buffer, len);
 }
 
@@ -692,8 +750,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
     {
-        const uint8_t size = JSON_OBJECT_SIZE(3) + JSON_ARRAY_SIZE(4) + 66; // See https://arduinojson.org/v5/assistant/
-        StaticJsonDocument<size> json;
+        JsonDocument json;  // Modern API - auto sizing
         DeserializationError err = deserializeJson(json, data);
         if (err)
         {
