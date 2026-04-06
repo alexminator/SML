@@ -502,24 +502,82 @@ void initWiFi()
     String savedSSID = preferences.getString("ssid", "");
     String savedPass = preferences.getString("password", "");
 
-    // Use saved credentials if available, otherwise use defaults
-    const char* ssid = (savedSSID.length() > 0) ? savedSSID.c_str() : WIFI_SSID;
-    const char* pass = (savedPass.length() > 0) ? savedPass.c_str() : WIFI_PASS;
-
     preferences.end();
 
-    Serial.printf("Connecting to WiFi: %s\n", ssid);
-    WiFi.begin(ssid, pass);
+    // Try to connect with saved credentials first, then defaults
+    bool connected = false;
+    int attempts = 0;
+    const int MAX_ATTEMPTS = 40;  // 40 * 500ms = 20 segundos timeout
 
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        Serial.print(".");
-        vTaskDelay(pdMS_TO_TICKS(500));
+    // Try with saved credentials first
+    if (savedSSID.length() > 0 && savedPass.length() > 0) {
+        Serial.printf("Trying SAVED credentials...\n");
+        Serial.printf("SSID: %s\n", savedSSID.c_str());
+        WiFi.begin(savedSSID.c_str(), savedPass.c_str());
+
+        while (WiFi.status() != WL_CONNECTED && attempts < MAX_ATTEMPTS)
+        {
+            Serial.print(".");
+            vTaskDelay(pdMS_TO_TICKS(500));
+            attempts++;
+        }
+
+        if (WiFi.status() == WL_CONNECTED) {
+            connected = true;
+        } else {
+            Serial.println("\nFailed with saved credentials!");
+        }
     }
-    Serial.printf(" %s\n", WiFi.localIP().toString().c_str());
-    Serial.printf("Listo!\nAbre http://%s.local en navegador\n", WEB_NAME);
-    Serial.print("o en la IP: ");
-    Serial.println(WiFi.localIP());
+
+    // If saved credentials failed, try with defaults
+    if (!connected) {
+        Serial.println("\nTrying DEFAULT credentials...");
+        Serial.printf("SSID: %s\n", WIFI_SSID);
+        WiFi.begin(WIFI_SSID, WIFI_PASS);
+
+        attempts = 0;
+        while (WiFi.status() != WL_CONNECTED && attempts < MAX_ATTEMPTS)
+        {
+            Serial.print(".");
+            vTaskDelay(pdMS_TO_TICKS(500));
+            attempts++;
+        }
+
+        if (WiFi.status() == WL_CONNECTED) {
+            connected = true;
+            Serial.println("\nConnected with DEFAULT credentials");
+        } else {
+            Serial.println("\nFailed with DEFAULT credentials too!");
+        }
+    }
+
+    // If all connection attempts failed
+    if (!connected)
+    {
+        Serial.println("\n\n*** WiFi CONNECTION FAILED ***");
+        Serial.println("Please check:");
+        Serial.println("1. WiFi router is powered on");
+        Serial.println("2. SSID and password are correct");
+        Serial.println("3. ESP32 is within WiFi range");
+        Serial.println("Restarting in 5 seconds...\n");
+
+        // Blink LED to indicate error
+        pinMode(STRIP_PIN, OUTPUT);
+        for (int i = 0; i < 10; i++)
+        {
+            digitalWrite(STRIP_PIN, HIGH);
+            delay(200);
+            digitalWrite(STRIP_PIN, LOW);
+            delay(200);
+        }
+
+        delay(5000);
+        ESP.restart();
+    }
+
+    // Connected successfully
+    Serial.printf("\nConnected! IP: %s\n", WiFi.localIP().toString().c_str());
+    Serial.printf("Abre http://%s.local o http://%s\n", WEB_NAME, WiFi.localIP().toString().c_str());
 
     if (!MDNS.begin(WEB_NAME))
     {
