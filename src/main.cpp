@@ -807,13 +807,32 @@ void notifyClients()
     for (uint8_t i = 0; i < 18; ++i)
         json[effectNames[i]] = (stripLed.effectId == i + 1 && stripLed.powerState) ? "on" : "off";
 
-    char buffer[768];
+    // Calculate required size first
+    const size_t requiredSize = json.memoryUsage();
+    const size_t safetyMargin = 128;
+    const size_t bufferSize = requiredSize + safetyMargin;
+
+    // Verify reasonable limit
+    if (bufferSize > 1024) {
+        debuglnE("JSON payload too large for WebSocket");
+        debugE("Required size: ");
+        debugE(String(bufferSize));
+        debugE(" bytes\n");
+        return;
+    }
+
+    // Dynamic buffer with exact needed size
+    char buffer[bufferSize];
     size_t len = serializeJson(json, buffer, sizeof(buffer));
 
     if (len >= sizeof(buffer)) {
-        Serial.println("ERROR: JSON buffer overflow!");
+        debuglnE("JSON serialization failed - buffer too small");
         return;
     }
+
+    debugD("WebSocket payload size: ");
+    debugD(String(len));
+    debugD(" bytes\n");
 
     ws.textAll(buffer, len);
 }
@@ -950,10 +969,26 @@ TaskHandle_t TaskOnboardLEDHandle;
 
 void TaskWebSocket(void *pvParameters)
 {
+    UBaseType_t stackHighWaterMark;
+
     while (true)
     {
         ws.cleanupClients();
         notifyClients();
+
+        // Monitor stack every 10 cycles
+        static uint8_t cycleCount = 0;
+        if (++cycleCount >= 10) {
+            stackHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
+            if (stackHighWaterMark < 256) {
+                debuglnW("WebSocket task stack running low!");
+                debugE("Stack free: ");
+                debugE(String(stackHighWaterMark));
+                debugE(" bytes\n");
+            }
+            cycleCount = 0;
+        }
+
         vTaskDelay(pdMS_TO_TICKS(3000));
     }
 }
