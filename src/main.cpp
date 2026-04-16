@@ -121,6 +121,24 @@ int readCount = 0;
 int lvlCharge;
 Battery18650Stats battery(ADC_PIN, CONV_FACTOR, READS, MAXV, MINV);
 
+// ----------------------------------------------------------------------------
+// RTOS Mutex Protection
+// ----------------------------------------------------------------------------
+SemaphoreHandle_t dataMutex = NULL;
+SemaphoreHandle_t wifiMutex = NULL;
+
+void initMutexes() {
+    dataMutex = xSemaphoreCreateMutex();
+    wifiMutex = xSemaphoreCreateMutex();
+
+    if (dataMutex == NULL || wifiMutex == NULL) {
+        debuglnE("Failed to create mutexes!");
+        debuglnE("System may experience race conditions");
+    } else {
+        debuglnD("Mutexes initialized successfully");
+    }
+}
+
 // balls effect
 float h[NUM_BALLS];                       // An array of heights
 float vImpact0 = sqrt(-2 * GRAVITY * h0); // Impact velocity of the ball when it hits the ground if "dropped" from the top of the strip
@@ -762,79 +780,88 @@ const char* bars()
 
 void notifyClients()
 {
-    JsonDocument json;  // Modern API - auto sizing
+    // Take mutex for reading shared data
+    if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+        JsonDocument json;  // Modern API - auto sizing
 
-    // Usar buffer char para conversiones numéricas
-    char battVoltageStr[10];
-    char levelStr[6];
-    char tempStr[8];
-    char humStr[8];
+        // Usar buffer char para conversiones numéricas
+        char battVoltageStr[10];
+        char levelStr[6];
+        char tempStr[8];
+        char humStr[8];
 
-    snprintf(battVoltageStr, sizeof(battVoltageStr), "%.3f", batt.battVolts);
-    snprintf(levelStr, sizeof(levelStr), "%d", batt.battLvl);
-    snprintf(tempStr, sizeof(tempStr), "%.1f", temp);
-    snprintf(humStr, sizeof(humStr), "%.1f", hum);
+        snprintf(battVoltageStr, sizeof(battVoltageStr), "%.3f", batt.battVolts);
+        snprintf(levelStr, sizeof(levelStr), "%d", batt.battLvl);
+        snprintf(tempStr, sizeof(tempStr), "%.1f", temp);
+        snprintf(humStr, sizeof(humStr), "%.1f", hum);
 
-    json["bars"] = bars();
-    json["battVoltage"] = battVoltageStr;
-    json["level"] = levelStr;
-    json["charging"] = batt.chargeState;
-    json["fullbatt"] = batt.fullBatt;
-    json["temperature"] = tempStr;
-    json["humidity"] = humStr;
-    json["lampstatus"] = lampState ? "on" : "off";
-    json["neostatus"] = stripLed.powerState ? "on" : "off";
-    json["btstatus"] = bt_powerState ? "on" : "off";
-    json["neobrightness"] = stripLed.brightness;
+        json["bars"] = bars();
+        json["battVoltage"] = battVoltageStr;
+        json["level"] = levelStr;
+        json["charging"] = batt.chargeState;
+        json["fullbatt"] = batt.fullBatt;
+        json["temperature"] = tempStr;
+        json["humidity"] = humStr;
+        json["lampstatus"] = lampState ? "on" : "off";
+        json["neostatus"] = stripLed.powerState ? "on" : "off";
+        json["btstatus"] = bt_powerState ? "on" : "off";
+        json["neobrightness"] = stripLed.brightness;
 
-    // WiFi information
-    json["ssid"] = WiFi.SSID();
-    json["ip"] = WiFi.localIP().toString();
-    json["rssi"] = WiFi.RSSI();
+        // WiFi information
+        json["ssid"] = WiFi.SSID();
+        json["ip"] = WiFi.localIP().toString();
+        json["rssi"] = WiFi.RSSI();
 
-    // Añade el color actual (modern API)
-    JsonObject color = json["color"].to<JsonObject>();
-    color["r"] = stripLed.R;
-    color["g"] = stripLed.G;
-    color["b"] = stripLed.B;
+        // Añade el color actual (modern API)
+        JsonObject color = json["color"].to<JsonObject>();
+        color["r"] = stripLed.R;
+        color["g"] = stripLed.G;
+        color["b"] = stripLed.B;
 
-    // Efectos y VU
-    const char *effectNames[] = {
-        "fireStatus", "movingdotStatus", "rainbowbeatStatus", "rwbStatus", "rippleStatus",
-        "twinkleStatus", "ballsStatus", "juggleStatus", "sinelonStatus", "cometStatus",
-        "rainbowVUStatus", "oldVUStatus", "rainbowHueVUStatus", "rippleVUStatus",
-        "threebarsVUStatus", "oceanVUStatus", "tempNEOStatus", "battNEOStatus"};
-    for (uint8_t i = 0; i < 18; ++i)
-        json[effectNames[i]] = (stripLed.effectId == i + 1 && stripLed.powerState) ? "on" : "off";
+        // Efectos y VU
+        const char *effectNames[] = {
+            "fireStatus", "movingdotStatus", "rainbowbeatStatus", "rwbStatus", "rippleStatus",
+            "twinkleStatus", "ballsStatus", "juggleStatus", "sinelonStatus", "cometStatus",
+            "rainbowVUStatus", "oldVUStatus", "rainbowHueVUStatus", "rippleVUStatus",
+            "threebarsVUStatus", "oceanVUStatus", "tempNEOStatus", "battNEOStatus"};
+        for (uint8_t i = 0; i < 18; ++i)
+            json[effectNames[i]] = (stripLed.effectId == i + 1 && stripLed.powerState) ? "on" : "off";
 
-    // Calculate required size first
-    const size_t requiredSize = json.memoryUsage();
-    const size_t safetyMargin = 128;
-    const size_t bufferSize = requiredSize + safetyMargin;
+        // Calculate required size first
+        const size_t requiredSize = json.memoryUsage();
+        const size_t safetyMargin = 128;
+        const size_t bufferSize = requiredSize + safetyMargin;
 
-    // Verify reasonable limit
-    if (bufferSize > 1024) {
-        debuglnE("JSON payload too large for WebSocket");
-        debugE("Required size: ");
-        debugE(String(bufferSize));
-        debugE(" bytes\n");
-        return;
+        // Verify reasonable limit
+        if (bufferSize > 1024) {
+            debuglnE("JSON payload too large for WebSocket");
+            debugE("Required size: ");
+            debugE(String(bufferSize));
+            debugE(" bytes\n");
+            xSemaphoreGive(dataMutex);
+            return;
+        }
+
+        // Dynamic buffer with exact needed size
+        char buffer[bufferSize];
+        size_t len = serializeJson(json, buffer, sizeof(buffer));
+
+        if (len >= sizeof(buffer)) {
+            debuglnE("JSON serialization failed - buffer too small");
+            xSemaphoreGive(dataMutex);
+            return;
+        }
+
+        debugD("WebSocket payload size: ");
+        debugD(String(len));
+        debugD(" bytes\n");
+
+        ws.textAll(buffer, len);
+
+        xSemaphoreGive(dataMutex);
+    } else {
+        debuglnW("Failed to acquire mutex for WebSocket update");
     }
-
-    // Dynamic buffer with exact needed size
-    char buffer[bufferSize];
-    size_t len = serializeJson(json, buffer, sizeof(buffer));
-
-    if (len >= sizeof(buffer)) {
-        debuglnE("JSON serialization failed - buffer too small");
-        return;
-    }
-
-    debugD("WebSocket payload size: ");
-    debugD(String(len));
-    debugD(" bytes\n");
-
-    ws.textAll(buffer, len);
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
@@ -998,7 +1025,15 @@ void TaskBatteryMonitor(void *pvParameters)
     while (true)
     {
         batt.battMonitor();
-        lvlCharge = batt.battLvl;
+
+        // Protect shared variable access
+        if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+            lvlCharge = batt.battLvl;
+            xSemaphoreGive(dataMutex);
+        } else {
+            debuglnW("Failed to acquire data mutex in BatteryMonitor");
+        }
+
         vTaskDelay(pdMS_TO_TICKS(3000));
     }
 }
@@ -1009,7 +1044,12 @@ void TaskLEDControl(void *pvParameters)
     {
         if (stripLed.powerState)
         {
-            brightness = stripLed.brightness;
+            // Protect brightness access
+            if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+                brightness = stripLed.brightness;
+                xSemaphoreGive(dataMutex);
+            }
+
             stripLed.update();
         }
         else
@@ -1022,12 +1062,35 @@ void TaskLEDControl(void *pvParameters)
 
 void TaskWiFiMonitor(void *pvParameters)
 {
+    static int disconnectCount = 0;
+    const int MAX_DISCONNECTS = 5;
+
     while (true)
     {
-        if (WiFi.status() != WL_CONNECTED)
-        {
-            ESP.restart();
+        // Protect WiFi status check
+        if (xSemaphoreTake(wifiMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+            if (WiFi.status() != WL_CONNECTED) {
+                disconnectCount++;
+                debugW("WiFi disconnect count: ");
+                debugW(String(disconnectCount));
+                debugW("\n");
+
+                if (disconnectCount >= MAX_DISCONNECTS) {
+                    debuglnE("Max WiFi disconnects reached, restarting...");
+                    vTaskDelay(pdMS_TO_TICKS(1000));
+                    ESP.restart();
+                }
+            } else {
+                if (disconnectCount > 0) {
+                    debugD("WiFi reconnected after ");
+                    debugD(String(disconnectCount));
+                    debugD(" disconnects\n");
+                }
+                disconnectCount = 0;
+            }
+            xSemaphoreGive(wifiMutex);
         }
+
         vTaskDelay(pdMS_TO_TICKS(5000));
     }
 }
@@ -1081,6 +1144,7 @@ void setup()
     digitalWrite(PLAY_PIN, LOW);
 
     Serial.begin(115200);
+    initMutexes();
 
     // Initialize DHT22 device.
     dht.begin();
