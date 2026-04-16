@@ -71,7 +71,7 @@ bool foundNL = false;
         Serial.print(__LINE__);            \
         Serial.print("] ");                \
     }                                      \
-    strncpy(debugStr, y.c_str(), sizeof(debugStr) - 1); \
+    strncpy(debugStr, y, sizeof(debugStr) - 1); \
     debugStr[sizeof(debugStr) - 1] = '\0';  \
     foundNL = (strstr(debugStr, "\n") != NULL); \
     if (z || foundNL)                      \
