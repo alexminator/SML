@@ -58,6 +58,20 @@ bool traceStampRequired = true;
 char debugStr[128];  // Buffer for debug messages
 bool foundNL = false;
 
+// Helper function to copy string to debug buffer
+inline void copyToDebugStr(const char* src) {
+    strncpy(debugStr, src, sizeof(debugStr) - 1);
+    debugStr[sizeof(debugStr) - 1] = '\0';
+    foundNL = (strstr(debugStr, "\n") != NULL);
+}
+
+// Helper function for String objects
+inline void copyToDebugStr(const String& src) {
+    strncpy(debugStr, src.c_str(), sizeof(debugStr) - 1);
+    debugStr[sizeof(debugStr) - 1] = '\0';
+    foundNL = (strstr(debugStr, "\n") != NULL);
+}
+
 // The tracestamp looks like [D][mainfunction:45]
 #define traceStamp(x, y, z)                \
     if (traceStampRequired)                \
@@ -71,9 +85,7 @@ bool foundNL = false;
         Serial.print(__LINE__);            \
         Serial.print("] ");                \
     }                                      \
-    strncpy(debugStr, y, sizeof(debugStr) - 1); \
-    debugStr[sizeof(debugStr) - 1] = '\0';  \
-    foundNL = (strstr(debugStr, "\n") != NULL); \
+    copyToDebugStr(y);                     \
     if (z || foundNL)                      \
         traceStampRequired = true;         \
     else                                   \

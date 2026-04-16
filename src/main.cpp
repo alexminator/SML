@@ -847,16 +847,16 @@ void notifyClients()
             json[effectNames[i]] = (stripLed.effectId == i + 1 && stripLed.powerState) ? "on" : "off";
 
         // Calculate required size first
-        const size_t requiredSize = json.memoryUsage();
+        const size_t requiredSize = measureJson(json);
         const size_t safetyMargin = 128;
         const size_t bufferSize = requiredSize + safetyMargin;
 
         // Verify reasonable limit
         if (bufferSize > 1024) {
             debuglnE("JSON payload too large for WebSocket");
-            debugE("Required size: ");
-            debugE(String(bufferSize));
-            debugE(" bytes\n");
+            char sizeMsg[64];
+            snprintf(sizeMsg, sizeof(sizeMsg), "Required size: %u bytes", bufferSize);
+            debuglnE(sizeMsg);
             xSemaphoreGive(dataMutex);
             return;
         }
@@ -871,9 +871,9 @@ void notifyClients()
             return;
         }
 
-        debugD("WebSocket payload size: ");
-        debugD(String(len));
-        debugD(" bytes\n");
+        char lenMsg[64];
+        snprintf(lenMsg, sizeof(lenMsg), "WebSocket payload size: %u bytes", len);
+        debuglnD(lenMsg);
 
         ws.textAll(buffer, len);
 
@@ -892,7 +892,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         DeserializationError err = deserializeJson(json, data);
         if (err)
         {
-            debuglnD(F("deserializeJson() failed with code "));
+            debuglnD("deserializeJson() failed with code ");
             debuglnD(err.c_str());
             return;
         }
@@ -922,7 +922,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         else if (strcmp(action, "slider") == 0)
         {
             const int brightness = json["brightness"].as<int>();
-            debuglnD("Brillo " + String(brightness));
+            char brightMsg[32];
+            snprintf(brightMsg, sizeof(brightMsg), "Brillo %d", brightness);
+            debuglnD(brightMsg);
             stripLed.brightness = brightness;
         }
         else if (strcmp(action, "picker") == 0)
@@ -931,7 +933,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             stripLed.R = r = color["r"].as<int>();
             stripLed.G = g = color["g"].as<int>();
             stripLed.B = b = color["b"].as<int>();
-            debuglnD("RGB: " + String(r) + ", " + String(g) + ", " + String(b));
+            char rgbMsg[32];
+            snprintf(rgbMsg, sizeof(rgbMsg), "RGB: %d, %d, %d", r, g, b);
+            debuglnD(rgbMsg);
         }
         else if (strcmp(action, "music") == 0)
         {
@@ -1028,9 +1032,9 @@ void TaskWebSocket(void *pvParameters)
             stackHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
             if (stackHighWaterMark < 256) {
                 debuglnW("WebSocket task stack running low!");
-                debugE("Stack free: ");
-                debugE(String(stackHighWaterMark));
-                debugE(" bytes\n");
+                char stackMsg[64];
+                snprintf(stackMsg, sizeof(stackMsg), "Stack free: %u bytes", stackHighWaterMark);
+                debuglnE(stackMsg);
             }
             cycleCount = 0;
         }
@@ -1090,9 +1094,9 @@ void TaskWiFiMonitor(void *pvParameters)
         if (xSemaphoreTake(wifiMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
             if (WiFi.status() != WL_CONNECTED) {
                 disconnectCount++;
-                debugW("WiFi disconnect count: ");
-                debugW(String(disconnectCount));
-                debugW("\n");
+                char discMsg[64];
+                snprintf(discMsg, sizeof(discMsg), "WiFi disconnect count: %d", disconnectCount);
+                debuglnW(discMsg);
 
                 if (disconnectCount >= MAX_DISCONNECTS) {
                     debuglnE("Max WiFi disconnects reached, restarting...");
@@ -1101,9 +1105,9 @@ void TaskWiFiMonitor(void *pvParameters)
                 }
             } else {
                 if (disconnectCount > 0) {
-                    debugD("WiFi reconnected after ");
-                    debugD(String(disconnectCount));
-                    debugD(" disconnects\n");
+                    char reconMsg[64];
+                    snprintf(reconMsg, sizeof(reconMsg), "WiFi reconnected after %d disconnects", disconnectCount);
+                    debuglnD(reconMsg);
                 }
                 disconnectCount = 0;
             }
@@ -1170,10 +1174,18 @@ void setup()
     // Print temperature sensor details.
     sensor_t sensor;
     dht.temperature().getSensor(&sensor);
-    debuglnD("Temperature Sensor\nSensor Type: " + String(sensor.name) + "\nDriver Ver: " + String(sensor.version) + "\nUnique ID: " + String(sensor.sensor_id) + "\nMax Value: " + String(sensor.max_value) + "°C\nMin Value: " + String(sensor.min_value) + "°C\nResolution: " + String(sensor.resolution) + "°C\n----------------------------------------------------");
+    debuglnD("Temperature Sensor");
+    char tempMsg[128];
+    snprintf(tempMsg, sizeof(tempMsg), "Sensor Type: %s\nDriver Ver: %s\nUnique ID: %u\nMax Value: %.1f°C\nMin Value: %.1f°C\nResolution: %.1f°C\n----------------------------------------------------",
+             sensor.name, sensor.version, sensor.sensor_id, sensor.max_value, sensor.min_value, sensor.resolution);
+    debuglnD(tempMsg);
     // Print humidity sensor details.
     dht.humidity().getSensor(&sensor);
-    debuglnD("Humidity Sensor\nSensor Type: " + String(sensor.name) + "\nDriver Ver: " + String(sensor.version) + "\nUnique ID: " + String(sensor.sensor_id) + "\nMax Value: " + String(sensor.max_value) + "%\nMin Value: " + String(sensor.min_value) + "%\nResolution: " + String(sensor.resolution) + "%\n----------------------------------------------------");
+    debuglnD("Humidity Sensor");
+    char humMsg[128];
+    snprintf(humMsg, sizeof(humMsg), "Sensor Type: %s\nDriver Ver: %s\nUnique ID: %u\nMax Value: %.1f%%\nMin Value: %.1f%%\nResolution: %.1f%%\n----------------------------------------------------",
+             sensor.name, sensor.version, sensor.sensor_id, sensor.max_value, sensor.min_value, sensor.resolution);
+    debuglnD(humMsg);
     
     // For FASTLED library
     FastLED.addLeds<LED_TYPE, STRIP_PIN, COLOR_ORDER>(leds, N_PIXELS).setCorrection(TypicalLEDStrip);
