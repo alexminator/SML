@@ -1178,7 +1178,8 @@ void setup()
     debugD("Sensor Type: ");
     debuglnD(sensor.name);
     debugD("Driver Ver: ");
-    debuglnD(sensor.version);
+    debugD_NUM(sensor.version, "%d");
+    debugD("\n");
     debugD("Unique ID: ");
     debugD_NUM(sensor.sensor_id, "%u");
     debugD("\n");
@@ -1198,7 +1199,8 @@ void setup()
     debugD("Sensor Type: ");
     debuglnD(sensor.name);
     debugD("Driver Ver: ");
-    debuglnD(sensor.version);
+    debugD_NUM(sensor.version, "%d");
+    debugD("\n");
     debugD("Unique ID: ");
     debugD_NUM(sensor.sensor_id, "%u");
     debugD("\n");
