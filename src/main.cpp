@@ -479,11 +479,24 @@ void initLittleFS()
     if (!LittleFS.begin())
     {
         debuglnD("Cannot mount LittleFS volume...");
-        while (1)
+
+        // Timeout instead of infinite loop
+        unsigned long errorStartTime = millis();
+        const unsigned long MAX_ERROR_TIME = 30000; // 30 seconds
+
+        // Overflow-safe elapsed time calculation
+        unsigned long elapsed;
+        do
         {
+            elapsed = millis() - errorStartTime;
             onboard_led.on = millis() % 200 < 50; // LED flashes, lighting for 50 ms and turning off for 150 ms in a 200 ms cycle. Indicates error when mounting volume
             onboard_led.update();
-        }
+            vTaskDelay(pdMS_TO_TICKS(100));
+        } while (elapsed < MAX_ERROR_TIME);
+
+        // Continue with setup
+        debuglnE("LittleFS mount failed - web interface unavailable");
+        debuglnW("Device will continue with limited functionality");
     }
 }
 
