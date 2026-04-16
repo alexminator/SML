@@ -1175,17 +1175,43 @@ void setup()
     sensor_t sensor;
     dht.temperature().getSensor(&sensor);
     debuglnD("Temperature Sensor");
-    char tempMsg[128];
-    snprintf(tempMsg, sizeof(tempMsg), "Sensor Type: %s\nDriver Ver: %s\nUnique ID: %u\nMax Value: %.1f°C\nMin Value: %.1f°C\nResolution: %.1f°C\n----------------------------------------------------",
-             sensor.name, sensor.version, sensor.sensor_id, sensor.max_value, sensor.min_value, sensor.resolution);
-    debuglnD(tempMsg);
+    debugD("Sensor Type: ");
+    debuglnD(sensor.name);
+    debugD("Driver Ver: ");
+    debuglnD(sensor.version);
+    debugD("Unique ID: ");
+    debugD_NUM(sensor.sensor_id, "%u");
+    debugD("\n");
+    debugD("Max Value: ");
+    debugD_NUM(sensor.max_value, "%.1f");
+    debugD("°C\n");
+    debugD("Min Value: ");
+    debugD_NUM(sensor.min_value, "%.1f");
+    debugD("°C\n");
+    debugD("Resolution: ");
+    debugD_NUM(sensor.resolution, "%.1f");
+    debugD("°C\n");
+    debuglnD("----------------------------------------------------");
     // Print humidity sensor details.
     dht.humidity().getSensor(&sensor);
     debuglnD("Humidity Sensor");
-    char humMsg[128];
-    snprintf(humMsg, sizeof(humMsg), "Sensor Type: %s\nDriver Ver: %s\nUnique ID: %u\nMax Value: %.1f%%\nMin Value: %.1f%%\nResolution: %.1f%%\n----------------------------------------------------",
-             sensor.name, sensor.version, sensor.sensor_id, sensor.max_value, sensor.min_value, sensor.resolution);
-    debuglnD(humMsg);
+    debugD("Sensor Type: ");
+    debuglnD(sensor.name);
+    debugD("Driver Ver: ");
+    debuglnD(sensor.version);
+    debugD("Unique ID: ");
+    debugD_NUM(sensor.sensor_id, "%u");
+    debugD("\n");
+    debugD("Max Value: ");
+    debugD_NUM(sensor.max_value, "%.1f");
+    debugD("%\n");
+    debugD("Min Value: ");
+    debugD_NUM(sensor.min_value, "%.1f");
+    debugD("%\n");
+    debugD("Resolution: ");
+    debugD_NUM(sensor.resolution, "%.1f");
+    debugD("%\n");
+    debuglnD("----------------------------------------------------");
     
     // For FASTLED library
     FastLED.addLeds<LED_TYPE, STRIP_PIN, COLOR_ORDER>(leds, N_PIXELS).setCorrection(TypicalLEDStrip);
