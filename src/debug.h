@@ -55,7 +55,7 @@ void debugNothing(...)
 // By default we want a trace stamp output in the first instance
 bool traceStampRequired = true;
 
-String debugStr = "";
+char debugStr[128];  // Buffer for debug messages
 bool foundNL = false;
 
 // The tracestamp looks like [D][mainfunction:45]
@@ -71,8 +71,9 @@ bool foundNL = false;
         Serial.print(__LINE__);            \
         Serial.print("] ");                \
     }                                      \
-    debugStr = y;                          \
-    foundNL = debugStr.indexOf("\n") > -1; \
+    strncpy(debugStr, y.c_str(), sizeof(debugStr) - 1); \
+    debugStr[sizeof(debugStr) - 1] = '\0';  \
+    foundNL = (strstr(debugStr, "\n") != NULL); \
     if (z || foundNL)                      \
         traceStampRequired = true;         \
     else                                   \
@@ -126,3 +127,18 @@ bool foundNL = false;
 #define debugV(x) debugNothing(x);
 #define debuglnV(x) debugNothing(x);
 #endif
+
+// Helper macros for debugging with numbers
+#define debugD_NUM(val, format) \
+    do { \
+        char _buf[32]; \
+        snprintf(_buf, sizeof(_buf), format, val); \
+        debugD(_buf); \
+    } while(0)
+
+#define debuglnD_NUM(val, format) \
+    do { \
+        char _buf[32]; \
+        snprintf(_buf, sizeof(_buf), format, val); \
+        debuglnD(_buf); \
+    } while(0)

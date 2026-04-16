@@ -204,10 +204,26 @@ struct Battery
 
 // Print the obtained values
 #ifdef BATTERY
-        debuglnD(chargeState ? "Cargador conectado" : "Cargador desconectado"); // Print the charger status
-        debuglnD("Estado del pin carga: " + String(fullyCharge));
-        debuglnD(!fullBatt && !chargeState ? "Batería usándose" : (fullBatt ? "Batería completamente cargada" : "Batería cargándose")); // Print the battery status
-        debuglnD("Lectura promedio del pin: " + String(battery.pinRead()) + ", Voltaje: " + String(battVolts) + ", Nivel de carga: " + String(battLvl));
+        debugD(chargeState ? "Cargador conectado" : "Cargador desconectado"); // Print the charger status
+        debugD("\n");
+
+        debugD("Estado del pin carga: ");
+        debugD(fullyCharge ? "LOW (charging)" : "HIGH (full/not charging)");
+        debugD("\n");
+
+        if (!fullBatt && !chargeState) {
+            debuglnD("Batería usándose");
+        } else if (fullBatt) {
+            debuglnD("Batería completamente cargada");
+        } else {
+            debuglnD("Batería cargándose");
+        }
+
+        char battMsg[128];
+        snprintf(battMsg, sizeof(battMsg),
+                 "Lectura promedio: %d, Voltaje: %.3f, Nivel: %d%%",
+                 battery.pinRead(), battVolts, battLvl);
+        debuglnD(battMsg);
 #endif
     }
 };
@@ -530,8 +546,11 @@ void initWiFi()
     Preferences preferences;
     preferences.begin("wifi", false);
 
-    String savedSSID = preferences.getString("ssid", "");
-    String savedPass = preferences.getString("password", "");
+    char savedSSID[33] = {0};  // SSID max 32 chars + null
+    char savedPass[65] = {0};  // Password max 64 chars + null
+
+    preferences.getString("ssid", savedSSID, sizeof(savedSSID));
+    preferences.getString("password", savedPass, sizeof(savedPass));
 
     preferences.end();
 
@@ -541,10 +560,10 @@ void initWiFi()
     const int MAX_ATTEMPTS = 40;  // 40 * 500ms = 20 segundos timeout
 
     // Try with saved credentials first
-    if (savedSSID.length() > 0 && savedPass.length() > 0) {
+    if (strlen(savedSSID) > 0 && strlen(savedPass) > 0) {
         Serial.printf("Trying SAVED credentials...\n");
-        Serial.printf("SSID: %s\n", savedSSID.c_str());
-        WiFi.begin(savedSSID.c_str(), savedPass.c_str());
+        Serial.printf("SSID: %s\n", savedSSID);
+        WiFi.begin(savedSSID, savedPass);
 
         while (WiFi.status() != WL_CONNECTED && attempts < MAX_ATTEMPTS)
         {
