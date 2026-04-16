@@ -21,11 +21,36 @@
 #define DEBUGLEVEL DEBUGLEVEL_DEBUGGING
 // #define DEBUGLEVEL DEBUGLEVEL_NONE
 #include "debug.h"
-// Declare what message you want to display on the console.
-// User picks console message from this list
-// This selection will not be effective if DEBUGLEVEL is DEBUGLEVEL_NONE
-// #define DHT
-// #define BATTERY
+
+// ============================================================================
+// DEBUG CATEGORIES - Uncomment to enable specific debug messages
+// ============================================================================
+// System-level messages (initialization, mutex, errors)
+#define DEBUG_SYSTEM
+
+// WiFi connection and authentication
+#define DEBUG_WIFI
+
+// Web server and LittleFS filesystem
+#define DEBUG_WEB
+
+// WebSocket communication and JSON
+#define DEBUG_WEBSOCKET
+
+// LED strip control and effects
+#define DEBUG_LED
+
+// Battery monitoring and charging
+#define DEBUG_BATTERY
+
+// Temperature and humidity sensor (DHT)
+#define DEBUG_TEMPERATURE
+
+// Network services (mDNS)
+#define DEBUG_NETWORK
+
+// Bluetooth control
+// #define DEBUG_BLUETOOTH
 
 // ----------------------------------------------------------------------------
 // Definition of macros
@@ -132,10 +157,14 @@ void initMutexes() {
     wifiMutex = xSemaphoreCreateMutex();
 
     if (dataMutex == NULL || wifiMutex == NULL) {
+#ifdef DEBUG_SYSTEM
         debuglnE("Failed to create mutexes!");
         debuglnE("System may experience race conditions");
+#endif
     } else {
+#ifdef DEBUG_SYSTEM
         debuglnD("Mutexes initialized successfully");
+#endif
     }
 }
 
@@ -203,7 +232,7 @@ struct Battery
         battLvl = battery.getBatteryChargeLevel(true);
 
 // Print the obtained values
-#ifdef BATTERY
+#ifdef DEBUG_BATTERY
         debugD(chargeState ? "Cargador conectado" : "Cargador desconectado"); // Print the charger status
         debugD("\n");
 
@@ -471,14 +500,18 @@ void readSensor()
         if (!isnan(event.temperature))
         {
             temp = event.temperature;
-            #ifdef DHT
-            debuglnD("Temperature: " + String(temp) + "°C");
-            #endif
+#ifdef DEBUG_TEMPERATURE
+            char tempMsg[32];
+            snprintf(tempMsg, sizeof(tempMsg), "Temperature: %.1f°C", temp);
+            debuglnD(tempMsg);
+#endif
             break; // Exit loop on success
         }
         else
         {
+#ifdef DEBUG_TEMPERATURE
             debuglnD("Error reading temperature! Retrying...");
+#endif
             retryCount++;
             vTaskDelay(pdMS_TO_TICKS(retryDelay)); // Wait before retrying
         }
@@ -490,14 +523,18 @@ void readSensor()
         if (!isnan(event.relative_humidity))
         {
             hum = event.relative_humidity;
-            #ifdef DHT
-            debuglnD("Humidity: " + String(hum) + "%");
-            #endif
+#ifdef DEBUG_TEMPERATURE
+            char humMsg[32];
+            snprintf(humMsg, sizeof(humMsg), "Humidity: %.1f%%", hum);
+            debuglnD(humMsg);
+#endif
             break; // Exit loop on success
         }
         else
         {
+#ifdef DEBUG_TEMPERATURE
             debuglnD("Error reading humidity! Retrying...");
+#endif
             retryCount++;
             vTaskDelay(pdMS_TO_TICKS(retryDelay)); // Wait before retrying
         }
@@ -512,7 +549,9 @@ void initLittleFS()
 {
     if (!LittleFS.begin())
     {
+#ifdef DEBUG_WEB
         debuglnD("Cannot mount LittleFS volume...");
+#endif
 
         // Timeout instead of infinite loop
         unsigned long errorStartTime = millis();
@@ -529,8 +568,10 @@ void initLittleFS()
         } while (elapsed < MAX_ERROR_TIME);
 
         // Continue with setup
+#ifdef DEBUG_WEB
         debuglnE("LittleFS mount failed - web interface unavailable");
         debuglnW("Device will continue with limited functionality");
+#endif
     }
 }
 
@@ -574,7 +615,9 @@ void initWiFi()
 
         if (WiFi.status() == WL_CONNECTED) {
             connected = true;
+#ifdef DEBUG_WIFI
             debuglnD("Using saved credentials from Preferences");
+#endif
         } else {
             Serial.println("\nFailed with saved credentials!");
         }
@@ -597,7 +640,9 @@ void initWiFi()
         if (WiFi.status() == WL_CONNECTED) {
             connected = true;
             Serial.println("\nConnected with DEFAULT credentials");
+#ifdef DEBUG_WIFI
             debuglnD("Using default credentials from build configuration");
+#endif
         } else {
             Serial.println("\nFailed with DEFAULT credentials too!");
         }
@@ -633,13 +678,17 @@ void initWiFi()
 
     if (!MDNS.begin(WEB_NAME))
     {
+#ifdef DEBUG_NETWORK
         debuglnD("Error configurando mDNS!");
+#endif
         while (1)
         {
             vTaskDelay(pdMS_TO_TICKS(1000));
         }
     }
+#ifdef DEBUG_NETWORK
     debuglnD("mDNS configurado");
+#endif
 }
 
 // ----------------------------------------------------------------------------
@@ -775,7 +824,9 @@ void initWebServer()
                     { request->send(400, "text/plain", "Not found"); });
     ElegantOTA.begin(&server); // Start ElegantOTA
     server.begin();
+#ifdef DEBUG_WEB
     debuglnD("HTTP server started");
+#endif
     MDNS.addService("http", "tcp", 80);
 }
 
@@ -853,10 +904,12 @@ void notifyClients()
 
         // Verify reasonable limit
         if (bufferSize > 1024) {
+#ifdef DEBUG_WEBSOCKET
             debuglnE("JSON payload too large for WebSocket");
             char sizeMsg[64];
             snprintf(sizeMsg, sizeof(sizeMsg), "Required size: %u bytes", bufferSize);
             debuglnE(sizeMsg);
+#endif
             xSemaphoreGive(dataMutex);
             return;
         }
@@ -866,20 +919,26 @@ void notifyClients()
         size_t len = serializeJson(json, buffer, sizeof(buffer));
 
         if (len >= sizeof(buffer)) {
+#ifdef DEBUG_WEBSOCKET
             debuglnE("JSON serialization failed - buffer too small");
+#endif
             xSemaphoreGive(dataMutex);
             return;
         }
 
+#ifdef DEBUG_WEBSOCKET
         char lenMsg[64];
         snprintf(lenMsg, sizeof(lenMsg), "WebSocket payload size: %u bytes", len);
         debuglnD(lenMsg);
+#endif
 
         ws.textAll(buffer, len);
 
         xSemaphoreGive(dataMutex);
     } else {
+#ifdef DEBUG_WEBSOCKET
         debuglnW("Failed to acquire mutex for WebSocket update");
+#endif
     }
 }
 
@@ -892,8 +951,10 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         DeserializationError err = deserializeJson(json, data);
         if (err)
         {
+#ifdef DEBUG_WEBSOCKET
             debuglnD("deserializeJson() failed with code ");
             debuglnD(err.c_str());
+#endif
             return;
         }
 
@@ -910,7 +971,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         {
             lampState = !lampState;
             digitalWrite(LAMP_PIN, lampState ? LOW : HIGH);
+#ifdef DEBUG_LED
             debuglnD(lampState ? "Lampara ON" : "Lampara OFF");
+#endif
         }
         else if (strcmp(action, "animation") == 0 || strcmp(action, "vu") == 0 || strcmp(action, "indicator") == 0)
         {
@@ -922,9 +985,11 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         else if (strcmp(action, "slider") == 0)
         {
             const int brightness = json["brightness"].as<int>();
+#ifdef DEBUG_LED
             char brightMsg[32];
             snprintf(brightMsg, sizeof(brightMsg), "Brillo %d", brightness);
             debuglnD(brightMsg);
+#endif
             stripLed.brightness = brightness;
         }
         else if (strcmp(action, "picker") == 0)
@@ -933,9 +998,11 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             stripLed.R = r = color["r"].as<int>();
             stripLed.G = g = color["g"].as<int>();
             stripLed.B = b = color["b"].as<int>();
+#ifdef DEBUG_LED
             char rgbMsg[32];
             snprintf(rgbMsg, sizeof(rgbMsg), "RGB: %d, %d, %d", r, g, b);
             debuglnD(rgbMsg);
+#endif
         }
         else if (strcmp(action, "music") == 0)
         {
@@ -1003,7 +1070,9 @@ void initWebSocket()
 {
     ws.onEvent(onWsEvent);
     server.addHandler(&ws);
+#ifdef DEBUG_WEBSOCKET
     debuglnD("WebSocket server started");
+#endif
 }
 
 // ----------------------------------------------------------------------------
@@ -1031,10 +1100,12 @@ void TaskWebSocket(void *pvParameters)
         if (++cycleCount >= 10) {
             stackHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
             if (stackHighWaterMark < 256) {
+#ifdef DEBUG_WEBSOCKET
                 debuglnW("WebSocket task stack running low!");
                 char stackMsg[64];
                 snprintf(stackMsg, sizeof(stackMsg), "Stack free: %u bytes", stackHighWaterMark);
                 debuglnE(stackMsg);
+#endif
             }
             cycleCount = 0;
         }
@@ -1054,7 +1125,9 @@ void TaskBatteryMonitor(void *pvParameters)
             lvlCharge = batt.battLvl;
             xSemaphoreGive(dataMutex);
         } else {
+#ifdef DEBUG_BATTERY
             debuglnW("Failed to acquire data mutex in BatteryMonitor");
+#endif
         }
 
         vTaskDelay(pdMS_TO_TICKS(3000));
@@ -1094,21 +1167,27 @@ void TaskWiFiMonitor(void *pvParameters)
         if (xSemaphoreTake(wifiMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
             if (WiFi.status() != WL_CONNECTED) {
                 disconnectCount++;
+#ifdef DEBUG_WIFI
                 char discMsg[64];
                 snprintf(discMsg, sizeof(discMsg), "WiFi disconnect count: %d", disconnectCount);
                 debuglnW(discMsg);
+#endif
 
                 if (disconnectCount >= MAX_DISCONNECTS) {
+#ifdef DEBUG_WIFI
                     debuglnE("Max WiFi disconnects reached, restarting...");
+#endif
                     vTaskDelay(pdMS_TO_TICKS(1000));
                     ESP.restart();
                 }
             } else {
+#ifdef DEBUG_WIFI
                 if (disconnectCount > 0) {
                     char reconMsg[64];
                     snprintf(reconMsg, sizeof(reconMsg), "WiFi reconnected after %d disconnects", disconnectCount);
                     debuglnD(reconMsg);
                 }
+#endif
                 disconnectCount = 0;
             }
             xSemaphoreGive(wifiMutex);
@@ -1174,6 +1253,7 @@ void setup()
     // Print temperature sensor details.
     sensor_t sensor;
     dht.temperature().getSensor(&sensor);
+#ifdef DEBUG_TEMPERATURE
     debuglnD("Temperature Sensor");
     debugD("Sensor Type: ");
     debuglnD(sensor.name);
@@ -1193,8 +1273,10 @@ void setup()
     debugD_NUM(sensor.resolution, "%.1f");
     debugD("°C\n");
     debuglnD("----------------------------------------------------");
+#endif
     // Print humidity sensor details.
     dht.humidity().getSensor(&sensor);
+#ifdef DEBUG_TEMPERATURE
     debuglnD("Humidity Sensor");
     debugD("Sensor Type: ");
     debuglnD(sensor.name);
@@ -1214,6 +1296,7 @@ void setup()
     debugD_NUM(sensor.resolution, "%.1f");
     debugD("%\n");
     debuglnD("----------------------------------------------------");
+#endif
     
     // For FASTLED library
     FastLED.addLeds<LED_TYPE, STRIP_PIN, COLOR_ORDER>(leds, N_PIXELS).setCorrection(TypicalLEDStrip);
