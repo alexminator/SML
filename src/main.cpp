@@ -537,6 +537,7 @@ void initWiFi()
 
         if (WiFi.status() == WL_CONNECTED) {
             connected = true;
+            debuglnD("Using saved credentials from Preferences");
         } else {
             Serial.println("\nFailed with saved credentials!");
         }
@@ -559,6 +560,7 @@ void initWiFi()
         if (WiFi.status() == WL_CONNECTED) {
             connected = true;
             Serial.println("\nConnected with DEFAULT credentials");
+            debuglnD("Using default credentials from build configuration");
         } else {
             Serial.println("\nFailed with DEFAULT credentials too!");
         }
