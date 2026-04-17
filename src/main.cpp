@@ -275,11 +275,15 @@ struct Battery
             debuglnD("Batería cargándose");
         }
 
-        char battMsg[128];
-        snprintf(battMsg, sizeof(battMsg),
-                 "Lectura promedio: %d, Voltaje: %.3f, Nivel: %d%%",
-                 battery.pinRead(), battVolts, battLvl);
-        debuglnD(battMsg);
+        debugD("Lectura promedio: ");
+        debugD_NUM(battery.pinRead(), "%d");
+        debugD(", Voltaje: ");
+        debugD_NUM((int)(battVolts * 1000), "%d");
+        debugD(".");
+        debugD_NUM((int)((battVolts * 1000) % 1000), "%03d");
+        debugD(", Nivel: ");
+        debugD_NUM(battLvl, "%d");
+        debuglnD("%");
 #endif
     }
 };
@@ -794,7 +798,7 @@ const char* processor(const String &var)
         return buffer;
     }
     case BRIGHTNESS:
-        snprintf(buffer, sizeof(buffer), "%d", brightness);
+        itoa(brightness, buffer, 10);
         return buffer;
     case STRIPLED:
         return stripLed.powerState ? "on" : "off";
@@ -937,24 +941,14 @@ void notifyClients()
     if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
         JsonDocument json;  // Modern API - auto sizing
 
-        // Usar buffer char para conversiones numéricas
-        char battVoltageStr[10];
-        char levelStr[6];
-        char tempStr[8];
-        char humStr[8];
-
-        snprintf(battVoltageStr, sizeof(battVoltageStr), "%.3f", batt.battVolts);
-        snprintf(levelStr, sizeof(levelStr), "%d", batt.battLvl);
-        snprintf(tempStr, sizeof(tempStr), "%.1f", temp);
-        snprintf(humStr, sizeof(humStr), "%.1f", hum);
-
+        // Usar valores numéricos directamente en JSON
         json["bars"] = bars();
-        json["battVoltage"] = battVoltageStr;
-        json["level"] = levelStr;
+        json["battVoltage"] = batt.battVolts;
+        json["level"] = batt.battLvl;
         json["charging"] = batt.chargeState;
         json["fullbatt"] = batt.fullBatt;
-        json["temperature"] = tempStr;
-        json["humidity"] = humStr;
+        json["temperature"] = temp;
+        json["humidity"] = hum;
         json["lampstatus"] = lampState ? "on" : "off";
         json["neostatus"] = stripLed.powerState ? "on" : "off";
         json["btstatus"] = bt_powerState ? "on" : "off";
@@ -989,9 +983,9 @@ void notifyClients()
         if (bufferSize > 1024) {
 #ifdef DEBUG_WEBSOCKET
             debuglnE("JSON payload too large for WebSocket");
-            char sizeMsg[64];
-            snprintf(sizeMsg, sizeof(sizeMsg), "Required size: %u bytes", bufferSize);
-            debuglnE(sizeMsg);
+            debugD("Required size: ");
+            debugD_NUM(bufferSize, "%u");
+            debuglnD(" bytes");
 #endif
             xSemaphoreGive(dataMutex);
             return;
@@ -1010,9 +1004,9 @@ void notifyClients()
         }
 
 #ifdef DEBUG_WEBSOCKET
-        char lenMsg[64];
-        snprintf(lenMsg, sizeof(lenMsg), "WebSocket payload size: %u bytes", len);
-        debuglnD(lenMsg);
+        debugD("WebSocket payload size: ");
+        debuglnD_NUM(len, "%u");
+        debuglnD(" bytes");
 #endif
 
         ws.textAll(buffer, len);
@@ -1069,9 +1063,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         {
             const int brightness = json["brightness"].as<int>();
 #ifdef DEBUG_LED
-            char brightMsg[32];
-            snprintf(brightMsg, sizeof(brightMsg), "Brillo %d", brightness);
-            debuglnD(brightMsg);
+            debugD("Brillo ");
+            debuglnD_NUM(brightness, "%d");
 #endif
             stripLed.brightness = brightness;
         }
@@ -1082,9 +1075,12 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             stripLed.G = g = color["g"].as<int>();
             stripLed.B = b = color["b"].as<int>();
 #ifdef DEBUG_LED
-            char rgbMsg[32];
-            snprintf(rgbMsg, sizeof(rgbMsg), "RGB: %d, %d, %d", r, g, b);
-            debuglnD(rgbMsg);
+            debugD("RGB: ");
+            debugD_NUM(r, "%d");
+            debugD(", ");
+            debugD_NUM(g, "%d");
+            debugD(", ");
+            debuglnD_NUM(b, "%d");
 #endif
         }
         else if (strcmp(action, "music") == 0)
@@ -1222,9 +1218,9 @@ void TaskWebSocket(void *pvParameters)
             if (stackHighWaterMark < STACK_WARNING_THRESHOLD) {
 #ifdef DEBUG_WEBSOCKET
                 debuglnW("WebSocket task stack running low!");
-                char stackMsg[64];
-                snprintf(stackMsg, sizeof(stackMsg), "Stack free: %u bytes", stackHighWaterMark);
-                debuglnE(stackMsg);
+                debugD("Stack free: ");
+                debugD_NUM(stackHighWaterMark, "%u");
+                debuglnD(" bytes");
 #endif
             }
             cycleCount = 0;
@@ -1288,9 +1284,8 @@ void TaskWiFiMonitor(void *pvParameters)
             if (WiFi.status() != WL_CONNECTED) {
                 disconnectCount++;
 #ifdef DEBUG_WIFI
-                char discMsg[64];
-                snprintf(discMsg, sizeof(discMsg), "WiFi disconnect count: %d", disconnectCount);
-                debuglnW(discMsg);
+                debugD("WiFi disconnect count: ");
+                debuglnD_NUM(disconnectCount, "%d");
 #endif
 
                 if (disconnectCount >= MAX_DISCONNECTS) {
@@ -1303,9 +1298,9 @@ void TaskWiFiMonitor(void *pvParameters)
             } else {
 #ifdef DEBUG_WIFI
                 if (disconnectCount > 0) {
-                    char reconMsg[64];
-                    snprintf(reconMsg, sizeof(reconMsg), "WiFi reconnected after %d disconnects", disconnectCount);
-                    debuglnD(reconMsg);
+                    debugD("WiFi reconnected after ");
+                    debugD_NUM(disconnectCount, "%d");
+                    debuglnD(" disconnects");
                 }
 #endif
                 disconnectCount = 0;
