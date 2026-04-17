@@ -49,6 +49,9 @@
 // Network services (mDNS)
 #define DEBUG_NETWORK
 
+// BLUETOOTH
+// #define DEBUG_BLUETOOTH
+
 // ----------------------------------------------------------------------------
 // Definition of macros
 // ----------------------------------------------------------------------------
@@ -832,22 +835,31 @@ void initWebServer()
       debuglnD("Saving WiFi credentials...");
 #endif
 
-      // Save to Preferences
-      Preferences preferences;
-      preferences.begin("wifi", false);
-      preferences.putString("ssid", newSSID);
-      preferences.putString("password", newPassword);
-      preferences.end();
+      // Protect WiFi credential operations with mutex
+      if (xSemaphoreTake(wifiMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
+          // Save to Preferences
+          Preferences preferences;
+          preferences.begin("wifi", false);
+          preferences.putString("ssid", newSSID);
+          preferences.putString("password", newPassword);
+          preferences.end();
 
 #ifdef DEBUG_WIFI
-      debuglnD("Saved. Restarting.");
+          debuglnD("Saved. Restarting.");
 #endif
+          xSemaphoreGive(wifiMutex);
 
-      // Send quick response
-      request->send(200, "application/json", "{\"status\":\"success\",\"message\":\"Saved\"}");
+          // Send quick response
+          request->send(200, "application/json", "{\"status\":\"success\",\"message\":\"Saved\"}");
 
-      // Restart immediately
-      ESP.restart();
+          // Restart immediately
+          ESP.restart();
+      } else {
+#ifdef DEBUG_WIFI
+          debuglnE("Failed to acquire WiFi mutex for saving credentials");
+#endif
+          request->send(500, "application/json", "{\"status\":\"error\",\"message\":\"Mutex busy\"}");
+      }
     });
 
     server.serveStatic("/", LittleFS, "/").setDefaultFile("index.html").setTryGzipFirst(false);
@@ -1039,7 +1051,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         {
             bt_powerState = !bt_powerState;
             digitalWrite(SWITCH_PIN, bt_powerState ? LOW : HIGH);
-#ifdef DEBUG_LED
+#ifdef DEBUG_BLUETOOTH
             if (bt_powerState) {
                 debuglnD("Encendido del modulo BT");
             } else {
@@ -1270,8 +1282,6 @@ void TaskSensor(void *pvParameters)
     while (true)
     {
         readSensor();
-        //UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(TaskSensorHandle); // give me a mark of 716
-        //Serial.printf("TaskSensor stack high water mark: %u\n", highWaterMark);
         vTaskDelay(pdMS_TO_TICKS(5000));
     }
 }
