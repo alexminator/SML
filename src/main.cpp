@@ -603,15 +603,17 @@ void initWiFi()
     // Try with saved credentials first
     if (strlen(savedSSID) > 0 && strlen(savedPass) > 0) {
 #ifdef DEBUG_WIFI
-        Serial.printf("Trying SAVED credentials...\n");
-        Serial.printf("SSID: %s\n", savedSSID);
+        debuglnD("Trying SAVED credentials...");
+        debugD("SSID: ");
+        debugD(savedSSID);
+        debugD("\n");
 #endif
         WiFi.begin(savedSSID, savedPass);
 
         while (WiFi.status() != WL_CONNECTED && attempts < MAX_ATTEMPTS)
         {
 #ifdef DEBUG_WIFI
-            Serial.print(".");
+            debugD(".");
 #endif
             vTaskDelay(pdMS_TO_TICKS(500));
             attempts++;
@@ -624,7 +626,8 @@ void initWiFi()
 #endif
         } else {
 #ifdef DEBUG_WIFI
-            Serial.println("\nFailed with saved credentials!");
+            debugD("\n");
+            debuglnD("Failed with saved credentials!");
 #endif
         }
     }
@@ -632,8 +635,11 @@ void initWiFi()
     // If saved credentials failed, try with defaults
     if (!connected) {
 #ifdef DEBUG_WIFI
-        Serial.println("\nTrying DEFAULT credentials...");
-        Serial.printf("SSID: %s\n", WIFI_SSID);
+        debugD("\n");
+        debuglnD("Trying DEFAULT credentials...");
+        debugD("SSID: ");
+        debugD(WIFI_SSID);
+        debugD("\n");
 #endif
         WiFi.begin(WIFI_SSID, WIFI_PASS);
 
@@ -641,7 +647,7 @@ void initWiFi()
         while (WiFi.status() != WL_CONNECTED && attempts < MAX_ATTEMPTS)
         {
 #ifdef DEBUG_WIFI
-            Serial.print(".");
+            debugD(".");
 #endif
             vTaskDelay(pdMS_TO_TICKS(500));
             attempts++;
@@ -650,12 +656,14 @@ void initWiFi()
         if (WiFi.status() == WL_CONNECTED) {
             connected = true;
 #ifdef DEBUG_WIFI
-            Serial.println("\nConnected with DEFAULT credentials");
+            debugD("\n");
+            debuglnD("Connected with DEFAULT credentials");
             debuglnD("Using default credentials from build configuration");
 #endif
         } else {
 #ifdef DEBUG_WIFI
-            Serial.println("\nFailed with DEFAULT credentials too!");
+            debugD("\n");
+            debuglnD("Failed with DEFAULT credentials too!");
 #endif
         }
     }
@@ -663,12 +671,14 @@ void initWiFi()
     // If all connection attempts failed
     if (!connected)
     {
-        Serial.println("\n\n*** WiFi CONNECTION FAILED ***");
-        Serial.println("Please check:");
-        Serial.println("1. WiFi router is powered on");
-        Serial.println("2. SSID and password are correct");
-        Serial.println("3. ESP32 is within WiFi range");
-        Serial.println("Restarting in 5 seconds...\n");
+#ifdef DEBUG_WIFI
+        debuglnD("\n\n*** WiFi CONNECTION FAILED ***");
+        debuglnD("Please check:");
+        debuglnD("1. WiFi router is powered on");
+        debuglnD("2. SSID and password are correct");
+        debuglnD("3. ESP32 is within WiFi range");
+        debuglnD("Restarting in 5 seconds...\n");
+#endif
 
         // Blink LED to indicate error
         pinMode(STRIP_PIN, OUTPUT);
@@ -685,8 +695,16 @@ void initWiFi()
     }
 
     // Connected successfully
-    Serial.printf("\nConnected! IP: %s\n", WiFi.localIP().toString().c_str());
-    Serial.printf("Abre http://%s.local o http://%s\n", WEB_NAME, WiFi.localIP().toString().c_str());
+#ifdef DEBUG_WIFI
+    debugD("\nConnected! IP: ");
+    debugD(WiFi.localIP().toString().c_str());
+    debugD("\n");
+    debugD("Abre http://");
+    debugD(WEB_NAME);
+    debugD(".local o http://");
+    debugD(WiFi.localIP().toString().c_str());
+    debugD("\n");
+#endif
 
     if (!MDNS.begin(WEB_NAME))
     {
@@ -814,7 +832,7 @@ void initWebServer()
       }
 
 #ifdef DEBUG_WIFI
-      Serial.println("Saving WiFi credentials...");
+      debuglnD("Saving WiFi credentials...");
 #endif
 
       // Save to Preferences
@@ -825,7 +843,7 @@ void initWebServer()
       preferences.end();
 
 #ifdef DEBUG_WIFI
-      Serial.println("Saved. Restarting.");
+      debuglnD("Saved. Restarting.");
 #endif
 
       // Send quick response
@@ -1025,7 +1043,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             bt_powerState = !bt_powerState;
             digitalWrite(SWITCH_PIN, bt_powerState ? LOW : HIGH);
 #ifdef DEBUG_LED
-            bt_powerState ? Serial.println("Encendido del modulo BT") : Serial.println("Apagado del modulo BT");
+            bt_powerState ? debuglnD("Encendido del modulo BT") : debuglnD("Apagado del modulo BT");
 #endif
         }
         else if (strcmp(action, "volup") == 0)
@@ -1069,12 +1087,18 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
     {
     case WS_EVT_CONNECT:
 #ifdef DEBUG_WEBSOCKET
-        Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+        debugD("WebSocket client #");
+        debugD_NUM(client->id(), "%u");
+        debugD(" connected from ");
+        debugD(client->remoteIP().toString().c_str());
+        debugD("\n");
 #endif
         break;
     case WS_EVT_DISCONNECT:
 #ifdef DEBUG_WEBSOCKET
-        Serial.printf("WebSocket client #%u disconnected\n", client->id());
+        debugD("WebSocket client #");
+        debugD_NUM(client->id(), "%u");
+        debugD(" disconnected\n");
 #endif
         break;
     case WS_EVT_DATA:
@@ -1082,12 +1106,28 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
         break;
     case WS_EVT_PONG:
 #ifdef DEBUG_WEBSOCKET
-        Serial.printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char *)data : "");
+        debugD("ws[");
+        debugD(server->url());
+        debugD("][");
+        debugD_NUM(client->id(), "%u");
+        debugD("] pong[");
+        debugD_NUM(len, "%u");
+        debugD("]: ");
+        debugD((len) ? (char *)data : "");
+        debugD("\n");
 #endif
         break;
     case WS_EVT_ERROR:
 #ifdef DEBUG_WEBSOCKET
-        Serial.printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t *)arg), (char *)data);
+        debugD("ws[");
+        debugD(server->url());
+        debugD("][");
+        debugD_NUM(client->id(), "%u");
+        debugD("] error(");
+        debugD_NUM(*((uint16_t *)arg), "%u");
+        debugD("): ");
+        debugD((char *)data);
+        debugD("\n");
 #endif
         break;
     }
