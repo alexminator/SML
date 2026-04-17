@@ -501,9 +501,9 @@ void readSensor()
         {
             temp = event.temperature;
 #ifdef DEBUG_TEMPERATURE
-            char tempMsg[32];
-            snprintf(tempMsg, sizeof(tempMsg), "Temperature: %.1f°C", temp);
-            debuglnD(tempMsg);
+            debugD("Temperature: ");
+            debugD_NUM(temp, "%.1f");
+            debugD("°C\n");
 #endif
             break; // Exit loop on success
         }
@@ -524,9 +524,9 @@ void readSensor()
         {
             hum = event.relative_humidity;
 #ifdef DEBUG_TEMPERATURE
-            char humMsg[32];
-            snprintf(humMsg, sizeof(humMsg), "Humidity: %.1f%%", hum);
-            debuglnD(humMsg);
+            debugD("Humidity: ");
+            debugD_NUM(hum, "%.1f");
+            debugD("%\n");
 #endif
             break; // Exit loop on success
         }
@@ -602,13 +602,17 @@ void initWiFi()
 
     // Try with saved credentials first
     if (strlen(savedSSID) > 0 && strlen(savedPass) > 0) {
+#ifdef DEBUG_WIFI
         Serial.printf("Trying SAVED credentials...\n");
         Serial.printf("SSID: %s\n", savedSSID);
+#endif
         WiFi.begin(savedSSID, savedPass);
 
         while (WiFi.status() != WL_CONNECTED && attempts < MAX_ATTEMPTS)
         {
+#ifdef DEBUG_WIFI
             Serial.print(".");
+#endif
             vTaskDelay(pdMS_TO_TICKS(500));
             attempts++;
         }
@@ -619,32 +623,40 @@ void initWiFi()
             debuglnD("Using saved credentials from Preferences");
 #endif
         } else {
+#ifdef DEBUG_WIFI
             Serial.println("\nFailed with saved credentials!");
+#endif
         }
     }
 
     // If saved credentials failed, try with defaults
     if (!connected) {
+#ifdef DEBUG_WIFI
         Serial.println("\nTrying DEFAULT credentials...");
         Serial.printf("SSID: %s\n", WIFI_SSID);
+#endif
         WiFi.begin(WIFI_SSID, WIFI_PASS);
 
         attempts = 0;
         while (WiFi.status() != WL_CONNECTED && attempts < MAX_ATTEMPTS)
         {
+#ifdef DEBUG_WIFI
             Serial.print(".");
+#endif
             vTaskDelay(pdMS_TO_TICKS(500));
             attempts++;
         }
 
         if (WiFi.status() == WL_CONNECTED) {
             connected = true;
-            Serial.println("\nConnected with DEFAULT credentials");
 #ifdef DEBUG_WIFI
+            Serial.println("\nConnected with DEFAULT credentials");
             debuglnD("Using default credentials from build configuration");
 #endif
         } else {
+#ifdef DEBUG_WIFI
             Serial.println("\nFailed with DEFAULT credentials too!");
+#endif
         }
     }
 
@@ -801,7 +813,9 @@ void initWebServer()
         newSSID = WiFi.SSID();
       }
 
+#ifdef DEBUG_WIFI
       Serial.println("Saving WiFi credentials...");
+#endif
 
       // Save to Preferences
       Preferences preferences;
@@ -810,7 +824,9 @@ void initWebServer()
       preferences.putString("password", newPassword);
       preferences.end();
 
+#ifdef DEBUG_WIFI
       Serial.println("Saved. Restarting.");
+#endif
 
       // Send quick response
       request->send(200, "application/json", "{\"status\":\"success\",\"message\":\"Saved\"}");
@@ -1008,7 +1024,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         {
             bt_powerState = !bt_powerState;
             digitalWrite(SWITCH_PIN, bt_powerState ? LOW : HIGH);
+#ifdef DEBUG_LED
             bt_powerState ? Serial.println("Encendido del modulo BT") : Serial.println("Apagado del modulo BT");
+#endif
         }
         else if (strcmp(action, "volup") == 0)
         {
@@ -1050,18 +1068,27 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
     switch (type)
     {
     case WS_EVT_CONNECT:
+#ifdef DEBUG_WEBSOCKET
         Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+#endif
         break;
     case WS_EVT_DISCONNECT:
+#ifdef DEBUG_WEBSOCKET
         Serial.printf("WebSocket client #%u disconnected\n", client->id());
+#endif
         break;
     case WS_EVT_DATA:
         handleWebSocketMessage(arg, data, len);
         break;
     case WS_EVT_PONG:
+#ifdef DEBUG_WEBSOCKET
         Serial.printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char *)data : "");
+#endif
+        break;
     case WS_EVT_ERROR:
+#ifdef DEBUG_WEBSOCKET
         Serial.printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t *)arg), (char *)data);
+#endif
         break;
     }
 }
