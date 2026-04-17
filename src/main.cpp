@@ -32,25 +32,22 @@
 #define DEBUG_WIFI
 
 // Web server and LittleFS filesystem
-#define DEBUG_WEB
+// #define DEBUG_WEB
 
 // WebSocket communication and JSON
-#define DEBUG_WEBSOCKET
+// #define DEBUG_WEBSOCKET
 
 // LED strip control and effects
-#define DEBUG_LED
+// #define DEBUG_LED
 
 // Battery monitoring and charging
-#define DEBUG_BATTERY
+// #define DEBUG_BATTERY
 
 // Temperature and humidity sensor (DHT)
-#define DEBUG_TEMPERATURE
+// #define DEBUG_TEMPERATURE
 
 // Network services (mDNS)
 #define DEBUG_NETWORK
-
-// Bluetooth control
-// #define DEBUG_BLUETOOTH
 
 // ----------------------------------------------------------------------------
 // Definition of macros
