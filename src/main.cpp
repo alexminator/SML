@@ -55,6 +55,33 @@
 // ----------------------------------------------------------------------------
 // Definition of macros
 // ----------------------------------------------------------------------------
+// Constants (Magic Numbers)
+// ----------------------------------------------------------------------------
+// Stack monitoring thresholds
+const uint32_t STACK_WARNING_THRESHOLD = 256;      // Stack low warning threshold (bytes)
+const uint32_t STACK_CRITICAL_THRESHOLD = 128;     // Stack critical threshold (bytes)
+
+// WiFi connection
+const int WIFI_MAX_ATTEMPTS = 40;                 // Max WiFi connection attempts
+const unsigned long WIFI_RETRY_DELAY = 500;       // WiFi connection retry delay (ms)
+
+// Timing
+const unsigned long LED_ERROR_FLASH_CYCLE = 200;  // LED error flash cycle (ms)
+const unsigned long LED_ERROR_FLASH_ON = 50;      // LED error flash on time (ms)
+
+// Battery monitoring
+const unsigned long BATTERY_CHECK_INTERVAL = 3000; // Battery check interval (ms)
+const unsigned long SENSOR_CHECK_INTERVAL = 5000;  // Sensor check interval (ms)
+const int BATTERY_MAX_READS = 10;                  // Max battery reads when threshold reached
+const int BATTERY_FULL_READS = 10;                 // Max battery reads when full
+
+// LittleFS timeout
+const unsigned long LITTLEFS_TIMEOUT = 30000;     // LittleFS error timeout (ms)
+
+// WebSocket
+const unsigned long WEBSOCKET_UPDATE_INTERVAL = 3000;  // WebSocket update interval (ms)
+const uint8_t WEBSOCKET_STACK_CHECK_CYCLES = 10;       // Check stack every N cycles
+
 // Strip LED
 #define STRIP_PIN 4
 #define N_PIXELS 24
@@ -555,14 +582,14 @@ void initLittleFS()
 
         // Timeout instead of infinite loop
         unsigned long errorStartTime = millis();
-        const unsigned long MAX_ERROR_TIME = 30000; // 30 seconds
+        const unsigned long MAX_ERROR_TIME = LITTLEFS_TIMEOUT; // 30 seconds
 
         // Overflow-safe elapsed time calculation
         unsigned long elapsed;
         do
         {
             elapsed = millis() - errorStartTime;
-            onboard_led.on = millis() % 200 < 50; // LED flashes, lighting for 50 ms and turning off for 150 ms in a 200 ms cycle. Indicates error when mounting volume
+            onboard_led.on = millis() % LED_ERROR_FLASH_CYCLE < LED_ERROR_FLASH_ON; // LED flashes, lighting for 50 ms and turning off for 150 ms in a 200 ms cycle. Indicates error when mounting volume
             onboard_led.update();
             vTaskDelay(pdMS_TO_TICKS(100));
         } while (elapsed < MAX_ERROR_TIME);
@@ -598,7 +625,6 @@ void initWiFi()
     // Try to connect with saved credentials first, then defaults
     bool connected = false;
     int attempts = 0;
-    const int MAX_ATTEMPTS = 40;  // 40 * 500ms = 20 segundos timeout
 
     // Try with saved credentials first
     if (strlen(savedSSID) > 0 && strlen(savedPass) > 0) {
@@ -610,12 +636,12 @@ void initWiFi()
 #endif
         WiFi.begin(savedSSID, savedPass);
 
-        while (WiFi.status() != WL_CONNECTED && attempts < MAX_ATTEMPTS)
+        while (WiFi.status() != WL_CONNECTED && attempts < WIFI_MAX_ATTEMPTS)
         {
 #ifdef DEBUG_WIFI
             debugD(".");
 #endif
-            vTaskDelay(pdMS_TO_TICKS(500));
+            vTaskDelay(pdMS_TO_TICKS(WIFI_RETRY_DELAY));
             attempts++;
         }
 
@@ -644,12 +670,12 @@ void initWiFi()
         WiFi.begin(WIFI_SSID, WIFI_PASS);
 
         attempts = 0;
-        while (WiFi.status() != WL_CONNECTED && attempts < MAX_ATTEMPTS)
+        while (WiFi.status() != WL_CONNECTED && attempts < WIFI_MAX_ATTEMPTS)
         {
 #ifdef DEBUG_WIFI
             debugD(".");
 #endif
-            vTaskDelay(pdMS_TO_TICKS(500));
+            vTaskDelay(pdMS_TO_TICKS(WIFI_RETRY_DELAY));
             attempts++;
         }
 
@@ -1189,9 +1215,9 @@ void TaskWebSocket(void *pvParameters)
 
         // Monitor stack every 10 cycles
         static uint8_t cycleCount = 0;
-        if (++cycleCount >= 10) {
+        if (++cycleCount >= WEBSOCKET_STACK_CHECK_CYCLES) {
             stackHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
-            if (stackHighWaterMark < 256) {
+            if (stackHighWaterMark < STACK_WARNING_THRESHOLD) {
 #ifdef DEBUG_WEBSOCKET
                 debuglnW("WebSocket task stack running low!");
                 char stackMsg[64];
@@ -1202,7 +1228,7 @@ void TaskWebSocket(void *pvParameters)
             cycleCount = 0;
         }
 
-        vTaskDelay(pdMS_TO_TICKS(3000));
+        vTaskDelay(pdMS_TO_TICKS(WEBSOCKET_UPDATE_INTERVAL));
     }
 }
 
@@ -1222,7 +1248,7 @@ void TaskBatteryMonitor(void *pvParameters)
 #endif
         }
 
-        vTaskDelay(pdMS_TO_TICKS(3000));
+        vTaskDelay(pdMS_TO_TICKS(BATTERY_CHECK_INTERVAL));
     }
 }
 
@@ -1285,7 +1311,7 @@ void TaskWiFiMonitor(void *pvParameters)
             xSemaphoreGive(wifiMutex);
         }
 
-        vTaskDelay(pdMS_TO_TICKS(5000));
+        vTaskDelay(pdMS_TO_TICKS(SENSOR_CHECK_INTERVAL));
     }
 }
 
@@ -1294,7 +1320,7 @@ void TaskSensor(void *pvParameters)
     while (true)
     {
         readSensor();
-        vTaskDelay(pdMS_TO_TICKS(5000));
+        vTaskDelay(pdMS_TO_TICKS(SENSOR_CHECK_INTERVAL));
     }
 }
 
