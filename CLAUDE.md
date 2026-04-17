@@ -188,6 +188,88 @@ The project includes multiple LED effects organized by ID:
 
 ## Development Notes
 
+### CRITICAL: ESP32 Crash Patterns to Avoid
+
+**⚠️ snprintf() with Format Specifiers CAUSES CRASHES**
+
+**ROOT CAUSE:** Using `snprintf()` with format specifiers (`%d`, `%u`, `%.1f`, `%.3f`, etc.) causes ESP32 to crash with "Interrupt wdt timeout on CPU0" immediately after WiFi initialization.
+
+**PROHIBITED PATTERNS:**
+```cpp
+// ❌ NEVER DO THIS - Causes crash
+char msg[64];
+snprintf(msg, sizeof(msg), "Value: %d", someInt);
+debuglnD(msg);
+
+// ❌ NEVER DO THIS - Causes crash
+snprintf(buffer, sizeof(buffer), "%.3f", voltage);
+
+// ❌ NEVER DO THIS - Causes crash
+snprintf(msg, sizeof(msg), "RGB: %d, %d, %d", r, g, b);
+```
+
+**SAFE ALTERNATIVES:**
+
+1. **For debug messages:** Use `debugD_NUM()` macro
+```cpp
+// ✅ SAFE - Use debugD_NUM macro
+debugD("Value: ");
+debuglnD_NUM(someInt, "%d");
+
+// ✅ SAFE - Split into multiple calls
+debugD("RGB: ");
+debugD_NUM(r, "%d");
+debugD(", ");
+debugD_NUM(g, "%d");
+debugD(", ");
+debuglnD_NUM(b, "%d");
+```
+
+2. **For float to string:** Manual conversion without snprintf
+```cpp
+// ✅ SAFE - Manual float conversion
+int volts_int = (int)voltage;
+int volts_frac = (int)((voltage - volts_int) * 1000);
+debugD("Voltage: ");
+debugD_NUM(volts_int, "%d");
+debugD(".");
+debugD_NUM(volts_frac, "%03d");
+debuglnD("V");
+```
+
+3. **For integer to string:** Use `itoa()` or direct assignment
+```cpp
+// ✅ SAFE - Use itoa()
+itoa(value, buffer, 10);
+
+// ✅ SAFE - Direct numeric in JSON
+json["value"] = someInt;  // ArduinoJson handles conversion safely
+```
+
+4. **For WebSocket/JSON:** Use numeric values directly
+```cpp
+// ✅ SAFE - Let ArduinoJson handle formatting
+json["temperature"] = tempValue;  // Not tempStr
+json["voltage"] = battVolts;      // Not battVoltageStr
+```
+
+**WHY THIS HAPPENS:**
+- ESP32 snprintf() implementation has issues with format string parsing
+- Floating point formatting (%.1f, %.3f) is particularly unstable
+- Crash occurs during startup when snprintf() is called in early initialization
+- Error appears as "Interrupt wdt timeout on CPU0" after WiFi connects
+
+**ENFORCEMENT:**
+- **ALWAYS** grep for `snprintf` before committing changes
+- **NEVER** use snprintf() with format specifiers in this codebase
+- **USE** debugD_NUM() macro for all debug output with numbers
+- **USE** ArduinoJson's native numeric handling for JSON
+- **USE** itoa() for simple integer-to-string conversion
+
+**History:**
+- 2026-04-16: Multiple snprintf() calls caused crash after WiFi init (commit 81ec832 fixed)
+- User explicitly warned about DHT sensor snprintf crash, but lesson was not applied globally
+
 ### Debugging
 - Set `DEBUGLEVEL_DEBUGGING` for console output
 - Uncomment `#define DHT` for sensor debugging
