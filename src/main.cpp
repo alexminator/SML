@@ -822,13 +822,25 @@ void initWebServer()
     // Endpoint to save WiFi configuration and restart
     server.on("/save-wifi", HTTP_POST, [](AsyncWebServerRequest *request)
     {
+      // Use char arrays instead of String to prevent memory fragmentation
+      char newSSID[33] = {0};  // SSID max 32 chars + null
+      char newPassword[65] = {0};  // Password max 64 chars + null
+
       // Get SSID and password from form data
-      String newSSID = request->getParam("ssid", true)->value();
-      String newPassword = request->getParam("password", true)->value();
+      String tempSSID = request->getParam("ssid", true)->value();
+      String tempPass = request->getParam("password", true)->value();
+
+      // Copy String to char array safely
+      if (tempSSID.length() > 0) {
+        strncpy(newSSID, tempSSID.c_str(), sizeof(newSSID) - 1);
+      }
+      if (tempPass.length() > 0) {
+        strncpy(newPassword, tempPass.c_str(), sizeof(newPassword) - 1);
+      }
 
       // If SSID is empty, use current SSID
-      if (newSSID.length() == 0) {
-        newSSID = WiFi.SSID();
+      if (strlen(newSSID) == 0) {
+        strncpy(newSSID, WiFi.SSID().c_str(), sizeof(newSSID) - 1);
       }
 
 #ifdef DEBUG_WIFI
