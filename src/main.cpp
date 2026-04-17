@@ -1043,7 +1043,11 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             bt_powerState = !bt_powerState;
             digitalWrite(SWITCH_PIN, bt_powerState ? LOW : HIGH);
 #ifdef DEBUG_LED
-            bt_powerState ? debuglnD("Encendido del modulo BT") : debuglnD("Apagado del modulo BT");
+            if (bt_powerState) {
+                debuglnD("Encendido del modulo BT");
+            } else {
+                debuglnD("Apagado del modulo BT");
+            }
 #endif
         }
         else if (strcmp(action, "volup") == 0)
