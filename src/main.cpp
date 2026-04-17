@@ -589,7 +589,9 @@ void initLittleFS()
         do
         {
             elapsed = millis() - errorStartTime;
-            onboard_led.on = millis() % LED_ERROR_FLASH_CYCLE < LED_ERROR_FLASH_ON; // LED flashes, lighting for 50 ms and turning off for 150 ms in a 200 ms cycle. Indicates error when mounting volume
+            // Overflow-safe LED flash timing
+            uint32_t flashOnTime = millis() % LED_ERROR_FLASH_CYCLE;
+            onboard_led.on = flashOnTime < LED_ERROR_FLASH_ON;
             onboard_led.update();
             vTaskDelay(pdMS_TO_TICKS(100));
         } while (elapsed < MAX_ERROR_TIME);
