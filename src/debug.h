@@ -58,17 +58,35 @@ bool traceStampRequired = true;
 char debugStr[128];  // Buffer for debug messages
 bool foundNL = false;
 
-// Helper function to copy string to debug buffer
+// Helper function to copy string to debug buffer (SAFE version - no snprintf)
 inline void copyToDebugStr(const char* src) {
-    strncpy(debugStr, src, sizeof(debugStr) - 1);
-    debugStr[sizeof(debugStr) - 1] = '\0';
+    if (src == nullptr) {
+        debugStr[0] = '\0';
+        foundNL = false;
+        return;
+    }
+
+    // Safe copy with explicit length limit
+    size_t i = 0;
+    while (i < sizeof(debugStr) - 1 && src[i] != '\0') {
+        debugStr[i] = src[i];
+        i++;
+    }
+    debugStr[i] = '\0';  // Always null terminate
     foundNL = (strstr(debugStr, "\n") != NULL);
 }
 
 // Helper function for String objects
 inline void copyToDebugStr(const String& src) {
-    strncpy(debugStr, src.c_str(), sizeof(debugStr) - 1);
-    debugStr[sizeof(debugStr) - 1] = '\0';
+    // Safe copy with explicit length limit
+    size_t i = 0;
+    const char* cstr = src.c_str();
+
+    while (i < sizeof(debugStr) - 1 && cstr[i] != '\0') {
+        debugStr[i] = cstr[i];
+        i++;
+    }
+    debugStr[i] = '\0';  // Always null terminate
     foundNL = (strstr(debugStr, "\n") != NULL);
 }
 
