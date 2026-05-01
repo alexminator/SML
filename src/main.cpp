@@ -1424,6 +1424,75 @@ void TaskOnboardLED(void *pvParameters)
     }
 }
 
+//-----------------------------------------------------------------------------
+// Power Management State Machine Functions
+//-----------------------------------------------------------------------------
+
+// Forward declarations
+void applyStateConfiguration(PowerState state);
+
+// Transition to new power state with logging
+void transitionToState(PowerState newState) {
+    previousPowerState = currentPowerState;
+    currentPowerState = newState;
+    lastStateChange = millis();
+
+    #ifdef DEBUG_POWER_MANAGEMENT
+    const char* stateNames[] = {
+        "POWER_AC_MODE",
+        "POWER_BATTERY_ACTIVE",
+        "POWER_BATTERY_SLEEP",
+        "POWER_BATTERY_CONNECTING"
+    };
+    debugD("State transition: ");
+    debugD(stateNames[previousPowerState]);
+    debugD(" → ");
+    debuglnD(stateNames[newState]);
+    #endif
+
+    // Apply state-specific configurations
+    applyStateConfiguration(newState);
+}
+
+// Apply hardware configuration for each state
+void applyStateConfiguration(PowerState state) {
+    switch (state) {
+        case POWER_AC_MODE:
+            // Full power mode - everything works normally
+            WiFi.setSleep(false);
+            setCpuFrequencyMhz(240);
+            // Neopixel enabled by default in AC mode
+            // ESP32 LEDs: ON (built-in, always on)
+            break;
+
+        case POWER_BATTERY_ACTIVE:
+            // Battery with active WebSocket user
+            WiFi.setSleep(false);
+            setCpuFrequencyMhz(240);
+            // Neopixel: OFF (user requirement)
+            // ESP32 LEDs: ON (built-in, always on)
+            FastLED.clear();
+            FastLED.show();
+            break;
+
+        case POWER_BATTERY_SLEEP:
+            // Maximum power savings
+            WiFi.setSleep(true);
+            setCpuFrequencyMhz(80);
+            // Neopixel: OFF
+            // ESP32 LEDs: ON (built-in, always on)
+            break;
+
+        case POWER_BATTERY_CONNECTING:
+            // Attempting to connect + wait for client
+            WiFi.setSleep(false);
+            setCpuFrequencyMhz(240);
+            // Neopixel: OFF
+            // ESP32 LEDs: ON (built-in, always on)
+            break;
+    }
+}
+
 // ----------------------------------------------------------------------------
 // Initialization
 // ----------------------------------------------------------------------------
