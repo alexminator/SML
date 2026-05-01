@@ -21,15 +21,66 @@
 #define DEBUGLEVEL DEBUGLEVEL_DEBUGGING
 // #define DEBUGLEVEL DEBUGLEVEL_NONE
 #include "debug.h"
-// Declare what message you want to display on the console.
-// User picks console message from this list
-// This selection will not be effective if DEBUGLEVEL is DEBUGLEVEL_NONE
-// #define DHT
-// #define BATTERY
+
+// ============================================================================
+// DEBUG CATEGORIES - Uncomment to enable specific debug messages
+// ============================================================================
+// System-level messages (initialization, mutex, errors)
+#define DEBUG_SYSTEM
+
+// WiFi connection and authentication
+#define DEBUG_WIFI
+
+// Web server and LittleFS filesystem
+// #define DEBUG_WEB
+
+// WebSocket communication and JSON
+// #define DEBUG_WEBSOCKET
+
+// LED strip control and effects
+// #define DEBUG_LED
+
+// Battery monitoring and charging
+// #define DEBUG_BATTERY
+
+// Temperature and humidity sensor (DHT)
+// #define DEBUG_TEMPERATURE
+
+// Network services (mDNS)
+#define DEBUG_NETWORK
+
+// BLUETOOTH
+// #define DEBUG_BLUETOOTH
 
 // ----------------------------------------------------------------------------
 // Definition of macros
 // ----------------------------------------------------------------------------
+// Constants (Magic Numbers)
+// ----------------------------------------------------------------------------
+// Stack monitoring thresholds
+const uint32_t STACK_WARNING_THRESHOLD = 256;      // Stack low warning threshold (bytes)
+const uint32_t STACK_CRITICAL_THRESHOLD = 128;     // Stack critical threshold (bytes)
+
+// WiFi connection
+const int WIFI_MAX_ATTEMPTS = 40;                 // Max WiFi connection attempts
+const unsigned long WIFI_RETRY_DELAY = 500;       // WiFi connection retry delay (ms)
+
+// Timing
+const unsigned long LED_ERROR_FLASH_CYCLE = 200;  // LED error flash cycle (ms)
+const unsigned long LED_ERROR_FLASH_ON = 50;      // LED error flash on time (ms)
+
+// Battery monitoring
+const unsigned long BATTERY_CHECK_INTERVAL = 3000; // Battery check interval (ms)
+const int BATTERY_MAX_READS = 10;                  // Max battery reads when threshold reached
+const int BATTERY_FULL_READS = 10;                 // Max battery reads when full
+
+// LittleFS timeout
+const unsigned long LITTLEFS_TIMEOUT = 30000;     // LittleFS error timeout (ms)
+
+// WebSocket
+const unsigned long WEBSOCKET_UPDATE_INTERVAL = 1000;  // 1 second for responsive UI
+const uint8_t WEBSOCKET_STACK_CHECK_CYCLES = 10;       // Check stack every N cycles
+
 // Strip LED
 #define STRIP_PIN 4
 #define N_PIXELS 24
@@ -45,7 +96,14 @@
 #define TOP (N_PIXELS + 2) // Allow dot to go slightly off scale [(N_PIXELS + 2)]
 #define PEAK_FALL 20       // Rate of peak falling dot [20]
 #define N_PIXELS_HALF (N_PIXELS / 2)
+
+// BIAS: ADC value for HALF of VCC (audio input calibration)
+// This is the center point for audio VU meter effects
+// Calibration: Measure actual ADC with no audio signal, adjust to match
+// Formula: BIAS = ADC_reading_at_half_VCC (should be ~1850 for 3.3V reference)
+// Typical range: ~1800-1900 for ESP32 with 3.3V reference
 #define BIAS 1850 // ADC value for HALF of 3.22V VCC. Hint: Take the analog reading without signal
+
 // Effects
 #define GRAVITY -1  // Downward (negative) acceleration of gravity in m/s^2
 #define h0 1        // Starting height, in meters, of the ball (strip length)
@@ -58,6 +116,9 @@ int lvl = 0;          // Current "dampened" audio level
 CRGBPalette16 currentPalette; // Define the current palette
 CRGBPalette16 targetPalette;  // Define the target palette
 
+// Initial brightness (0-255)
+// 130 = ~50% - comfortable starting point for indoor use
+// Prevents eye strain from full brightness while still being visible
 int brightness = 130;
 int effectId = 0;
 uint8_t myhue = 0;           // hue 0. red color
@@ -90,6 +151,13 @@ AsyncWebSocket ws("/ws");
 DHT_Unified dht(DHTPIN, DHTTYPE);
 float temp;
 float hum;
+// Temperature/Humidity sensor monitoring
+// 5-second interval is appropriate for DHT22:
+// - Minimizes 2ms blocking impact (0.04% duty cycle)
+// - DHT22 response time is ~2 seconds max
+// - Allows sufficient time between reads for sensor accuracy
+// - User experience: Updates feel responsive without overwhelming the system
+const unsigned long SENSOR_CHECK_INTERVAL = 5000;  // Sensor check interval (ms)
 
 // Power Switch for Bluetooth Module
 #define SWITCH_PIN 18 // Pin to command relay. BT on/off
@@ -108,7 +176,14 @@ bool lampState = false;
 // Sensor Battery
 #define FULL_CHARGE_PIN 35 // Pin to sense full charge, signal come from TP4056
 #define ADC_PIN 33         // Pin to monitor Batt
+
+// CONV_FACTOR: ADC to voltage conversion
+// Measure battery voltage at full charge (TP4056 blue LED on)
+// Adjust this value until reading matches multimeter
+// Formula: CONV_FACTOR = measured_voltage / ADC_reading
+// Typical range: 1.5 - 2.0 for most voltage dividers
 #define CONV_FACTOR 1.702
+
 #define READS 30
 #define MAXV 4.00
 #define MINV 3.20
@@ -120,6 +195,28 @@ int battLvl;
 int readCount = 0;
 int lvlCharge;
 Battery18650Stats battery(ADC_PIN, CONV_FACTOR, READS, MAXV, MINV);
+
+// ----------------------------------------------------------------------------
+// RTOS Mutex Protection
+// ----------------------------------------------------------------------------
+SemaphoreHandle_t dataMutex = NULL;
+SemaphoreHandle_t wifiMutex = NULL;
+
+void initMutexes() {
+    dataMutex = xSemaphoreCreateMutex();
+    wifiMutex = xSemaphoreCreateMutex();
+
+    if (dataMutex == NULL || wifiMutex == NULL) {
+#ifdef DEBUG_SYSTEM
+        debuglnE("Failed to create mutexes!");
+        debuglnE("System may experience race conditions");
+#endif
+    } else {
+#ifdef DEBUG_SYSTEM
+        debuglnD("Mutexes initialized successfully");
+#endif
+    }
+}
 
 // balls effect
 float h[NUM_BALLS];                       // An array of heights
@@ -185,11 +282,31 @@ struct Battery
         battLvl = battery.getBatteryChargeLevel(true);
 
 // Print the obtained values
-#ifdef BATTERY
-        debuglnD(chargeState ? "Cargador conectado" : "Cargador desconectado"); // Print the charger status
-        debuglnD("Estado del pin carga: " + String(fullyCharge));
-        debuglnD(!fullBatt && !chargeState ? "Batería usándose" : (fullBatt ? "Batería completamente cargada" : "Batería cargándose")); // Print the battery status
-        debuglnD("Lectura promedio del pin: " + String(battery.pinRead()) + ", Voltaje: " + String(battVolts) + ", Nivel de carga: " + String(battLvl));
+#ifdef DEBUG_BATTERY
+        debugD(chargeState ? "Cargador conectado" : "Cargador desconectado"); // Print the charger status
+        debugD("\n");
+
+        debugD("Estado del pin carga: ");
+        debugD(fullyCharge ? "LOW (charging)" : "HIGH (full/not charging)");
+        debugD("\n");
+
+        if (!fullBatt && !chargeState) {
+            debuglnD("Batería usándose");
+        } else if (fullBatt) {
+            debuglnD("Batería completamente cargada");
+        } else {
+            debuglnD("Batería cargándose");
+        }
+
+        debugD("Lectura promedio: ");
+        debugD_NUM(battery.pinRead(), "%d");
+        debugD(", Voltaje: ");
+        debugD_NUM((int)(battVolts * 1000), "%d");
+        debugD(".");
+        debugD_NUM((int)((battVolts * 1000) % 1000), "%03d");
+        debugD(", Nivel: ");
+        debugD_NUM(battLvl, "%d");
+        debuglnD("%");
 #endif
     }
 };
@@ -425,6 +542,15 @@ Battery batt = {battVolts, battLvl, false, false};
 //-----------------------------------------------------------------------------
 // DHT initialization
 //-----------------------------------------------------------------------------
+
+// DHT sensor blocking analysis:
+// - Read time: ~2ms (blocking during sensor read)
+// - Interval: 5000ms (SENSOR_CHECK_INTERVAL)
+// - Duty cycle: 0.04% (2ms / 5000ms = 0.0004)
+// - Impact: Negligible - DHT reading is in separate FreeRTOS task
+// - No action needed unless interval decreases significantly
+// - Alternative: Use async DHT library if blocking becomes issue
+
 void readSensor()
 {
     sensors_event_t event;
@@ -437,14 +563,18 @@ void readSensor()
         if (!isnan(event.temperature))
         {
             temp = event.temperature;
-            #ifdef DHT
-            debuglnD("Temperature: " + String(temp) + "°C");
-            #endif
+#ifdef DEBUG_TEMPERATURE
+            debugD("Temperature: ");
+            debugD_NUM(temp, "%.1f");
+            debugD("°C\n");
+#endif
             break; // Exit loop on success
         }
         else
         {
+#ifdef DEBUG_TEMPERATURE
             debuglnD("Error reading temperature! Retrying...");
+#endif
             retryCount++;
             vTaskDelay(pdMS_TO_TICKS(retryDelay)); // Wait before retrying
         }
@@ -456,14 +586,18 @@ void readSensor()
         if (!isnan(event.relative_humidity))
         {
             hum = event.relative_humidity;
-            #ifdef DHT
-            debuglnD("Humidity: " + String(hum) + "%");
-            #endif
+#ifdef DEBUG_TEMPERATURE
+            debugD("Humidity: ");
+            debugD_NUM(hum, "%.1f");
+            debugD("%\n");
+#endif
             break; // Exit loop on success
         }
         else
         {
+#ifdef DEBUG_TEMPERATURE
             debuglnD("Error reading humidity! Retrying...");
+#endif
             retryCount++;
             vTaskDelay(pdMS_TO_TICKS(retryDelay)); // Wait before retrying
         }
@@ -478,25 +612,31 @@ void initLittleFS()
 {
     if (!LittleFS.begin())
     {
+#ifdef DEBUG_WEB
         debuglnD("Cannot mount LittleFS volume...");
+#endif
 
         // Timeout instead of infinite loop
         unsigned long errorStartTime = millis();
-        const unsigned long MAX_ERROR_TIME = 30000; // 30 seconds
+        const unsigned long MAX_ERROR_TIME = LITTLEFS_TIMEOUT; // 30 seconds
 
         // Overflow-safe elapsed time calculation
         unsigned long elapsed;
         do
         {
             elapsed = millis() - errorStartTime;
-            onboard_led.on = millis() % 200 < 50; // LED flashes, lighting for 50 ms and turning off for 150 ms in a 200 ms cycle. Indicates error when mounting volume
+            // Overflow-safe LED flash timing
+            uint32_t flashOnTime = millis() % LED_ERROR_FLASH_CYCLE;
+            onboard_led.on = flashOnTime < LED_ERROR_FLASH_ON;
             onboard_led.update();
             vTaskDelay(pdMS_TO_TICKS(100));
         } while (elapsed < MAX_ERROR_TIME);
 
         // Continue with setup
+#ifdef DEBUG_WEB
         debuglnE("LittleFS mount failed - web interface unavailable");
         debuglnW("Device will continue with limited functionality");
+#endif
     }
 }
 
@@ -512,95 +652,152 @@ void initWiFi()
     Preferences preferences;
     preferences.begin("wifi", false);
 
-    String savedSSID = preferences.getString("ssid", "");
-    String savedPass = preferences.getString("password", "");
+    char savedSSID[33] = {0};  // SSID max 32 chars + null
+    char savedPass[65] = {0};  // Password max 64 chars + null
+
+    // Read WiFi credentials (putBytes format - no String objects)
+    size_t ssidLen = preferences.getBytes("ssid", savedSSID, sizeof(savedSSID) - 1);
+    savedSSID[ssidLen] = '\0';  // Ensure null termination
+
+    size_t passLen = preferences.getBytes("password", savedPass, sizeof(savedPass) - 1);
+    savedPass[passLen] = '\0';  // Ensure null termination
 
     preferences.end();
 
     // Try to connect with saved credentials first, then defaults
     bool connected = false;
     int attempts = 0;
-    const int MAX_ATTEMPTS = 40;  // 40 * 500ms = 20 segundos timeout
 
     // Try with saved credentials first
-    if (savedSSID.length() > 0 && savedPass.length() > 0) {
-        Serial.printf("Trying SAVED credentials...\n");
-        Serial.printf("SSID: %s\n", savedSSID.c_str());
-        WiFi.begin(savedSSID.c_str(), savedPass.c_str());
+    if (strlen(savedSSID) > 0 && strlen(savedPass) > 0) {
+#ifdef DEBUG_WIFI
+        debuglnD("Trying SAVED credentials...");
+        debugD("SSID: ");
+        debugD(savedSSID);
+        debugD("\n");
+#endif
+        WiFi.begin(savedSSID, savedPass);
 
-        while (WiFi.status() != WL_CONNECTED && attempts < MAX_ATTEMPTS)
+        while (WiFi.status() != WL_CONNECTED && attempts < WIFI_MAX_ATTEMPTS)
         {
-            Serial.print(".");
-            vTaskDelay(pdMS_TO_TICKS(500));
+#ifdef DEBUG_WIFI
+            debugD(".");
+#endif
+            vTaskDelay(pdMS_TO_TICKS(WIFI_RETRY_DELAY));
             attempts++;
         }
 
         if (WiFi.status() == WL_CONNECTED) {
             connected = true;
+#ifdef DEBUG_WIFI
+            debuglnD("Using saved credentials from Preferences");
+#endif
         } else {
-            Serial.println("\nFailed with saved credentials!");
+#ifdef DEBUG_WIFI
+            debugD("\n");
+            debuglnD("Failed with saved credentials!");
+#endif
         }
     }
 
     // If saved credentials failed, try with defaults
     if (!connected) {
-        Serial.println("\nTrying DEFAULT credentials...");
-        Serial.printf("SSID: %s\n", WIFI_SSID);
+#ifdef DEBUG_WIFI
+        debugD("\n");
+        debuglnD("Trying DEFAULT credentials...");
+        debugD("SSID: ");
+        debugD(WIFI_SSID);
+        debugD("\n");
+#endif
         WiFi.begin(WIFI_SSID, WIFI_PASS);
 
         attempts = 0;
-        while (WiFi.status() != WL_CONNECTED && attempts < MAX_ATTEMPTS)
+        while (WiFi.status() != WL_CONNECTED && attempts < WIFI_MAX_ATTEMPTS)
         {
-            Serial.print(".");
-            vTaskDelay(pdMS_TO_TICKS(500));
+#ifdef DEBUG_WIFI
+            debugD(".");
+#endif
+            vTaskDelay(pdMS_TO_TICKS(WIFI_RETRY_DELAY));
             attempts++;
         }
 
         if (WiFi.status() == WL_CONNECTED) {
             connected = true;
-            Serial.println("\nConnected with DEFAULT credentials");
+#ifdef DEBUG_WIFI
+            debugD("\n");
+            debuglnD("Connected with DEFAULT credentials");
+            debuglnD("Using default credentials from build configuration");
+#endif
         } else {
-            Serial.println("\nFailed with DEFAULT credentials too!");
+#ifdef DEBUG_WIFI
+            debugD("\n");
+            debuglnD("Failed with DEFAULT credentials too!");
+#endif
         }
     }
 
     // If all connection attempts failed
     if (!connected)
     {
-        Serial.println("\n\n*** WiFi CONNECTION FAILED ***");
-        Serial.println("Please check:");
-        Serial.println("1. WiFi router is powered on");
-        Serial.println("2. SSID and password are correct");
-        Serial.println("3. ESP32 is within WiFi range");
-        Serial.println("Restarting in 5 seconds...\n");
+#ifdef DEBUG_WIFI
+        debuglnD("\n\n*** WiFi CONNECTION FAILED ***");
+        debuglnD("Please check:");
+        debuglnD("1. WiFi router is powered on");
+        debuglnD("2. SSID and password are correct");
+        debuglnD("3. ESP32 is within WiFi range");
+        debuglnD("Restarting in 5 seconds...\n");
+#endif
 
-        // Blink LED to indicate error
+        // Blink LED to indicate error (non-blocking)
         pinMode(STRIP_PIN, OUTPUT);
-        for (int i = 0; i < 10; i++)
+        unsigned long blinkStart = millis();
+        int blinkCount = 0;
+        while (blinkCount < 10 && millis() - blinkStart < 4000)
         {
-            digitalWrite(STRIP_PIN, HIGH);
-            delay(200);
-            digitalWrite(STRIP_PIN, LOW);
-            delay(200);
+            if (millis() - blinkStart >= (blinkCount * 400))
+            {
+                digitalWrite(STRIP_PIN, (blinkCount % 2 == 0) ? HIGH : LOW);
+                blinkCount++;
+            }
+            vTaskDelay(pdMS_TO_TICKS(10));  // Small delay to yield CPU
+        }
+        digitalWrite(STRIP_PIN, LOW);  // Ensure LED is off
+
+        // Non-blocking delay before restart
+        unsigned long restartStart = millis();
+        while (millis() - restartStart < 5000)
+        {
+            vTaskDelay(pdMS_TO_TICKS(100));  // Yield to FreeRTOS
         }
 
-        delay(5000);
         ESP.restart();
     }
 
     // Connected successfully
-    Serial.printf("\nConnected! IP: %s\n", WiFi.localIP().toString().c_str());
-    Serial.printf("Abre http://%s.local o http://%s\n", WEB_NAME, WiFi.localIP().toString().c_str());
+#ifdef DEBUG_WIFI
+    debugD("\nConnected! IP: ");
+    debugD(WiFi.localIP().toString().c_str());
+    debugD("\n");
+    debugD("Abre http://");
+    debugD(WEB_NAME);
+    debugD(".local o http://");
+    debugD(WiFi.localIP().toString().c_str());
+    debugD("\n");
+#endif
 
     if (!MDNS.begin(WEB_NAME))
     {
+#ifdef DEBUG_NETWORK
         debuglnD("Error configurando mDNS!");
+#endif
         while (1)
         {
             vTaskDelay(pdMS_TO_TICKS(1000));
         }
     }
+#ifdef DEBUG_NETWORK
     debuglnD("mDNS configurado");
+#endif
 }
 
 // ----------------------------------------------------------------------------
@@ -648,7 +845,7 @@ const char* processor(const String &var)
         return buffer;
     }
     case BRIGHTNESS:
-        snprintf(buffer, sizeof(buffer), "%d", brightness);
+        itoa(brightness, buffer, 10);
         return buffer;
     case STRIPLED:
         return stripLed.powerState ? "on" : "off";
@@ -704,31 +901,73 @@ void initWebServer()
     // Endpoint to save WiFi configuration and restart
     server.on("/save-wifi", HTTP_POST, [](AsyncWebServerRequest *request)
     {
-      // Get SSID and password from form data
-      String newSSID = request->getParam("ssid", true)->value();
-      String newPassword = request->getParam("password", true)->value();
+      // Direct char array copy - no String objects to prevent heap fragmentation
+      char newSSID[33] = {0};  // SSID max 32 chars + null
+      char newPassword[65] = {0};  // Password max 64 chars + null
 
-      // If SSID is empty, use current SSID
-      if (newSSID.length() == 0) {
-        newSSID = WiFi.SSID();
+      // Get parameters directly without String objects
+      const AsyncWebParameter* pSSID = request->getParam("ssid", true);
+      const AsyncWebParameter* pPass = request->getParam("password", true);
+
+      // Validate parameters exist
+      if (!pSSID || !pPass) {
+        request->send(400, "application/json", "{\"status\":\"error\",\"message\":\"Missing parameters\"}");
+        return;
       }
 
-      Serial.println("Saving WiFi credentials...");
+      // Get string lengths
+      size_t ssidLen = pSSID->value().length();
+      size_t passLen = pPass->value().length();
 
-      // Save to Preferences
-      Preferences preferences;
-      preferences.begin("wifi", false);
-      preferences.putString("ssid", newSSID);
-      preferences.putString("password", newPassword);
-      preferences.end();
+      // Validate lengths
+      if (ssidLen > 32 || passLen > 64) {
+        request->send(400, "application/json", "{\"status\":\"error\",\"message\":\"SSID or password too long\"}");
+        return;
+      }
 
-      Serial.println("Saved. Restarting.");
+      // Copy directly to char arrays (no String objects!)
+      strncpy(newSSID, pSSID->value().c_str(), sizeof(newSSID) - 1);
+      newSSID[sizeof(newSSID) - 1] = '\0';  // Ensure null termination
 
-      // Send quick response
-      request->send(200, "application/json", "{\"status\":\"success\",\"message\":\"Saved\"}");
+      strncpy(newPassword, pPass->value().c_str(), sizeof(newPassword) - 1);
+      newPassword[sizeof(newPassword) - 1] = '\0';  // Ensure null termination
 
-      // Restart immediately
-      ESP.restart();
+      // If SSID is empty, use current SSID
+      if (strlen(newSSID) == 0) {
+        strncpy(newSSID, WiFi.SSID().c_str(), sizeof(newSSID) - 1);
+        newSSID[sizeof(newSSID) - 1] = '\0';  // Ensure null termination
+      }
+
+#ifdef DEBUG_WIFI
+      debuglnD("Saving WiFi credentials...");
+#endif
+
+      // Protect WiFi credential operations with mutex
+      if (xSemaphoreTake(wifiMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
+          // Save to Preferences
+          Preferences preferences;
+          preferences.begin("wifi", false);
+          preferences.putBytes("ssid", newSSID, strlen(newSSID));
+          preferences.putBytes("password", newPassword, strlen(newPassword));
+          preferences.end();
+
+#ifdef DEBUG_WIFI
+          debuglnD("Saved. Restarting.");
+          size_t heapAfter = ESP.getFreeHeap();
+#endif
+          xSemaphoreGive(wifiMutex);
+
+          // Send quick response
+          request->send(200, "application/json", "{\"status\":\"success\",\"message\":\"Saved\"}");
+
+          // Restart immediately
+          ESP.restart();
+      } else {
+#ifdef DEBUG_WIFI
+          debuglnE("Failed to acquire WiFi mutex for saving credentials");
+#endif
+          request->send(500, "application/json", "{\"status\":\"error\",\"message\":\"Mutex busy\"}");
+      }
     });
 
     server.serveStatic("/", LittleFS, "/").setDefaultFile("index.html").setTryGzipFirst(false);
@@ -736,7 +975,9 @@ void initWebServer()
                     { request->send(400, "text/plain", "Not found"); });
     ElegantOTA.begin(&server); // Start ElegantOTA
     server.begin();
+#ifdef DEBUG_WEB
     debuglnD("HTTP server started");
+#endif
     MDNS.addService("http", "tcp", 80);
 }
 
@@ -760,60 +1001,86 @@ const char* bars()
 
 void notifyClients()
 {
-    JsonDocument json;  // Modern API - auto sizing
+    // Take mutex for reading shared data
+    if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+        JsonDocument json;  // Modern API - auto sizing
 
-    // Usar buffer char para conversiones numéricas
-    char battVoltageStr[10];
-    char levelStr[6];
-    char tempStr[8];
-    char humStr[8];
+        // Usar valores numéricos directamente en JSON
+        json["bars"] = bars();
+        json["battVoltage"] = batt.battVolts;
+        json["level"] = batt.battLvl;
+        json["charging"] = batt.chargeState;
+        json["fullbatt"] = batt.fullBatt;
+        json["temperature"] = temp;
+        json["humidity"] = hum;
+        json["lampstatus"] = lampState ? "on" : "off";
+        json["neostatus"] = stripLed.powerState ? "on" : "off";
+        json["btstatus"] = bt_powerState ? "on" : "off";
+        json["neobrightness"] = stripLed.brightness;
 
-    snprintf(battVoltageStr, sizeof(battVoltageStr), "%.3f", batt.battVolts);
-    snprintf(levelStr, sizeof(levelStr), "%d", batt.battLvl);
-    snprintf(tempStr, sizeof(tempStr), "%.1f", temp);
-    snprintf(humStr, sizeof(humStr), "%.1f", hum);
+        // WiFi information
+        json["ssid"] = WiFi.SSID();
+        json["ip"] = WiFi.localIP().toString();
+        json["rssi"] = WiFi.RSSI();
 
-    json["bars"] = bars();
-    json["battVoltage"] = battVoltageStr;
-    json["level"] = levelStr;
-    json["charging"] = batt.chargeState;
-    json["fullbatt"] = batt.fullBatt;
-    json["temperature"] = tempStr;
-    json["humidity"] = humStr;
-    json["lampstatus"] = lampState ? "on" : "off";
-    json["neostatus"] = stripLed.powerState ? "on" : "off";
-    json["btstatus"] = bt_powerState ? "on" : "off";
-    json["neobrightness"] = stripLed.brightness;
+        // Añade el color actual (modern API)
+        JsonObject color = json["color"].to<JsonObject>();
+        color["r"] = stripLed.R;
+        color["g"] = stripLed.G;
+        color["b"] = stripLed.B;
 
-    // WiFi information
-    json["ssid"] = WiFi.SSID();
-    json["ip"] = WiFi.localIP().toString();
-    json["rssi"] = WiFi.RSSI();
+        // Efectos y VU
+        const char *effectNames[] = {
+            "fireStatus", "movingdotStatus", "rainbowbeatStatus", "rwbStatus", "rippleStatus",
+            "twinkleStatus", "ballsStatus", "juggleStatus", "sinelonStatus", "cometStatus",
+            "rainbowVUStatus", "oldVUStatus", "rainbowHueVUStatus", "rippleVUStatus",
+            "threebarsVUStatus", "oceanVUStatus", "tempNEOStatus", "battNEOStatus"};
+        for (uint8_t i = 0; i < 18; ++i)
+            json[effectNames[i]] = (stripLed.effectId == i + 1 && stripLed.powerState) ? "on" : "off";
 
-    // Añade el color actual (modern API)
-    JsonObject color = json["color"].to<JsonObject>();
-    color["r"] = stripLed.R;
-    color["g"] = stripLed.G;
-    color["b"] = stripLed.B;
+        // Calculate required size first
+        const size_t requiredSize = measureJson(json);
+        const size_t safetyMargin = 128;
+        const size_t bufferSize = requiredSize + safetyMargin;
 
-    // Efectos y VU
-    const char *effectNames[] = {
-        "fireStatus", "movingdotStatus", "rainbowbeatStatus", "rwbStatus", "rippleStatus",
-        "twinkleStatus", "ballsStatus", "juggleStatus", "sinelonStatus", "cometStatus",
-        "rainbowVUStatus", "oldVUStatus", "rainbowHueVUStatus", "rippleVUStatus",
-        "threebarsVUStatus", "oceanVUStatus", "tempNEOStatus", "battNEOStatus"};
-    for (uint8_t i = 0; i < 18; ++i)
-        json[effectNames[i]] = (stripLed.effectId == i + 1 && stripLed.powerState) ? "on" : "off";
+        // Verify reasonable limit
+        if (bufferSize > 1024) {
+#ifdef DEBUG_WEBSOCKET
+            debuglnE("JSON payload too large for WebSocket");
+            debugD("Required size: ");
+            debugD_NUM(bufferSize, "%u");
+            debuglnD(" bytes");
+#endif
+            xSemaphoreGive(dataMutex);
+            return;
+        }
 
-    char buffer[768];
-    size_t len = serializeJson(json, buffer, sizeof(buffer));
+        // Dynamic buffer with exact needed size
+        char buffer[bufferSize];
+        size_t len = serializeJson(json, buffer, sizeof(buffer));
 
-    if (len >= sizeof(buffer)) {
-        Serial.println("ERROR: JSON buffer overflow!");
-        return;
+        if (len >= sizeof(buffer)) {
+#ifdef DEBUG_WEBSOCKET
+            debuglnE("JSON serialization failed - buffer too small");
+#endif
+            xSemaphoreGive(dataMutex);
+            return;
+        }
+
+#ifdef DEBUG_WEBSOCKET
+        debugD("WebSocket payload size: ");
+        debuglnD_NUM(len, "%u");
+        debuglnD(" bytes");
+#endif
+
+        ws.textAll(buffer, len);
+
+        xSemaphoreGive(dataMutex);
+    } else {
+#ifdef DEBUG_WEBSOCKET
+        debuglnW("Failed to acquire mutex for WebSocket update");
+#endif
     }
-
-    ws.textAll(buffer, len);
 }
 
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
@@ -825,8 +1092,10 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         DeserializationError err = deserializeJson(json, data);
         if (err)
         {
-            debuglnD(F("deserializeJson() failed with code "));
+#ifdef DEBUG_WEBSOCKET
+            debuglnD("deserializeJson() failed with code ");
             debuglnD(err.c_str());
+#endif
             return;
         }
 
@@ -843,7 +1112,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         {
             lampState = !lampState;
             digitalWrite(LAMP_PIN, lampState ? LOW : HIGH);
+#ifdef DEBUG_LED
             debuglnD(lampState ? "Lampara ON" : "Lampara OFF");
+#endif
         }
         else if (strcmp(action, "animation") == 0 || strcmp(action, "vu") == 0 || strcmp(action, "indicator") == 0)
         {
@@ -855,7 +1126,10 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         else if (strcmp(action, "slider") == 0)
         {
             const int brightness = json["brightness"].as<int>();
-            debuglnD("Brillo " + String(brightness));
+#ifdef DEBUG_LED
+            debugD("Brillo ");
+            debuglnD_NUM(brightness, "%d");
+#endif
             stripLed.brightness = brightness;
         }
         else if (strcmp(action, "picker") == 0)
@@ -864,13 +1138,26 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             stripLed.R = r = color["r"].as<int>();
             stripLed.G = g = color["g"].as<int>();
             stripLed.B = b = color["b"].as<int>();
-            debuglnD("RGB: " + String(r) + ", " + String(g) + ", " + String(b));
+#ifdef DEBUG_LED
+            debugD("RGB: ");
+            debugD_NUM(r, "%d");
+            debugD(", ");
+            debugD_NUM(g, "%d");
+            debugD(", ");
+            debuglnD_NUM(b, "%d");
+#endif
         }
         else if (strcmp(action, "music") == 0)
         {
             bt_powerState = !bt_powerState;
             digitalWrite(SWITCH_PIN, bt_powerState ? LOW : HIGH);
-            bt_powerState ? Serial.println("Encendido del modulo BT") : Serial.println("Apagado del modulo BT");
+#ifdef DEBUG_BLUETOOTH
+            if (bt_powerState) {
+                debuglnD("Encendido del modulo BT");
+            } else {
+                debuglnD("Apagado del modulo BT");
+            }
+#endif
         }
         else if (strcmp(action, "volup") == 0)
         {
@@ -912,18 +1199,49 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
     switch (type)
     {
     case WS_EVT_CONNECT:
-        Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+#ifdef DEBUG_WEBSOCKET
+        debugD("WebSocket client #");
+        debugD_NUM(client->id(), "%u");
+        debugD(" connected from ");
+        debugD(client->remoteIP().toString().c_str());
+        debugD("\n");
+#endif
         break;
     case WS_EVT_DISCONNECT:
-        Serial.printf("WebSocket client #%u disconnected\n", client->id());
+#ifdef DEBUG_WEBSOCKET
+        debugD("WebSocket client #");
+        debugD_NUM(client->id(), "%u");
+        debugD(" disconnected\n");
+#endif
         break;
     case WS_EVT_DATA:
         handleWebSocketMessage(arg, data, len);
         break;
     case WS_EVT_PONG:
-        Serial.printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len) ? (char *)data : "");
+#ifdef DEBUG_WEBSOCKET
+        debugD("ws[");
+        debugD(server->url());
+        debugD("][");
+        debugD_NUM(client->id(), "%u");
+        debugD("] pong[");
+        debugD_NUM(len, "%u");
+        debugD("]: ");
+        debugD((len) ? (char *)data : "");
+        debugD("\n");
+#endif
+        break;
     case WS_EVT_ERROR:
-        Serial.printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t *)arg), (char *)data);
+#ifdef DEBUG_WEBSOCKET
+        debugD("ws[");
+        debugD(server->url());
+        debugD("][");
+        debugD_NUM(client->id(), "%u");
+        debugD("] error(");
+        debugD_NUM(*((uint16_t *)arg), "%u");
+        debugD("): ");
+        debugD((char *)data);
+        debugD("\n");
+#endif
         break;
     }
 }
@@ -932,7 +1250,9 @@ void initWebSocket()
 {
     ws.onEvent(onWsEvent);
     server.addHandler(&ws);
+#ifdef DEBUG_WEBSOCKET
     debuglnD("WebSocket server started");
+#endif
 }
 
 // ----------------------------------------------------------------------------
@@ -948,11 +1268,29 @@ TaskHandle_t TaskOnboardLEDHandle;
 
 void TaskWebSocket(void *pvParameters)
 {
+    UBaseType_t stackHighWaterMark;
+
     while (true)
     {
         ws.cleanupClients();
         notifyClients();
-        vTaskDelay(pdMS_TO_TICKS(3000));
+
+        // Monitor stack every 10 cycles
+        static uint8_t cycleCount = 0;
+        if (++cycleCount >= WEBSOCKET_STACK_CHECK_CYCLES) {
+            stackHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
+            if (stackHighWaterMark < STACK_WARNING_THRESHOLD) {
+#ifdef DEBUG_WEBSOCKET
+                debuglnW("WebSocket task stack running low!");
+                debugD("Stack free: ");
+                debugD_NUM(stackHighWaterMark, "%u");
+                debuglnD(" bytes");
+#endif
+            }
+            cycleCount = 0;
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(WEBSOCKET_UPDATE_INTERVAL));
     }
 }
 
@@ -961,8 +1299,18 @@ void TaskBatteryMonitor(void *pvParameters)
     while (true)
     {
         batt.battMonitor();
-        lvlCharge = batt.battLvl;
-        vTaskDelay(pdMS_TO_TICKS(3000));
+
+        // Protect shared variable access
+        if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+            lvlCharge = batt.battLvl;
+            xSemaphoreGive(dataMutex);
+        } else {
+#ifdef DEBUG_BATTERY
+            debuglnW("Failed to acquire data mutex in BatteryMonitor");
+#endif
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(BATTERY_CHECK_INTERVAL));
     }
 }
 
@@ -972,7 +1320,12 @@ void TaskLEDControl(void *pvParameters)
     {
         if (stripLed.powerState)
         {
-            brightness = stripLed.brightness;
+            // Protect brightness access
+            if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+                brightness = stripLed.brightness;
+                xSemaphoreGive(dataMutex);
+            }
+
             stripLed.update();
         }
         else
@@ -985,13 +1338,41 @@ void TaskLEDControl(void *pvParameters)
 
 void TaskWiFiMonitor(void *pvParameters)
 {
+    static int disconnectCount = 0;
+    const int MAX_DISCONNECTS = 5;
+
     while (true)
     {
-        if (WiFi.status() != WL_CONNECTED)
-        {
-            ESP.restart();
+        // Protect WiFi status check
+        if (xSemaphoreTake(wifiMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+            if (WiFi.status() != WL_CONNECTED) {
+                disconnectCount++;
+#ifdef DEBUG_WIFI
+                debugD("WiFi disconnect count: ");
+                debuglnD_NUM(disconnectCount, "%d");
+#endif
+
+                if (disconnectCount >= MAX_DISCONNECTS) {
+#ifdef DEBUG_WIFI
+                    debuglnE("Max WiFi disconnects reached, restarting...");
+#endif
+                    vTaskDelay(pdMS_TO_TICKS(1000));
+                    ESP.restart();
+                }
+            } else {
+#ifdef DEBUG_WIFI
+                if (disconnectCount > 0) {
+                    debugD("WiFi reconnected after ");
+                    debugD_NUM(disconnectCount, "%d");
+                    debuglnD(" disconnects");
+                }
+#endif
+                disconnectCount = 0;
+            }
+            xSemaphoreGive(wifiMutex);
         }
-        vTaskDelay(pdMS_TO_TICKS(5000));
+
+        vTaskDelay(pdMS_TO_TICKS(SENSOR_CHECK_INTERVAL));
     }
 }
 
@@ -1000,9 +1381,7 @@ void TaskSensor(void *pvParameters)
     while (true)
     {
         readSensor();
-        //UBaseType_t highWaterMark = uxTaskGetStackHighWaterMark(TaskSensorHandle); // give me a mark of 716
-        //Serial.printf("TaskSensor stack high water mark: %u\n", highWaterMark);
-        vTaskDelay(pdMS_TO_TICKS(5000));
+        vTaskDelay(pdMS_TO_TICKS(SENSOR_CHECK_INTERVAL));
     }
 }
 
@@ -1044,16 +1423,57 @@ void setup()
     digitalWrite(PLAY_PIN, LOW);
 
     Serial.begin(115200);
+    initMutexes();
 
     // Initialize DHT22 device.
     dht.begin();
     // Print temperature sensor details.
     sensor_t sensor;
     dht.temperature().getSensor(&sensor);
-    debuglnD("Temperature Sensor\nSensor Type: " + String(sensor.name) + "\nDriver Ver: " + String(sensor.version) + "\nUnique ID: " + String(sensor.sensor_id) + "\nMax Value: " + String(sensor.max_value) + "°C\nMin Value: " + String(sensor.min_value) + "°C\nResolution: " + String(sensor.resolution) + "°C\n----------------------------------------------------");
+#ifdef DEBUG_TEMPERATURE
+    debuglnD("Temperature Sensor");
+    debugD("Sensor Type: ");
+    debuglnD(sensor.name);
+    debugD("Driver Ver: ");
+    debugD_NUM(sensor.version, "%d");
+    debugD("\n");
+    debugD("Unique ID: ");
+    debugD_NUM(sensor.sensor_id, "%u");
+    debugD("\n");
+    debugD("Max Value: ");
+    debugD_NUM(sensor.max_value, "%.1f");
+    debugD("°C\n");
+    debugD("Min Value: ");
+    debugD_NUM(sensor.min_value, "%.1f");
+    debugD("°C\n");
+    debugD("Resolution: ");
+    debugD_NUM(sensor.resolution, "%.1f");
+    debugD("°C\n");
+    debuglnD("----------------------------------------------------");
+#endif
     // Print humidity sensor details.
     dht.humidity().getSensor(&sensor);
-    debuglnD("Humidity Sensor\nSensor Type: " + String(sensor.name) + "\nDriver Ver: " + String(sensor.version) + "\nUnique ID: " + String(sensor.sensor_id) + "\nMax Value: " + String(sensor.max_value) + "%\nMin Value: " + String(sensor.min_value) + "%\nResolution: " + String(sensor.resolution) + "%\n----------------------------------------------------");
+#ifdef DEBUG_TEMPERATURE
+    debuglnD("Humidity Sensor");
+    debugD("Sensor Type: ");
+    debuglnD(sensor.name);
+    debugD("Driver Ver: ");
+    debugD_NUM(sensor.version, "%d");
+    debugD("\n");
+    debugD("Unique ID: ");
+    debugD_NUM(sensor.sensor_id, "%u");
+    debugD("\n");
+    debugD("Max Value: ");
+    debugD_NUM(sensor.max_value, "%.1f");
+    debugD("%\n");
+    debugD("Min Value: ");
+    debugD_NUM(sensor.min_value, "%.1f");
+    debugD("%\n");
+    debugD("Resolution: ");
+    debugD_NUM(sensor.resolution, "%.1f");
+    debugD("%\n");
+    debuglnD("----------------------------------------------------");
+#endif
     
     // For FASTLED library
     FastLED.addLeds<LED_TYPE, STRIP_PIN, COLOR_ORDER>(leds, N_PIXELS).setCorrection(TypicalLEDStrip);

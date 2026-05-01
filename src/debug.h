@@ -31,6 +31,9 @@
     #define DEBUGLEVEL DEBUGLEVEL_DEBUGGING
 */
 
+#ifndef DEBUG_H
+#define DEBUG_H
+
 // User picks debugging level from this list
 #define DEBUGLEVEL_ERRORS 1
 #define DEBUGLEVEL_WARNINGS 2
@@ -55,8 +58,40 @@ void debugNothing(...)
 // By default we want a trace stamp output in the first instance
 bool traceStampRequired = true;
 
-String debugStr = "";
+char debugStr[128];  // Buffer for debug messages
 bool foundNL = false;
+
+// Helper function to copy string to debug buffer (SAFE version - no snprintf)
+inline void copyToDebugStr(const char* src) {
+    if (src == nullptr) {
+        debugStr[0] = '\0';
+        foundNL = false;
+        return;
+    }
+
+    // Safe copy with explicit length limit
+    size_t i = 0;
+    while (i < sizeof(debugStr) - 1 && src[i] != '\0') {
+        debugStr[i] = src[i];
+        i++;
+    }
+    debugStr[i] = '\0';  // Always null terminate
+    foundNL = (strstr(debugStr, "\n") != NULL);
+}
+
+// Helper function for String objects
+inline void copyToDebugStr(const String& src) {
+    // Safe copy with explicit length limit
+    size_t i = 0;
+    const char* cstr = src.c_str();
+
+    while (i < sizeof(debugStr) - 1 && cstr[i] != '\0') {
+        debugStr[i] = cstr[i];
+        i++;
+    }
+    debugStr[i] = '\0';  // Always null terminate
+    foundNL = (strstr(debugStr, "\n") != NULL);
+}
 
 // The tracestamp looks like [D][mainfunction:45]
 #define traceStamp(x, y, z)                \
@@ -71,8 +106,7 @@ bool foundNL = false;
         Serial.print(__LINE__);            \
         Serial.print("] ");                \
     }                                      \
-    debugStr = y;                          \
-    foundNL = debugStr.indexOf("\n") > -1; \
+    copyToDebugStr(y);                     \
     if (z || foundNL)                      \
         traceStampRequired = true;         \
     else                                   \
@@ -126,3 +160,20 @@ bool foundNL = false;
 #define debugV(x) debugNothing(x);
 #define debuglnV(x) debugNothing(x);
 #endif
+
+// Helper macros for debugging with numbers
+#define debugD_NUM(val, format) \
+    do { \
+        char _buf[32]; \
+        snprintf(_buf, sizeof(_buf), format, val); \
+        debugD(_buf); \
+    } while(0)
+
+#define debuglnD_NUM(val, format) \
+    do { \
+        char _buf[32]; \
+        snprintf(_buf, sizeof(_buf), format, val); \
+        debuglnD(_buf); \
+    } while(0)
+
+#endif  // DEBUG_H
