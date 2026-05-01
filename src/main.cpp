@@ -859,8 +859,8 @@ void initWebServer()
       char newPassword[65] = {0};  // Password max 64 chars + null
 
       // Get parameters directly without String objects
-      AsyncWebParameter* pSSID = request->getParam("ssid", true);
-      AsyncWebParameter* pPass = request->getParam("password", true);
+      const AsyncWebParameter* pSSID = request->getParam("ssid", true);
+      const AsyncWebParameter* pPass = request->getParam("password", true);
 
       // Validate parameters exist
       if (!pSSID || !pPass) {
