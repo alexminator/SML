@@ -1488,7 +1488,15 @@ void TaskOnboardLED(void *pvParameters)
 {
     while (true)
     {
-        onboard_led.on = millis() % 1000 < 500; // Blink every 1000 ms (on for 500 ms)
+        // LED behavior based on power management state
+        // AC_MODE or BATTERY_ACTIVE: Blink (system active, user present)
+        // BATTERY_SLEEP or BATTERY_CONNECTING: OFF (saving power)
+        if (currentPowerState == POWER_AC_MODE ||
+            currentPowerState == POWER_BATTERY_ACTIVE) {
+            onboard_led.on = millis() % 1000 < 500; // Blink every 1s
+        } else {
+            onboard_led.on = false;  // LED OFF in battery saving modes
+        }
         onboard_led.update();
         vTaskDelay(pdMS_TO_TICKS(100)); // Update every 100 ms
     }
