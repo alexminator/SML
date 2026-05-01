@@ -623,8 +623,11 @@ void initWiFi()
     char savedSSID[33] = {0};  // SSID max 32 chars + null
     char savedPass[65] = {0};  // Password max 64 chars + null
 
-    preferences.getString("ssid", savedSSID, sizeof(savedSSID));
-    preferences.getString("password", savedPass, sizeof(savedPass));
+    size_t ssidLen = preferences.getBytes("ssid", savedSSID, sizeof(savedSSID) - 1);
+    savedSSID[ssidLen] = '\0';  // Ensure null termination
+
+    size_t passLen = preferences.getBytes("password", savedPass, sizeof(savedPass) - 1);
+    savedPass[passLen] = '\0';  // Ensure null termination
 
     preferences.end();
 
@@ -911,8 +914,8 @@ void initWebServer()
           // Save to Preferences
           Preferences preferences;
           preferences.begin("wifi", false);
-          preferences.putString("ssid", newSSID);
-          preferences.putString("password", newPassword);
+          preferences.putBytes("ssid", newSSID, strlen(newSSID));
+          preferences.putBytes("password", newPassword, strlen(newPassword));
           preferences.end();
 
 #ifdef DEBUG_WIFI
