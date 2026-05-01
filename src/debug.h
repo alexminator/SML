@@ -41,6 +41,9 @@
 #define DEBUGLEVEL_VERBOSE 4
 #define DEBUGLEVEL_NONE 0
 
+// Power Management State Machine debugging
+#define DEBUG_POWER_MANAGEMENT
+
 // We want to debug everything! Overide this in your sketch
 #ifndef DEBUGLEVEL
 #define DEBUGLEVEL DEBUGLEVEL_VERBOSE
