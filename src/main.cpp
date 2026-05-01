@@ -623,25 +623,12 @@ void initWiFi()
     char savedSSID[33] = {0};  // SSID max 32 chars + null
     char savedPass[65] = {0};  // Password max 64 chars + null
 
-    // Try new format (putBytes) first, then fall back to old format (putString)
-    // This ensures backward compatibility with credentials saved before putBytes refactor
+    // Read WiFi credentials (putBytes format - no String objects)
     size_t ssidLen = preferences.getBytes("ssid", savedSSID, sizeof(savedSSID) - 1);
-    if (ssidLen == 0) {
-        // Fall back to old getString format for backward compatibility
-        preferences.getString("ssid", savedSSID, sizeof(savedSSID));
-        ssidLen = strlen(savedSSID);
-    } else {
-        savedSSID[ssidLen] = '\0';  // Ensure null termination for getBytes
-    }
+    savedSSID[ssidLen] = '\0';  // Ensure null termination
 
     size_t passLen = preferences.getBytes("password", savedPass, sizeof(savedPass) - 1);
-    if (passLen == 0) {
-        // Fall back to old getString format for backward compatibility
-        preferences.getString("password", savedPass, sizeof(savedPass));
-        passLen = strlen(savedPass);
-    } else {
-        savedPass[passLen] = '\0';  // Ensure null termination for getBytes
-    }
+    savedPass[passLen] = '\0';  // Ensure null termination
 
     preferences.end();
 
