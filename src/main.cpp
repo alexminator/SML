@@ -160,7 +160,14 @@ bool lampState = false;
 // Sensor Battery
 #define FULL_CHARGE_PIN 35 // Pin to sense full charge, signal come from TP4056
 #define ADC_PIN 33         // Pin to monitor Batt
+
+// CONV_FACTOR: ADC to voltage conversion
+// Measure battery voltage at full charge (TP4056 blue LED on)
+// Adjust this value until reading matches multimeter
+// Formula: CONV_FACTOR = measured_voltage / ADC_reading
+// Typical range: 1.5 - 2.0 for most voltage dividers
 #define CONV_FACTOR 1.702
+
 #define READS 30
 #define MAXV 4.00
 #define MINV 3.20
