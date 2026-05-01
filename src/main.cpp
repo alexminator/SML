@@ -854,29 +854,49 @@ void initWebServer()
     // Endpoint to save WiFi configuration and restart
     server.on("/save-wifi", HTTP_POST, [](AsyncWebServerRequest *request)
     {
-      // Use char arrays instead of String to prevent memory fragmentation
+      // Direct char array copy - no String objects to prevent heap fragmentation
       char newSSID[33] = {0};  // SSID max 32 chars + null
       char newPassword[65] = {0};  // Password max 64 chars + null
 
-      // Get SSID and password from form data
-      String tempSSID = request->getParam("ssid", true)->value();
-      String tempPass = request->getParam("password", true)->value();
+      // Get parameters directly without String objects
+      AsyncWebParameter* pSSID = request->getParam("ssid", true);
+      AsyncWebParameter* pPass = request->getParam("password", true);
 
-      // Copy String to char array safely
-      if (tempSSID.length() > 0) {
-        strncpy(newSSID, tempSSID.c_str(), sizeof(newSSID) - 1);
+      // Validate parameters exist
+      if (!pSSID || !pPass) {
+        request->send(400, "application/json", "{\"status\":\"error\",\"message\":\"Missing parameters\"}");
+        return;
       }
-      if (tempPass.length() > 0) {
-        strncpy(newPassword, tempPass.c_str(), sizeof(newPassword) - 1);
+
+      // Get string lengths
+      size_t ssidLen = pSSID->value().length();
+      size_t passLen = pPass->value().length();
+
+      // Validate lengths
+      if (ssidLen > 32 || passLen > 64) {
+        request->send(400, "application/json", "{\"status\":\"error\",\"message\":\"SSID or password too long\"}");
+        return;
       }
+
+      // Copy directly to char arrays (no String objects!)
+      strncpy(newSSID, pSSID->value().c_str(), sizeof(newSSID) - 1);
+      newSSID[sizeof(newSSID) - 1] = '\0';  // Ensure null termination
+
+      strncpy(newPassword, pPass->value().c_str(), sizeof(newPassword) - 1);
+      newPassword[sizeof(newPassword) - 1] = '\0';  // Ensure null termination
 
       // If SSID is empty, use current SSID
       if (strlen(newSSID) == 0) {
         strncpy(newSSID, WiFi.SSID().c_str(), sizeof(newSSID) - 1);
+        newSSID[sizeof(newSSID) - 1] = '\0';  // Ensure null termination
       }
 
 #ifdef DEBUG_WIFI
       debuglnD("Saving WiFi credentials...");
+      // Test: Measure heap before/after to detect memory leak
+      size_t heapBefore = ESP.getFreeHeap();
+      debugD("Heap before WiFi save: ");
+      debuglnD_NUM(heapBefore, "%u");
 #endif
 
       // Protect WiFi credential operations with mutex
@@ -890,6 +910,16 @@ void initWebServer()
 
 #ifdef DEBUG_WIFI
           debuglnD("Saved. Restarting.");
+          size_t heapAfter = ESP.getFreeHeap();
+          debugD("Heap after WiFi save: ");
+          debuglnD_NUM(heapAfter, "%u");
+          debugD("Heap difference: ");
+          debuglnD_NUM(heapAfter - heapBefore, "%d");
+          if (heapAfter < heapBefore - 100) {
+            debuglnE("MEMORY LEAK DETECTED in WiFi save!");
+          } else {
+            debuglnD("WiFi save: No leak detected");
+          }
 #endif
           xSemaphoreGive(wifiMutex);
 
