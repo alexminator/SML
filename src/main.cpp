@@ -893,10 +893,6 @@ void initWebServer()
 
 #ifdef DEBUG_WIFI
       debuglnD("Saving WiFi credentials...");
-      // Test: Measure heap before/after to detect memory leak
-      size_t heapBefore = ESP.getFreeHeap();
-      debugD("Heap before WiFi save: ");
-      debuglnD_NUM(heapBefore, "%u");
 #endif
 
       // Protect WiFi credential operations with mutex
@@ -911,15 +907,6 @@ void initWebServer()
 #ifdef DEBUG_WIFI
           debuglnD("Saved. Restarting.");
           size_t heapAfter = ESP.getFreeHeap();
-          debugD("Heap after WiFi save: ");
-          debuglnD_NUM(heapAfter, "%u");
-          debugD("Heap difference: ");
-          debuglnD_NUM(heapAfter - heapBefore, "%d");
-          if (heapAfter < heapBefore - 100) {
-            debuglnE("MEMORY LEAK DETECTED in WiFi save!");
-          } else {
-            debuglnD("WiFi save: No leak detected");
-          }
 #endif
           xSemaphoreGive(wifiMutex);
 
