@@ -71,15 +71,6 @@ const unsigned long LED_ERROR_FLASH_ON = 50;      // LED error flash on time (ms
 
 // Battery monitoring
 const unsigned long BATTERY_CHECK_INTERVAL = 3000; // Battery check interval (ms)
-
-// Temperature/Humidity sensor monitoring
-// 5-second interval is appropriate for DHT22:
-// - Minimizes 2ms blocking impact (0.04% duty cycle)
-// - DHT22 response time is ~2 seconds max
-// - Allows sufficient time between reads for sensor accuracy
-// - User experience: Updates feel responsive without overwhelming the system
-const unsigned long SENSOR_CHECK_INTERVAL = 5000;  // Sensor check interval (ms)
-
 const int BATTERY_MAX_READS = 10;                  // Max battery reads when threshold reached
 const int BATTERY_FULL_READS = 10;                 // Max battery reads when full
 
@@ -105,7 +96,14 @@ const uint8_t WEBSOCKET_STACK_CHECK_CYCLES = 10;       // Check stack every N cy
 #define TOP (N_PIXELS + 2) // Allow dot to go slightly off scale [(N_PIXELS + 2)]
 #define PEAK_FALL 20       // Rate of peak falling dot [20]
 #define N_PIXELS_HALF (N_PIXELS / 2)
+
+// BIAS: ADC value for HALF of VCC (audio input calibration)
+// This is the center point for audio VU meter effects
+// Calibration: Measure actual ADC with no audio signal, adjust to match
+// Formula: BIAS = ADC_reading_at_half_VCC (should be ~1850 for 3.3V reference)
+// Typical range: ~1800-1900 for ESP32 with 3.3V reference
 #define BIAS 1850 // ADC value for HALF of 3.22V VCC. Hint: Take the analog reading without signal
+
 // Effects
 #define GRAVITY -1  // Downward (negative) acceleration of gravity in m/s^2
 #define h0 1        // Starting height, in meters, of the ball (strip length)
@@ -118,6 +116,9 @@ int lvl = 0;          // Current "dampened" audio level
 CRGBPalette16 currentPalette; // Define the current palette
 CRGBPalette16 targetPalette;  // Define the target palette
 
+// Initial brightness (0-255)
+// 130 = ~50% - comfortable starting point for indoor use
+// Prevents eye strain from full brightness while still being visible
 int brightness = 130;
 int effectId = 0;
 uint8_t myhue = 0;           // hue 0. red color
@@ -150,6 +151,13 @@ AsyncWebSocket ws("/ws");
 DHT_Unified dht(DHTPIN, DHTTYPE);
 float temp;
 float hum;
+// Temperature/Humidity sensor monitoring
+// 5-second interval is appropriate for DHT22:
+// - Minimizes 2ms blocking impact (0.04% duty cycle)
+// - DHT22 response time is ~2 seconds max
+// - Allows sufficient time between reads for sensor accuracy
+// - User experience: Updates feel responsive without overwhelming the system
+const unsigned long SENSOR_CHECK_INTERVAL = 5000;  // Sensor check interval (ms)
 
 // Power Switch for Bluetooth Module
 #define SWITCH_PIN 18 // Pin to command relay. BT on/off
