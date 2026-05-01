@@ -712,17 +712,28 @@ void initWiFi()
         debuglnD("Restarting in 5 seconds...\n");
 #endif
 
-        // Blink LED to indicate error
+        // Blink LED to indicate error (non-blocking)
         pinMode(STRIP_PIN, OUTPUT);
-        for (int i = 0; i < 10; i++)
+        unsigned long blinkStart = millis();
+        int blinkCount = 0;
+        while (blinkCount < 10 && millis() - blinkStart < 4000)
         {
-            digitalWrite(STRIP_PIN, HIGH);
-            delay(200);
-            digitalWrite(STRIP_PIN, LOW);
-            delay(200);
+            if (millis() - blinkStart >= (blinkCount * 400))
+            {
+                digitalWrite(STRIP_PIN, (blinkCount % 2 == 0) ? HIGH : LOW);
+                blinkCount++;
+            }
+            vTaskDelay(pdMS_TO_TICKS(10));  // Small delay to yield CPU
+        }
+        digitalWrite(STRIP_PIN, LOW);  // Ensure LED is off
+
+        // Non-blocking delay before restart
+        unsigned long restartStart = millis();
+        while (millis() - restartStart < 5000)
+        {
+            vTaskDelay(pdMS_TO_TICKS(100));  // Yield to FreeRTOS
         }
 
-        delay(5000);
         ESP.restart();
     }
 
