@@ -71,7 +71,15 @@ const unsigned long LED_ERROR_FLASH_ON = 50;      // LED error flash on time (ms
 
 // Battery monitoring
 const unsigned long BATTERY_CHECK_INTERVAL = 3000; // Battery check interval (ms)
+
+// Temperature/Humidity sensor monitoring
+// 5-second interval is appropriate for DHT22:
+// - Minimizes 2ms blocking impact (0.04% duty cycle)
+// - DHT22 response time is ~2 seconds max
+// - Allows sufficient time between reads for sensor accuracy
+// - User experience: Updates feel responsive without overwhelming the system
 const unsigned long SENSOR_CHECK_INTERVAL = 5000;  // Sensor check interval (ms)
+
 const int BATTERY_MAX_READS = 10;                  // Max battery reads when threshold reached
 const int BATTERY_FULL_READS = 10;                 // Max battery reads when full
 
@@ -526,6 +534,15 @@ Battery batt = {battVolts, battLvl, false, false};
 //-----------------------------------------------------------------------------
 // DHT initialization
 //-----------------------------------------------------------------------------
+
+// DHT sensor blocking analysis:
+// - Read time: ~2ms (blocking during sensor read)
+// - Interval: 5000ms (SENSOR_CHECK_INTERVAL)
+// - Duty cycle: 0.04% (2ms / 5000ms = 0.0004)
+// - Impact: Negligible - DHT reading is in separate FreeRTOS task
+// - No action needed unless interval decreases significantly
+// - Alternative: Use async DHT library if blocking becomes issue
+
 void readSensor()
 {
     sensors_event_t event;
