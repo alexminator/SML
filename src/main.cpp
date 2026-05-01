@@ -219,6 +219,7 @@ unsigned long lastStateChange = 0;
 unsigned long sleepCycleStart = 0;
 bool webSocketClientConnected = false;
 bool onBatteryPower = false;
+bool powerManagementControllingWiFi = false;  // Signal to TaskWiFiMonitor
 
 // Timing constants
 const unsigned long SLEEP_DURATION = 60000;        // 60 seconds WiFi sleep
@@ -1431,7 +1432,8 @@ void TaskWiFiMonitor(void *pvParameters)
     {
         // Protect WiFi status check
         if (xSemaphoreTake(wifiMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
-            if (WiFi.status() != WL_CONNECTED) {
+            // Only count disconnects if power management is NOT controlling WiFi
+            if (!powerManagementControllingWiFi && WiFi.status() != WL_CONNECTED) {
                 disconnectCount++;
 #ifdef DEBUG_WIFI
                 debugD("WiFi disconnect count: ");
@@ -1455,6 +1457,17 @@ void TaskWiFiMonitor(void *pvParameters)
 #endif
                 disconnectCount = 0;
             }
+
+            // Debug: Show when power management is controlling WiFi
+#ifdef DEBUG_POWER_MANAGEMENT
+            if (powerManagementControllingWiFi) {
+                static unsigned long lastDebugMsg = 0;
+                if (millis() - lastDebugMsg > 10000) {  // Every 10 seconds
+                    debuglnD("🔋 Power Management controlling WiFi - TaskWiFiMonitor bypassed");
+                    lastDebugMsg = millis();
+                }
+            }
+#endif
             xSemaphoreGive(wifiMutex);
         }
 
@@ -1518,6 +1531,7 @@ void applyStateConfiguration(PowerState state) {
             // Full power mode - everything works normally
             WiFi.setSleep(false);
             setCpuFrequencyMhz(240);
+            powerManagementControllingWiFi = false;  // TaskWiFiMonitor handles WiFi
             // Neopixel enabled by default in AC mode
             // ESP32 LEDs: ON (built-in, always on)
             break;
@@ -1526,6 +1540,7 @@ void applyStateConfiguration(PowerState state) {
             // Battery with active WebSocket user
             WiFi.setSleep(false);
             setCpuFrequencyMhz(240);
+            powerManagementControllingWiFi = true;  // Power management controls WiFi
             // Neopixel: OFF (user requirement)
             // ESP32 LEDs: ON (built-in, always on)
             FastLED.clear();
@@ -1536,6 +1551,7 @@ void applyStateConfiguration(PowerState state) {
             // Maximum power savings
             WiFi.setSleep(true);
             setCpuFrequencyMhz(80);
+            powerManagementControllingWiFi = true;  // Power management controls WiFi
             // Neopixel: OFF
             // ESP32 LEDs: ON (built-in, always on)
             break;
@@ -1544,6 +1560,7 @@ void applyStateConfiguration(PowerState state) {
             // Attempting to connect + wait for client
             WiFi.setSleep(false);
             setCpuFrequencyMhz(240);
+            powerManagementControllingWiFi = true;  // Power management controls WiFi
             // Neopixel: OFF
             // ESP32 LEDs: ON (built-in, always on)
             break;
