@@ -196,6 +196,35 @@ int readCount = 0;
 int lvlCharge;
 Battery18650Stats battery(ADC_PIN, CONV_FACTOR, READS, MAXV, MINV);
 
+//-----------------------------------------------------------------------------
+// Power Management State Machine
+//-----------------------------------------------------------------------------
+
+// State definitions
+enum PowerState {
+    POWER_AC_MODE,            // AC power connected - full operation
+    POWER_BATTERY_ACTIVE,     // Battery + WebSocket client connected
+    POWER_BATTERY_SLEEP,      // Battery + no clients (savings mode)
+    POWER_BATTERY_CONNECTING   // Battery + attempting connection
+};
+
+// State machine variables
+PowerState currentPowerState = POWER_AC_MODE;
+PowerState previousPowerState = POWER_AC_MODE;
+unsigned long lastStateChange = 0;
+unsigned long sleepCycleStart = 0;
+bool webSocketClientConnected = false;
+bool onBatteryPower = false;
+
+// Timing constants
+const unsigned long SLEEP_DURATION = 60000;        // 60 seconds WiFi sleep
+const unsigned long AWAKE_DURATION = 10000;         // 10 seconds WiFi awake
+const unsigned long POWER_CHANGE_DEBOUNCE = 3000;   // 3 seconds debounce
+const unsigned long WS_WAIT_DURATION = 30000;        // 30 seconds wait for WebSocket
+
+// Critical battery threshold
+const int BATTERY_CRITICAL_LEVEL = 15;  // 15%
+
 // ----------------------------------------------------------------------------
 // RTOS Mutex Protection
 // ----------------------------------------------------------------------------
