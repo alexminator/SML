@@ -31,6 +31,9 @@
     #define DEBUGLEVEL DEBUGLEVEL_DEBUGGING
 */
 
+#ifndef DEBUG_H
+#define DEBUG_H
+
 // User picks debugging level from this list
 #define DEBUGLEVEL_ERRORS 1
 #define DEBUGLEVEL_WARNINGS 2
@@ -172,3 +175,5 @@ inline void copyToDebugStr(const String& src) {
         snprintf(_buf, sizeof(_buf), format, val); \
         debuglnD(_buf); \
     } while(0)
+
+#endif  // DEBUG_H
