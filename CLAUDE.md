@@ -290,6 +290,45 @@ json["voltage"] = battVolts;      // Not battVoltageStr
 
 ## Power Management
 
+### Automatic Power Management System (2026-05-01)
+
+The ESP32 implements an intelligent state machine-based power management system that automatically detects power source and optimizes power consumption.
+
+**Power States:**
+- **AC_MODE** (POWER_AC_MODE): Full operation - WiFi always ON, CPU 240MHz, Neopixel LED active
+- **BATTERY_CONNECTING** (POWER_BATTERY_CONNECTING): Try WiFi 10s, wait 30s for WebSocket client
+- **BATTERY_ACTIVE** (POWER_BATTERY_ACTIVE): Client connected - WiFi ON, CPU 240MHz, Neopixel OFF
+- **BATTERY_SLEEP** (POWER_BATTERY_SLEEP): Power savings - 60s WiFi OFF / 10s WiFi ON cycle, CPU 80MHz
+
+**State Transitions:**
+- AC lost → Try connect 10s → Wait 30s for client → Sleep if no client
+- Client connects → Immediate wake-up from any state
+- Client disconnects → Wait 30s for reconnect → Sleep
+- AC restored → Immediate return to full operation
+- Battery < 15% → Force maximum power savings
+
+**Power Detection:**
+- Uses existing battery monitoring logic (fullBatt/chargeState from TP4056)
+- 3-second debounce prevents rapid state changes from power flickering
+- Automatic detection: AC power = charging OR full battery
+
+**Hardware Optimization:**
+- WiFi: `WiFi.setSleep(false)` for AC/ACTIVE, `WiFi.setSleep(true)` for SLEEP
+- CPU: 240MHz (AC/ACTIVE), 80MHz (SLEEP)
+- Neopixel: ON (AC only), OFF (battery modes)
+- ESP32 LEDs: Always ON (built-in indicators)
+
+**Expected Performance:**
+- AC Mode: ~180mA (unchanged from original)
+- Battery Active: ~120mA (33% reduction)
+- Battery Sleep: ~25mA average (86% reduction from 180mA)
+- Wake-up Time: < 1 second when client connects
+
+**Debug Logging:**
+- Enable with `#define DEBUG_POWER_MANAGEMENT` in `src/debug.h`
+- Logs state transitions, power source changes, WiFi connection attempts
+- Use `#ifdef DEBUG_POWER_MANAGEMENT` blocks for custom debug output
+
 ### Load Sharing Circuit
 - Automatic switching between mains and battery power
 - Schottky diode prevents backfeed to mains
