@@ -1224,6 +1224,19 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     }
 }
 
+//-----------------------------------------------------------------------------
+// Power Management Function Declarations
+//-----------------------------------------------------------------------------
+
+void transitionToState(PowerState newState);
+void applyStateConfiguration(PowerState state);
+void onPowerSourceChanged(bool nowOnBattery);
+void onCriticalBatteryLevel();
+void handleBatteryConnectingState();
+void handleBatterySleepState();
+void updatePowerStateMachine();
+void checkWebSocketClients();
+
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
     switch (type)
@@ -1236,6 +1249,19 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
         debugD(client->remoteIP().toString().c_str());
         debugD("\n");
 #endif
+        webSocketClientConnected = true;
+#ifdef DEBUG_POWER_MANAGEMENT
+        debuglnD("✅ WebSocket client connected");
+#endif
+
+        // If in battery sleep or connecting, wake up immediately
+        if (currentPowerState == POWER_BATTERY_SLEEP ||
+            currentPowerState == POWER_BATTERY_CONNECTING) {
+#ifdef DEBUG_POWER_MANAGEMENT
+            debuglnD("🔔 Waking for WebSocket client");
+#endif
+            transitionToState(POWER_BATTERY_ACTIVE);
+        }
         break;
     case WS_EVT_DISCONNECT:
 #ifdef DEBUG_WEBSOCKET
@@ -1243,6 +1269,18 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
         debugD_NUM(client->id(), "%u");
         debugD(" disconnected\n");
 #endif
+        webSocketClientConnected = false;
+#ifdef DEBUG_POWER_MANAGEMENT
+        debuglnD("❌ WebSocket client disconnected");
+#endif
+
+        // If in battery active mode, go back to connecting (wait 30s)
+        if (currentPowerState == POWER_BATTERY_ACTIVE) {
+#ifdef DEBUG_POWER_MANAGEMENT
+            debuglnD("💤 Client disconnected - waiting 30s for reconnect");
+#endif
+            transitionToState(POWER_BATTERY_CONNECTING);
+        }
         break;
     case WS_EVT_DATA:
         handleWebSocketMessage(arg, data, len);
@@ -1339,6 +1377,24 @@ void TaskBatteryMonitor(void *pvParameters)
             debuglnW("Failed to acquire data mutex in BatteryMonitor");
 #endif
         }
+
+        // Power source detection (Task 4)
+        bool currentlyOnBattery = (!batt.fullBatt && !batt.chargeState);
+
+        if (currentlyOnBattery != onBatteryPower) {
+            onPowerSourceChanged(currentlyOnBattery);
+        }
+
+        // Check for critical battery level
+        if (onBatteryPower && batt.battLvl < BATTERY_CRITICAL_LEVEL) {
+            onCriticalBatteryLevel();
+        }
+
+        // WebSocket client tracking (Task 11)
+        checkWebSocketClients();
+
+        // Power management state machine (Task 12)
+        updatePowerStateMachine();
 
         vTaskDelay(pdMS_TO_TICKS(BATTERY_CHECK_INTERVAL));
     }
