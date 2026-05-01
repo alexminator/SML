@@ -87,7 +87,7 @@ const int BATTERY_FULL_READS = 10;                 // Max battery reads when ful
 const unsigned long LITTLEFS_TIMEOUT = 30000;     // LittleFS error timeout (ms)
 
 // WebSocket
-const unsigned long WEBSOCKET_UPDATE_INTERVAL = 3000;  // WebSocket update interval (ms)
+const unsigned long WEBSOCKET_UPDATE_INTERVAL = 1000;  // 1 second for responsive UI
 const uint8_t WEBSOCKET_STACK_CHECK_CYCLES = 10;       // Check stack every N cycles
 
 // Strip LED
