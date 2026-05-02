@@ -293,10 +293,6 @@ bool is_centered = false; // For VU1 effects
 #include "vu4.h"
 #include "vu5.h"
 #include "vu6.h"
-// WLED Effects
-#include "Effect.h"
-#include "Fire2012.h"
-#include "BouncingBalls.h"
 
 // ----------------------------------------------------------------------------
 // Definition of Battery component
@@ -507,7 +503,7 @@ struct StripLed
             simpleColor(r, g, b, brightness);
             break;
         case 1:
-            wledEffects[0]->run();  // Fire2012
+            runFire();
             break;
         case 2:
             runMovingDot();
@@ -525,13 +521,13 @@ struct StripLed
             runTwinkle();
             break;
         case 7:
-            wledEffects[2]->run();  // BouncingBalls
+            runBalls();
             break;
         case 8:
             runJuggle();
             break;
         case 9:
-            wledEffects[1]->run();  // Sinelon
+            runSinelon();
             break;
         case 10:
             runComet();
@@ -1878,25 +1874,6 @@ void checkWebSocketClients() {
 }
 
 // ----------------------------------------------------------------------------
-// WLED Effects Management
-// ----------------------------------------------------------------------------
-
-#define NUM_WLED_EFFECTS 3
-Effect* wledEffects[NUM_WLED_EFFECTS];
-
-void initEffects() {
-  wledEffects[0] = new Fire2012(leds, N_PIXELS);
-  wledEffects[1] = new Sinelon(leds, N_PIXELS);
-  wledEffects[2] = new BouncingBalls(leds, N_PIXELS);
-}
-
-void cleanupEffects() {
-  for (int i = 0; i < NUM_WLED_EFFECTS; i++) {
-    delete wledEffects[i];
-  }
-}
-
-// ----------------------------------------------------------------------------
 // Initialization
 // ----------------------------------------------------------------------------
 
@@ -2006,9 +1983,6 @@ void setup()
     xTaskCreatePinnedToCore(TaskWiFiMonitor, "WiFiMonitorTask", 2048, NULL, 1, &TaskWiFiMonitorHandle, 1);
     xTaskCreatePinnedToCore(TaskSensor, "SensorTask", 2048, NULL, 1, &TaskSensorHandle, 0);
     xTaskCreatePinnedToCore(TaskOnboardLED, "LEDOnboardTask", 2048, NULL, 1, &TaskOnboardLEDHandle, 1);
-
-    // Initialize WLED effects
-    initEffects();
 }
 
 // ----------------------------------------------------------------------------
