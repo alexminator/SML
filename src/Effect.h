@@ -13,9 +13,9 @@
 // Default parameter values
 #define DEFAULT_SPEED 128
 #define DEFAULT_INTENSITY 128
-#define DEFAULT_C1 0
-#define DEFAULT_C2 0
-#define DEFAULT_C3 0
+#define DEFAULT_C1 128
+#define DEFAULT_C2 128
+#define DEFAULT_C3 16
 
 /**
  * Unified parameter structure for all effects
