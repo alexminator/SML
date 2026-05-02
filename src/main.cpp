@@ -52,6 +52,9 @@
 // BLUETOOTH
 // #define DEBUG_BLUETOOTH
 
+// Power Management State Machine debugging
+#define DEBUG_POWER_MANAGEMENT
+
 // ----------------------------------------------------------------------------
 // Definition of macros
 // ----------------------------------------------------------------------------
@@ -1488,15 +1491,34 @@ void TaskOnboardLED(void *pvParameters)
 {
     while (true)
     {
-        // LED behavior based on power management state
-        // AC_MODE or BATTERY_ACTIVE: Blink (system active, user present)
-        // BATTERY_SLEEP or BATTERY_CONNECTING: OFF (saving power)
-        if (currentPowerState == POWER_AC_MODE ||
-            currentPowerState == POWER_BATTERY_ACTIVE) {
-            onboard_led.on = millis() % 1000 < 500; // Blink every 1s
+        // LED behavior based on connection status (not power management)
+        // Pattern meanings:
+        // - WiFi + WebSocket: Mixed short+long blink (200ms+800ms)
+        // - WiFi only: Regular 1s blink
+        // - Not connected: OFF
+        bool wifiConnected = (WiFi.status() == WL_CONNECTED);
+
+        if (wifiConnected && webSocketClientConnected) {
+            // WiFi + WebSocket connected: Mixed pattern (short 200ms + long 800ms)
+            // Cycle: ON(200ms) -> OFF(300ms) -> ON(500ms) -> OFF(1000ms)
+            uint32_t cycleTime = millis() % 2000;
+            if (cycleTime < 200) {
+                onboard_led.on = true;   // Short blink
+            } else if (cycleTime < 500) {
+                onboard_led.on = false;  // Short pause
+            } else if (cycleTime < 1000) {
+                onboard_led.on = true;   // Long blink
+            } else {
+                onboard_led.on = false;  // Long pause (remainder of 2s cycle)
+            }
+        } else if (wifiConnected) {
+            // WiFi only (no WebSocket): Regular 1s blink
+            onboard_led.on = millis() % 1000 < 500;
         } else {
-            onboard_led.on = false;  // LED OFF in battery saving modes
+            // Not connected: OFF
+            onboard_led.on = false;
         }
+
         onboard_led.update();
         vTaskDelay(pdMS_TO_TICKS(100)); // Update every 100 ms
     }
