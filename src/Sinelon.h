@@ -1,24 +1,30 @@
+// src/Sinelon.h
+#pragma once
+#include "Effect.h"
 
-class Sinelon {
-  public:
-    Sinelon(){};
-    void runPattern();
-  private:
-};
+class Sinelon : public Effect {
+private:
+  CRGBPalette16 palette;
+  uint8_t hue;
 
-void Sinelon::runPattern() {
-
-  const uint8_t THIS_BEAT = 23;
-  const uint8_t THAT_BEAT = 28;
-  const uint8_t THIS_FADE = 2; // How quickly does it fade? Lower = slower fade rate.
-
-  fadeToBlackBy(leds, N_PIXELS, THIS_FADE);
-  int pos1 = beatsin16(THIS_BEAT, 0, N_PIXELS - 1);
-  int pos2 = beatsin16(THAT_BEAT, 0, N_PIXELS - 1);
-  leds[(pos1 + pos2) / 2] += CHSV(myhue, 255, brightness);
-  EVERY_N_MILLISECONDS(10) {
-    myhue++;
+public:
+  Sinelon(CRGB* l, uint16_t n) : Effect(l, n) {
+    palette = PartyColors_p;
+    hue = 0;
   }
-  
-  FastLED.show();
-}
+
+protected:
+  void render() override {
+    uint8_t pos = beatsin16(255 - params.speed, 0, numLeds - 1);
+    uint8_t fade = map(params.intensity, 0, 255, 8, 224);
+    fadeToBlackBy(leds, numLeds, fade);
+
+    leds[pos] = ColorFromPalette(palette, hue, 255, LINEARBLEND);
+
+    EVERY_N_MILLIS(20) {
+      hue++;
+    }
+
+    FastLED.show();
+  }
+};
