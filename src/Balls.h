@@ -1,4 +1,8 @@
 
+// External parameters defined in main.cpp
+extern uint8_t ballsCount;
+extern bool ballsRandomColors;
+
 class Balls
 {
 public:
@@ -10,13 +14,13 @@ private:
 
 void Balls::runPattern()
 {
-  for (int i = 0 ; i < NUM_BALLS ; i++) {
+  for (int i = 0 ; i < ballsCount ; i++) {
     tCycle[i] =  millis() - tLast[i] ;     // Calculate the time since the last time the ball was on the ground
 
     // A little kinematics equation calculates positon as a function of time, acceleration (gravity) and intial velocity
     h[i] = 0.5 * GRAVITY * pow( tCycle[i]/1000 , 2.0 ) + vImpact[i] * tCycle[i]/1000;
 
-    if ( h[i] < 0 ) {                      
+    if ( h[i] < 0 ) {
       h[i] = 0;                            // If the ball crossed the threshold of the "ground," put it back on the ground
       vImpact[i] = COR[i] * vImpact[i] ;   // and recalculate its new upward velocity as it's old velocity * COR
       tLast[i] = millis();
@@ -27,10 +31,16 @@ void Balls::runPattern()
   }
 
   //Choose color of LEDs, then the "pos" LED on
-  for (int i = 0 ; i < NUM_BALLS ; i++) leds[pos[i]] = CHSV( uint8_t (i * 40) , 255, brightness);
+  for (int i = 0 ; i < ballsCount ; i++) {
+    if (ballsRandomColors) {
+      leds[pos[i]] = CHSV(random8(), 255, brightness);
+    } else {
+      leds[pos[i]] = CHSV(uint8_t (i * 40) , 255, brightness);
+    }
+  }
   FastLED.show();
   //Then off for the next loop around
-  for (int i = 0 ; i < NUM_BALLS ; i++) {
+  for (int i = 0 ; i < ballsCount ; i++) {
     leds[pos[i]] = CRGB::Black;
   }
 }

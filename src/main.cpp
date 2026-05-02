@@ -130,6 +130,23 @@ uint8_t g = 255;
 uint8_t b = 255;
 CRGB leds[N_PIXELS];        //  for FASTLED
 
+// ============================================================================
+// EFFECT PARAMETERS (configurable via web in future)
+// ============================================================================
+
+// Fire Effect Parameters
+uint8_t fireCooling = 55;   // 0-255, default 55 (cooling rate)
+uint8_t fireSparking = 50;  // 0-255, default 50 (sparking probability)
+bool fireReverse = false;   // true = inverted fire
+
+// Balls Effect Parameters
+uint8_t ballsCount = 3;          // 1-16 balls
+bool ballsRandomColors = false;  // true = random, false = sequential
+
+// Sinelon Effect Parameters
+uint8_t sinelonBeat = 23;  // 0-255, beat frequency
+uint8_t sinelonFade = 2;   // 0-255, fade rate
+
 // WEB
 #define HTTP_PORT 80
 #include <WiFi.h>
