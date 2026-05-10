@@ -226,8 +226,8 @@ ul.tabs li a .tab-text{
         "RWBbutton Ripplebutton Twinklebutton"  0.5fr
         "balls juggle sinelon"  0.3fr
         "Ballsbutton Jugglebutton Sinelonbutton"    0.5fr
-        "comet breath ." 0.3fr
-        "cometbutton breathbutton ."   0.5fr  /
+        "comet breath colorsweep" 0.3fr
+        "cometbutton breathbutton colorsweepbutton"   0.5fr  /
         1fr 1fr 1fr;
 	grid-gap: 0.5rem;
     padding: 20px;
@@ -239,6 +239,47 @@ ul.tabs li a .tab-text{
 
 #Breathbutton{
     grid-area: breathbutton;
+}
+
+/* Original effects buttons */
+#Firebutton {
+    grid-area: Firebutton;
+}
+
+#MovingDotbutton {
+    grid-area: MovingDotbutton;
+}
+
+#RainbowBeatbutton {
+    grid-area: RainbowBeatbutton;
+}
+
+#RWBbutton {
+    grid-area: RWBbutton;
+}
+
+#Ripplebutton {
+    grid-area: Ripplebutton;
+}
+
+#Twinklebutton {
+    grid-area: Twinklebutton;
+}
+
+#Ballsbutton {
+    grid-area: Ballsbutton;
+}
+
+#Jugglebutton {
+    grid-area: Jugglebutton;
+}
+
+#Sinelonbutton {
+    grid-area: Sinelonbutton;
+}
+
+#ColorSweepbutton {
+    grid-area: colorsweepbutton;
 }
 
 .effects-button span.fa-magic {
@@ -291,6 +332,10 @@ ul.tabs li a .tab-text{
 
 .effects-button h3.breath {
     grid-area: breath;
+}
+
+.effects-button h3.colorsweep {
+    grid-area: colorsweep;
 }
 
 /* Tab music */

@@ -172,6 +172,9 @@ bool cometBlur = false;      // true = blurred trail
 // Breath Effect Parameters (WLED-compatible)
 uint8_t breathSpeed = 128;  // Default: 128, range: 0-255 (breathing speed)
 
+// ColorSweep Effect Parameters (WLED-compatible)
+uint8_t sweepSpeed = 128;  // Default: 128, range: 0-255 (sweep speed)
+
 // Juggle Effect Parameters
 uint8_t juggleDots = 4;       // 1-16, number of dots (better than WLED's 8 hardcoded)
 uint8_t juggleSpeed = 64;     // 0-255, movement frequency (WLED: speed)
@@ -333,6 +336,7 @@ bool is_centered = false; // For VU1 effects
 #include "Comet.h"
 #include "Temp.h"
 #include "Breath.h"
+#include "ColorSweep.h"
 #include "Battery.h"
 // VU
 #include "vu1.h"
@@ -501,6 +505,12 @@ struct StripLed
         breath.runPattern();
     }
 
+    void runColorSweep()
+    {
+        ColorSweep colorSweep = ColorSweep();
+        colorSweep.runPattern();
+    }
+
     void runRainbowVU()
     {
         RainbowVU VU1 = RainbowVU();
@@ -589,28 +599,31 @@ struct StripLed
         case 11:  // NEW - Breath effect
             runBreath();
             break;
-        case 12:  // Was case 11 - RainbowVU
+        case 12:  // NEW - ColorSweep effect
+            runColorSweep();
+            break;
+        case 13:  // Was case 12 - RainbowVU
             runRainbowVU();
             break;
-        case 13:  // Was case 12 - OldVU
+        case 14:  // Was case 13 - OldVU
             runOldVU();
             break;
-        case 14:  // Was case 13 - RainbowHueVU
+        case 15:  // Was case 14 - RainbowHueVU
             runRainbowHueVU();
             break;
-        case 15:  // Was case 14 - RippleVU
+        case 16:  // Was case 15 - RippleVU
             runRippleVU();
             break;
-        case 16:  // Was case 15 - ThreebarsVU
+        case 17:  // Was case 16 - ThreebarsVU
             runThreebarsVU();
             break;
-        case 17:  // Was case 16 - OceanVU
+        case 18:  // Was case 17 - OceanVU
             runOceanVU();
             break;
-        case 18:  // Was case 17 - Temperature
+        case 19:  // Was case 18 - Temperature
             runTemperature();
             break;
-        case 19:  // Was case 18 - Battery
+        case 20:  // Was case 19 - Battery
             runBattery();
             break;        
         default:
@@ -908,6 +921,7 @@ enum Status
     SINELON_STATE,
     COMET_STATE,
     BREATH_STATE,
+    COLORSWEEP_STATE,
     BRIGHTNESS,
     STRIPLED,
     BLUETOOTH,
@@ -954,6 +968,7 @@ const char* processor(const String &var)
     case SINELON_STATE:
     case COMET_STATE:
     case BREATH_STATE:
+    case COLORSWEEP_STATE:
     case VU1:
     case VU2:
     case VU3:
@@ -1126,9 +1141,9 @@ void notifyClients()
         const char *effectNames[] = {
             "fireStatus", "movingdotStatus", "rainbowbeatStatus", "rwbStatus", "rippleStatus",
             "twinkleStatus", "ballsStatus", "juggleStatus", "sinelonStatus", "cometStatus", "breathStatus",
-            "rainbowVUStatus", "oldVUStatus", "rainbowHueVUStatus", "rippleVUStatus",
+            "colorSweepStatus", "rainbowVUStatus", "oldVUStatus", "rainbowHueVUStatus", "rippleVUStatus",
             "threebarsVUStatus", "oceanVUStatus", "tempNEOStatus", "battNEOStatus"};
-        for (uint8_t i = 0; i < 19; ++i)
+        for (uint8_t i = 0; i < 20; ++i)
             json[effectNames[i]] = (stripLed.effectId == i + 1 && stripLed.powerState) ? "on" : "off";
 
         // Calculate required size first

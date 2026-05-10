@@ -285,8 +285,8 @@ function initButton() {
     const buttons = [
         'lamp', 'Neo', 'Bluetooth', 'Firebutton', 'MovingDotbutton', 'RainbowBeatbutton',
         'RWBbutton', 'Ripplebutton', 'Twinklebutton', 'Ballsbutton', 'Jugglebutton',
-        'Sinelonbutton', 'Cometbutton', 'Breathbutton', 'RainbowVU', 'OldSkoolVU',
-        'RainbowHueVU', 'RippleVU', 'ThreebarsVU', 'OceanVU', 'TempNEO', 'BattNEO'
+        'Sinelonbutton', 'Cometbutton', 'Breathbutton', 'ColorSweepbutton', 'RainbowVU',
+        'OldSkoolVU', 'RainbowHueVU', 'RippleVU', 'ThreebarsVU', 'OceanVU', 'TempNEO', 'BattNEO'
     ];
 
     buttons.forEach(buttonId => {
@@ -309,14 +309,15 @@ const effectMap = {
     Sinelonbutton: 9,
     Cometbutton: 10,
     Breathbutton: 11,  // NEW
-    RainbowVU: 12,     // Was 11
-    OldSkoolVU: 13,    // Was 12
-    RainbowHueVU: 14,  // Was 13
-    RippleVU: 15,      // Was 14
-    ThreebarsVU: 16,   // Was 15
-    OceanVU: 17,       // Was 16
-    TempNEO: 18,       // Was 17
-    BattNEO: 19        // Was 18
+    ColorSweepbutton: 12,  // NEW
+    RainbowVU: 13,     // Was 12
+    OldSkoolVU: 14,    // Was 13
+    RainbowHueVU: 15,  // Was 14
+    RippleVU: 16,      // Was 15
+    ThreebarsVU: 17,   // Was 16
+    OceanVU: 18,       // Was 17
+    TempNEO: 19,       // Was 18
+    BattNEO: 20        // Was 19
 };
 
 function handleButtonClick(buttonId) {
@@ -344,6 +345,7 @@ function getActionFromButtonId(buttonId) {
         case 'Sinelonbutton': return 'animation';
         case 'Cometbutton': return 'animation';
         case 'Breathbutton': return 'animation';
+        case 'ColorSweepbutton': return 'animation';
         case 'RainbowVU': return 'vu';
         case 'OldSkoolVU': return 'vu';
         case 'RainbowHueVU': return 'vu';
