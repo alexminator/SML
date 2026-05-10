@@ -586,28 +586,31 @@ struct StripLed
         case 10:
             runComet();
             break;
-        case 11:
+        case 11:  // NEW - Breath effect
+            runBreath();
+            break;
+        case 12:  // Was case 11 - RainbowVU
             runRainbowVU();
             break;
-        case 12:
+        case 13:  // Was case 12 - OldVU
             runOldVU();
             break;
-        case 13:
+        case 14:  // Was case 13 - RainbowHueVU
             runRainbowHueVU();
             break;
-        case 14:
+        case 15:  // Was case 14 - RippleVU
             runRippleVU();
             break;
-        case 15:
+        case 16:  // Was case 15 - ThreebarsVU
             runThreebarsVU();
             break;
-        case 16:
+        case 17:  // Was case 16 - OceanVU
             runOceanVU();
             break;
-        case 17:
+        case 18:  // Was case 17 - Temperature
             runTemperature();
             break;
-        case 18:
+        case 19:  // Was case 18 - Battery
             runBattery();
             break;        
         default:
