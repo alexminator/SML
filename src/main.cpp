@@ -907,6 +907,7 @@ enum Status
     JUGGLE_STATE,
     SINELON_STATE,
     COMET_STATE,
+    BREATH_STATE,
     BRIGHTNESS,
     STRIPLED,
     BLUETOOTH,
@@ -952,6 +953,7 @@ const char* processor(const String &var)
     case JUGGLE_STATE:
     case SINELON_STATE:
     case COMET_STATE:
+    case BREATH_STATE:
     case VU1:
     case VU2:
     case VU3:
@@ -1123,10 +1125,10 @@ void notifyClients()
         // Efectos y VU
         const char *effectNames[] = {
             "fireStatus", "movingdotStatus", "rainbowbeatStatus", "rwbStatus", "rippleStatus",
-            "twinkleStatus", "ballsStatus", "juggleStatus", "sinelonStatus", "cometStatus",
+            "twinkleStatus", "ballsStatus", "juggleStatus", "sinelonStatus", "cometStatus", "breathStatus",
             "rainbowVUStatus", "oldVUStatus", "rainbowHueVUStatus", "rippleVUStatus",
             "threebarsVUStatus", "oceanVUStatus", "tempNEOStatus", "battNEOStatus"};
-        for (uint8_t i = 0; i < 18; ++i)
+        for (uint8_t i = 0; i < 19; ++i)
             json[effectNames[i]] = (stripLed.effectId == i + 1 && stripLed.powerState) ? "on" : "off";
 
         // Calculate required size first
