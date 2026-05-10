@@ -218,7 +218,7 @@ ul.tabs li a .tab-text{
 
 .effects-button {
     display: grid;
-    grid-template:
+    grid-template: 
         "power-label power-label power-label"   0.3fr
         "fire movingdot rainbow"  0.3fr
         "Firebutton MovingDotbutton RainbowBeatbutton"  0.5fr
@@ -226,8 +226,8 @@ ul.tabs li a .tab-text{
         "RWBbutton Ripplebutton Twinklebutton"  0.5fr
         "balls juggle sinelon"  0.3fr
         "Ballsbutton Jugglebutton Sinelonbutton"    0.5fr
-        "comet comet"          0.3fr
-        "cometbutton breathbutton"   0.5fr
+        "comet comet comet" 0.3fr
+        ". cometbutton ."   0.5fr  /
         1fr 1fr 1fr;
 	grid-gap: 0.5rem;
     padding: 20px;
@@ -235,14 +235,6 @@ ul.tabs li a .tab-text{
 
 #Cometbutton{
     grid-area: cometbutton;
-}
-
-.effects-button h3.breath {
-    grid-area: breath;
-}
-
-#Breathbutton{
-    grid-area: breathbutton;
 }
 
 .effects-button span.fa-magic {
