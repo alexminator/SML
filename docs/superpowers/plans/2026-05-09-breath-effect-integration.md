@@ -153,39 +153,74 @@ git commit -m "feat: integrate Breath as case 11, renumber effects 12-19"
 
 ---
 
-## Task 4: Add Breath Template Variables to data.h
+## Task 4: Add Breath Template Integration to main.cpp
 
 **Files:**
-- Modify: `src/data.h` (add state variable and template after WiFi credentials section)
+- Modify: `src/main.cpp` (add BREATH_STATE to enum Status and processor function)
 
-- [ ] **Step 1: Add breathState boolean after line 25**
+**CRITICAL:** This codebase uses enum Status + processor() function, NOT #define macros for template variables.
 
-```cpp
-// Add after const char *WEB_NAME = "sml";
-bool breathState = false;
-```
+- [ ] **Step 1: Add BREATH_STATE to enum Status (around line 909)**
 
-- [ ] **Step 2: Add BREATH_STATE template macro**
+Find the enum Status definition in main.cpp. Add BREATH_STATE after the last effect state:
 
 ```cpp
-// Add after the breathState variable
-#define BREATH_STATE breathState ? "on" : "off"
+enum Status {
+    COLOR,
+    // ... existing states
+    COMET_STATE,
+    BREATH_STATE,  // NEW - Breath effect template variable
+    // ... VU and special states
+};
 ```
 
-- [ ] **Step 3: Verify template follows existing pattern**
+- [ ] **Step 2: Add BREATH_STATE case to processor() function (around line 924)**
 
-Confirm that BREATH_STATE follows the exact same pattern as FIRE_STATE, MOVINGDOT_STATE, etc. - ternary operator returning "on" or "off" string.
+Find the processor() function. Add a case for BREATH_STATE:
 
-- [ ] **Step 4: Verify compilation**
+```cpp
+const char* processor(const String &var) {
+    static char buffer[64];
+    switch (status) {
+        // ... existing cases
+        case BREATH_STATE:
+            return (stripLed.effectId == 11 && stripLed.powerState) ? "on" : "off";
+        // ... other cases
+    }
+    return String();
+}
+```
+
+- [ ] **Step 3: Add breathStatus to effectNames array (around line 1125)**
+
+Find the effectNames array and add Breath status:
+
+```cpp
+const char* effectNames[] = {
+    "Fire", "MovingDot", "RainbowBeat", // ... existing effects
+    "Comet", "Breath",  // Add "Breath" after "Comet"
+    "RainbowVU", "OldSkoolVU", // ... VU effects
+    // ... special effects
+};
+```
+
+- [ ] **Step 4: Verify template system integration**
+
+Confirm that:
+- BREATH_STATE enum value follows the existing pattern
+- processor() function returns correct "on"/"off" for effectId 11
+- effectNames array includes "Breath" in the correct position
+
+- [ ] **Step 5: Verify compilation**
 
 Run: `arduino-cli compile --fqbn esp32:esp32:esp32`
-Expected: Template preprocessing succeeds
+Expected: Compilation succeeds, template system properly configured
 
-- [ ] **Step 5: Commit changes**
+- [ ] **Step 6: Commit changes**
 
 ```bash
-git add src/data.h
-git commit -m "feat: add Breath template variable and state to data.h"
+git add src/main.cpp
+git commit -m "feat: add Breath template integration (enum Status + processor)"
 ```
 
 ---
