@@ -495,6 +495,12 @@ struct StripLed
         comet.runPattern();
     }
 
+    void runBreath()
+    {
+        Breath breath = Breath();
+        breath.runPattern();
+    }
+
     void runRainbowVU()
     {
         RainbowVU VU1 = RainbowVU();
