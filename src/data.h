@@ -10,6 +10,4 @@
 const char *WIFI_SSID = DEFAULT_WIFI_SSID;
 const char *WIFI_PASS = DEFAULT_WIFI_PASS;
 const char *WEB_NAME = "sml";
-bool breathState = false;
-#define BREATH_STATE breathState ? "on" : "off"
 
