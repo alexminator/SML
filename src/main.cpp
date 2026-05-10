@@ -169,6 +169,9 @@ uint8_t cometSpeed = 8;      // 0-255, comet movement speed
 uint8_t cometTrail = 4;      // 0-10, trail length
 bool cometBlur = false;      // true = blurred trail
 
+// Breath Effect Parameters (WLED-compatible)
+uint8_t breathSpeed = 128;  // Default: 128, range: 0-255 (breathing speed)
+
 // Juggle Effect Parameters
 uint8_t juggleDots = 4;       // 1-16, number of dots (better than WLED's 8 hardcoded)
 uint8_t juggleSpeed = 64;     // 0-255, movement frequency (WLED: speed)
@@ -329,6 +332,7 @@ bool is_centered = false; // For VU1 effects
 #include "Sinelon.h"
 #include "Comet.h"
 #include "Temp.h"
+#include "Breath.h"
 #include "Battery.h"
 // VU
 #include "vu1.h"
