@@ -226,8 +226,8 @@ ul.tabs li a .tab-text{
         "RWBbutton Ripplebutton Twinklebutton"  0.5fr
         "balls juggle sinelon"  0.3fr
         "Ballsbutton Jugglebutton Sinelonbutton"    0.5fr
-        "comet comet comet" 0.3fr
-        ". cometbutton ."   0.5fr  /
+        "comet breath ." 0.3fr
+        "cometbutton breathbutton ."   0.5fr  /
         1fr 1fr 1fr;
 	grid-gap: 0.5rem;
     padding: 20px;
@@ -235,6 +235,10 @@ ul.tabs li a .tab-text{
 
 #Cometbutton{
     grid-area: cometbutton;
+}
+
+#Breathbutton{
+    grid-area: breathbutton;
 }
 
 .effects-button span.fa-magic {
@@ -283,6 +287,10 @@ ul.tabs li a .tab-text{
 
 .effects-button h3.comet {
     grid-area: comet;
+}
+
+.effects-button h3.breath {
+    grid-area: breath;
 }
 
 /* Tab music */
