@@ -567,65 +567,85 @@ struct StripLed
             simpleColor(r, g, b, brightness);
             break;
         case 1:
+            clear();
             runFire();
             break;
         case 2:
+            clear();
             runMovingDot();
             break;
         case 3:
+            clear();
             runRainbowBeat();
             break;
         case 4:
+            clear();
             runRedWhiteBlue();
             break;
         case 5:
+            clear();
             runRipple();
             break;
         case 6:
+            clear();
             runTwinkle();
             break;
         case 7:
+            clear();
             runBalls();
             break;
         case 8:
+            clear();
             runJuggle();
             break;
         case 9:
+            clear();
             runSinelon();
             break;
         case 10:
+            clear();
             runComet();
             break;
         case 11:  // NEW - Breath effect
+            clear();
             runBreath();
             break;
         case 12:  // NEW - ColorSweep effect
+            clear();
             runColorSweep();
             break;
         case 13:  // Was case 12 - RainbowVU
+            clear();
             runRainbowVU();
             break;
         case 14:  // Was case 13 - OldVU
+            clear();
             runOldVU();
             break;
         case 15:  // Was case 14 - RainbowHueVU
+            clear();
             runRainbowHueVU();
             break;
         case 16:  // Was case 15 - RippleVU
+            clear();
             runRippleVU();
             break;
         case 17:  // Was case 16 - ThreebarsVU
+            clear();
             runThreebarsVU();
             break;
         case 18:  // Was case 17 - OceanVU
+            clear();
             runOceanVU();
             break;
         case 19:  // Was case 18 - Temperature
+            clear();
             runTemperature();
             break;
         case 20:  // Was case 19 - Battery
+            clear();
             runBattery();
-            break;        
+            break;
         default:
             break;
         }
