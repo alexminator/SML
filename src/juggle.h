@@ -1,4 +1,9 @@
 
+// External parameters defined in main.cpp
+extern uint8_t juggleDots;
+extern uint8_t juggleSpeed;
+extern uint8_t juggleIntensity;
+
 class Juggle {
   public:
     Juggle(){};
@@ -8,18 +13,27 @@ class Juggle {
 
 
 
-void Juggle::runPattern() { 
-  const uint8_t NUM_DOTS = 4; // Number of dots in use.
-  const uint8_t HUE_INC = 16; // Incremental change in hue between each dot.
-  static uint8_t thishue = 0; // Starting hue.
-  static uint8_t curhue = 0;
-  const uint8_t basebeat = 5;
-  
-  curhue = thishue; // Reset the hue values?
-  fadeToBlackBy(leds, N_PIXELS, FADE_RATE);
-  for (int i = 0; i < NUM_DOTS; i++) {
-    leds[beatsin16(basebeat + i + NUM_DOTS, 0, N_PIXELS - 1)] |= CHSV(curhue, 255, brightness);
-    curhue += HUE_INC;
+void Juggle::runPattern() {
+  // WLED Juggle algorithm - eight colored dots weaving in and out of sync
+  // Enhanced with configurable number of dots (better than WLED's 8 hardcoded)
+
+  // Fade based on intensity (WLED: 192 - (3*intensity/4))
+  uint8_t fadeAmount = 192 - (3 * juggleIntensity / 4);
+  fadeToBlackBy(leds, N_PIXELS, fadeAmount);
+
+  byte dothue = 0;
+
+  // Use configurable number of dots (better than WLED's hardcoded 8)
+  for (int i = 0; i < juggleDots; i++) {
+    // WLED: beatsin88_t((16 + SEGMENT.speed)*(i + 7), 0, SEGLEN -1)
+    // We use beatsin16 with configurable speed
+    int index = beatsin16((16 + juggleSpeed) * (i + 7), 0, N_PIXELS - 1);
+
+    // Additive color blending for brighter overlap
+    leds[index] |= CHSV(dothue, 220, brightness);
+
+    dothue += 32; // WLED uses 32 for hue increment
   }
+
   FastLED.show();
 }

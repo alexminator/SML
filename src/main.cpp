@@ -147,6 +147,33 @@ bool ballsRandomColors = false;  // true = random, false = sequential
 uint8_t sinelonBeat = 23;  // 0-255, beat frequency
 uint8_t sinelonFade = 2;   // 0-255, fade rate
 
+// Twinkle Effect Parameters (WLED TwinkleFOX algorithm)
+uint8_t twinkleSpeed = 8;       // 0-255, twinkle speed
+uint8_t twinkleIntensity = 160; // 0-255, cooling/density
+bool twinkleRedCool = true;     // true = shift to red when fading (like incandescent)
+
+// Rainbow Beat Effect Parameters
+uint8_t rainbowSpeed = 30;     // 0-255, beat frequency
+uint8_t rainbowDelta = 8;      // 0-255, hue delta between LEDs
+
+// Moving Dot Effect Parameters
+uint8_t movingDotSpeed = 30;   // 0-255, movement speed
+uint8_t movingDotFade = 10;    // 0-255, fade rate
+
+// Ripple Effect Parameters
+uint8_t rippleSize = 3;     // 0-7, ripple wave size
+bool rippleMirror = false;  // true = mirrored ripple (better than WLED's overlay)
+
+// Comet Effect Parameters (original improved version)
+uint8_t cometSpeed = 8;      // 0-255, comet movement speed
+uint8_t cometTrail = 4;      // 0-10, trail length
+bool cometBlur = false;      // true = blurred trail
+
+// Juggle Effect Parameters
+uint8_t juggleDots = 4;       // 1-16, number of dots (better than WLED's 8 hardcoded)
+uint8_t juggleSpeed = 64;     // 0-255, movement frequency (WLED: speed)
+uint8_t juggleIntensity = 128;// 0-255, fade rate/trail (WLED: intensity)
+
 // WEB
 #define HTTP_PORT 80
 #include <WiFi.h>

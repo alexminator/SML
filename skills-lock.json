@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "esp32-arduino-development": {
+      "source": "EricSun787/esp32-arduino-development",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "973c30c46d43d30fbf7724dfd36c6403d66458fbd37384d58f6bd748c35f2395"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "computedHash": "9e1c8b3103f92fa8092568a44fe64858de7c5c9dc65ce4bea8f168080e889cfd"
+    }
+  }
+}
