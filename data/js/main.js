@@ -238,6 +238,7 @@ function onMessage(evt) {
   updateButtonStatus("Jugglebutton", data.juggleStatus);
   updateButtonStatus("Sinelonbutton", data.sinelonStatus);
   updateButtonStatus("Cometbutton", data.cometStatus);
+  updateButtonStatus("Breathbutton", data.breathStatus);
   //Buttons VU
   updateButtonStatus("RainbowVU", data.rainbowVUStatus);
   updateButtonStatus("OldSkoolVU", data.oldVUStatus);
@@ -284,8 +285,8 @@ function initButton() {
     const buttons = [
         'lamp', 'Neo', 'Bluetooth', 'Firebutton', 'MovingDotbutton', 'RainbowBeatbutton',
         'RWBbutton', 'Ripplebutton', 'Twinklebutton', 'Ballsbutton', 'Jugglebutton',
-        'Sinelonbutton', 'Cometbutton', 'RainbowVU', 'OldSkoolVU', 'RainbowHueVU',
-        'RippleVU', 'ThreebarsVU', 'OceanVU', 'TempNEO', 'BattNEO'
+        'Sinelonbutton', 'Cometbutton', 'Breathbutton', 'RainbowVU', 'OldSkoolVU',
+        'RainbowHueVU', 'RippleVU', 'ThreebarsVU', 'OceanVU', 'TempNEO', 'BattNEO'
     ];
 
     buttons.forEach(buttonId => {
@@ -307,14 +308,15 @@ const effectMap = {
     Jugglebutton: 8,
     Sinelonbutton: 9,
     Cometbutton: 10,
-    RainbowVU: 11,
-    OldSkoolVU: 12,
-    RainbowHueVU: 13,
-    RippleVU: 14,
-    ThreebarsVU: 15,
-    OceanVU: 16,
-    TempNEO: 17,
-    BattNEO: 18
+    Breathbutton: 11,  // NEW
+    RainbowVU: 12,     // Was 11
+    OldSkoolVU: 13,    // Was 12
+    RainbowHueVU: 14,  // Was 13
+    RippleVU: 15,      // Was 14
+    ThreebarsVU: 16,   // Was 15
+    OceanVU: 17,       // Was 16
+    TempNEO: 18,       // Was 17
+    BattNEO: 19        // Was 18
 };
 
 function handleButtonClick(buttonId) {
@@ -341,6 +343,7 @@ function getActionFromButtonId(buttonId) {
         case 'Jugglebutton': return 'animation';
         case 'Sinelonbutton': return 'animation';
         case 'Cometbutton': return 'animation';
+        case 'Breathbutton': return 'animation';
         case 'RainbowVU': return 'vu';
         case 'OldSkoolVU': return 'vu';
         case 'RainbowHueVU': return 'vu';
