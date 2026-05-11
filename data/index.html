@@ -368,6 +368,43 @@
           </div>
         </div>
 
+        <!-- Peek Tab -->
+        <div id="tab-peek" class="tab-content">
+          <div class="sml-peek-container">
+            <!-- Mode Toggle Controls -->
+            <div class="sml-peek-controls">
+              <button id="modeStrip" class="sml-peek-mode-btn active">
+                <span class="fas fa-grip-lines"></span>
+                <span>Strip</span>
+              </button>
+              <button id="modeCircle" class="sml-peek-mode-btn">
+                <span class="fas fa-circle-notch"></span>
+                <span>Circle</span>
+              </button>
+            </div>
+
+            <!-- LED Count Selector -->
+            <div class="sml-peek-led-selector">
+              <label for="ledCountSelect">LEDs:</label>
+              <select id="ledCountSelect" class="sml-peek-led-select">
+                <option value="24">24 LEDs</option>
+              </select>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="sml-peek-canvas-wrapper">
+              <canvas id="ledPreviewCanvas" class="sml-peek-canvas"></canvas>
+
+              <!-- Info Overlay -->
+              <div class="sml-peek-info">
+                <span id="peekEffect" class="sml-peek-effect-name">None</span>
+                <span id="peekLEDCount" class="sml-peek-led-count">24 LEDs</span>
+                <span id="peekFPS" class="sml-peek-fps">0 FPS</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Battery Tab -->
         <div id="tab-battery" class="tab-content">
           <section class="battery">
