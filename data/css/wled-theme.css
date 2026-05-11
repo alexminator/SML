@@ -165,3 +165,53 @@ a:hover {
   border: none;
   color: var(--text-primary);
 }
+
+/* ============================================
+   THEME SYSTEM - Override Variables
+   ============================================ */
+
+/* Sunset Theme - Gold and Orange */
+body[data-theme="sunset"] {
+  /* Override background colors */
+  --bg-secondary: #1a1400;
+  --bg-tertiary: #2c2100;
+
+  /* Override text colors */
+  --text-secondary: #ffe0b2;
+  --text-tertiary: #bcaaa4;
+
+  /* Override accent colors */
+  --sml-cyan: #ffd700;
+  --sml-blue: #ff9800;
+
+  /* Override gradient colors */
+  --gradient-start: #1a1400;
+  --gradient-mid: #2c2100;
+  --gradient-end: #1a0f00;
+
+  /* Override SML brand colors */
+  --sml-gold: #ffd700;
+}
+
+/* Ocean Theme - Blue and Purple */
+body[data-theme="ocean"] {
+  /* Override background colors */
+  --bg-secondary: #0a0a1a;
+  --bg-tertiary: #14142e;
+
+  /* Override text colors */
+  --text-secondary: #e0e0ff;
+  --text-tertiary: #b0b0ff;
+
+  /* Override accent colors */
+  --sml-cyan: #3f51b5;
+  --sml-blue: #9c27b0;
+
+  /* Override gradient colors */
+  --gradient-start: #0a0a1a;
+  --gradient-mid: #14142e;
+  --gradient-end: #1a0a2e;
+
+  /* Override SML brand colors */
+  --sml-gold: #3f51b5;
+}
