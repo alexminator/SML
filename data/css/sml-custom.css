@@ -29,7 +29,7 @@
 
 .glowing span {
   font-family: var(--font-impact);
-  color: #fff;
+  color: var(--text-primary);
   font-size: 4em;
   display: inline-block;
   letter-spacing: 25px;
@@ -129,7 +129,7 @@
 
 /* Signal Strength Colors */
 .sml-status-bar.connected .sml-wifi-signal {
-  color: #4CAF50;
+  color: var(--sml-green);
 }
 
 .sml-status-bar.disconnected .sml-wifi-signal {
@@ -147,20 +147,20 @@
 }
 
 /* Battery Level Colors */
-.sml-battery-high { color: #4CAF50; }
-.sml-battery-medium { color: #FFC107; }
-.sml-battery-low { color: #F44336; }
+.sml-battery-high { color: var(--sml-green); }
+.sml-battery-medium { color: var(--sml-amber); }
+.sml-battery-low { color: var(--sml-red); }
 
 /* === Brand Identity Colors === */
 .sml-gradient-gold {
-  background: linear-gradient(135deg, var(--sml-gold) 0%, #FFD700 100%);
+  background: linear-gradient(135deg, #FFA500 0%, var(--sml-gold) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .sml-gradient-cyan {
-  background: linear-gradient(135deg, var(--sml-cyan) 0%, #00CED1 100%);
+  background: linear-gradient(135deg, #00CED1 0%, var(--sml-cyan) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -204,6 +204,64 @@
 .sml-btn-cyan:hover {
   box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
   transform: translateY(-2px);
+}
+
+/* === Toggle Switches === */
+.button {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: background-color var(--transition-normal);
+  border: 2px solid var(--bg-tertiary);
+}
+
+.button::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background-color: var(--text-disabled);
+  border-radius: 50%;
+  transition: transform var(--transition-normal), background-color var(--transition-normal);
+}
+
+/* ON state - when parent has .on class */
+.on .button {
+  background-color: var(--sml-cyan);
+  border-color: var(--sml-cyan);
+}
+
+.on .button::after {
+  transform: translateX(24px);
+  background-color: var(--text-primary);
+}
+
+/* OFF state - when parent has .off class */
+.off .button {
+  background-color: var(--bg-secondary);
+  border-color: var(--bg-tertiary);
+}
+
+.off .button::after {
+  transform: translateX(0);
+  background-color: var(--text-disabled);
+}
+
+/* Hover effect */
+.button:hover {
+  border-color: var(--sml-cyan);
+}
+
+/* Focus for accessibility */
+.button:focus {
+  outline: 2px solid var(--sml-cyan);
+  outline-offset: 2px;
 }
 
 /* === Border Accents === */
