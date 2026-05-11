@@ -17,9 +17,13 @@
   <link rel="stylesheet" href="css/fontawesome.css">
   <link rel="stylesheet" href="css/solid.css">
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/effects-config.css">
+  <link rel="stylesheet" href="css/config-tab.css">
 
   <!--=============== JS ===============-->
   <script src="js/tabs-manager.js" defer></script>
+  <script src="js/effects-handler.js" defer></script>
+  <script src="js/config-manager.js" defer></script>
   <script src="js/main.js" defer></script>
   <script src="js/iro.min.js" defer></script>
   <script src="js/slider.js" defer></script>
@@ -36,7 +40,7 @@
   <!-- Status Bar -->
   <div class="status-bar">
     <div class="status-bar-left">
-      <div id="Signal" class="%BARS%" onclick="openWiFiModal()">
+      <div id="Signal" class="%BARS%">
         <div class="wv4 wave">
           <div class="wv3 wave">
             <div class="wv2 wave">
@@ -112,53 +116,113 @@
 
           <div class="effects-button">
             <h2 class="power-label">Effects <span class="fas fa-wand-sparkles"></span></h2>
-            <h3 class="fire">Fire</h3>
-            <div id="Firebutton" class="%FIRE_STATE%">
-              <span class="button"><span class="slide"></span></span>
+            <div class="effect-item">
+              <h3 class="fire">Fire</h3>
+              <button class="sml-effect-config-btn" data-effect="Fire" aria-label="Configure Fire effect">
+                <span class="fas fa-cog"></span>
+              </button>
+              <div id="Firebutton" class="%FIRE_STATE%">
+                <span class="button"><span class="slide"></span></span>
+              </div>
             </div>
-            <h3 class="movingdot">Dots</h3>
-            <div id="MovingDotbutton" class="%MOVINGDOT_STATE%">
-              <span class="button"><span class="slide"></span></span>
+            <div class="effect-item">
+              <h3 class="movingdot">Dots</h3>
+              <button class="sml-effect-config-btn" data-effect="MovingDot" aria-label="Configure Dots effect">
+                <span class="fas fa-cog"></span>
+              </button>
+              <div id="MovingDotbutton" class="%MOVINGDOT_STATE%">
+                <span class="button"><span class="slide"></span></span>
+              </div>
             </div>
-            <h3 class="rainbow">Rainbow</h3>
-            <div id="RainbowBeatbutton" class="%RAINBOWBEAT_STATE%">
-              <span class="button"><span class="slide"></span></span>
+            <div class="effect-item">
+              <h3 class="rainbow">Rainbow</h3>
+              <button class="sml-effect-config-btn" data-effect="RainbowBeat" aria-label="Configure Rainbow effect">
+                <span class="fas fa-cog"></span>
+              </button>
+              <div id="RainbowBeatbutton" class="%RAINBOWBEAT_STATE%">
+                <span class="button"><span class="slide"></span></span>
+              </div>
             </div>
-            <h3 class="rwb">RWB</h3>
-            <div id="RWBbutton" class="%RWB_STATE%">
-              <span class="button"><span class="slide"></span></span>
+            <div class="effect-item">
+              <h3 class="rwb">RWB</h3>
+              <button class="sml-effect-config-btn" data-effect="RWB" aria-label="Configure RWB effect">
+                <span class="fas fa-cog"></span>
+              </button>
+              <div id="RWBbutton" class="%RWB_STATE%">
+                <span class="button"><span class="slide"></span></span>
+              </div>
             </div>
-            <h3 class="ripple">Ripple</h3>
-            <div id="Ripplebutton" class="%RIPPLE_STATE%">
-              <span class="button"><span class="slide"></span></span>
+            <div class="effect-item">
+              <h3 class="ripple">Ripple</h3>
+              <button class="sml-effect-config-btn" data-effect="Ripple" aria-label="Configure Ripple effect">
+                <span class="fas fa-cog"></span>
+              </button>
+              <div id="Ripplebutton" class="%RIPPLE_STATE%">
+                <span class="button"><span class="slide"></span></span>
+              </div>
             </div>
-            <h3 class="twinkle">Twinkle</h3>
-            <div id="Twinklebutton" class="%TWINKLE_STATE%">
-              <span class="button"><span class="slide"></span></span>
+            <div class="effect-item">
+              <h3 class="twinkle">Twinkle</h3>
+              <button class="sml-effect-config-btn" data-effect="Twinkle" aria-label="Configure Twinkle effect">
+                <span class="fas fa-cog"></span>
+              </button>
+              <div id="Twinklebutton" class="%TWINKLE_STATE%">
+                <span class="button"><span class="slide"></span></span>
+              </div>
             </div>
-            <h3 class="balls">Balls</h3>
-            <div id="Ballsbutton" class="%BALLS_STATE%">
-              <span class="button"><span class="slide"></span></span>
+            <div class="effect-item">
+              <h3 class="balls">Balls</h3>
+              <button class="sml-effect-config-btn" data-effect="Balls" aria-label="Configure Balls effect">
+                <span class="fas fa-cog"></span>
+              </button>
+              <div id="Ballsbutton" class="%BALLS_STATE%">
+                <span class="button"><span class="slide"></span></span>
+              </div>
             </div>
-            <h3 class="juggle">Juggle</h3>
-            <div id="Jugglebutton" class="%JUGGLE_STATE%">
-              <span class="button"><span class="slide"></span></span>
+            <div class="effect-item">
+              <h3 class="juggle">Juggle</h3>
+              <button class="sml-effect-config-btn" data-effect="Juggle" aria-label="Configure Juggle effect">
+                <span class="fas fa-cog"></span>
+              </button>
+              <div id="Jugglebutton" class="%JUGGLE_STATE%">
+                <span class="button"><span class="slide"></span></span>
+              </div>
             </div>
-            <h3 class="sinelon">Sinelon</h3>
-            <div id="Sinelonbutton" class="%SINELON_STATE%">
-              <span class="button"><span class="slide"></span></span>
+            <div class="effect-item">
+              <h3 class="sinelon">Sinelon</h3>
+              <button class="sml-effect-config-btn" data-effect="Sinelon" aria-label="Configure Sinelon effect">
+                <span class="fas fa-cog"></span>
+              </button>
+              <div id="Sinelonbutton" class="%SINELON_STATE%">
+                <span class="button"><span class="slide"></span></span>
+              </div>
             </div>
-            <h3 class="comet">Comet</h3>
-            <div id="Cometbutton" class="%COMET_STATE%">
-              <span class="button"><span class="slide"></span></span>
+            <div class="effect-item">
+              <h3 class="comet">Comet</h3>
+              <button class="sml-effect-config-btn" data-effect="Comet" aria-label="Configure Comet effect">
+                <span class="fas fa-cog"></span>
+              </button>
+              <div id="Cometbutton" class="%COMET_STATE%">
+                <span class="button"><span class="slide"></span></span>
+              </div>
             </div>
-            <h3 class="breath">Breath</h3>
-            <div id="Breathbutton" class="%BREATH_STATE%">
-              <span class="button"><span class="slide"></span></span>
+            <div class="effect-item">
+              <h3 class="breath">Breath</h3>
+              <button class="sml-effect-config-btn" data-effect="Breath" aria-label="Configure Breath effect">
+                <span class="fas fa-cog"></span>
+              </button>
+              <div id="Breathbutton" class="%BREATH_STATE%">
+                <span class="button"><span class="slide"></span></span>
+              </div>
             </div>
-            <h3 class="colorsweep">ColorSweep</h3>
-            <div id="ColorSweepbutton" class="%COLORSWEEP_STATE%">
-              <span class="button"><span class="slide"></span></span>
+            <div class="effect-item">
+              <h3 class="colorsweep">ColorSweep</h3>
+              <button class="sml-effect-config-btn" data-effect="ColorSweep" aria-label="Configure ColorSweep effect">
+                <span class="fas fa-cog"></span>
+              </button>
+              <div id="ColorSweepbutton" class="%COLORSWEEP_STATE%">
+                <span class="button"><span class="slide"></span></span>
+              </div>
             </div>
           </div>
         </div>
@@ -332,27 +396,137 @@
           </section>
         </div>
 
-        <!-- Config Tab (New) -->
+        <!-- Config Tab -->
         <div id="tab-config" class="tab-content">
           <div class="config-section">
             <h2>Configuration</h2>
+
+            <!-- WiFi Configuration -->
             <div class="config-card">
-              <h3>WiFi Settings</h3>
-              <button onclick="openWiFiModal()" class="btn-config">
-                <span class="fas fa-wifi"></span> Configure WiFi
-              </button>
+              <h3><span class="fas fa-wifi"></span> WiFi Configuration</h3>
+              <div class="wifi-current-info">
+                <p><strong>SSID:</strong> <span id="currentSSID">-</span></p>
+                <p><strong>Signal:</strong> <span id="currentSignal">-</span></p>
+                <p><strong>IP:</strong> <span id="currentIP">-</span></p>
+              </div>
+              <form id="wifiConfigForm" onsubmit="saveWiFiConfig(event)">
+                <div class="form-group">
+                  <label for="newSSID">New SSID <span class="optional">(optional)</span>:</label>
+                  <input type="text" id="newSSID" name="ssid" placeholder="Leave empty to keep current SSID">
+                  <small class="help-text">Leave empty to keep current WiFi name</small>
+                </div>
+                <div class="form-group">
+                  <label for="newPassword"><span class="required">*</span> New Password:</label>
+                  <input type="password" id="newPassword" name="password" required placeholder="Enter new WiFi password">
+                  <small class="help-text">Minimum 8 characters</small>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn-save">
+                    <span class="fas fa-save"></span> Save & Restart
+                  </button>
+                </div>
+              </form>
+              <div id="wifiStatus" class="wifi-status"></div>
             </div>
+
+            <!-- LED Hardware Configuration -->
             <div class="config-card">
-              <h3>System</h3>
-              <p>Firmware Version: <span id="firmware-version">1.0</span></p>
-              <p>Uptime: <span id="uptime">0s</span></p>
+              <h3><span class="fas fa-lightbulb"></span> LED Hardware Configuration</h3>
+              <form id="ledConfigForm" onsubmit="saveLEDConfig(event)">
+                <div class="form-group">
+                  <label for="realLedCount">Real LED Count <span class="required">*</span>:</label>
+                  <input type="number" id="realLedCount" name="realLedCount" min="1" max="500" value="24" required>
+                  <small class="help-text">Actual number of LEDs connected to strip (1-500)</small>
+                </div>
+                <div class="form-group">
+                  <label for="maxWebLeds">Max Web LEDs <span class="required">*</span>:</label>
+                  <input type="number" id="maxWebLeds" name="maxWebLeds" min="1" max="500" value="24" required>
+                  <small class="help-text">Maximum LEDs controllable from web interface (1-500)</small>
+                </div>
+                <div class="form-group">
+                  <label for="defaultBrightness">Default Brightness <span class="required">*</span>:</label>
+                  <div class="brightness-slider-container">
+                    <input type="range" id="defaultBrightness" name="defaultBrightness" min="0" max="255" value="130" class="brightness-slider">
+                    <span id="brightnessValue" class="brightness-value">130</span>
+                  </div>
+                  <small class="help-text">Default brightness level (0-255)</small>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn-save">
+                    <span class="fas fa-save"></span> Save LED Config
+                  </button>
+                </div>
+              </form>
+              <div id="ledConfigStatus" class="config-status"></div>
             </div>
+
+            <!-- Help & Tips -->
             <div class="config-card">
-              <h3>Updates</h3>
+              <h3><span class="fas fa-question-circle"></span> Help & Tips</h3>
+              <div class="help-grid">
+                <div class="help-card">
+                  <div class="help-icon"><span class="fas fa-magic"></span></div>
+                  <h4>LED Effects</h4>
+                  <p>Choose from 16+ effects including Rainbow, Fire, Twinkle, and music-reactive VU meters. Adjust speed and brightness in real-time.</p>
+                </div>
+                <div class="help-card">
+                  <div class="help-icon"><span class="fas fa-eye"></span></div>
+                  <h4>Peek View</h4>
+                  <p>Quick status overview shows lamp, Bluetooth, temperature, and battery at a glance. Perfect for monitoring without navigating.</p>
+                </div>
+                <div class="help-card">
+                  <div class="help-icon"><span class="fas fa-mobile-alt"></span></div>
+                  <h4>Navigation</h4>
+                  <p>Desktop: Use sidebar or top tabs. Mobile: Bottom navigation bar. All features work on both layouts seamlessly.</p>
+                </div>
+                <div class="help-card">
+                  <div class="help-icon"><span class="fas fa-bolt"></span></div>
+                  <h4>Performance</h4>
+                  <p>WebSocket updates provide real-time status. Config changes take effect immediately. WiFi changes require restart.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- System Info -->
+            <div class="config-card">
+              <h3><span class="fas fa-info-circle"></span> System Information</h3>
+              <div class="system-info-grid">
+                <div class="system-info-item">
+                  <span class="system-info-label">Firmware Version:</span>
+                  <span id="firmware-version" class="system-info-value">1.0</span>
+                </div>
+                <div class="system-info-item">
+                  <span class="system-info-label">IP Address:</span>
+                  <span id="system-ip" class="system-info-value">-</span>
+                </div>
+                <div class="system-info-item">
+                  <span class="system-info-label">MAC Address:</span>
+                  <span id="system-mac" class="system-info-value">-</span>
+                </div>
+                <div class="system-info-item">
+                  <span class="system-info-label">Uptime:</span>
+                  <span id="uptime" class="system-info-value">0s</span>
+                </div>
+                <div class="system-info-item">
+                  <span class="system-info-label">Free Heap:</span>
+                  <span id="free-heap" class="system-info-value">-</span>
+                </div>
+                <div class="system-info-item">
+                  <span class="system-info-label">WiFi Mode:</span>
+                  <span id="wifi-mode" class="system-info-value">Station</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Updates -->
+            <div class="config-card">
+              <h3><span class="fas fa-download"></span> Firmware Updates</h3>
+              <p class="update-info">Update your SML firmware to the latest version for new features and bug fixes.</p>
               <button onclick="window.location.href='/update'" class="btn-config">
-                <span class="fas fa-download"></span> Check for Updates
+                <span class="fas fa-cloud-download-alt"></span> Check for Updates
               </button>
             </div>
+
           </div>
         </div>
       </div>
@@ -419,40 +593,6 @@
       </a>
     </nav>
   </aside>
-
-  <!-- WiFi Configuration Modal -->
-  <div id="wifiModal" class="wifi-modal">
-    <div class="wifi-modal-content">
-      <div class="wifi-modal-header">
-        <h2>WiFi Configuration</h2>
-        <span class="wifi-close" onclick="closeWiFiModal()">&times;</span>
-      </div>
-      <div class="wifi-modal-body">
-        <div class="wifi-info">
-          <p><strong>SSID:</strong> <span id="currentSSID">-</span></p>
-          <p><strong>Signal:</strong> <span id="currentSignal">-</span></p>
-          <p><strong>IP:</strong> <span id="currentIP">-</span></p>
-        </div>
-        <form id="wifiConfigForm" onsubmit="saveWiFiConfig(event)">
-          <div class="form-group">
-            <label for="newSSID">New SSID <span class="optional">(optional)</span>:</label>
-            <input type="text" id="newSSID" name="ssid" placeholder="Leave empty to keep current SSID">
-            <small class="help-text">Leave empty to keep current WiFi name</small>
-          </div>
-          <div class="form-group">
-            <label for="newPassword"><span class="required">*</span> New Password:</label>
-            <input type="password" id="newPassword" name="password" required placeholder="Enter new WiFi password">
-            <small class="help-text">Minimum 8 characters</small>
-          </div>
-          <div class="wifi-modal-footer">
-            <button type="button" class="btn-cancel" onclick="closeWiFiModal()">Cancel</button>
-            <button type="submit" class="btn-save">Save & Restart</button>
-          </div>
-        </form>
-        <div id="wifiStatus" class="wifi-status"></div>
-      </div>
-    </div>
-  </div>
 
   <!-- Additional Scripts -->
   <script src="js/battery.js" defer></script>
