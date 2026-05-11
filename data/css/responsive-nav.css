@@ -138,7 +138,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 100;
+  z-index: var(--z-fixed);
   color: var(--text-primary);
   border: none;
   transition: transform var(--transition-fast);
