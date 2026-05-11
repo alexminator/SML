@@ -238,6 +238,49 @@ Readings update every 3 seconds via WebSocket.
 
 ---
 
+#### Theme Selection
+
+**Choose your preferred color scheme.**
+
+The SML Web Interface v2.1 includes 3 color themes inspired by WLED:
+
+**Available Themes:**
+
+1. **WLED Classic** (Default)
+   - Colors: Cyan and blue
+   - Style: Technical LED aesthetic
+   - Best for: Programming effects, technical control
+
+2. **Sunset**
+   - Colors: Gold and orange
+   - Style: Warm lamp ambiance
+   - Best for: Daily home use, cozy atmosphere
+
+3. **Ocean**
+   - Colors: Blue and purple
+   - Style: Musical environment
+   - Best for: Music mode, visualizations, parties
+
+**How to Change Theme:**
+
+1. Navigate to **Config Tab**
+2. Scroll to **🎨 Appearance** section
+3. Click on any theme card to apply
+4. Theme saves automatically to your browser
+
+**Theme Persistence:**
+
+- Theme selection is saved in your browser's local storage
+- Persists across page reloads and browser restarts
+- Each device/browser can have its own theme
+- Private/Incognito mode: Theme only for current session
+
+**Visual Preview:**
+
+Each theme card shows a mini preview of the color scheme, helping you see how the interface will look before applying.
+
+---
+
 #### Help & Tips
 
 **FAQ Cards:**
