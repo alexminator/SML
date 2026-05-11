@@ -3,19 +3,18 @@
 
 /* === Header Styling === */
 .sml-header {
-  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+  background: var(--bg-gradient);
   padding: var(--spacing-md);
   border-bottom: 1px solid rgba(255, 215, 0, 0.1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   text-align: center;
   position: relative;
-  z-index: 1;
 }
 
 .sml-subtitle {
   font-family: var(--font-handmade);
   font-size: 1.2rem;
-  margin-top: 10px;
+  margin-top: var(--spacing-sm);
   color: var(--text-secondary);
 }
 
@@ -297,4 +296,13 @@
   color: var(--sml-cyan);
   font-weight: 600;
   text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+}
+
+/* === Alignment Utilities === */
+.power-control,
+.effect-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
 }
