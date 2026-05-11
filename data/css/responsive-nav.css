@@ -62,21 +62,23 @@
 .desktop-sidebar {
   display: none;
   position: fixed;
-  top: var(--status-bar-height);
   left: 0;
-  bottom: 0;
-  background: var(--bg-secondary);
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  flex-direction: column;
-  z-index: var(--z-sidebar);
+  top: var(--status-bar-height);
+  height: calc(100vh - var(--status-bar-height));
+  width: 200px;
+  background-color: var(--bg-secondary);
+  border-right: 1px solid var(--bg-tertiary);
   transition: width var(--transition-normal);
+  z-index: var(--z-sidebar);
+  display: flex;
+  flex-direction: column;
 }
 
 /* Sidebar Navigation */
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: var(--spacing-xs);
   padding: var(--spacing-md) 0;
   overflow-y: auto;
   flex: 1;
@@ -86,12 +88,13 @@
   display: flex;
   align-items: center;
   padding: var(--spacing-md);
-  color: var(--text-secondary);
+  color: var(--text-primary);
   text-decoration: none;
-  transition: all var(--transition-fast);
+  transition: all var(--transition-normal);
   cursor: pointer;
   white-space: nowrap;
   position: relative;
+  border-radius: var(--radius-md);
 }
 
 .sidebar-item:hover {
@@ -99,10 +102,10 @@
   color: var(--sml-gold);
 }
 
-.sidebar-item.active {
-  background: rgba(0, 212, 255, 0.15);
-  color: var(--sml-cyan);
-  border-left: 3px solid var(--sml-cyan);
+.sidebar-item.active,
+.sidebar-item[data-tab="config"].active {
+  background: var(--sml-cyan);
+  color: var(--bg-primary);
 }
 
 .sidebar-item span:first-child {
@@ -112,7 +115,14 @@
 
 .sidebar-text {
   margin-left: var(--spacing-md);
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
   font-weight: 500;
+}
+
+.sidebar-item.active .sidebar-text,
+.sidebar-item[data-tab="config"].active .sidebar-text {
+  color: var(--bg-primary);
 }
 
 /* Sidebar Toggle Button (Desktop only) */
@@ -129,7 +139,7 @@
   justify-content: center;
   cursor: pointer;
   z-index: 100;
-  color: white;
+  color: var(--text-primary);
   border: none;
   transition: transform var(--transition-fast);
 }
@@ -201,9 +211,18 @@
 
 /* === Main Content Area === */
 .main {
+  margin-left: 200px;
+  transition: margin-left var(--transition-normal);
   padding-bottom: 70px; /* Space for bottom nav on mobile */
   padding-top: var(--status-bar-height);
-  transition: margin-left var(--transition-normal);
+}
+
+body.sidebar-collapsed .main {
+  margin-left: 60px;
+}
+
+body.sidebar-hidden .main {
+  margin-left: 0;
 }
 
 @media (min-width: 768px) {
