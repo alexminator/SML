@@ -167,14 +167,17 @@
   background: rgba(255, 255, 255, 0.1);
   border: none;
   border-radius: var(--radius-sm);
-  width: 32px;
-  height: 32px;
-  display: flex;
+  min-width: 44px;
+  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all var(--transition-fast);
   color: var(--sml-cyan);
+  padding: var(--spacing-sm);
 }
 
 .sml-effect-config-btn:hover {

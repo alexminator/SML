@@ -115,6 +115,13 @@ class ConfigManager {
       return;
     }
 
+    // Show loading state
+    const saveBtn = document.getElementById('wifiSaveBtn');
+    if (saveBtn) {
+      saveBtn.classList.add('loading');
+      saveBtn.disabled = true;
+    }
+
     // Disable form
     this.setFormState(this.wifiForm, 'disabled');
 
@@ -146,6 +153,12 @@ class ConfigManager {
       console.error('WiFi config error:', error);
       this.showStatus('error', error.message || 'Failed to configure WiFi. Please try again.');
       this.setFormState(this.wifiForm, 'enabled');
+
+      // Reset button state
+      if (saveBtn) {
+        saveBtn.classList.remove('loading');
+        saveBtn.disabled = false;
+      }
     }
   }
 
@@ -190,6 +203,13 @@ class ConfigManager {
       colorOrder: formData.get('colorOrder')
     };
 
+    // Show loading state
+    const saveBtn = document.getElementById('ledSaveBtn');
+    if (saveBtn) {
+      saveBtn.classList.add('loading');
+      saveBtn.disabled = true;
+    }
+
     this.setFormState(form, 'disabled');
 
     try {
@@ -216,6 +236,12 @@ class ConfigManager {
       this.showStatus('error', error.message || 'Failed to configure LED. Please try again.');
     } finally {
       this.setFormState(form, 'enabled');
+
+      // Reset button state
+      if (saveBtn) {
+        saveBtn.classList.remove('loading');
+        saveBtn.disabled = false;
+      }
     }
   }
 

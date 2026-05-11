@@ -90,9 +90,9 @@
 }
 
 .wifi-status.success {
-  background: rgba(0, 255, 136, 0.1);
-  border: 1px solid var(--sml-green);
-  color: var(--sml-green);
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid var(--sml-green-light);
+  color: var(--sml-green-light);
 }
 
 .wifi-status.error {
@@ -133,6 +133,42 @@
 
 .btn-save:active {
   transform: translateY(0);
+}
+
+.btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-save .btn-content,
+.btn-save .btn-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  transition: opacity var(--transition-fast);
+}
+
+.btn-save .btn-loader {
+  display: none;
+}
+
+.btn-save.loading .btn-content {
+  display: none;
+}
+
+.btn-save.loading .btn-loader {
+  display: flex;
+}
+
+.btn-save.loading {
+  opacity: 0.8;
+  cursor: wait;
+}
+
+.hidden {
+  display: none !important;
 }
 
 .form-group {
@@ -354,12 +390,14 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-md);
   padding: var(--spacing-md);
-  transition: all var(--transition-fast);
+  transition: all var(--transition-normal) ease;
+  cursor: pointer;
 }
 
 .help-card:hover {
   border-color: var(--sml-cyan);
-  transform: translateY(-2px);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 212, 255, 0.2);
 }
 
 .help-icon {
@@ -593,9 +631,9 @@
 
 .config-status.success {
   display: block;
-  background: rgba(0, 255, 136, 0.1);
-  border: 1px solid var(--sml-green);
-  color: var(--sml-green);
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid var(--sml-green-light);
+  color: var(--sml-green-light);
 }
 
 .config-status.error {

@@ -49,7 +49,28 @@ body {
   transition: color 0.3s ease, text-shadow 0.3s ease;
 }
 
+/* Default: Subtle green glow (recommended for IoT dashboard) */
 @keyframes animateTEXT {
+  0% {
+    color: var(--sml-green-light);
+    text-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+  }
+  50% {
+    color: var(--sml-green);
+    text-shadow: 0 0 15px rgba(34, 197, 94, 0.7);
+  }
+  100% {
+    color: var(--sml-green-light);
+    text-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+  }
+}
+
+/* RGB animation class (use sparingly for rainbow effects) */
+.glowing.rgb-active span {
+  animation: animateTEXT_RGB 2s linear infinite;
+}
+
+@keyframes animateTEXT_RGB {
   0% {
     color: #f00;
     text-shadow: 0 0 10px rgba(255, 0, 0, 1);
@@ -138,7 +159,7 @@ body {
 
 /* Signal Strength Colors */
 .sml-status-bar.connected .sml-wifi-signal {
-  color: var(--sml-green);
+  color: var(--sml-green-light);
 }
 
 .sml-status-bar.disconnected .sml-wifi-signal {
@@ -156,7 +177,7 @@ body {
 }
 
 /* Battery Level Colors */
-.sml-battery-high { color: var(--sml-green); }
+.sml-battery-high { color: var(--sml-green-light); }
 .sml-battery-medium { color: var(--sml-amber); }
 .sml-battery-low { color: var(--sml-red); }
 

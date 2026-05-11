@@ -34,6 +34,8 @@
 
   /* Additional status colors */
   --sml-green: #4CAF50;
+  --sml-green-light: #22C55E;
+  --sml-green-dark: #16A34A;
   --sml-red: #F44336;
   --sml-blue: #008BFF;
   --sml-amber: #FFC107;
@@ -58,6 +60,7 @@
   --font-handmade: 'Handmade', cursive;
   --font-impact: 'Impactreg', sans-serif;
   --font-body: "Public Sans", -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'Fira Code', 'Consolas', 'Monaco', monospace;
 
   /* Z-index layers */
   --z-background: -1;
@@ -195,6 +198,19 @@ a:hover {
 .padding-lg { padding: var(--spacing-lg); }
 .padding-xl { padding: var(--spacing-xl); }
 
+/* === Technical Data Display === */
+.data-display {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.percentage-display {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
 /* === Button Gradient Utility === */
 .btn-gradient {
   background: linear-gradient(135deg, var(--sml-cyan) 0%, var(--sml-blue) 100%);
@@ -250,4 +266,20 @@ body[data-theme="ocean"] {
 
   /* Override SML brand colors */
   --sml-gold: #3f51b5;
+}
+
+/* OLED Mode - Pure black for power saving (can be combined with any theme) */
+body.oled-mode {
+  --bg-primary: #000000; /* Pure black for OLED */
+  --bg-secondary: #0A0A0A;
+  --bg-tertiary: #141414;
+
+  /* Reduce white emission to 90% for eye comfort */
+  --text-primary: rgba(255, 255, 255, 0.9);
+  --text-secondary: rgba(224, 224, 224, 0.85);
+  --text-tertiary: rgba(176, 176, 176, 0.8);
+}
+
+body.oled-mode .glowing span {
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.4); /* Subtler glow */
 }

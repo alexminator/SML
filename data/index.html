@@ -10,6 +10,11 @@
   <title>Smart Music Lamp</title>
   <link rel="icon" href="SML.ico" type="image/x-icon">
 
+  <!-- Google Fonts: Fira Code for data displays -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+
   <!--=============== CSS ===============-->
   <link rel="stylesheet" href="css/wled-theme.css">
   <link rel="stylesheet" href="css/sml-custom.css">
@@ -331,7 +336,7 @@
             </div>
 
             <div class="temp">
-              <h2 id="temp">%TEMPERATURE%</h2>
+              <h2 id="temp" class="data-display">%TEMPERATURE%</h2>
             </div>
 
             <div class="wrapper">
@@ -342,7 +347,7 @@
             </div>
 
             <div class="humidity">
-              <i class="fas fa-droplet"></i> <span id="hum">%HUMIDITY%</span>
+              <i class="fas fa-droplet"></i> <span id="hum" class="data-display">%HUMIDITY%</span>
             </div>
 
             <div class="widget">
@@ -386,7 +391,7 @@
             <!-- LED Count Selector -->
             <div class="sml-peek-led-selector">
               <label for="ledCountSelect">LEDs:</label>
-              <select id="ledCountSelect" class="sml-peek-led-select">
+              <select id="ledCountSelect" class="sml-peek-led-select data-display">
                 <option value="24">24 LEDs</option>
               </select>
             </div>
@@ -417,8 +422,8 @@
                     <span class="light"></span>
                   </div>
                 </div>
-                <p id="battVolt">%BATTVOLTAGE%</p>
-                <h1 id="battlevel" class="battery__percentage">0</h1>
+                <p id="battVolt" class="data-display">%BATTVOLTAGE%</p>
+                <h1 id="battlevel" class="battery__percentage percentage-display">0</h1>
                 <p id="battCharge" class="battery__status">
                   Low Battery <span class="fas fa-plug"></span>
                 </p>
@@ -460,8 +465,13 @@
                 </div>
                 <small class="help-text">Minimum 8 characters</small>
                 <div class="form-actions">
-                  <button type="submit" class="btn-save">
-                    <span class="fas fa-save"></span> Save & Restart
+                  <button type="submit" class="btn-save" id="wifiSaveBtn">
+                    <span class="btn-content">
+                      <span class="fas fa-save"></span> <span class="btn-text">Save & Restart</span>
+                    </span>
+                    <span class="btn-loader hidden">
+                      <span class="fas fa-spinner fa-spin"></span> Saving...
+                    </span>
                   </button>
                 </div>
               </form>
@@ -542,8 +552,13 @@
                 </div>
                 <small class="help-text">Default brightness level (0-255)</small>
                 <div class="form-actions">
-                  <button type="submit" class="btn-save">
-                    <span class="fas fa-save"></span> Save LED Config
+                  <button type="submit" class="btn-save" id="ledSaveBtn">
+                    <span class="btn-content">
+                      <span class="fas fa-save"></span> <span class="btn-text">Save LED Config</span>
+                    </span>
+                    <span class="btn-loader hidden">
+                      <span class="fas fa-spinner fa-spin"></span> Saving...
+                    </span>
                   </button>
                 </div>
               </form>
@@ -583,23 +598,23 @@
               <div class="system-info-grid">
                 <div class="system-info-item">
                   <span class="system-info-label">Firmware Version:</span>
-                  <span id="firmware-version" class="system-info-value">1.0</span>
+                  <span id="firmware-version" class="system-info-value data-display">1.0</span>
                 </div>
                 <div class="system-info-item">
                   <span class="system-info-label">IP Address:</span>
-                  <span id="system-ip" class="system-info-value">-</span>
+                  <span id="system-ip" class="system-info-value data-display">-</span>
                 </div>
                 <div class="system-info-item">
                   <span class="system-info-label">MAC Address:</span>
-                  <span id="system-mac" class="system-info-value">-</span>
+                  <span id="system-mac" class="system-info-value data-display">-</span>
                 </div>
                 <div class="system-info-item">
                   <span class="system-info-label">Uptime:</span>
-                  <span id="uptime" class="system-info-value">0s</span>
+                  <span id="uptime" class="system-info-value data-display">0s</span>
                 </div>
                 <div class="system-info-item">
                   <span class="system-info-label">Free Heap:</span>
-                  <span id="free-heap" class="system-info-value">-</span>
+                  <span id="free-heap" class="system-info-value data-display">-</span>
                 </div>
                 <div class="system-info-item">
                   <span class="system-info-label">WiFi Mode:</span>
