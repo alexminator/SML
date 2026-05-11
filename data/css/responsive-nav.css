@@ -1,0 +1,235 @@
+/*=============== Responsive Navigation System ===============*/
+/* SML Web Interface v2.1 - Navigation Components */
+
+/* === Mobile Bottom Navigation (< 768px) === */
+.mobile-bottom-nav {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: var(--spacing-sm) 0;
+  z-index: var(--z-bottom-nav);
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  text-decoration: none;
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
+  cursor: pointer;
+  min-width: 0;
+}
+
+.nav-item:hover {
+  color: var(--sml-gold);
+}
+
+.nav-item.active {
+  color: var(--sml-cyan);
+}
+
+.nav-item span:first-child {
+  font-size: 1.5rem;
+  transition: transform var(--transition-normal);
+}
+
+.nav-item.active span:first-child {
+  transform: scale(1.1);
+}
+
+.nav-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Responsive text scaling for 6 items */
+@media (max-width: 380px) {
+  .nav-text {
+    font-size: 0.7em;
+  }
+}
+
+/* === Desktop/Tablet Sidebar (≥ 768px) === */
+.desktop-sidebar {
+  display: none;
+  position: fixed;
+  top: var(--status-bar-height);
+  left: 0;
+  bottom: 0;
+  background: var(--bg-secondary);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  flex-direction: column;
+  z-index: var(--z-sidebar);
+  transition: width var(--transition-normal);
+}
+
+/* Sidebar Navigation */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: var(--spacing-md) 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-md);
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  white-space: nowrap;
+  position: relative;
+}
+
+.sidebar-item:hover {
+  background: rgba(255, 215, 0, 0.1);
+  color: var(--sml-gold);
+}
+
+.sidebar-item.active {
+  background: rgba(0, 212, 255, 0.15);
+  color: var(--sml-cyan);
+  border-left: 3px solid var(--sml-cyan);
+}
+
+.sidebar-item span:first-child {
+  font-size: 1.5rem;
+  min-width: 24px;
+}
+
+.sidebar-text {
+  margin-left: var(--spacing-md);
+  font-weight: 500;
+}
+
+/* Sidebar Toggle Button (Desktop only) */
+.sidebar-toggle {
+  display: none;
+  position: absolute;
+  top: var(--spacing-md);
+  left: var(--spacing-md);
+  width: 40px;
+  height: 40px;
+  background: var(--sml-orange);
+  border-radius: var(--radius-md);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  color: white;
+  border: none;
+  transition: transform var(--transition-fast);
+}
+
+.sidebar-toggle:hover {
+  transform: scale(1.1);
+}
+
+.sidebar-toggle:active {
+  transform: scale(0.95);
+}
+
+/* === Tablet Sidebar (768px - 1023px) === */
+@media (min-width: 768px) {
+  .mobile-bottom-nav {
+    display: none;
+  }
+
+  .desktop-sidebar {
+    display: flex;
+    width: 60px;
+  }
+
+  .sidebar-text {
+    display: none;
+  }
+
+  .main {
+    margin-left: 60px;
+    padding-top: var(--status-bar-height);
+  }
+
+  .sidebar-toggle {
+    display: none;
+  }
+}
+
+/* === Desktop Sidebar (≥ 1024px) === */
+@media (min-width: 1024px) {
+  .desktop-sidebar {
+    width: 200px;
+  }
+
+  .desktop-sidebar.collapsed {
+    width: 60px;
+  }
+
+  .desktop-sidebar.collapsed .sidebar-text {
+    display: none;
+  }
+
+  .sidebar-text {
+    display: inline;
+  }
+
+  .main {
+    margin-left: 200px;
+    transition: margin-left var(--transition-normal);
+  }
+
+  .main.expanded {
+    margin-left: 60px;
+  }
+
+  .sidebar-toggle {
+    display: flex;
+  }
+}
+
+/* === Main Content Area === */
+.main {
+  padding-bottom: 70px; /* Space for bottom nav on mobile */
+  padding-top: var(--status-bar-height);
+  transition: margin-left var(--transition-normal);
+}
+
+@media (min-width: 768px) {
+  .main {
+    padding-bottom: 0;
+  }
+}
+
+/* === Tab Content Sections === */
+.tab-content {
+  display: none;
+  padding: var(--spacing-md);
+  animation: fadeIn var(--transition-normal);
+}
+
+.tab-content.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
