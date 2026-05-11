@@ -114,7 +114,7 @@
   background: linear-gradient(135deg, var(--sml-cyan), var(--sml-blue));
   border: none;
   border-radius: var(--radius-md);
-  color: white;
+  color: var(--text-primary);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -372,8 +372,9 @@
   justify-content: center;
   margin-bottom: var(--spacing-sm);
   font-size: 1.25rem;
-  color: white;
+  color: var(--text-primary);
 }
+
 
 .help-card-icon {
   width: 40px;
@@ -385,7 +386,7 @@
   justify-content: center;
   margin-bottom: var(--spacing-sm);
   font-size: 1.25rem;
-  color: white;
+  color: var(--text-primary);
 }
 
 .help-card h4 {
@@ -456,7 +457,7 @@
   background: linear-gradient(135deg, var(--sml-cyan), var(--sml-blue));
   border: none;
   border-radius: var(--radius-md);
-  color: white;
+  color: var(--text-primary);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -829,3 +830,202 @@
   font-size: 0.95rem;
   margin-bottom: var(--spacing-md);
 }
+
+/* ============================================
+   THEME SELECTOR STYLES
+   ============================================ */
+
+/* Section title styling */
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.section-title i {
+  color: var(--sml-cyan);
+}
+
+/* Theme selector grid container */
+.theme-selector {
+  display: grid;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+/* Responsive grid layout */
+@media (min-width: 1024px) {
+  .theme-selector {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .theme-selector {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .theme-selector {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Theme card base styles */
+.theme-card {
+  background: var(--bg-secondary);
+  border: 2px solid var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  cursor: pointer;
+  transition: all var(--transition-normal) ease;
+  position: relative;
+}
+
+/* Hover effect - elevate card */
+.theme-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--sml-cyan);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Active state - selected theme */
+.theme-card.active {
+  border-color: var(--sml-cyan);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sml-cyan) 30%, transparent);
+}
+
+/* Checkmark icon for active theme */
+.theme-card.active::after {
+  content: '✓';
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  background: var(--sml-cyan);
+  color: var(--bg-primary);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* Theme preview miniature */
+.theme-preview {
+  width: 100%;
+  height: 80px;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--spacing-sm);
+  overflow: hidden;
+  position: relative;
+}
+
+.preview-header {
+  height: 20px;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.preview-body {
+  position: absolute;
+  top: 25px;
+  left: var(--spacing-sm);
+  right: var(--spacing-sm);
+}
+
+.preview-button {
+  width: 30px;
+  height: 16px;
+  border-radius: 4px;
+  margin-bottom: var(--spacing-xs);
+}
+
+.preview-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+}
+
+/* WLED Classic preview colors */
+.theme-preview.wled-classic .preview-header {
+  background: linear-gradient(135deg, #121212 0%, #1e1e1e 100%);
+}
+.theme-preview.wled-classic .preview-button {
+  background: #00bcd4;
+}
+.theme-preview.wled-classic .preview-slider {
+  background: #00bcd4;
+}
+
+/* Sunset preview colors */
+.theme-preview.sunset .preview-header {
+  background: linear-gradient(135deg, #1a1400 0%, #2c2100 100%);
+}
+.theme-preview.sunset .preview-button {
+  background: #ffd700;
+}
+.theme-preview.sunset .preview-slider {
+  background: #ff9800;
+}
+
+/* Ocean preview colors */
+.theme-preview.ocean .preview-header {
+  background: linear-gradient(135deg, #0a0a1a 0%, #14142e 100%);
+}
+.theme-preview.ocean .preview-button {
+  background: #3f51b5;
+}
+.theme-preview.ocean .preview-slider {
+  background: #9c27b0;
+}
+
+/* Theme card text */
+.theme-card h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-xs) 0;
+}
+
+.theme-card p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Info text below theme selector */
+.theme-info {
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+  margin-top: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.theme-info i {
+  color: var(--sml-cyan);
+}
+
+/* Focus state for keyboard navigation */
+.theme-card:focus {
+  outline: 2px solid var(--sml-cyan);
+  outline-offset: 2px;
+}
+
+/* GPU acceleration for active card */
+.theme-card.active {
+  will-change: transform, box-shadow;
+}
+

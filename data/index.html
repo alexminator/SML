@@ -61,7 +61,7 @@
     </div>
   </div>
 
-  <!-- Header (NO butterfly) -->
+  <!-- Header -->
   <header class="header">
     <div class="glowing"><span>S</span><span>M</span><span>L</span></div>
     <p>Smart Music Lamp</p>
@@ -468,6 +468,57 @@
               <div id="wifiStatus" class="wifi-status"></div>
             </div>
 
+            <!-- Appearance Section - Theme Selector -->
+            <div class="config-card">
+              <h3><span class="fas fa-palette"></span> Appearance</h3>
+
+              <div class="theme-selector">
+                <!-- WLED Classic Theme -->
+                <div class="theme-card active" data-theme="wled-classic" role="radio" aria-checked="true" tabindex="0">
+                  <div class="theme-preview wled-classic">
+                    <div class="preview-header"></div>
+                    <div class="preview-body">
+                      <div class="preview-button"></div>
+                      <div class="preview-slider"></div>
+                    </div>
+                  </div>
+                  <h4>WLED Classic</h4>
+                  <p>Cyan y azul - Estilo técnico LED</p>
+                </div>
+
+                <!-- Sunset Theme -->
+                <div class="theme-card" data-theme="sunset" role="radio" aria-checked="false" tabindex="0">
+                  <div class="theme-preview sunset">
+                    <div class="preview-header"></div>
+                    <div class="preview-body">
+                      <div class="preview-button"></div>
+                      <div class="preview-slider"></div>
+                    </div>
+                  </div>
+                  <h4>Sunset</h4>
+                  <p>Dorado y naranja - Luz cálida</p>
+                </div>
+
+                <!-- Ocean Theme -->
+                <div class="theme-card" data-theme="ocean" role="radio" aria-checked="false" tabindex="0">
+                  <div class="theme-preview ocean">
+                    <div class="preview-header"></div>
+                    <div class="preview-body">
+                      <div class="preview-button"></div>
+                      <div class="preview-slider"></div>
+                    </div>
+                  </div>
+                  <h4>Ocean</h4>
+                  <p>Azul y púrpura - Ambiente musical</p>
+                </div>
+              </div>
+
+              <p class="theme-info">
+                <i class="fas fa-info-circle"></i>
+                El tema se guarda automáticamente en tu navegador
+              </p>
+            </div>
+
             <!-- LED Hardware Configuration -->
             <div class="config-card">
               <h3><span class="fas fa-lightbulb"></span> LED Hardware Configuration</h3>
@@ -637,6 +688,7 @@
   <script src="js/battery.js" defer></script>
   <script src="js/date.js" defer></script>
   <script src="js/player.js" defer></script>
+  <script src="js/theme-manager.js" defer></script>
 </body>
 
 </html>
