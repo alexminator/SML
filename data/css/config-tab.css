@@ -898,6 +898,10 @@
 .theme-card.active {
   border-color: var(--sml-cyan);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--sml-cyan) 30%, transparent);
+
+  /* Force GPU layer for smoother animations */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 /* Checkmark icon for active theme */
