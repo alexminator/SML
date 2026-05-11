@@ -29,6 +29,19 @@
   --radius-lg: 12px;
   --radius-full: 9999px;
 
+  /* Additional status colors */
+  --sml-green: #4CAF50;
+  --sml-red: #F44336;
+  --sml-blue: #008BFF;
+
+  /* Additional text colors */
+  --text-tertiary: #7A7A7A;
+
+  /* Gradient stops for consistency */
+  --gradient-start: #121212;
+  --gradient-mid: #1a1a2e;
+  --gradient-end: #16213e;
+
   /* Transitions */
   --transition-fast: 150ms ease;
   --transition-normal: 300ms ease;
