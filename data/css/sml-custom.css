@@ -1,6 +1,16 @@
 /*=============== SML Custom Identity - Gold/Cyan Accents ===============*/
 /* SML Web Interface v2.1 - Brand Identity */
 
+/* === Background Gradient Application === */
+body {
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+}
+
+.grid-container {
+  background: var(--bg-gradient);
+}
+
 /* === Header Styling === */
 .sml-header {
   background: var(--bg-gradient);

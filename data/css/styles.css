@@ -69,8 +69,6 @@ html {
 body {
     font-family: var(--body-font);
     font-size: var(--normal-font-size);
-    background: var(--bg-gradient);
-    background-attachment: fixed;
     color: var(--text-color);
     min-height: 100%;
     position: relative;
@@ -130,7 +128,6 @@ footer p {
         "main" auto
         "footer" 80px;
     min-height: 100vh;
-    background: var(--bg-gradient);
 }
 
 /* Old navigation styles removed - now using responsive-nav.css */
@@ -822,7 +819,7 @@ footer p {
     font-weight: 500;
     top: -40px;
     line-height: 55px;
-    z-index: 2;
+    z-index: var(--z-dropdown);
     color: #fff;
     transform-origin: bottom;
     transition: transform 0.3s ease-in-out;
@@ -839,7 +836,7 @@ footer p {
     width: 100%;
     background: var(--slider-ballon);
     border: 3px solid #fff;
-    z-index: -1;
+    z-index: var(--z-background);
     left: 50%;
     transform: translateX(-50%) rotate(45deg);
     border-bottom-left-radius: 50%;
@@ -880,7 +877,7 @@ footer p {
     border-radius: 5px;
     outline: none;
     border: none;
-    z-index: 2222;
+    z-index: var(--z-modal-overlay);
 }
 
 .range input::-webkit-slider-thumb {
@@ -1234,7 +1231,7 @@ footer p {
     border-radius: 20px;
     box-shadow: var(--termometer-shadow);
     margin-bottom: 50px;
-    z-index: 1;
+    z-index: var(--z-base);
   }
   
   #termometer:before,
@@ -1249,7 +1246,7 @@ footer p {
     height: 34px;
     bottom: 9px;
     background: var(--termometer-bg);
-    z-index: -1;
+    z-index: var(--z-background);
   }
   
   #termometer:after {
@@ -1260,7 +1257,7 @@ footer p {
     bottom: -41px;
     left: 50%;
     transform: translateX(-50%);
-    z-index: -3;
+    z-index: var(--z-background);
     box-shadow: 5px 10px 8px var(--container-color);
   }
   
@@ -1462,7 +1459,7 @@ footer p {
     position: relative;
     margin: 3em 0 0; /* Height bubbles rise to */
     color: #fff;
-    z-index: 2;
+    z-index: var(--z-dropdown);
 }
 .individual-bubble {
     position: absolute;
@@ -1470,7 +1467,7 @@ footer p {
     bottom: 0;
     background-color: hsl(92, 89%, 46%);
     animation: animated-charging-bubble 1.2s infinite alternate;
-    z-index: 1;
+    z-index: var(--z-base);
 }
 
 @keyframes animated-charging-bubble {
@@ -1489,7 +1486,7 @@ _:-ms-lang(x), _:-webkit-full-screen, .individual-bubble { top: inherit !importa
 .wifi-modal {
     display: none;
     position: fixed;
-    z-index: 10000;
+    z-index: var(--z-modal-overlay);
     left: 0;
     top: 0;
     width: 100%;
@@ -1680,7 +1677,7 @@ _:-ms-lang(x), _:-webkit-full-screen, .individual-bubble { top: inherit !importa
     display: none;
     line-height: 1.6;
     position: relative;
-    z-index: 1;
+    z-index: var(--z-base);
 }
 
 .wifi-status:not(:empty) {
