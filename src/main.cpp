@@ -35,7 +35,7 @@
 // #define DEBUG_WEB
 
 // WebSocket communication and JSON
-// #define DEBUG_WEBSOCKET
+#define DEBUG_WEBSOCKET
 
 // LED strip control and effects
 // #define DEBUG_LED
@@ -1211,6 +1211,90 @@ void notifyClients()
     }
 }
 
+// ============================================================================
+// WebSocket LED Update for Peek Tab (Task 21)
+// ============================================================================
+#define MAX_WEB_LEDS 60  // Maximum LEDs to send for web preview
+
+void sendLEDUpdate()
+{
+    // Skip if no clients connected
+    if (ws.count() == 0) {
+        return;
+    }
+
+    // Take mutex for reading LED data
+    if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(50)) == pdTRUE) {
+        JsonDocument json;
+
+        // Add LED data with MAX 60 limit and equidistant sampling
+        JsonArray ledArray = json["leds"].to<JsonArray>();
+
+        // Determine number of LEDs to send
+        const uint8_t realLedCount = N_PIXELS;
+        const uint8_t previewLedCount = (realLedCount > MAX_WEB_LEDS) ? MAX_WEB_LEDS : realLedCount;
+
+        // Equidistant sampling: map preview LED to real LED
+        for (uint8_t i = 0; i < previewLedCount; i++) {
+            // Calculate which real LED to sample
+            const uint16_t realLedIndex = (i * realLedCount) / previewLedCount;
+
+            JsonObject led = ledArray.add<JsonObject>();
+            led["r"] = leds[realLedIndex].r;
+            led["g"] = leds[realLedIndex].g;
+            led["b"] = leds[realLedIndex].b;
+        }
+
+        // Add metadata
+        json["realCount"] = realLedCount;
+        json["previewCount"] = previewLedCount;
+
+        // Get current effect name
+        const char* effectName = "None";
+        if (stripLed.effectId >= 1 && stripLed.effectId <= 20) {
+            const char* effectNames[] = {
+                "MovingDot", "RainbowBeat", "RWB", "Ripple", "Fire",
+                "Twinkle", "BouncingBalls", "Juggle", "Sinelon", "Comet",
+                "Breath", "ColorSweep", "RainbowVU", "OldSkoolVU", "RainbowHueVU",
+                "RippleVU", "ThreeBarsVU", "OceanVU", "TempBased", "BatteryBased"
+            };
+            effectName = effectNames[stripLed.effectId - 1];
+        }
+        json["effect"] = effectName;
+
+        // Calculate required size
+        const size_t requiredSize = measureJson(json);
+        const size_t safetyMargin = 64;
+        const size_t bufferSize = requiredSize + safetyMargin;
+
+        // Verify reasonable limit (LED data can be larger)
+        if (bufferSize > 4096) {
+#ifdef DEBUG_WEBSOCKET
+            debuglnW("LED update payload too large, skipping");
+#endif
+            xSemaphoreGive(dataMutex);
+            return;
+        }
+
+        // Dynamic buffer
+        char buffer[bufferSize];
+        size_t len = serializeJson(json, buffer, sizeof(buffer));
+
+        if (len < sizeof(buffer)) {
+            ws.textAll(buffer, len);
+#ifdef DEBUG_WEBSOCKET
+            debugD("LED update sent: ");
+            debugD_NUM(previewLedCount, "%u");
+            debugD(" LEDs, ");
+            debugD_NUM(len, "%u");
+            debuglnD(" bytes");
+#endif
+        }
+
+        xSemaphoreGive(dataMutex);
+    }
+}
+
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 {
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
@@ -1436,14 +1520,22 @@ void TaskWebSocket(void *pvParameters)
 {
     UBaseType_t stackHighWaterMark;
 
+    // Peek tab LED update: 50ms = 20 FPS (adaptive based on effect type)
+    const unsigned long LED_UPDATE_INTERVAL = 50;
+
     while (true)
     {
         ws.cleanupClients();
-        notifyClients();
 
-        // Monitor stack every 10 cycles
+        // Send LED preview data every cycle (20 FPS)
+        sendLEDUpdate();
+
+        // Send general status updates less frequently (every 10 cycles = 500ms)
         static uint8_t cycleCount = 0;
         if (++cycleCount >= WEBSOCKET_STACK_CHECK_CYCLES) {
+            notifyClients();
+
+            // Monitor stack
             stackHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
             if (stackHighWaterMark < STACK_WARNING_THRESHOLD) {
 #ifdef DEBUG_WEBSOCKET
@@ -1456,7 +1548,8 @@ void TaskWebSocket(void *pvParameters)
             cycleCount = 0;
         }
 
-        vTaskDelay(pdMS_TO_TICKS(WEBSOCKET_UPDATE_INTERVAL));
+        // Use LED update interval for faster refresh
+        vTaskDelay(pdMS_TO_TICKS(LED_UPDATE_INTERVAL));
     }
 }
 
