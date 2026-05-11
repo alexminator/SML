@@ -21,7 +21,6 @@
 
 /* === Layout === */
 @import url('layout/grid.css');
-@import url('layout/wled-theme.css');
 @import url('layout/responsive-nav.css');
 @import url('layout/header.css');
 
@@ -33,6 +32,7 @@
 @import url('components/thermometer.css');
 
 /* === Themes === */
+@import url('themes/wled-theme.css');
 @import url('themes/sml-brand.css');
 
 /* === Pages === */

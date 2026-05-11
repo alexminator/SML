@@ -40,10 +40,6 @@
   text-align: center;
 }
 
-.wrapper {
-  grid-area: wrapper;
-}
-
 .humidity {
   grid-area: humidity;
   text-align: center;

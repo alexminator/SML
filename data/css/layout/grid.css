@@ -1,14 +1,94 @@
 /*=============== Grid Layout ===============*/
-/* SML Web Interface v2.1 - Page Structure */
+/* SML Web Interface v2.1 - Modern Grid Layout */
 
 /* === Main Grid Container === */
 .grid-container {
   display: grid;
-  grid-template:
-    "header" 170px
-    "main" auto
-    "footer" 80px;
   min-height: 100vh;
+  /* Default mobile layout (< 768px) */
+  grid-template:
+    "status-bar" 44px
+    "header" auto
+    "main" auto
+    "mobile-nav" 60px;
+}
+
+/* === Grid Areas Assignment === */
+.status-bar {
+  grid-area: status-bar;
+}
+
+.header {
+  grid-area: header;
+}
+
+.main {
+  grid-area: main;
+}
+
+.mobile-bottom-nav {
+  grid-area: mobile-nav;
+}
+
+/* === Desktop Sidebar (>= 1024px) === */
+@media (min-width: 1024px) {
+  .grid-container {
+    grid-template:
+      "status-bar status-bar" 44px
+      "sidebar header" auto
+      "sidebar main" 1fr;
+    grid-template-columns: 200px 1fr;
+  }
+
+  .desktop-sidebar {
+    grid-area: sidebar;
+    position: sticky;
+    top: 44px; /* Below status bar */
+    height: calc(100vh - 44px);
+    overflow-y: auto;
+  }
+
+  .mobile-bottom-nav {
+    display: none; /* Hide mobile nav on desktop */
+  }
+}
+
+/* === Tablet Collapsed Sidebar (768-1023px) === */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .grid-container {
+    grid-template:
+      "status-bar status-bar" 44px
+      "sidebar header" auto
+      "sidebar main" 1fr;
+    grid-template-columns: 60px 1fr;
+  }
+
+  .desktop-sidebar {
+    grid-area: sidebar;
+    position: sticky;
+    top: 44px;
+    height: calc(100vh - 44px);
+    overflow-y: auto;
+  }
+
+  .mobile-bottom-nav {
+    display: none; /* Hide mobile nav on tablet */
+  }
+
+  body.sidebar-collapsed .grid-container {
+    grid-template-columns: 60px 1fr;
+  }
+}
+
+/* === Mobile (< 768px) === */
+@media (max-width: 767px) {
+  .desktop-sidebar {
+    display: none; /* Hide sidebar on mobile */
+  }
+
+  .mobile-bottom-nav {
+    display: flex; /* Show mobile nav */
+  }
 }
 
 /* === Background Circles Animation === */
@@ -20,6 +100,7 @@
   height: 100%;
   overflow: hidden;
   z-index: var(--z-background);
+  pointer-events: none;
 }
 
 .circles li {
@@ -122,40 +203,5 @@
   }
 }
 
-/* === Tab Content Structure === */
-.wrap {
-  max-width: 480px;
-  margin: 20px auto;
-  position: relative;
-}
-
-/* === Footer === */
-.footer {
-  grid-area: footer;
-  position: absolute;
-  color: var(--text-color);
-  background: rgba(0, 0, 0, .1);
-  right: 0;
-  opacity: 1;
-  width: 200px;
-  height: 80px;
-}
-
-.footer p {
-  padding: 31px;
-  font-size: 14px;
-}
-
-/* === Responsive Breakpoints === */
-@media screen and (max-width: 400px) {
-  .wrap {
-    margin: 10px auto;
-    width: 100%;
-  }
-}
-
-@media screen and (min-width: 580px) {
-  .light {
-    zoom: 0.6;
-  }
-}
+/* === Obsolete: .wrap removed, kept for reference only === */
+/* .wrap was used in old structure, now replaced by .sections */

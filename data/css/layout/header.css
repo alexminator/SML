@@ -4,144 +4,76 @@
 /* === Header Container === */
 .header {
   grid-area: header;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
-  padding: var(--spacing-lg) var(--spacing-md);
   text-align: center;
-  background: var(--bg-gradient);
-  border-bottom: 1px solid rgba(255, 215, 0, 0.1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  position: relative;
-}
-
-/* Desktop: compensate for sidebar width */
-@media (min-width: 1024px) {
-  .header {
-    max-width: calc(100vw - 200px);
-    margin-left: 200px;
-    transition: max-width var(--transition-normal),
-                margin-left var(--transition-normal);
-  }
-
-  body.sidebar-collapsed .header {
-    max-width: calc(100vw - 60px);
-    margin-left: 60px;
-  }
-}
-
-/* Tablet: compensate for collapsed sidebar */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .header {
-    max-width: calc(100vw - 60px);
-    margin-left: 60px;
-  }
-}
-
-/* Mobile: full width, no compensation */
-@media (max-width: 767px) {
-  .header {
-    max-width: 100vw;
-    margin-left: 0;
-    padding: var(--spacing-md);
-  }
+  max-width: 420px;
+  margin: auto;
 }
 
 /* === Header Subtitle === */
 .header p {
-  font-family: var(--font-handmade);
+  font-family: 'Handmade';
   position: relative;
-  top: 25px;
-  font-size: 60px;
-  color: var(--text-color);
+  top: 5px;
+  font-size: 85px;
+  color: var(--text-primary);
   margin-left: 10px;
 }
 
-.sml-subtitle {
-  font-family: var(--font-handmade);
-  font-size: 1.2rem;
-  margin-top: var(--spacing-sm);
-  color: var(--text-secondary);
-}
-
 /* === Responsive Font Scaling === */
-@media (max-width: 400px) {
+@media (max-width: 767px) {
   .header p {
-    font-size: 3em;
-  }
-
-  .sml-subtitle {
-    font-size: 1rem;
+    font-size: 65px;
+    top: 5px;
   }
 }
 
-/* === SML Glowing Animation (Consolidated) === */
+@media (max-width: 399px) {
+  .header p {
+    font-size: 55px;
+    top: 3px;
+  }
+}
+
+/* === SML Glowing Animation === */
 .glowing {
-  display: flex;
   align-items: center;
-  justify-content: center;
-  margin: 0 auto;
-  width: 100%;
-  max-width: 100%;
+  align-content: center;
+  margin-left: 30px;
 }
 
 .glowing span {
-  font-family: var(--font-impact);
-  color: var(--text-primary);
-  font-size: 4em;
+  font-family: 'Impactreg';
+  color: #fff;
+  font-size: 6em;
   display: inline-block;
-  letter-spacing: 25px;
+  letter-spacing: 30px;
   -webkit-box-reflect: below 1px linear-gradient(transparent, #0004);
   line-height: 0.8em;
-  position: relative;
-  transition: color 0.3s ease, text-shadow 0.3s ease;
-}
-
-/* Default: Subtle green glow (IoT dashboard style) */
-@keyframes animateTEXT {
-  0% {
-    color: var(--sml-green-light);
-    text-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
-  }
-  50% {
-    color: var(--sml-green);
-    text-shadow: 0 0 15px rgba(34, 197, 94, 0.7);
-  }
-  100% {
-    color: var(--sml-green-light);
-    text-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
-  }
-}
-
-.glowing span {
   animation: animateTEXT 2s linear infinite;
+  align-items: center;
+  position: relative;
+  top: 60px;
 }
 
-/* RGB animation class (use sparingly for special effects) */
-.glowing.rgb-active span {
-  animation: animateTEXT_RGB 2s linear infinite;
-}
-
-@keyframes animateTEXT_RGB {
+@keyframes animateTEXT {
   0% {
     color: #f00;
     text-shadow: 0 0 10px rgba(255, 0, 0, 1);
   }
+
   33.3% {
     color: #ff0;
     text-shadow: 0 0 20px rgba(255, 255, 0, 1);
   }
+
   66.6% {
     color: #0f0;
     text-shadow: 0 0 40px rgba(0, 255, 0, 1);
   }
+
   100% {
-    color: #00f;
-    text-shadow: 0 0 50px rgba(0, 0, 255, 1);
+    color: #f00;
+    text-shadow: 0 0 80px rgba(255, 0, 0, 1);
   }
 }
 
@@ -158,9 +90,28 @@
 }
 
 /* === Responsive Glowing Text === */
-@media (max-width: 400px) {
+/* Mobile (< 768px) */
+@media (max-width: 767px) {
   .glowing span {
-    font-size: 3em;
-    letter-spacing: 15px;
+    font-size: 4.5em;
+    letter-spacing: 22px;
+    top: 50px;
+  }
+
+  .glowing {
+    margin-left: 15px;
+  }
+}
+
+/* Small mobile (< 400px) */
+@media (max-width: 399px) {
+  .glowing span {
+    font-size: 3.5em;
+    letter-spacing: 18px;
+    top: 40px;
+  }
+
+  .glowing {
+    margin-left: 10px;
   }
 }

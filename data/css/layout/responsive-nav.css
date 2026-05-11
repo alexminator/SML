@@ -4,10 +4,6 @@
 /* === Mobile Bottom Navigation (< 768px) === */
 .mobile-bottom-nav {
   display: flex;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
   background: var(--bg-secondary);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding: var(--spacing-sm) 0;
@@ -65,24 +61,13 @@
 /* === Desktop/Tablet Sidebar (≥ 768px) === */
 .desktop-sidebar {
   display: none; /* Hidden on mobile */
-  position: fixed;
-  left: 0;
-  top: var(--status-bar-height);
-  height: calc(100vh - var(--status-bar-height));
-  width: 200px;
   background-color: var(--bg-secondary);
   border-right: 1px solid var(--bg-tertiary);
   transition: width var(--transition-normal);
   z-index: var(--z-sidebar);
   flex-direction: column;
   padding: 0;
-}
-
-/* Enable flexbox when sidebar is visible */
-@media (min-width: 768px) {
-  .desktop-sidebar {
-    display: flex;
-  }
+  overflow-y: auto;
 }
 
 /* Sidebar Navigation */

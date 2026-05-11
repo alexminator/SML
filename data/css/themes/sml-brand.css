@@ -14,10 +14,6 @@ body {
 /* === Status Bar Styling === */
 .status-bar,
 .sml-status-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
   height: var(--status-bar-height);
   background: rgba(18, 18, 18, 0.95);
   backdrop-filter: blur(10px);
