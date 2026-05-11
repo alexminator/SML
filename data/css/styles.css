@@ -136,50 +136,7 @@ footer p {
         "footer" 80px;
 }
 
-ul.tabs {
-    width: 100%;
-    border-top-left-radius: 1.5rem;
-    border-top-right-radius: 1.5rem;
-    background-color: var(--container-color);
-    list-style: none;
-    display: grid;
-    grid-template:
-        "lamp music weather battery";
-}
-
-ul.tabs li a {
-    color: var(--body-color);
-    text-decoration: none;
-    font-size: 2rem;
-    display: block;
-    padding: 20px 0px;
-    text-align: center;
-}
-
-ul.tabs li a.active{
-    color: var(--text-color);
-    background-color: var(--container-color-active);
-    border-top-left-radius: 1.5rem;
-    border-top-right-radius: 1.5rem;
-}
-
-ul.tabs li a .tab-text{
-    font-family: Impactreg;
-    margin-left: 10px;
-    font-size: 1.5rem;
-    text-align: center;
-}
-
-.sections {
-    padding: 10px;
-    border-bottom-left-radius: 43px;
-    border-bottom-right-radius: 43px;
-    background: linear-gradient(360deg, var(--body-color) 0%, var(--container-color-active) 100%);
-}
-
-.sections h1 {
-    padding: 10px;
-}
+/* Old navigation styles removed - now using responsive-nav.css */
 
 .power-button {
     display: grid;
@@ -421,24 +378,10 @@ ul.tabs li a .tab-text{
         margin: 10px auto;
         width: 100%;
     }
-
-    ul.tabs li a {
-        padding: 15px 0px;
-        font-size: 3rem;
-    }
-
-    ul.tabs li a .tab-text {
-        display: none;
-    }
 }
 
 /* For large devices */
 @media screen and (min-width: 580px) {
-    ul.tabs li {
-        width: none;
-        flex-basis: 0;
-        flex-grow: 1;
-    }
     .light {
         zoom: 0.6;
     }

@@ -9,11 +9,17 @@
   <meta name="description" content="Smart Music Lamp">
   <title>Smart Music Lamp</title>
   <link rel="icon" href="SML.ico" type="image/x-icon">
+
   <!--=============== CSS ===============-->
-  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/wled-theme.css">
+  <link rel="stylesheet" href="css/sml-custom.css">
+  <link rel="stylesheet" href="css/responsive-nav.css">
   <link rel="stylesheet" href="css/fontawesome.css">
   <link rel="stylesheet" href="css/solid.css">
-  <!--=============== MAIN JS ===============-->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!--=============== JS ===============-->
+  <script src="js/tabs-manager.js" defer></script>
   <script src="js/main.js" defer></script>
   <script src="js/iro.min.js" defer></script>
   <script src="js/slider.js" defer></script>
@@ -21,53 +27,64 @@
 
 <body class="grid-container">
 
+  <!-- Background Circles -->
   <ul class="circles">
-    <li></li>
-    <li></li>
-    <li></li>
-    <li></li>
-    <li></li>
-    <li></li>
-    <li></li>
-    <li></li>
-    <li></li>
-    <li></li>
+    <li></li><li></li><li></li><li></li><li></li>
+    <li></li><li></li><li></li><li></li><li></li>
   </ul>
 
-  <header class="header">
-    <div id="butterfly">
-      <div class="wings"></div>
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <div class="status-bar-left">
+      <div id="Signal" class="%BARS%" onclick="openWiFiModal()">
+        <div class="wv4 wave">
+          <div class="wv3 wave">
+            <div class="wv2 wave">
+              <div class="wv1 wave"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <span id="status">Disconnected</span>
     </div>
+    <div class="status-bar-right">
+      <div class="battery-indicator">
+        <span id="battlevel-small">0%</span>
+        <span class="fas fa-battery-three-quarters"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header (NO butterfly) -->
+  <header class="header">
     <div class="glowing"><span>S</span><span>M</span><span>L</span></div>
     <p>Smart Music Lamp</p>
   </header>
 
+  <!-- Main Content with 6 Tab Sections -->
   <main class="main">
-
     <div class="wrap">
       <ul class="tabs">
         <li><a href="#tab-lamp"><span class="fas fa-lightbulb"></span><span class="tab-text">Lamp</span></a></li>
         <li><a href="#tab-music"><span class="fas fa-music"></span><span class="tab-text">Music</span></a></li>
+        <li><a href="#tab-peek"><span class="fas fa-eye"></span><span class="tab-text">Peek</span></a></li>
         <li><a href="#tab-temp"><span class="fas fa-thermometer-half"></span><span class="tab-text">Weather</span></a></li>
         <li><a href="#tab-battery"><span class="fas fa-battery"></span><span class="tab-text">Battery</span></a></li>
+        <li><a href="#tab-config"><span class="fas fa-cog"></span><span class="tab-text">Config</span></a></li>
       </ul>
 
       <div class="sections">
-        <div id="tab-lamp">
+        <!-- Lamp Tab -->
+        <div id="tab-lamp" class="tab-content">
           <div class="power-button">
             <h2 class="power-label">Power <span class="fas fa-power-off"></span></h2>
             <h4 class="power-lamp">Lamp</h4>
             <div id="lamp" class="%LAMP%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
+              <span class="button"><span class="slide"></span></span>
             </div>
-
             <h4 class="power-neo">Neopixel</h4>
             <div id="Neo" class="%STRIPLED%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
+              <span class="button"><span class="slide"></span></span>
             </div>
           </div>
 
@@ -97,126 +114,89 @@
             <h2 class="power-label">Effects <span class="fas fa-wand-sparkles"></span></h2>
             <h3 class="fire">Fire</h3>
             <div id="Firebutton" class="%FIRE_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
+              <span class="button"><span class="slide"></span></span>
             </div>
             <h3 class="movingdot">Dots</h3>
             <div id="MovingDotbutton" class="%MOVINGDOT_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
+              <span class="button"><span class="slide"></span></span>
             </div>
             <h3 class="rainbow">Rainbow</h3>
             <div id="RainbowBeatbutton" class="%RAINBOWBEAT_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
+              <span class="button"><span class="slide"></span></span>
             </div>
             <h3 class="rwb">RWB</h3>
             <div id="RWBbutton" class="%RWB_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
+              <span class="button"><span class="slide"></span></span>
             </div>
             <h3 class="ripple">Ripple</h3>
             <div id="Ripplebutton" class="%RIPPLE_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
+              <span class="button"><span class="slide"></span></span>
             </div>
             <h3 class="twinkle">Twinkle</h3>
             <div id="Twinklebutton" class="%TWINKLE_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
+              <span class="button"><span class="slide"></span></span>
             </div>
             <h3 class="balls">Balls</h3>
             <div id="Ballsbutton" class="%BALLS_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
+              <span class="button"><span class="slide"></span></span>
             </div>
             <h3 class="juggle">Juggle</h3>
             <div id="Jugglebutton" class="%JUGGLE_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
+              <span class="button"><span class="slide"></span></span>
             </div>
             <h3 class="sinelon">Sinelon</h3>
             <div id="Sinelonbutton" class="%SINELON_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
+              <span class="button"><span class="slide"></span></span>
             </div>
             <h3 class="comet">Comet</h3>
             <div id="Cometbutton" class="%COMET_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
+              <span class="button"><span class="slide"></span></span>
             </div>
             <h3 class="breath">Breath</h3>
             <div id="Breathbutton" class="%BREATH_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
+              <span class="button"><span class="slide"></span></span>
             </div>
             <h3 class="colorsweep">ColorSweep</h3>
             <div id="ColorSweepbutton" class="%COLORSWEEP_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
+              <span class="button"><span class="slide"></span></span>
             </div>
           </div>
         </div>
 
-        <div id="tab-music">
+        <!-- Music Tab -->
+        <div id="tab-music" class="tab-content">
           <div class="music">
             <div class="power-music">
               <h2 class="power-bt">Bluetooth</h2>
               <div id="Bluetooth" class="%BLUETOOTH%">
-                <span class="button">
-                  <span class="slide"></span>
-                </span>
+                <span class="button"><span class="slide"></span></span>
               </div>
             </div>
             <h2 class="power-label">VU Meter <span class="fas fa-tachometer"></span></h2>
             <div class="effects-vu">
               <h3 class="rainbowVU">Rainbow</h3>
               <div id="RainbowVU" class="%VU1%">
-                <span class="button">
-                  <span class="slide"></span>
-                </span>
+                <span class="button"><span class="slide"></span></span>
               </div>
               <h3 class="oldskoolVU">Old</h3>
               <div id="OldSkoolVU" class="%VU2%">
-                <span class="button">
-                  <span class="slide"></span>
-                </span>
+                <span class="button"><span class="slide"></span></span>
               </div>
               <h3 class="rainbowHueVU">Hue</h3>
               <div id="RainbowHueVU" class="%VU3%">
-                <span class="button">
-                  <span class="slide"></span>
-                </span>
+                <span class="button"><span class="slide"></span></span>
               </div>
               <h3 class="rippleVU">Ripple</h3>
               <div id="RippleVU" class="%VU4%">
-                <span class="button">
-                  <span class="slide"></span>
-                </span>
+                <span class="button"><span class="slide"></span></span>
               </div>
               <h3 class="barsVU">3 bars</h3>
               <div id="ThreebarsVU" class="%VU5%">
-                <span class="button">
-                  <span class="slide"></span>
-                </span>
+                <span class="button"><span class="slide"></span></span>
               </div>
               <h3 class="oceanVU">Ocean</h3>
               <div id="OceanVU" class="%VU6%">
-                <span class="button">
-                  <span class="slide"></span>
-                </span>
+                <span class="button"><span class="slide"></span></span>
               </div>
             </div>
 
@@ -242,23 +222,46 @@
                 <div class="vol-down">
                   <img src="img/Volume Down Icon.svg" alt="Volume Down" width="32" height="11" />
                 </div>
-
               </div>
             </div>
           </div>
         </div>
 
-        <div id="tab-temp">
+        <!-- Peek Tab (New - Placeholder) -->
+        <div id="tab-peek" class="tab-content">
+          <div class="peek-view">
+            <h2>Peek View</h2>
+            <p>Quick overview of all systems</p>
+            <div class="peek-grid">
+              <div class="peek-card">
+                <h3>Lamp</h3>
+                <p id="peek-lamp-status">Off</p>
+              </div>
+              <div class="peek-card">
+                <h3>Bluetooth</h3>
+                <p id="peek-bt-status">Disconnected</p>
+              </div>
+              <div class="peek-card">
+                <h3>Temperature</h3>
+                <p id="peek-temp">%TEMPERATURE%</p>
+              </div>
+              <div class="peek-card">
+                <h3>Battery</h3>
+                <p id="peek-battery">0%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weather Tab -->
+        <div id="tab-temp" class="tab-content">
           <div class="weather">
             <div class="weather-label">
               <h2 class="weather-text">Weather</h2>
               <div id="TempNEO" class="%TEMPNEO%">
-                <span class="button">
-                  <span class="slide"></span>
-                </span>
+                <span class="button"><span class="slide"></span></span>
                 <span class="light"></span>
               </div>
-
             </div>
 
             <div class="temp">
@@ -299,16 +302,15 @@
           </div>
         </div>
 
-        <div id="tab-battery">
+        <!-- Battery Tab -->
+        <div id="tab-battery" class="tab-content">
           <section class="battery">
             <div class="battery__card">
               <div class="battery__data">
                 <div class="battery__header">
                   <h2 class="battery__text">Battery</h2>
                   <div id="BattNEO" class="%BATTNEO%">
-                    <span class="button">
-                      <span class="slide"></span>
-                    </span>
+                    <span class="button"><span class="slide"></span></span>
                     <span class="light"></span>
                   </div>
                 </div>
@@ -329,23 +331,94 @@
             </div>
           </section>
         </div>
-      </div>
-    </div>
-  </main>
 
-  <footer class="footer">
-    <div id="Signal" class="%BARS%" onclick="openWiFiModal()">
-      <div class="wv4 wave">
-        <div class="wv3 wave">
-          <div class="wv2 wave">
-            <div class="wv1 wave"></div>
+        <!-- Config Tab (New) -->
+        <div id="tab-config" class="tab-content">
+          <div class="config-section">
+            <h2>Configuration</h2>
+            <div class="config-card">
+              <h3>WiFi Settings</h3>
+              <button onclick="openWiFiModal()" class="btn-config">
+                <span class="fas fa-wifi"></span> Configure WiFi
+              </button>
+            </div>
+            <div class="config-card">
+              <h3>System</h3>
+              <p>Firmware Version: <span id="firmware-version">1.0</span></p>
+              <p>Uptime: <span id="uptime">0s</span></p>
+            </div>
+            <div class="config-card">
+              <h3>Updates</h3>
+              <button onclick="window.location.href='/update'" class="btn-config">
+                <span class="fas fa-download"></span> Check for Updates
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <p id="status">Disconnected</p>
-    <div id="indicator"></div>
-  </footer>
+  </main>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="mobile-bottom-nav">
+    <a href="#tab-lamp" class="nav-item active" data-tab="lamp">
+      <span class="fas fa-lightbulb"></span>
+      <span class="nav-text">Lamp</span>
+    </a>
+    <a href="#tab-music" class="nav-item" data-tab="music">
+      <span class="fas fa-music"></span>
+      <span class="nav-text">Music</span>
+    </a>
+    <a href="#tab-peek" class="nav-item" data-tab="peek">
+      <span class="fas fa-eye"></span>
+      <span class="nav-text">Peek</span>
+    </a>
+    <a href="#tab-temp" class="nav-item" data-tab="weather">
+      <span class="fas fa-thermometer-half"></span>
+      <span class="nav-text">Weather</span>
+    </a>
+    <a href="#tab-battery" class="nav-item" data-tab="battery">
+      <span class="fas fa-battery-three-quarters"></span>
+      <span class="nav-text">Battery</span>
+    </a>
+    <a href="#tab-config" class="nav-item" data-tab="config">
+      <span class="fas fa-cog"></span>
+      <span class="nav-text">Config</span>
+    </a>
+  </nav>
+
+  <!-- Desktop Sidebar -->
+  <aside class="desktop-sidebar">
+    <button class="sidebar-toggle" id="sidebarToggle">
+      <span class="fas fa-bars"></span>
+    </button>
+    <nav class="sidebar-nav">
+      <a href="#tab-lamp" class="sidebar-item active" data-tab="lamp">
+        <span class="fas fa-lightbulb"></span>
+        <span class="sidebar-text">Lamp</span>
+      </a>
+      <a href="#tab-music" class="sidebar-item" data-tab="music">
+        <span class="fas fa-music"></span>
+        <span class="sidebar-text">Music</span>
+      </a>
+      <a href="#tab-peek" class="sidebar-item" data-tab="peek">
+        <span class="fas fa-eye"></span>
+        <span class="sidebar-text">Peek</span>
+      </a>
+      <a href="#tab-temp" class="sidebar-item" data-tab="weather">
+        <span class="fas fa-thermometer-half"></span>
+        <span class="sidebar-text">Weather</span>
+      </a>
+      <a href="#tab-battery" class="sidebar-item" data-tab="battery">
+        <span class="fas fa-battery-three-quarters"></span>
+        <span class="sidebar-text">Battery</span>
+      </a>
+      <a href="#tab-config" class="sidebar-item" data-tab="config">
+        <span class="fas fa-cog"></span>
+        <span class="sidebar-text">Config</span>
+      </a>
+    </nav>
+  </aside>
 
   <!-- WiFi Configuration Modal -->
   <div id="wifiModal" class="wifi-modal">
@@ -380,6 +453,8 @@
       </div>
     </div>
   </div>
+
+  <!-- Additional Scripts -->
   <script src="js/battery.js" defer></script>
   <script src="js/date.js" defer></script>
   <script src="js/player.js" defer></script>

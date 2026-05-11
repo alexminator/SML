@@ -1,0 +1,242 @@
+/*=============== SML Custom Identity - Gold/Cyan Accents ===============*/
+/* SML Web Interface v2.1 - Brand Identity */
+
+/* === Header Styling === */
+.sml-header {
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+  padding: var(--spacing-md);
+  border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.sml-subtitle {
+  font-family: var(--font-handmade);
+  font-size: 1.2rem;
+  margin-top: 10px;
+  color: var(--text-secondary);
+}
+
+/* === SML Glowing Animation (PRESERVED) === */
+.glowing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.glowing span {
+  font-family: var(--font-impact);
+  color: #fff;
+  font-size: 4em;
+  display: inline-block;
+  letter-spacing: 25px;
+  -webkit-box-reflect: below 1px linear-gradient(transparent, #0004);
+  line-height: 0.8em;
+  animation: animateTEXT 2s linear infinite;
+  position: relative;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+@keyframes animateTEXT {
+  0% {
+    color: #f00;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 1);
+  }
+  33.3% {
+    color: #ff0;
+    text-shadow: 0 0 20px rgba(255, 255, 0, 1);
+  }
+  66.6% {
+    color: #0f0;
+    text-shadow: 0 0 40px rgba(0, 255, 0, 1);
+  }
+  100% {
+    color: #00f;
+    text-shadow: 0 0 50px rgba(0, 0, 255, 1);
+  }
+}
+
+.glowing span:nth-child(1) { animation-delay: 0s; }
+.glowing span:nth-child(2) { animation-delay: 0.1s; }
+.glowing span:nth-child(3) { animation-delay: 0.2s; }
+
+/* === Responsive Font Scaling === */
+@media (max-width: 400px) {
+  .glowing span {
+    font-size: 3em;
+    letter-spacing: 15px;
+  }
+
+  .sml-subtitle {
+    font-size: 1rem;
+  }
+}
+
+/* === Accent Elements === */
+.sml-accent-gold {
+  color: var(--sml-gold);
+}
+
+.sml-accent-cyan {
+  color: var(--sml-cyan);
+}
+
+/* === Interactive Hover Effects === */
+.sml-interactive-hover {
+  transition: all var(--transition-normal);
+}
+
+.sml-interactive-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+/* === Status Bar Styling === */
+.sml-status-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--status-bar-height);
+  background: rgba(18, 18, 18, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--spacing-md);
+  z-index: var(--z-status-bar);
+}
+
+.sml-status-left,
+.sml-status-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.sml-status-center {
+  flex: 1;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-disabled);
+}
+
+/* Signal Strength Colors */
+.sml-status-bar.connected .sml-wifi-signal {
+  color: #4CAF50;
+}
+
+.sml-status-bar.disconnected .sml-wifi-signal {
+  color: var(--text-disabled);
+}
+
+.sml-status-bar.connecting .sml-wifi-signal {
+  color: var(--sml-gold);
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Battery Level Colors */
+.sml-battery-high { color: #4CAF50; }
+.sml-battery-medium { color: #FFC107; }
+.sml-battery-low { color: #F44336; }
+
+/* === Brand Identity Colors === */
+.sml-gradient-gold {
+  background: linear-gradient(135deg, var(--sml-gold) 0%, #FFD700 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.sml-gradient-cyan {
+  background: linear-gradient(135deg, var(--sml-cyan) 0%, #00CED1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* === Glow Effects for Interactive Elements === */
+.sml-glow-gold {
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5),
+              0 0 20px rgba(255, 215, 0, 0.3),
+              0 0 30px rgba(255, 215, 0, 0.1);
+}
+
+.sml-glow-cyan {
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5),
+              0 0 20px rgba(0, 255, 255, 0.3),
+              0 0 30px rgba(0, 255, 255, 0.1);
+}
+
+/* === Button Styling with SML Accents === */
+.sml-btn-gold {
+  background: linear-gradient(135deg, var(--sml-gold) 0%, #FFA500 100%);
+  color: #000;
+  border: none;
+  font-weight: 600;
+  transition: all var(--transition-normal);
+}
+
+.sml-btn-gold:hover {
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+  transform: translateY(-2px);
+}
+
+.sml-btn-cyan {
+  background: linear-gradient(135deg, var(--sml-cyan) 0%, #00CED1 100%);
+  color: #000;
+  border: none;
+  font-weight: 600;
+  transition: all var(--transition-normal);
+}
+
+.sml-btn-cyan:hover {
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+  transform: translateY(-2px);
+}
+
+/* === Border Accents === */
+.sml-border-gold {
+  border: 1px solid var(--sml-gold);
+  border-radius: var(--border-radius);
+}
+
+.sml-border-cyan {
+  border: 1px solid var(--sml-cyan);
+  border-radius: var(--border-radius);
+}
+
+/* === Icon Styling === */
+.sml-icon-gold {
+  color: var(--sml-gold);
+  filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.5));
+}
+
+.sml-icon-cyan {
+  color: var(--sml-cyan);
+  filter: drop-shadow(0 0 3px rgba(0, 255, 255, 0.5));
+}
+
+/* === Text Emphasis === */
+.sml-emphasis-gold {
+  color: var(--sml-gold);
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.sml-emphasis-cyan {
+  color: var(--sml-cyan);
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+}
