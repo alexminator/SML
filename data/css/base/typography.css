@@ -1,0 +1,62 @@
+/*=============== Typography ===============*/
+/* SML Web Interface v2.1 - Fonts and Text Styles */
+
+/* === Font Imports === */
+@font-face {
+  font-family: 'Handmade';
+  src: url('../fonts/Handmade.woff');
+}
+
+@font-face {
+  font-family: 'Impactreg';
+  src: url('../fonts/impactreg.woff');
+}
+
+/* === Base Typography === */
+h1, h2, h3, h4 {
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+h2 {
+  font-size: 1.5rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+h4 {
+  font-size: 1rem;
+}
+
+p {
+  user-select: none;
+}
+
+/* === Responsive Typography === */
+@media screen and (min-width: 968px) {
+  :root {
+    --biggest-font-size: 2.75rem;
+    --normal-font-size: 1.5rem;
+    --smaller-font-size: 1rem;
+  }
+}
+
+/* === Technical Data Display === */
+.data-display {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.percentage-display {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,106 @@
+/*=============== CSS Reset ===============*/
+/* SML Web Interface v2.1 - Base Reset */
+
+/* === Reset and Base Styles === */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  min-height: 100%;
+  overflow-x: hidden;
+
+  /* Smooth transitions for theme changes */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* === Focus States === */
+*:focus-visible {
+  outline: 2px solid var(--sml-orange);
+  outline-offset: 2px;
+}
+
+/* === Links === */
+a {
+  color: var(--sml-cyan);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--sml-gold);
+}
+
+/* === Utility Classes === */
+.hidden {
+  display: none !important;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.flex {
+  display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+/* === Spacing Utilities === */
+.spacing-xs {
+  margin: var(--spacing-xs);
+}
+
+.spacing-sm {
+  margin: var(--spacing-sm);
+}
+
+.spacing-md {
+  margin: var(--spacing-md);
+}
+
+.spacing-lg {
+  margin: var(--spacing-lg);
+}
+
+.spacing-xl {
+  margin: var(--spacing-xl);
+}
+
+.padding-xs {
+  padding: var(--spacing-xs);
+}
+
+.padding-sm {
+  padding: var(--spacing-sm);
+}
+
+.padding-md {
+  padding: var(--spacing-md);
+}
+
+.padding-lg {
+  padding: var(--spacing-lg);
+}
+
+.padding-xl {
+  padding: var(--spacing-xl);
+}

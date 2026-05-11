@@ -1,0 +1,324 @@
+/*=============== SML Brand Identity ===============*/
+/* SML Web Interface v2.1 - Brand Identity (Gold/Cyan Accents) */
+
+/* === Background Gradient Application === */
+body {
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+}
+
+.grid-container {
+  background: var(--bg-gradient);
+}
+
+/* === Status Bar Styling === */
+.status-bar,
+.sml-status-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--status-bar-height);
+  background: rgba(18, 18, 18, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--spacing-md);
+  z-index: var(--z-status-bar);
+}
+
+.status-bar-left,
+.sml-status-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.status-bar-right,
+.sml-status-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.status-text {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* === Mobile-Style Status Icons === */
+.status-icons {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.signal-icon {
+  font-size: 1rem;
+  color: var(--sml-green-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.battery-compact {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.battery-icon {
+  font-size: 1rem;
+}
+
+/* Hide wave animation (replaced with simple icon) */
+.wave {
+  display: none;
+}
+
+/* === Signal Strength Colors === */
+.status-bar.connected .signal-icon,
+.sml-status-bar.connected .sml-wifi-signal {
+  color: var(--sml-green-light);
+}
+
+.status-bar.disconnected .signal-icon,
+.sml-status-bar.disconnected .sml-wifi-signal {
+  color: var(--text-disabled);
+}
+
+.status-bar.connecting .signal-icon,
+.sml-status-bar.connecting .sml-wifi-signal {
+  color: var(--sml-gold);
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* === Battery Level Colors === */
+.sml-battery-high {
+  color: var(--sml-green-light);
+}
+
+.sml-battery-medium {
+  color: var(--sml-amber);
+}
+
+.sml-battery-low {
+  color: var(--sml-red);
+}
+
+/* === Accent Elements === */
+.sml-accent-gold {
+  color: var(--sml-gold);
+}
+
+.sml-accent-cyan {
+  color: var(--sml-cyan);
+}
+
+/* === Interactive Hover Effects === */
+.sml-interactive-hover {
+  transition: all var(--transition-normal);
+}
+
+.sml-interactive-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+/* === Unified Button Gradient === */
+.btn-gradient {
+  background: linear-gradient(135deg, var(--sml-cyan) 0%, var(--sml-blue) 100%);
+  border: none;
+  color: var(--text-primary);
+}
+
+/* === SML Button Styling === */
+.sml-btn-gold {
+  background: linear-gradient(135deg, var(--sml-gold) 0%, #FFA500 100%);
+  color: #000;
+  border: none;
+  font-weight: 600;
+  transition: all var(--transition-normal) ease;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.sml-btn-gold:hover {
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.sml-btn-gold:active {
+  transform: translateY(0);
+}
+
+.sml-btn-cyan {
+  background: linear-gradient(135deg, var(--sml-cyan) 0%, #00CED1 100%);
+  color: #000;
+  border: none;
+  font-weight: 600;
+  transition: all var(--transition-normal) ease;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.sml-btn-cyan:hover {
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.sml-btn-cyan:active {
+  transform: translateY(0);
+}
+
+/* === Toggle Switches === */
+.button {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-normal) ease;
+  border: 2px solid var(--bg-tertiary);
+}
+
+.button::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background-color: var(--text-disabled);
+  border-radius: 50%;
+  transition: transform var(--transition-normal), background-color var(--transition-normal);
+}
+
+/* ON state - when parent has .on class */
+.on .button {
+  background-color: var(--sml-cyan);
+  border-color: var(--sml-cyan);
+}
+
+.on .button::after {
+  transform: translateX(24px);
+  background-color: var(--text-primary);
+}
+
+/* OFF state - when parent has .off class */
+.off .button {
+  background-color: var(--bg-secondary);
+  border-color: var(--bg-tertiary);
+}
+
+.off .button::after {
+  transform: translateX(0);
+  background-color: var(--text-disabled);
+}
+
+/* Hover effect */
+.button:hover {
+  border-color: var(--sml-cyan);
+}
+
+/* Focus for accessibility */
+.button:focus {
+  outline: 2px solid var(--sml-cyan);
+  outline-offset: 2px;
+}
+
+/* === Border Accents === */
+.sml-border-gold {
+  border: 1px solid var(--sml-gold);
+  border-radius: var(--border-radius);
+}
+
+.sml-border-cyan {
+  border: 1px solid var(--sml-cyan);
+  border-radius: var(--border-radius);
+}
+
+/* === Icon Styling === */
+.sml-icon-gold {
+  color: var(--sml-gold);
+  filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.5));
+}
+
+.sml-icon-cyan {
+  color: var(--sml-cyan);
+  filter: drop-shadow(0 0 3px rgba(0, 255, 255, 0.5));
+}
+
+/* === Text Emphasis === */
+.sml-emphasis-gold {
+  color: var(--sml-gold);
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.sml-emphasis-cyan {
+  color: var(--sml-cyan);
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+}
+
+/* === Glow Effects for Interactive Elements === */
+.sml-glow-gold {
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5),
+              0 0 20px rgba(255, 215, 0, 0.3),
+              0 0 30px rgba(255, 215, 0, 0.1);
+}
+
+.sml-glow-cyan {
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5),
+              0 0 20px rgba(0, 255, 255, 0.3),
+              0 0 30px rgba(0, 255, 255, 0.1);
+}
+
+/* === Alignment Utilities === */
+.power-control,
+.effect-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+/* === Brand Identity Colors === */
+.sml-gradient-gold {
+  background: linear-gradient(135deg, #FFA500 0%, var(--sml-gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.sml-gradient-cyan {
+  background: linear-gradient(135deg, #00CED1 0%, var(--sml-cyan) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

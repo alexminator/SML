@@ -1,0 +1,161 @@
+/*=============== Thermometer Widget ===============*/
+/* SML Web Interface v2.1 - DHT22 Temperature Sensor */
+
+.weather {
+  display: grid;
+  grid-template:
+    "weather-label weather-label wrapper" 0.3fr
+    "temp temp wrapper" 0.3fr
+    "humidity humidity wrapper"  0.3fr
+    "widget widget wrapper"  0.5fr;
+  grid-gap: 0.5rem;
+  padding: 10px;
+}
+
+.weather-label {
+  grid-area: weather-label;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.weather-text {
+  margin-right: 10px;
+}
+
+#TempNEO {
+  display: flex;
+  align-items: center;
+}
+
+#BattNEO {
+  display: flex;
+  align-items: center;
+}
+
+.temp {
+  grid-area: temp;
+  font-size: var(--biggest-font-size);
+  text-align: center;
+}
+
+.wrapper {
+  grid-area: wrapper;
+}
+
+.humidity {
+  grid-area: humidity;
+  text-align: center;
+  font-size: var(--biggest-font-size);
+}
+
+.widget {
+  grid-area: widget;
+}
+
+/* === Date/Time Widget === */
+.widget {
+  position: relative;
+  margin: auto;
+  text-align: center;
+}
+
+.widget p {
+  display: inline-block;
+  line-height: 1em;
+}
+
+.fecha {
+  font-size: 1.0em;
+  margin-bottom: 5px;
+}
+
+.reloj .cajaSegundos {
+  display: inline-block;
+}
+
+.reloj .ampm,
+.reloj .segundos {
+  display: block;
+  font-size: 1.5rem;
+}
+
+#time-icon {
+  font-size: 1.5em;
+}
+
+#horas,
+#minutos,
+.reloj p {
+  font-size: 3em;
+}
+
+/* === Thermometer Visual === */
+#termometer {
+  width: 25px;
+  height: 240px;
+  position: relative;
+  background: var(--termometer-bg);
+  border: 9px solid var(--termometer-border);
+  border-radius: 20px;
+  box-shadow: var(--termometer-shadow);
+  margin-bottom: 50px;
+  z-index: var(--z-base);
+}
+
+#termometer:before,
+#termometer:after {
+  position: absolute;
+  content: "";
+  border-radius: 50%;
+}
+
+#termometer:before {
+  width: 100%;
+  height: 34px;
+  bottom: 9px;
+  background: var(--termometer-bg);
+  z-index: var(--z-background);
+}
+
+#termometer:after {
+  width: 50px;
+  height: 50px;
+  background-color: var(--termometer-bulb-bg);
+  border: 9px solid var(--termometer-border);
+  bottom: -41px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-background);
+  box-shadow: 5px 10px 8px var(--container-color);
+}
+
+#termometer #graduations {
+  position: absolute;
+  height: 59%;
+  top: 20%;
+  width: 50%;
+  border-top: 2px solid rgba(0, 0, 0, 0.5);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.5);
+}
+
+#termometer #graduations:before {
+  content: "";
+  position: absolute;
+  height: 34%;
+  width: 100%;
+  top: 32%;
+  border-top: 2px solid rgba(0, 0, 0, 0.5);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.5);
+}
+
+#termometer #temperature {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: var(--temperature-gradient) no-repeat bottom;
+  background-size: 100% 240px;
+  border-radius: 20px;
+  transition: all 0.2s ease-in-out;
+}

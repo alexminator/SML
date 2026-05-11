@@ -1,0 +1,160 @@
+/*=============== CSS Variables ===============*/
+/* SML Web Interface v2.1 - All CSS Variables in One Place */
+
+/* === Colors === */
+:root {
+  /* Background Colors */
+  --bg-primary: #121212;
+  --bg-secondary: #1E1E1E;
+  --bg-tertiary: #2A2A2A;
+
+  /* High contrast text for dark theme */
+  --text-primary: #FFFFFF;
+  --text-secondary: #E0E0E0;
+  --text-tertiary: #B0B0B0;
+  --text-disabled: #6A6A6A;
+
+  /* SML Brand Colors */
+  --sml-gold: #FFD700;
+  --sml-cyan: #00D4FF;
+  --sml-orange: #FF6B00;
+  --sml-blue: #008BFF;
+
+  /* Additional status colors */
+  --sml-green: #4CAF50;
+  --sml-green-light: #22C55E;
+  --sml-green-dark: #16A34A;
+  --sml-red: #F44336;
+  --sml-amber: #FFC107;
+
+  /* Gradients */
+  --bg-gradient: linear-gradient(180deg, var(--gradient-start) 0%, var(--gradient-mid) 50%, var(--gradient-end) 100%);
+  --gradient-start: #121212;
+  --gradient-mid: #1a1a2e;
+  --gradient-end: #16213e;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 300ms ease;
+  --transition-slow: 500ms ease;
+
+  /* Status Bar */
+  --status-bar-height: 44px;
+
+  /* Typography */
+  --font-handmade: 'Handmade', cursive;
+  --font-impact: 'Impactreg', sans-serif;
+  --font-body: "Public Sans", -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'Fira Code', 'Consolas', 'Monaco', monospace;
+
+  /* Z-index layers */
+  --z-background: -1;
+  --z-base: 1;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-fixed: 300;
+  --z-modal-backdrop: 400;
+  --z-modal: 500;
+  --z-popover: 600;
+  --z-tooltip: 700;
+  --z-status-bar: 800;
+  --z-sidebar: 750;
+  --z-bottom-nav: 999;
+  --z-config-panel: 1001;
+  --z-bottom-sheet: 1002;
+  --z-modal-overlay: 10000;
+
+  /* LED and Effect Colors */
+  --gradient-color-red: linear-gradient(90deg, hsl(7, 89%, 46%) 15%, hsl(11, 93%, 68%) 100%);
+  --gradient-color-orange: linear-gradient(90deg, hsl(22, 89%, 46%) 15%, hsl(54, 90%, 45%) 100%);
+  --gradient-color-yellow: linear-gradient(90deg, hsl(54, 89%, 46%) 15%, hsl(92, 90%, 45%) 100%);
+  --gradient-color-green: linear-gradient(90deg, hsl(92, 89%, 46%) 15%, hsl(92, 90%, 68%) 100%);
+
+  /* UI Component Colors */
+  --text-color: #ccc;
+  --body-color: hsl(0, 0%, 9%);
+  --container-color: hsl(0, 0%, 15%);
+  --container-color-active: hsl(0, 0%, 25%);
+  --slider-ballon: #5d68e2;
+  --primary: #6d5dfc;
+  --greyDark: #9baacf;
+
+  /* Indicator Colors */
+  --sz: 4vmin;
+  --on: #03A9F4;
+  --of: #fff0;
+  --tr: all 0.5s ease 0s;
+  --lg: var(--of);
+
+  /* Typography Sizes */
+  --body-font: "Public Sans", sans-serif;
+  --biggest-font-size: 2rem;
+  --normal-font-size: 1.2rem;
+  --smaller-font-size: .9rem;
+
+  /* Thermometer Colors */
+  --termometer-bg: #38383f;
+  --termometer-border: #2a2a2e;
+  --termometer-shadow: inset 20px 0 48px hsl(0, 0%, 16%),
+                       inset -4px 12px 48px hsl(0, 0%, 56%),
+                       5px 10px 8px var(--container-color);
+  --termometer-bulb-bg: #3dcadf;
+  --temperature-gradient: linear-gradient(#f17a65, #3dcadf);
+}
+
+/* === OLED Mode (Optional) === */
+body.oled-mode {
+  --bg-primary: #000000;
+  --bg-secondary: #0A0A0A;
+  --bg-tertiary: #141414;
+  --text-primary: rgba(255, 255, 255, 0.9);
+  --text-secondary: rgba(224, 224, 224, 0.85);
+  --text-tertiary: rgba(176, 176, 176, 0.8);
+}
+
+body.oled-mode .glowing span {
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+}
+
+/* === Reduced Motion Support === */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .glowing span {
+    animation: none !important;
+    color: var(--text-primary) !important;
+    text-shadow: none !important;
+  }
+
+  .sml-interactive-hover:hover,
+  .theme-card:hover,
+  .help-card:hover {
+    transform: none !important;
+  }
+
+  .sml-btn-gold:hover,
+  .sml-btn-cyan:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
