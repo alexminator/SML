@@ -62,6 +62,236 @@ SML/
 └── README.md             # English documentation
 ```
 
+## Web Interface v2.1 Architecture (2026 Redesign)
+
+### Overview
+SML Web Interface v2.1 is a complete rewrite inspired by WLED, featuring a modern responsive design with real-time LED visualization.
+
+### File Structure (data/)
+
+```
+data/
+├── index.html              # Main HTML (463 lines, 6 tabs)
+├── css/
+│   ├── wled-theme.css      # CSS variables & base styles (125 lines)
+│   ├── sml-custom.css      # SML-specific styles (242 lines)
+│   ├── responsive-nav.css  # Mobile/tablet/desktop navigation (235 lines)
+│   ├── effects-config.css  # Effect configuration panels (193 lines)
+│   ├── config-tab.css      # Config tab styles (450+ lines)
+│   └── peek-preview.css    # Peek tab canvas styles (186 lines)
+├── js/
+│   ├── tabs-manager.js     # Tab switching & sidebar (262 lines)
+│   ├── effects-handler.js  # Effect selection & config (669 lines)
+│   ├── peek-render.js      # LED preview Canvas rendering (293 lines)
+│   ├── config-manager.js   # WiFi & LED config (390+ lines)
+│   └── main.js             # WebSocket routing (365 lines)
+└── fonts/                  # FontAwesome icons
+```
+
+### Responsive Navigation Breakpoints
+
+**Mobile (< 768px):**
+- Bottom navigation bar
+- 6 tabs: Lamp, Music, Peek, Weather, Battery, Config
+- Full-width tab content
+- Compact status bar (44px)
+
+**Tablet (768-1023px):**
+- Collapsed sidebar (60px width)
+- Icon-only navigation
+- Toggle button to expand
+- Adjusted header centering
+
+**Desktop (≥1024px):**
+- Expanded sidebar (200px width)
+- Icon + text navigation
+- Collapsible via toggle button
+- Maximum canvas space for Peek tab
+
+### Tab Architecture
+
+**Tab Order (Sidebar):**
+1. **Lamp:** Power, color picker, effects dropdown, effect config
+2. **Music:** Bluetooth power, VU meter selection, playback controls
+3. **Peek:** Real-time LED visualization (NEW in v2.1)
+4. **Weather:** Temperature, humidity, clock
+5. **Battery:** Battery level, voltage, charging status
+6. **Config:** WiFi setup, LED hardware config, Help & Tips, System info
+
+### Peek Tab Implementation
+
+**Purpose:** Real-time LED strip visualization on HTML5 Canvas
+
+**Technical Details:**
+- **Rendering:** Canvas 2D API with requestAnimationFrame (60 FPS)
+- **Modes:** Strip (horizontal) or Circle (circular) arrangement
+- **LED Count:** Selector from real LED count up to 60 LEDs
+- **Data Source:** WebSocket streaming at 20 FPS (50ms interval)
+- **Sampling:** Equidistant sampling for >60 real LEDs
+
+**MAX 60 LED Limit:**
+- Web preview capped at 60 LEDs to prevent ESP32 overload
+- If `N_PIXELS ≤ 60`: Shows all LEDs
+- If `N_PIXELS > 60`: Shows every `(N_PIXELS / 60)`th LED
+- Example: 100 real LEDs → Preview shows LEDs 0, 2, 4, 6... (equidistant)
+
+**WebSocket LED Data Format:**
+```json
+{
+  "leds": [
+    {"r": 255, "g": 0, "b": 0},
+    {"r": 200, "g": 50, "b": 0},
+    // ... (max 60 LEDs)
+  ],
+  "realCount": 24,
+  "previewCount": 24,
+  "effect": "Fire"
+}
+```
+
+**ESP32 Implementation (main.cpp):**
+```cpp
+#define MAX_WEB_LEDS 60  // Maximum LEDs for web preview
+
+void sendLEDUpdate() {
+  // Equidistant sampling formula
+  const uint16_t realLedIndex = (i * realCount) / previewCount;
+
+  // Create JSON with LED array
+  JsonArray ledArray = json["leds"].to<JsonArray>();
+  // Add RGB values...
+
+  // Send via WebSocket
+  ws.textAll(buffer, len);
+}
+```
+
+### WebSocket Communication
+
+**Protocol:** WebSocket (RFC 6455) over HTTP
+**URL:** `ws://<ESP32-IP>/ws`
+**Format:** JSON messages
+
+**Update Rates:**
+- Status updates: 1 Hz (WiFi, battery, temperature, etc.)
+- LED preview data: 20 Hz (when Peek tab active)
+- Adaptive based on effect type (static effects = lower frequency)
+
+**Message Types:**
+
+1. **Client → Server (Actions):**
+```json
+{"action": "toggle"}        // Toggle LED power
+{"action": "solid", "r": 255, "g": 0, "b": 0}  // Set color
+{"action": "effect", "effectId": 5}  // Set effect
+{"action": "brightness", "brightness": 180}  // Set brightness
+```
+
+2. **Server → Client (Status Updates):**
+```json
+{
+  "bars": "waveStrength-4",
+  "battVoltage": 3.85,
+  "level": 75,
+  "charging": false,
+  "temperature": 23.5,
+  "humidity": 45.2,
+  "lampstatus": "on",
+  "neostatus": "on",
+  "neobrightness": 150,
+  "color": {"r": 255, "g": 128, "b": 0}
+}
+```
+
+3. **Server → Client (LED Preview Data):**
+```json
+{
+  "leds": [{"r": 255, "g": 0, "b": 0}, ...],
+  "realCount": 24,
+  "previewCount": 24,
+  "effect": "Fire"
+}
+```
+
+### Effect System
+
+**20 Effects Total:**
+
+**ID 1-10 (Standard Effects):**
+1. Moving Dot
+2. Rainbow Beat
+3. Red White Blue
+4. Ripple
+5. Fire
+6. Twinkle
+7. Bouncing Balls
+8. Juggle
+9. Sinelon
+10. Comet
+
+**ID 11-12 (Breath Effects):**
+11. Breath
+12. Color Sweep
+
+**ID 13-18 (VU Meter Effects):**
+13. Rainbow VU
+14. Old Skool VU
+15. Rainbow Hue VU
+16. Ripple VU
+17. 3 Bars VU
+18. Ocean VU
+
+**ID 19-20 (Sensor-Based):**
+19. Temperature (color based on temp)
+20. Battery (color based on charge level)
+
+**Effect Configuration:**
+- Desktop: Long-press effect button → Side panel slides in
+- Mobile: Tap gear icon → Bottom sheet slides up
+- Parameters: Speed, intensity, color, size, direction
+
+### Performance Optimizations
+
+**Target Metrics:**
+- Canvas FPS: ≥30 (desktop), ≥20 (mobile)
+- WebSocket CPU: <10% ESP32 time
+- Page load: <2s First Contentful Paint
+- Mobile touch: <50ms response
+
+**Implemented:**
+- Exponential backoff WebSocket reconnection (1s, 2s, 4s, 8s, 15s)
+- Adaptive LED update frequency (10-20 FPS based on effect)
+- requestAnimationFrame for smooth Canvas rendering
+- Equidistant LED sampling for large arrays
+- CSS transitions for smooth UI animations
+
+**Planned (Future):**
+- Canvas gradient caching
+- Compact JSON format (30% smaller)
+- Gzip compression (75% size reduction)
+- FontAwesome subsetting (100KB → 10KB)
+
+### Preserved SML Branding
+
+**Retained from v1.0:**
+- ✅ "Handmade" font for "Smart Music Lamp" text
+- ✅ SML glowing animation (RGB color cycling)
+- ✅ Slider styling
+- ✅ Thermometer animation
+- ✅ Battery liquid animation
+- ✅ Bluetooth SVG player controls
+
+**Removed from v1.0:**
+- ❌ Butterfly decoration (completely removed)
+
+**New in v2.1:**
+- ✨ WLED-inspired dark theme
+- ✨ Responsive navigation (mobile/tablet/desktop)
+- ✨ Peek tab with real-time LED visualization
+- ✨ Centralized Config tab
+- ✨ Effect configuration panels
+- ✨ MAX 60 LED preview limit
+
 ## Key Configuration Variables
 
 ### LED Strip Settings (main.cpp)
