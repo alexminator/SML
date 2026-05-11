@@ -19,6 +19,10 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   text-align: center;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .sml-subtitle {
@@ -34,6 +38,8 @@ body {
   align-items: center;
   justify-content: center;
   margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
 }
 
 .glowing span {
@@ -125,6 +131,7 @@ body {
 }
 
 /* === Status Bar Styling === */
+.status-bar,
 .sml-status-bar {
   position: fixed;
   top: 0;
@@ -141,7 +148,16 @@ body {
   z-index: var(--z-status-bar);
 }
 
-.sml-status-left,
+.status-bar-left,
+.sml-status-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.status-bar-right,
 .sml-status-right {
   display: flex;
   align-items: center;
@@ -150,22 +166,56 @@ body {
   color: var(--text-secondary);
 }
 
-.sml-status-center {
-  flex: 1;
-  text-align: center;
+.status-text {
   font-size: 0.75rem;
-  color: var(--text-disabled);
+  color: var(--text-secondary);
+}
+
+/* === Mobile-Style Status Icons === */
+.status-icons {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.signal-icon {
+  font-size: 1rem;
+  color: var(--sml-green-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.battery-compact {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.battery-icon {
+  font-size: 1rem;
+}
+
+/* Hide wave animation (replaced with simple icon) */
+.wave {
+  display: none;
 }
 
 /* Signal Strength Colors */
+.status-bar.connected .signal-icon,
 .sml-status-bar.connected .sml-wifi-signal {
   color: var(--sml-green-light);
 }
 
+.status-bar.disconnected .signal-icon,
 .sml-status-bar.disconnected .sml-wifi-signal {
   color: var(--text-disabled);
 }
 
+.status-bar.connecting .signal-icon,
 .sml-status-bar.connecting .sml-wifi-signal {
   color: var(--sml-gold);
   animation: pulse 1s infinite;

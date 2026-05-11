@@ -64,7 +64,7 @@
 
 /* === Desktop/Tablet Sidebar (≥ 768px) === */
 .desktop-sidebar {
-  display: none;
+  display: none; /* Hidden on mobile */
   position: fixed;
   left: 0;
   top: var(--status-bar-height);
@@ -74,8 +74,15 @@
   border-right: 1px solid var(--bg-tertiary);
   transition: width var(--transition-normal);
   z-index: var(--z-sidebar);
-  display: flex;
   flex-direction: column;
+  padding: 0;
+}
+
+/* Enable flexbox when sidebar is visible */
+@media (min-width: 768px) {
+  .desktop-sidebar {
+    display: flex;
+  }
 }
 
 /* Sidebar Navigation */
@@ -86,6 +93,14 @@
   padding: var(--spacing-md) 0;
   overflow-y: auto;
   flex: 1;
+  padding-top: 0; /* No top padding, toggle button has its own space */
+}
+
+/* Sidebar Toggle Button Wrapper */
+.sidebar-toggle-wrapper {
+  flex-shrink: 0;
+  padding: var(--spacing-md);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .sidebar-item {
@@ -136,20 +151,17 @@
 /* Sidebar Toggle Button (Desktop only) */
 .sidebar-toggle {
   display: none;
-  position: absolute;
-  top: var(--spacing-md);
-  left: var(--spacing-md);
-  width: 40px;
+  width: 100%;
   height: 40px;
   background: var(--sml-orange);
   border-radius: var(--radius-md);
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: var(--z-fixed);
   color: var(--text-primary);
   border: none;
   transition: transform var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .sidebar-toggle:hover {
@@ -167,8 +179,11 @@
   }
 
   .desktop-sidebar {
-    display: flex;
     width: 60px;
+  }
+
+  .sidebar-toggle-wrapper {
+    display: none; /* No toggle on tablet, always icon-only */
   }
 
   .sidebar-text {
@@ -178,10 +193,6 @@
   .main {
     margin-left: 60px;
     padding-top: var(--status-bar-height);
-  }
-
-  .sidebar-toggle {
-    display: none;
   }
 }
 
@@ -199,43 +210,49 @@
     display: none;
   }
 
+  .desktop-sidebar.collapsed .sidebar-toggle-wrapper {
+    padding: var(--spacing-sm);
+  }
+
   .sidebar-text {
     display: inline;
-  }
-
-  .main {
-    margin-left: 200px;
-    transition: margin-left var(--transition-normal);
-  }
-
-  .main.expanded {
-    margin-left: 60px;
   }
 
   .sidebar-toggle {
     display: flex;
   }
+
+  .sidebar-toggle-wrapper {
+    display: block;
+  }
 }
 
 /* === Main Content Area === */
+/* Base: Mobile (no sidebar, bottom nav) */
 .main {
-  margin-left: 200px;
-  transition: margin-left var(--transition-normal);
+  margin-left: 0;
   padding-bottom: 70px; /* Space for bottom nav on mobile */
   padding-top: var(--status-bar-height);
+  transition: margin-left var(--transition-normal);
 }
 
-body.sidebar-collapsed .main {
-  margin-left: 60px;
-}
-
-body.sidebar-hidden .main {
-  margin-left: 0;
-}
-
+/* Tablet: collapsed sidebar (60px) */
 @media (min-width: 768px) {
   .main {
+    margin-left: 60px;
     padding-bottom: 0;
+  }
+}
+
+/* Desktop: expanded sidebar (200px) */
+@media (min-width: 1024px) {
+  .main {
+    margin-left: 200px;
+  }
+
+  /* Sidebar collapsed state */
+  body.sidebar-collapsed .main {
+    margin-left: 60px;
   }
 }
 

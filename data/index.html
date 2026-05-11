@@ -47,21 +47,20 @@
   <!-- Status Bar -->
   <div class="status-bar">
     <div class="status-bar-left">
-      <div id="Signal" class="%BARS%">
-        <div class="wv4 wave">
-          <div class="wv3 wave">
-            <div class="wv2 wave">
-              <div class="wv1 wave"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <span id="status">Disconnected</span>
+      <span id="status" class="status-text">Disconnected</span>
     </div>
     <div class="status-bar-right">
-      <div class="battery-indicator">
-        <span id="battlevel-small">0%</span>
-        <span class="fas fa-battery-three-quarters"></span>
+      <div class="status-icons">
+        <!-- WiFi signal icon (compact) -->
+        <div class="signal-icon" id="Signal" title="%BARS%">
+          <span class="fas fa-wifi"></span>
+        </div>
+
+        <!-- Battery percentage + icon (compact) -->
+        <div class="battery-compact">
+          <span id="battlevel-small">0%</span>
+          <span class="fas fa-battery-three-quarters battery-icon"></span>
+        </div>
       </div>
     </div>
   </div>
@@ -668,9 +667,11 @@
 
   <!-- Desktop Sidebar -->
   <aside class="desktop-sidebar">
-    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar menu">
-      <span class="fas fa-bars" aria-hidden="true"></span>
-    </button>
+    <div class="sidebar-toggle-wrapper">
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar menu">
+        <span class="fas fa-bars" aria-hidden="true"></span>
+      </button>
+    </div>
     <nav class="sidebar-nav">
       <a href="#tab-lamp" class="sidebar-item active" data-tab="lamp">
         <span class="fas fa-lightbulb"></span>
