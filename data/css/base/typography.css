@@ -4,12 +4,19 @@
 /* === Font Imports === */
 @font-face {
   font-family: 'Handmade';
-  src: url('../fonts/Handmade.woff');
+  src: url('../../fonts/Handmade.woff');
 }
 
 @font-face {
   font-family: 'Impactreg';
-  src: url('../fonts/impactreg.woff');
+  src: url('../../fonts/impactreg.woff');
+}
+
+@font-face {
+  font-family: 'Font Awesome 6 Free';
+  src: url('../../fonts/fa-solid-900.woff2') format('woff2');
+  font-weight: 900;
+  font-style: normal;
 }
 
 /* === Base Typography === */

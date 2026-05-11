@@ -1,3 +1,6 @@
+// Initialize logger
+const playerLogger = createLogger('Player');
+
 // Variables del reproductor
 const play = document.querySelector('.play-btn');
 const back = document.querySelector('.skip-left');
@@ -12,7 +15,7 @@ const sendWebSocketCommand = (action) => {
     json.action = action;
     websocket.send(JSON.stringify(json));
   } else {
-    console.error('WebSocket is not open');
+    playerLogger.error('WebSocket is not open');
   }
 };
 

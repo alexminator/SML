@@ -5,6 +5,9 @@
  * for desktop side panels and mobile bottom sheets.
  */
 
+// Initialize logger
+const effectsLogger = createLogger('Effects');
+
 class EffectsHandler {
   constructor() {
     // Effect definitions with parameters
@@ -312,7 +315,7 @@ class EffectsHandler {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(command)
-      }).catch(err => console.error('Effect command failed:', err));
+      }).catch(err => effectsLogger.error('Effect command failed:', err));
     }
   }
 
@@ -632,7 +635,7 @@ class EffectsHandler {
       }).then(() => {
         this.showApplySuccess();
       }).catch(err => {
-        console.error('Failed to apply parameters:', err);
+        effectsLogger.error('Failed to apply parameters:', err);
         this.showApplyError();
       });
     }

@@ -5,6 +5,9 @@
  * for the SML web interface.
  */
 
+// Initialize logger
+const tabsLogger = createLogger('Tabs');
+
 class TabsManager {
   constructor() {
     this.tabs = [
@@ -107,7 +110,7 @@ class TabsManager {
   switchTab(tabId) {
     // Validate tab ID
     if (!this.tabs.find(tab => tab.id === tabId)) {
-      console.warn(`Invalid tab ID: ${tabId}`);
+      tabsLogger.warn(`Invalid tab ID: ${tabId}`);
       return;
     }
 

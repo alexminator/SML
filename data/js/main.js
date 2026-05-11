@@ -1,6 +1,9 @@
 /*=============== SML Main JavaScript - WebSocket & Data Routing ===============*/
 /* SML Web Interface v2.1 - Main Controller */
 
+// Initialize logger
+const wsLogger = createLogger('WebSocket');
+
 // WebSocket connection
 let websocket = null;
 let connected = false;
@@ -26,7 +29,7 @@ function connectWebSocket() {
   const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   const wsUrl = `${wsProtocol}//${window.location.hostname}/ws`;
 
-  console.log(`[WebSocket] Connecting to ${wsUrl}`);
+  wsLogger.info(`Connecting to ${wsUrl}`);
 
   try {
     websocket = new WebSocket(wsUrl);
@@ -36,13 +39,13 @@ function connectWebSocket() {
     websocket.onerror = handleWebSocketError;
     websocket.onmessage = handleWebSocketMessage;
   } catch (error) {
-    console.error('[WebSocket] Connection failed:', error);
+    wsLogger.error('Connection failed:', error);
     scheduleReconnect();
   }
 }
 
 function handleWebSocketOpen(event) {
-  console.log('[WebSocket] Connected');
+  wsLogger.info('Connected');
   connected = true;
   reconnectAttempts = 0;
 
@@ -54,7 +57,7 @@ function handleWebSocketOpen(event) {
 }
 
 function handleWebSocketClose(event) {
-  console.log('[WebSocket] Disconnected');
+  wsLogger.info('Disconnected');
   connected = false;
   updateConnectionStatus(false);
 
@@ -63,7 +66,7 @@ function handleWebSocketClose(event) {
 }
 
 function handleWebSocketError(error) {
-  console.error('[WebSocket] Error:', error);
+  wsLogger.error('Error:', error);
   updateConnectionStatus(false);
 }
 
@@ -81,13 +84,13 @@ function handleWebSocketMessage(event) {
       handleStatusUpdate(data);
     }
   } catch (error) {
-    console.error('[WebSocket] Failed to parse message:', error);
+    wsLogger.error('Failed to parse message:', error);
   }
 }
 
 function scheduleReconnect() {
   if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-    console.error('[WebSocket] Max reconnection attempts reached');
+    wsLogger.error('Max reconnection attempts reached');
     updateConnectionStatus(false, 'max_attempts');
     return;
   }
@@ -98,7 +101,7 @@ function scheduleReconnect() {
 
   reconnectAttempts++;
 
-  console.log(`[WebSocket] Reconnecting in ${interval}ms (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+  wsLogger.info(`Reconnecting in ${interval}ms (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
   updateConnectionStatus(false, 'reconnecting');
 
   setTimeout(connectWebSocket, interval);
@@ -133,13 +136,13 @@ function updateConnectionStatus(isConnected, status = 'connected') {
 function handleLEDData(data) {
   // Validate data structure
   if (!data.leds || !Array.isArray(data.leds)) {
-    console.warn('[LED Data] Invalid LED array');
+    wsLogger.warn('Invalid LED array');
     return;
   }
 
   if (!window.ledPreview) {
     // LEDPreview not initialized yet
-    console.warn('[LED Data] LEDPreview not available');
+    wsLogger.warn('LEDPreview not available');
     return;
   }
 
@@ -162,10 +165,10 @@ function handleLEDData(data) {
 
     // Debug logging
     if (window.DEBUG_MODE) {
-      console.log(`[LED Data] ${previewCount} LEDs, effect: ${effectName}`);
+      wsLogger.debug(`${previewCount} LEDs, effect: ${effectName}`);
     }
   } catch (error) {
-    console.error('[LED Data] Failed to update preview:', error);
+    wsLogger.error('Failed to update preview:', error);
   }
 }
 
@@ -325,7 +328,7 @@ function updateToggleState(id, state) {
 
 function sendWebSocketAction(action, params = {}) {
   if (!connected || !websocket) {
-    console.warn('[WebSocket] Not connected, cannot send action');
+    wsLogger.warn('Not connected, cannot send action');
     return;
   }
 
@@ -336,9 +339,9 @@ function sendWebSocketAction(action, params = {}) {
 
   try {
     websocket.send(JSON.stringify(message));
-    console.log('[WebSocket] Sent:', action, params);
+    wsLogger.debug('Sent:', action, params);
   } catch (error) {
-    console.error('[WebSocket] Failed to send message:', error);
+    wsLogger.error('Failed to send message:', error);
   }
 }
 
@@ -347,7 +350,7 @@ function sendWebSocketAction(action, params = {}) {
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('SML Web Interface v2.1 - Initializing...');
+  wsLogger.info('SML Web Interface v2.1 - Initializing...');
 
   // Initialize WebSocket connection
   connectWebSocket();
@@ -368,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.sendWebSocketAction = sendWebSocketAction;
   window.SMLState = appState;
 
-  console.log('SML Web Interface v2.1 - Ready');
+  wsLogger.info('SML Web Interface v2.1 - Ready');
 });
 
 // ============================================================================

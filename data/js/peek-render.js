@@ -1,12 +1,15 @@
 /*=============== Peek LED Preview Renderer ===============*/
 /* SML Web Interface v2.1 - Real-time LED Visualization */
 
+// Initialize logger
+const peekLogger = createLogger('Peek');
+
 class LEDPreview {
   constructor() {
     // Canvas setup
     this.canvas = document.getElementById('ledPreviewCanvas');
     if (!this.canvas) {
-      console.error('LED canvas not found');
+      peekLogger.error('LED canvas not found');
       return;
     }
 

@@ -10,17 +10,38 @@
   <title>Smart Music Lamp</title>
   <link rel="icon" href="SML.ico" type="image/x-icon">
 
-  <!-- Google Fonts: Fira Code for data displays -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
-
   <!--=============== CSS ===============-->
-  <link rel="stylesheet" href="css/main.css">
-  <link rel="stylesheet" href="css/fontawesome.css">
-  <link rel="stylesheet" href="css/solid.css">
+  <!-- Base & Variables -->
+  <link rel="stylesheet" href="css/base/variables.css">
+  <link rel="stylesheet" href="css/base/reset.css">
+  <link rel="stylesheet" href="css/base/typography.css">
+
+  <!-- Layout -->
+  <link rel="stylesheet" href="css/layout/wled-theme.css">
+  <link rel="stylesheet" href="css/layout/grid.css">
+  <link rel="stylesheet" href="css/layout/header.css">
+  <link rel="stylesheet" href="css/layout/responsive-nav.css">
+
+  <!-- Components -->
+  <link rel="stylesheet" href="css/components/buttons.css">
+  <link rel="stylesheet" href="css/components/forms.css">
+  <link rel="stylesheet" href="css/components/player.css">
+  <link rel="stylesheet" href="css/components/battery.css">
+  <link rel="stylesheet" href="css/components/thermometer.css">
+
+  <!-- Pages -->
+  <link rel="stylesheet" href="css/pages/effects-config.css">
+  <link rel="stylesheet" href="css/pages/config-tab.css">
+  <link rel="stylesheet" href="css/pages/peek-preview.css">
+
+  <!-- Themes -->
+  <link rel="stylesheet" href="css/themes/sml-brand.css">
+
+  <!-- Vendor (Third-party libraries) -->
+  <link rel="stylesheet" href="css/vendor/fontawesome.css">
 
   <!--=============== JS ===============-->
+  <script src="js/logger.js"></script>
   <script src="js/tabs-manager.js" defer></script>
   <script src="js/effects-handler.js" defer></script>
   <script src="js/peek-render.js" defer></script>
@@ -67,17 +88,7 @@
 
   <!-- Main Content with 6 Tab Sections -->
   <main class="main">
-    <div class="wrap">
-      <ul class="tabs">
-        <li><a href="#tab-lamp"><span class="fas fa-lightbulb"></span><span class="tab-text">Lamp</span></a></li>
-        <li><a href="#tab-music"><span class="fas fa-music"></span><span class="tab-text">Music</span></a></li>
-        <li><a href="#tab-peek"><span class="fas fa-eye"></span><span class="tab-text">Peek</span></a></li>
-        <li><a href="#tab-temp"><span class="fas fa-thermometer-half"></span><span class="tab-text">Weather</span></a></li>
-        <li><a href="#tab-battery"><span class="fas fa-battery"></span><span class="tab-text">Battery</span></a></li>
-        <li><a href="#tab-config"><span class="fas fa-cog"></span><span class="tab-text">Config</span></a></li>
-      </ul>
-
-      <div class="sections">
+    <div class="sections">
         <!-- Lamp Tab -->
         <div id="tab-lamp" class="tab-content">
           <div class="power-button">
@@ -291,27 +302,27 @@
           </div>
         </div>
 
-        <!-- Peek Tab (New - Placeholder) -->
-        <div id="tab-peek" class="tab-content">
+        <!-- Peek Tab (Old Placeholder - DEPRECATED, use tab-peek below) -->
+        <div id="tab-peek-old" class="tab-content" style="display: none;">
           <div class="peek-view">
-            <h2>Peek View</h2>
-            <p>Quick overview of all systems</p>
+            <h2>Peek View (Old)</h2>
+            <p>This placeholder tab is deprecated. Use the Peek tab below with LED Canvas preview.</p>
             <div class="peek-grid">
               <div class="peek-card">
                 <h3>Lamp</h3>
-                <p id="peek-lamp-status">Off</p>
+                <p id="peek-lamp-status-old">Off</p>
               </div>
               <div class="peek-card">
                 <h3>Bluetooth</h3>
-                <p id="peek-bt-status">Disconnected</p>
+                <p id="peek-bt-status-old">Disconnected</p>
               </div>
               <div class="peek-card">
                 <h3>Temperature</h3>
-                <p id="peek-temp">%TEMPERATURE%</p>
+                <p id="peek-temp-old">%TEMPERATURE%</p>
               </div>
               <div class="peek-card">
                 <h3>Battery</h3>
-                <p id="peek-battery">0%</p>
+                <p id="peek-battery-old">0%</p>
               </div>
             </div>
           </div>
@@ -371,11 +382,11 @@
           <div class="sml-peek-container">
             <!-- Mode Toggle Controls -->
             <div class="sml-peek-controls">
-              <button id="modeStrip" class="sml-peek-mode-btn active">
+              <button id="modeStrip" class="sml-peek-mode-btn active" aria-label="Switch to strip mode" aria-pressed="true">
                 <span class="fas fa-grip-lines"></span>
                 <span>Strip</span>
               </button>
-              <button id="modeCircle" class="sml-peek-mode-btn">
+              <button id="modeCircle" class="sml-peek-mode-btn" aria-label="Switch to circle mode" aria-pressed="false">
                 <span class="fas fa-circle-notch"></span>
                 <span>Circle</span>
               </button>
@@ -458,7 +469,7 @@
                 </div>
                 <small class="help-text">Minimum 8 characters</small>
                 <div class="form-actions">
-                  <button type="submit" class="btn-save" id="wifiSaveBtn">
+                  <button type="submit" class="btn-save" id="wifiSaveBtn" aria-label="Save WiFi configuration and restart device">
                     <span class="btn-content">
                       <span class="fas fa-save"></span> <span class="btn-text">Save & Restart</span>
                     </span>
@@ -545,7 +556,7 @@
                 </div>
                 <small class="help-text">Default brightness level (0-255)</small>
                 <div class="form-actions">
-                  <button type="submit" class="btn-save" id="ledSaveBtn">
+                  <button type="submit" class="btn-save" id="ledSaveBtn" aria-label="Save LED configuration">
                     <span class="btn-content">
                       <span class="fas fa-save"></span> <span class="btn-text">Save LED Config</span>
                     </span>
@@ -620,7 +631,7 @@
             <div class="config-card">
               <h3><span class="fas fa-download"></span> Firmware Updates</h3>
               <p class="update-info">Update your SML firmware to the latest version for new features and bug fixes.</p>
-              <button onclick="window.location.href='/update'" class="btn-config">
+              <button onclick="window.location.href='/update'" class="btn-config" aria-label="Check for firmware updates">
                 <span class="fas fa-cloud-download-alt"></span> Check for Updates
               </button>
             </div>
@@ -628,7 +639,6 @@
           </div>
         </div>
       </div>
-    </div>
   </main>
 
   <!-- Mobile Bottom Navigation -->

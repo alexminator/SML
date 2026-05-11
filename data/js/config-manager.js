@@ -5,6 +5,9 @@
  * help system, system info updates, and restart countdown.
  */
 
+// Initialize logger
+const configLogger = createLogger('Config');
+
 class ConfigManager {
   constructor() {
     this.wifiForm = null;
@@ -36,7 +39,7 @@ class ConfigManager {
     this.wifiForm = document.getElementById('wifiConfigForm');
 
     if (!this.wifiForm) {
-      console.warn('WiFi configuration form not found');
+      configLogger.warn('WiFi configuration form not found');
       return;
     }
 
@@ -150,7 +153,7 @@ class ConfigManager {
       }
 
     } catch (error) {
-      console.error('WiFi config error:', error);
+      configLogger.error('WiFi config error:', error);
       this.showStatus('error', error.message || 'Failed to configure WiFi. Please try again.');
       this.setFormState(this.wifiForm, 'enabled');
 
@@ -232,7 +235,7 @@ class ConfigManager {
       }
 
     } catch (error) {
-      console.error('LED config error:', error);
+      configLogger.error('LED config error:', error);
       this.showStatus('error', error.message || 'Failed to configure LED. Please try again.');
     } finally {
       this.setFormState(form, 'enabled');
@@ -332,7 +335,7 @@ class ConfigManager {
       this.updateSystemInfo(data);
 
     } catch (error) {
-      console.error('System info fetch error:', error);
+      configLogger.error('System info fetch error:', error);
     }
   }
 
@@ -405,7 +408,7 @@ class ConfigManager {
       }
 
     } catch (error) {
-      console.error('Config load error:', error);
+      configLogger.error('Config load error:', error);
     }
   }
 
@@ -434,7 +437,7 @@ class ConfigManager {
     const countdownEl = document.querySelector('.restart-countdown');
 
     if (!countdownEl) {
-      console.warn('Restart countdown element not found');
+      configLogger.warn('Restart countdown element not found');
       return;
     }
 
@@ -518,7 +521,7 @@ class ConfigManager {
       this.displayNetworks(networks);
 
     } catch (error) {
-      console.error('Network scan error:', error);
+      configLogger.error('Network scan error:', error);
       this.showStatus('error', 'Failed to scan for networks');
     } finally {
       this.scanningNetworks = false;

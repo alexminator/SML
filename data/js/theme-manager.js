@@ -10,6 +10,10 @@
  * theme.changeTheme('sunset');
  * console.log(theme.getTheme()); // 'sunset'
  */
+
+// Initialize logger
+const themeLogger = createLogger('Theme');
+
 class ThemeManager {
   constructor() {
     this.currentTheme = this.loadTheme();
@@ -48,7 +52,7 @@ class ThemeManager {
       }
     } catch (e) {
       // localStorage not available (private mode)
-      console.warn('localStorage not available, using default theme');
+      themeLogger.warn('localStorage not available, using default theme');
     }
     return 'wled-classic';
   }
@@ -60,7 +64,7 @@ class ThemeManager {
     } catch (e) {
       // Silently fail in private mode
       if (window.DEBUG_MODE) {
-        console.warn('localStorage write failed:', e);
+        themeLogger.warn('localStorage write failed:', e);
       }
     }
   }
@@ -68,7 +72,7 @@ class ThemeManager {
   applyTheme(theme, withTransition = false) {
     // Validate theme
     if (!this.themes.includes(theme)) {
-      console.warn(`Invalid theme "${theme}", using default`);
+      themeLogger.warn(`Invalid theme "${theme}", using default`);
       theme = 'wled-classic';
     }
 

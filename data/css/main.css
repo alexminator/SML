@@ -4,10 +4,11 @@
 /**
  * LOAD ORDER:
  * 1. Base (reset, variables, typography)
- * 2. Layout (grid, navigation, header)
- * 3. Components (reusable UI elements)
- * 4. Themes (color schemes)
- * 5. Pages (tab-specific styles)
+ * 2. Vendor (third-party libraries)
+ * 3. Layout (grid, navigation, header)
+ * 4. Components (reusable UI elements)
+ * 5. Themes (color schemes)
+ * 6. Pages (tab-specific styles)
  */
 
 /* === Base === */
@@ -15,8 +16,12 @@
 @import url('base/variables.css');
 @import url('base/typography.css');
 
+/* === Vendor (Third-party) === */
+@import url('vendor/fontawesome.css');
+
 /* === Layout === */
 @import url('layout/grid.css');
+@import url('layout/wled-theme.css');
 @import url('layout/responsive-nav.css');
 @import url('layout/header.css');
 
@@ -28,7 +33,6 @@
 @import url('components/thermometer.css');
 
 /* === Themes === */
-@import url('themes/wled-theme.css');
 @import url('themes/sml-brand.css');
 
 /* === Pages === */
