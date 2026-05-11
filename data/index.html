@@ -120,8 +120,8 @@
             <h2 class="power-label">Effects <span class="fas fa-wand-sparkles"></span></h2>
             <div class="effect-item">
               <h3 class="fire">Fire</h3>
-              <button class="sml-effect-config-btn" data-effect="Fire" aria-label="Configure Fire effect">
-                <span class="fas fa-cog"></span>
+              <button class="sml-effect-config-btn" data-effect="Fire" aria-label="Configure Fire effect settings">
+                <span class="fas fa-cog" aria-hidden="true"></span>
               </button>
               <div id="Firebutton" class="%FIRE_STATE%">
                 <span class="button"><span class="slide"></span></span>
@@ -452,13 +452,13 @@
                 <div class="form-group">
                   <label for="newSSID">New SSID <span class="optional">(optional)</span>:</label>
                   <input type="text" id="newSSID" name="ssid" placeholder="Leave empty to keep current SSID">
-                  <small class="help-text">Leave empty to keep current WiFi name</small>
                 </div>
+                <small class="help-text">Leave empty to keep current WiFi name</small>
                 <div class="form-group">
                   <label for="newPassword"><span class="required">*</span> New Password:</label>
                   <input type="password" id="newPassword" name="password" required placeholder="Enter new WiFi password">
-                  <small class="help-text">Minimum 8 characters</small>
                 </div>
+                <small class="help-text">Minimum 8 characters</small>
                 <div class="form-actions">
                   <button type="submit" class="btn-save">
                     <span class="fas fa-save"></span> Save & Restart
@@ -526,21 +526,21 @@
                 <div class="form-group">
                   <label for="realLedCount">Real LED Count <span class="required">*</span>:</label>
                   <input type="number" id="realLedCount" name="realLedCount" min="1" max="500" value="24" required>
-                  <small class="help-text">Actual number of LEDs connected to strip (1-500)</small>
                 </div>
+                <small class="help-text">Actual number of LEDs connected to strip (1-500)</small>
                 <div class="form-group">
                   <label for="maxWebLeds">Max Web LEDs <span class="required">*</span>:</label>
                   <input type="number" id="maxWebLeds" name="maxWebLeds" min="1" max="500" value="24" required>
-                  <small class="help-text">Maximum LEDs controllable from web interface (1-500)</small>
                 </div>
+                <small class="help-text">Maximum LEDs controllable from web interface (1-500)</small>
                 <div class="form-group">
                   <label for="defaultBrightness">Default Brightness <span class="required">*</span>:</label>
                   <div class="brightness-slider-container">
                     <input type="range" id="defaultBrightness" name="defaultBrightness" min="0" max="255" value="130" class="brightness-slider">
                     <span id="brightnessValue" class="brightness-value">130</span>
                   </div>
-                  <small class="help-text">Default brightness level (0-255)</small>
                 </div>
+                <small class="help-text">Default brightness level (0-255)</small>
                 <div class="form-actions">
                   <button type="submit" class="btn-save">
                     <span class="fas fa-save"></span> Save LED Config
@@ -625,36 +625,36 @@
 
   <!-- Mobile Bottom Navigation -->
   <nav class="mobile-bottom-nav">
-    <a href="#tab-lamp" class="nav-item active" data-tab="lamp">
-      <span class="fas fa-lightbulb"></span>
+    <a href="#tab-lamp" class="nav-item active" data-tab="lamp" aria-label="Lamp controls">
+      <span class="fas fa-lightbulb" aria-hidden="true"></span>
       <span class="nav-text">Lamp</span>
     </a>
-    <a href="#tab-music" class="nav-item" data-tab="music">
-      <span class="fas fa-music"></span>
+    <a href="#tab-music" class="nav-item" data-tab="music" aria-label="Music controls">
+      <span class="fas fa-music" aria-hidden="true"></span>
       <span class="nav-text">Music</span>
     </a>
-    <a href="#tab-peek" class="nav-item" data-tab="peek">
-      <span class="fas fa-eye"></span>
+    <a href="#tab-peek" class="nav-item" data-tab="peek" aria-label="Peek view">
+      <span class="fas fa-eye" aria-hidden="true"></span>
       <span class="nav-text">Peek</span>
     </a>
-    <a href="#tab-temp" class="nav-item" data-tab="weather">
-      <span class="fas fa-thermometer-half"></span>
+    <a href="#tab-temp" class="nav-item" data-tab="weather" aria-label="Weather information">
+      <span class="fas fa-thermometer-half" aria-hidden="true"></span>
       <span class="nav-text">Weather</span>
     </a>
-    <a href="#tab-battery" class="nav-item" data-tab="battery">
-      <span class="fas fa-battery-three-quarters"></span>
+    <a href="#tab-battery" class="nav-item" data-tab="battery" aria-label="Battery status">
+      <span class="fas fa-battery-three-quarters" aria-hidden="true"></span>
       <span class="nav-text">Battery</span>
     </a>
-    <a href="#tab-config" class="nav-item" data-tab="config">
-      <span class="fas fa-cog"></span>
+    <a href="#tab-config" class="nav-item" data-tab="config" aria-label="Configuration">
+      <span class="fas fa-cog" aria-hidden="true"></span>
       <span class="nav-text">Config</span>
     </a>
   </nav>
 
   <!-- Desktop Sidebar -->
   <aside class="desktop-sidebar">
-    <button class="sidebar-toggle" id="sidebarToggle">
-      <span class="fas fa-bars"></span>
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar menu">
+      <span class="fas fa-bars" aria-hidden="true"></span>
     </button>
     <nav class="sidebar-nav">
       <a href="#tab-lamp" class="sidebar-item active" data-tab="lamp">

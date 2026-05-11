@@ -37,7 +37,7 @@
 
 .sml-close-panel {
   background: var(--sml-orange);
-  color: white;
+  color: var(--text-primary);
   border: none;
   width: 32px;
   height: 32px;
@@ -93,7 +93,7 @@
 
 .sml-close-sheet {
   background: var(--sml-orange);
-  color: white;
+  color: var(--text-primary);
   border: none;
   width: 32px;
   height: 32px;
@@ -179,7 +179,7 @@
 
 .sml-effect-config-btn:hover {
   background: var(--sml-cyan);
-  color: white;
+  color: var(--text-primary);
   transform: scale(1.1);
 }
 

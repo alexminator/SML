@@ -103,6 +103,39 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* === Accessibility: Reduced Motion Support === */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Disable RGB glowing animation */
+  .glowing span {
+    animation: none !important;
+    color: var(--text-primary) !important;
+    text-shadow: none !important;
+  }
+
+  /* Remove hover transforms */
+  .sml-interactive-hover:hover,
+  .theme-card:hover,
+  .help-card:hover {
+    transform: none !important;
+  }
+
+  /* Disable button hover effects */
+  .sml-btn-gold:hover,
+  .sml-btn-cyan:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
 /* === Typography === */
 h1, h2, h3, h4 {
   font-weight: 600;
