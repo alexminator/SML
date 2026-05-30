@@ -1,6 +1,6 @@
 // WLED-based Meteor effect - smooth falling meteors with trails
 // Adapted from WLED mode_meteor implementation
-#include "Globals.h"
+#include "Settings.h"
 class Meteor {
   public:
     Meteor(){};

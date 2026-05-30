@@ -1,7 +1,7 @@
 // WLED-based Color Sweep effect - wipes color, turns off opposite
 // Adapted from WLED mode_color_sweep implementation
 
-#include "Globals.h"
+#include "Settings.h"
 class ColorSweep {
   public:
     ColorSweep(){};

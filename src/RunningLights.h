@@ -1,6 +1,6 @@
 // WLED-based Running Lights effect - smooth sine wave transition
 // Adapted from WLED mode_running_lights implementation
-#include "Globals.h"
+#include "Settings.h"
 class RunningLights {
   public:
     RunningLights(){};
@@ -25,7 +25,7 @@ void RunningLights::runPattern() {
     int sineVal = sin8((i * 255 / N_PIXELS) - (counter >> 8));
 
     // Map sine value to brightness
-    byte brightnessVal = map(sineVal, 0, 255, 0, brightness);
+    byte brightnessVal = map(sineVal, 0, 255, 0, stripLed.brightness);
 
     // Apply color with calculated brightness
     leds[i] = CHSV(myhue, 255, brightnessVal);

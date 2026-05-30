@@ -1,6 +1,6 @@
 // WLED-based Breath effect - "standby-breathing" of well known i-Devices
 // Adapted from WLED mode_breath implementation
-#include "Globals.h"
+#include "Settings.h"
 class Breath {
   public:
     Breath(){};

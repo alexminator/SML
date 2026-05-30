@@ -1,5 +1,4 @@
-
-#include "Globals.h"
+#include "Settings.h"
 
 class RainbowBeat {
   public:

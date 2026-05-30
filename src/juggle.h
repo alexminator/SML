@@ -1,5 +1,5 @@
 
-#include "Globals.h"
+#include "Settings.h"
 class Juggle {
   public:
     Juggle(){};

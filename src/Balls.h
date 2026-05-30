@@ -1,5 +1,5 @@
 
-#include "Globals.h"
+#include "Settings.h"
 class Balls
 {
 public:
@@ -11,7 +11,6 @@ private:
 
 void Balls::runPattern()
 {
-
   for (int i = 0 ; i < ballsCount ; i++) {
     tCycle[i] =  millis() - tLast[i] ;     // Calculate the time since the last time the ball was on the ground
 

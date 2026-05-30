@@ -17,7 +17,7 @@
 #include <DHT_U.h>
 #include <Preferences.h>
 #include "data.h"
-#include "Globals.h"
+#include "Settings.h"
 
 // Declare the debugging level then include the header file
 #define DEBUGLEVEL DEBUGLEVEL_DEBUGGING
@@ -57,57 +57,6 @@
 // Power Management State Machine debugging
 #define DEBUG_POWER_MANAGEMENT
 
-// ----------------------------------------------------------------------------
-// Definition of macros
-// ----------------------------------------------------------------------------
-// Constants (Magic Numbers)
-// ----------------------------------------------------------------------------
-// Stack monitoring thresholds
-const uint32_t STACK_WARNING_THRESHOLD = 256;      // Stack low warning threshold (bytes)
-const uint32_t STACK_CRITICAL_THRESHOLD = 128;     // Stack critical threshold (bytes)
-
-// WiFi connection
-const int WIFI_MAX_ATTEMPTS = 40;                 // Max WiFi connection attempts
-const unsigned long WIFI_RETRY_DELAY = 500;       // WiFi connection retry delay (ms)
-const unsigned long WIFI_MONITOR_INTERVAL = 2000;
-
-// Timing
-const unsigned long LED_ERROR_FLASH_CYCLE = 200;  // LED error flash cycle (ms)
-const unsigned long LED_ERROR_FLASH_ON = 50;      // LED error flash on time (ms)
-
-// Battery monitoring
-const unsigned long BATTERY_CHECK_INTERVAL = 3000; // Battery check interval (ms)
-
-// LittleFS timeout
-const unsigned long LITTLEFS_TIMEOUT = 30000;     // LittleFS error timeout (ms)
-
-// WebSocket
-const unsigned long WEBSOCKET_UPDATE_INTERVAL = 1000;  // 1 second for responsive UI
-const uint8_t WEBSOCKET_STACK_CHECK_CYCLES = 10;       // Check stack every N cycles
-
-// Strip LED
-#define STRIP_PIN 4
-#define N_PIXELS 24
-#define VOLTS 5           // Vcc Strip [5 volts]
-#define MAX_MILLIAMPS 500 // Maximum current to draw [500 mA]
-#define COLOR_ORDER GRB   // Colour order of LED strip [GRB]
-#define LED_TYPE WS2812B  // LED string type [WS2812B]
-// VU
-#define AUDIO_IN_PIN 36    // Aux in signal
-#define DC_OFFSET 0        // DC offset in aux signal [0]
-#define NOISE 30           // Noise/hum/interference in aux signal [10]
-#define SAMPLES 60         // Length of buffer for dynamic level adjustment [60]
-#define TOP (N_PIXELS + 2) // Allow dot to go slightly off scale [(N_PIXELS + 2)]
-#define PEAK_FALL 20       // Rate of peak falling dot [20]
-#define N_PIXELS_HALF (N_PIXELS / 2)
-
-// BIAS: ADC value for HALF of VCC (audio input calibration)
-// This is the center point for audio VU meter effects
-// Calibration: Measure actual ADC with no audio signal, adjust to match
-// Formula: BIAS = ADC_reading_at_half_VCC (should be ~1850 for 3.3V reference)
-// Typical range: ~1800-1900 for ESP32 with 3.3V reference
-#define BIAS 1850 // ADC value for HALF of 3.22V VCC. Hint: Take the analog reading without signal
-
 // WEB
 #define HTTP_PORT 80
 #include <WiFi.h>
@@ -118,96 +67,6 @@ const uint8_t WEBSOCKET_STACK_CHECK_CYCLES = 10;       // Check stack every N cy
 
 AsyncWebServer server(HTTP_PORT);
 AsyncWebSocket ws("/ws");
-
-// ----------------------------------------------------------------------------
-// Definition of global constants
-// ----------------------------------------------------------------------------
-
-// DHT Sensor
-#define DHTPIN 23 // Digital pin connected to the DHT sensor
-// Uncomment the type of sensor in use:
-// #define DHTTYPE   DHT11     // DHT 11
-#define DHTTYPE DHT22 // DHT 22 (AM2302)
-// #define DHTTYPE   DHT21     // DHT 21 (AM2301)
-DHT_Unified dht(DHTPIN, DHTTYPE);
-float temp;
-float hum;
-// Temperature/Humidity sensor monitoring
-// 5-second interval is appropriate for DHT22:
-// - Minimizes 2ms blocking impact (0.04% duty cycle)
-// - DHT22 response time is ~2 seconds max
-// - Allows sufficient time between reads for sensor accuracy
-// - User experience: Updates feel responsive without overwhelming the system
-const unsigned long SENSOR_CHECK_INTERVAL = 5000;  // Sensor check interval (ms)
-
-// Power Switch for Bluetooth Module
-#define SWITCH_PIN 18 // Pin to command relay. BT on/off
-bool bt_powerState = false;
-// Emulate BT Button
-#define VOLUMENUP_PIN 5                // Pin to command Mosfet to emulate a BT button Volumen UP and FF.
-#define VOLUMENDOWN_PIN 19             // Pin to command Mosfet to emulate a BT button Volumen DOWN and REW.
-#define PLAY_PIN 21                    // Pin to command Mosfet to emulate a BT button PLAY AND PAUSE.
-const unsigned long long_delay = 1000; // More than 1s (Volumen + -)
-const unsigned long short_delay = 200; // Short time (FF, RW, PLAY and PAUSE)
-// Lamp Switch
-#define LAMP_PIN 32 // Pin to command LAMP IN1 relay
-bool lampState = false;
-// Charge Status
-#define CHARGE_PIN 34 // Pin to sense Charge mode, signal come from TP4056
-// Sensor Battery
-#define FULL_CHARGE_PIN 35 // Pin to sense full charge, signal come from TP4056
-#define ADC_PIN 33         // Pin to monitor Batt
-
-// CONV_FACTOR: ADC to voltage conversion
-// Measure battery voltage at full charge (TP4056 blue LED on)
-// Adjust this value until reading matches multimeter
-// Formula: CONV_FACTOR = measured_voltage / ADC_reading
-// Typical range: 1.5 - 2.0 for most voltage dividers
-#define CONV_FACTOR 1.702
-
-#define READS 30
-#define MAXV 4.00
-#define MINV 3.20
-#define BATT_THRESHOLD 30 // Defines battery threshold in %
-#define MAX_READS 10      // Defines the maximum number of readings when the battery reaches the threshold
-#define FULL_READS 10     // Defines the maximum number of readings when the battery is full
-int readCount = 0;
-int lvlCharge;
-Battery18650Stats battery(ADC_PIN, CONV_FACTOR, READS, MAXV, MINV);
-
-// WiFi credentials (loaded from Preferences in setup())
-char savedSSID[33] = {0};  // SSID max 32 chars + null
-char savedPass[65] = {0};  // Password max 64 chars + null
-
-//-----------------------------------------------------------------------------
-// Power Management State Machine
-//-----------------------------------------------------------------------------
-
-// State definitions
-enum PowerState {
-    POWER_AC_MODE,            // AC power connected - full operation
-    POWER_BATTERY_ACTIVE,     // Battery + WebSocket client connected
-    POWER_BATTERY_SLEEP,      // Battery + no clients (savings mode)
-    POWER_BATTERY_CONNECTING   // Battery + attempting connection
-};
-
-// State machine variables
-PowerState currentPowerState = POWER_AC_MODE;
-PowerState previousPowerState = POWER_AC_MODE;
-unsigned long lastStateChange = 0;
-unsigned long sleepCycleStart = 0;
-bool webSocketClientConnected = false;
-bool onBatteryPower = false;
-bool powerManagementControllingWiFi = false;  // Signal to TaskWiFiMonitor
-
-// Timing constants
-const unsigned long SLEEP_DURATION = 60000;        // 60 seconds WiFi sleep
-const unsigned long AWAKE_DURATION = 10000;         // 10 seconds WiFi awake
-const unsigned long POWER_CHANGE_DEBOUNCE = 3000;   // 3 seconds debounce
-const unsigned long WS_WAIT_DURATION = 30000;        // 30 seconds wait for WebSocket
-
-// Critical battery threshold
-const int BATTERY_CRITICAL_LEVEL = 15;  // 15%
 
 // ----------------------------------------------------------------------------
 // RTOS Mutex Protection
@@ -232,311 +91,78 @@ void initMutexes() {
 }
 
 // ============================================================================
-// DEFINICIONES DE VARIABLES GLOBALES (una sola vez)
+// DEFINICIÓN DE vImpact0 (SOLO UNA VEZ, AQUÍ)
 // ============================================================================
 
-// Variables VU
-uint8_t volCount = 0; // Frame counter for storing past volume data
-int vol[SAMPLES];     // Collection of prior volume samples
-int lvl = 0;          // Current "dampened" audio level
-
-CRGBPalette16 currentPalette; // Define the current palette
-CRGBPalette16 targetPalette;  // Define the target palette
-
-// Initial brightness (0-255)
-// 130 = ~50% - comfortable starting point for indoor use
-// Prevents eye strain from full brightness while still being visible
-uint8_t myhue = 0;           // hue 0. red color
-CRGB leds[N_PIXELS];        //  for FASTLED
+float vImpact0 = sqrt(-2 * GRAVITY * h0);
 
 // ============================================================================
-// EFFECT PARAMETERS (configurable via web in future)
+// DEFINICIÓN DE MÉTODOS DEL STRUCT BATTERY
 // ============================================================================
 
-// Fire Effect Parameters
-uint8_t fireCooling = 55;   // 0-255, default 55 (cooling rate)
-uint8_t fireSparking = 50;  // 0-255, default 50 (sparking probability)
-bool fireReverse = false;   // true = inverted fire
+void Battery::battMonitor() {
+    int isCharging = digitalRead(CHARGE_PIN);
+    chargeState = isCharging == LOW;
+    int fullyCharge = digitalRead(FULL_CHARGE_PIN);
+    fullBatt = fullyCharge == LOW;
+    battVolts = batteryStats.getBatteryVolts();
+    battLvl = batteryStats.getBatteryChargeLevel(true);
 
-// Balls Effect Parameters
-uint8_t ballsCount = 3;          // 1-16 balls
-bool ballsRandomColors = false;  // true = random, false = sequential
-
-// Sinelon Effect Parameters
-uint8_t sinelonBeat = 23;  // 0-255, beat frequency
-uint8_t sinelonFade = 2;   // 0-255, fade rate
-
-// Twinkle Effect Parameters (WLED TwinkleFOX algorithm)
-uint8_t twinkleSpeed = 8;       // 0-255, twinkle speed
-uint8_t twinkleIntensity = 160; // 0-255, cooling/density
-bool twinkleRedCool = true;     // true = shift to red when fading (like incandescent)
-
-// Rainbow Beat Effect Parameters
-uint8_t rainbowSpeed = 30;     // 0-255, beat frequency
-uint8_t rainbowDelta = 8;      // 0-255, hue delta between LEDs
-
-// Moving Dot Effect Parameters
-uint8_t movingDotSpeed = 30;   // 0-255, movement speed
-uint8_t movingDotFade = 10;    // 0-255, fade rate
-
-// Ripple Effect Parameters
-uint8_t rippleSize = 3;     // 0-7, ripple wave size
-bool rippleMirror = false;  // true = mirrored ripple (better than WLED's overlay)
-
-// Comet Effect Parameters (original improved version)
-uint8_t cometSpeed = 8;      // 0-255, comet movement speed
-uint8_t cometTrail = 4;      // 0-10, trail length
-bool cometBlur = false;      // true = blurred trail
-
-// Breath Effect Parameters (WLED-compatible)
-uint8_t breathSpeed = 128;  // Default: 128, range: 0-255 (breathing speed)
-
-// ColorSweep Effect Parameters (WLED-compatible)
-uint8_t sweepSpeed = 128;  // Default: 128, range: 0-255 (sweep speed)
-
-// Juggle Effect Parameters
-uint8_t juggleDots = 4;       // 1-16, number of dots (better than WLED's 8 hardcoded)
-uint8_t juggleSpeed = 64;     // 0-255, movement frequency (WLED: speed)
-uint8_t juggleIntensity = 128;// 0-255, fade rate/trail (WLED: intensity)
-
-// balls effect
-float h[NUM_BALLS];                       // An array of heights
-float vImpact0 = sqrt(-2 * GRAVITY * h0); // Impact velocity of the ball when it hits the ground if "dropped" from the top of the strip
-float vImpact[NUM_BALLS];                 // As time goes on the impact velocity will change, so make an array to store those values
-float tCycle[NUM_BALLS];                  // The time since the last time the ball struck the ground
-int pos[NUM_BALLS];                       // The integer position of the dot on the strip (LED index)
-long tLast[NUM_BALLS];                    // The clock time of the last ground strike
-float COR[NUM_BALLS];                     // Coefficient of Restitution (bounce damping)
-
-// VU
-uint8_t volCountLeft = 0; // Frame counter for storing past volume data
-int volLeft[SAMPLES];     // Collection of prior volume samples
-int lvlLeft = 0;          // Current "dampened" audio level
-int minLvlAvgLeft = 0;    // For dynamic adjustment of graph low & high
-int maxLvlAvgLeft = 512;
-bool is_centered = false; // For VU1 effects
-
-
-
-// ----------------------------------------------------------------------------
-// Definition of Battery component
-// ----------------------------------------------------------------------------
-
-struct Battery
-{
-    // state variables
-    double battVolts;
-    int battLvl;
-    bool fullBatt;
-    bool chargeState;
-
-    Battery() : battVolts(0), battLvl(0), fullBatt(false), chargeState(false) {}
-
-    // methods for monitor battery
-    void battMonitor() // Define a function to read the state of the battery and charge
-    {
-        // Read the state of the charge signal came from pin 7 of TP4056. Low level means charging mode
-        int isCharging = digitalRead(CHARGE_PIN);
-        chargeState = isCharging == LOW; // If "isCharging" is equal to "LOW", then "chargeState" is set to true, indicating that the battery is charging
-        // Read the state of the charge signal came from pin 6 of TP4056. Low level means Full Battery charge
-        int fullyCharge = digitalRead(FULL_CHARGE_PIN);
-        fullBatt = fullyCharge == LOW; // If "fullyCharge" is equal to "LOW", then "fullBatt" is set to true, indicating that the battery is fully charged
-        // Get the voltage and charge level of the battery using the Battery library
-        battVolts = battery.getBatteryVolts();
-        battLvl = battery.getBatteryChargeLevel(true);
-
-// Print the obtained values
 #ifdef DEBUG_BATTERY
-        debugD(chargeState ? "Cargador conectado" : "Cargador desconectado"); // Print the charger status
-        debugD("\n");
-
-        debugD("Estado del pin carga: ");
-        debugD(fullyCharge ? "LOW (charging)" : "HIGH (full/not charging)");
-        debugD("\n");
-
-        if (!fullBatt && !chargeState) {
-            debuglnD("Batería usándose");
-        } else if (fullBatt) {
-            debuglnD("Batería completamente cargada");
-        } else {
-            debuglnD("Batería cargándose");
-        }
-
-        debugD("Lectura promedio: ");
-        debugD_NUM(battery.pinRead(), "%d");
-        debugD(", Voltaje: ");
-        debugD_NUM((int)(battVolts * 1000), "%d");
-        debugD(".");
-        debugD_NUM((int)((battVolts * 1000) % 1000), "%03d");
-        debugD(", Nivel: ");
-        debugD_NUM(battLvl, "%d");
-        debuglnD("%");
+    debugD(chargeState ? "Cargador conectado" : "Cargador desconectado");
+    debugD("\n");
+    debugD("Estado del pin carga: ");
+    debugD(fullyCharge ? "LOW (charging)" : "HIGH (full/not charging)");
+    debugD("\n");
+    if (!fullBatt && !chargeState) {
+        debuglnD("Batería usándose");
+    } else if (fullBatt) {
+        debuglnD("Batería completamente cargada");
+    } else {
+        debuglnD("Batería cargándose");
+    }
+    debugD("Lectura promedio: ");
+    debugD_NUM(batteryStats.pinRead(), "%d");
+    debugD(", Voltaje: ");
+    debugD_NUM((int)(battVolts * 1000), "%d");
+    debugD(".");
+    debugD_NUM((int)((battVolts * 1000) % 1000), "%03d");
+    debugD(", Nivel: ");
+    debugD_NUM(battLvl, "%d");
+    debuglnD("%");
 #endif
+}
+
+// ============================================================================
+// DEFINICIÓN DE OBJETOS GLOBALES
+// ============================================================================
+
+StripLed stripLed;
+Led onboard_led = {ONBOARD_LED_PIN, false};
+Battery batt;
+
+// ============================================================================
+// DEFINICIÓN DEL STRUCT STRIPLED (MÉTODOS)
+// ============================================================================
+
+StripLed::StripLed() : R(255), G(255), B(255), brightness(130), effectId(0), powerState(false) {}  // Inicializado con el color blanco el brillo en la mitad y efecto 0
+
+void StripLed::simpleColor(int ar, int ag, int ab, int brightness) {
+    for (int i = 0; i < N_PIXELS; i++) {
+        leds[i] = CRGB(ar, ag, ab);
     }
-};
+    FastLED.setBrightness(brightness);
+    FastLED.show();
+}
 
-// ----------------------------------------------------------------------------
-// Definition of the LED component
-// ----------------------------------------------------------------------------
+void StripLed::clear() {
+    FastLED.clear();
+    FastLED.show();
+}
 
-struct Led
-{
-    // state variables
-    uint8_t pin;
-    bool on;
-
-    // methods for update state of onboard led
-    void update()
-    {
-        digitalWrite(pin, on ? HIGH : LOW);
-    }
-};
-
-struct StripLed
-{
-    // state variables
-    int R;
-    int G;
-    int B;
-    int brightness;
-    int effectId;
-    bool powerState;
-
-    StripLed() : R(255), G(255), B(255), brightness(130), effectId(0), powerState(false) {}
-
-    // methods for different effects on stripled
-    // SET ALL LEDS TO ONE COLOR
-    void simpleColor(int ar, int ag, int ab, int brightness)
-    {
-        for (int i = 0; i < N_PIXELS; i++)
-        {
-            leds[i] = CRGB(ar, ag, ab);
-        }
-        FastLED.setBrightness(brightness);
-        FastLED.show();
-    }
-
-    void runFire();
-    void runMovingDot();
-    void runRainbowBeat();
-    void runRedWhiteBlue();
-    void runRipple();
-    void runTwinkle();
-    void runBalls();
-    void runJuggle();
-    void runSinelon();
-    void runComet();
-    void runBreath();
-    void runColorSweep();
-    void runRainbowVU();
-    void runOldVU();
-    void runRainbowHueVU();
-    void runRippleVU();
-    void runThreebarsVU();
-    void runOceanVU();
-    void runTemperature();
-    void runBattery();
-
-    void update()
-    {
-        switch (effectId)
-        {
-        case 0:
-            simpleColor(R, G, B, brightness);
-            break;
-        case 1:
-            clear();
-            runFire();
-            break;
-        case 2:
-            clear();
-            runMovingDot();
-            break;
-        case 3:
-            clear();
-            runRainbowBeat();
-            break;
-        case 4:
-            clear();
-            runRedWhiteBlue();
-            break;
-        case 5:
-            clear();
-            runRipple();
-            break;
-        case 6:
-            clear();
-            runTwinkle();
-            break;
-        case 7:
-            clear();
-            runBalls();
-            break;
-        case 8:
-            clear();
-            runJuggle();
-            break;
-        case 9:
-            clear();
-            runSinelon();
-            break;
-        case 10:
-            clear();
-            runComet();
-            break;
-        case 11:  // NEW - Breath effect
-            clear();
-            runBreath();
-            break;
-        case 12:  // NEW - ColorSweep effect
-            clear();
-            runColorSweep();
-            break;
-        case 13:  // Was case 12 - RainbowVU
-            clear();
-            runRainbowVU();
-            break;
-        case 14:  // Was case 13 - OldVU
-            clear();
-            runOldVU();
-            break;
-        case 15:  // Was case 14 - RainbowHueVU
-            clear();
-            runRainbowHueVU();
-            break;
-        case 16:  // Was case 15 - RippleVU
-            clear();
-            runRippleVU();
-            break;
-        case 17:  // Was case 16 - ThreebarsVU
-            clear();
-            runThreebarsVU();
-            break;
-        case 18:  // Was case 17 - OceanVU
-            clear();
-            runOceanVU();
-            break;
-        case 19:  // Was case 18 - Temperature
-            clear();
-            runTemperature();
-            break;
-        case 20:  // Was case 19 - Battery
-            clear();
-            runBattery();
-            break;
-        default:
-            break;
-        }
-    }
-
-    void clear()
-    {
-        FastLED.clear(); // clear all pixel data
-        FastLED.show();
-    }
-};
-
-// Effects library
+// ============================================================================
+// EFFECTS LIBRARY INCLUDES
+// ============================================================================
 #include "common.h"
 #include "MovingDot.h"
 #include "RainbowBeat.h"
@@ -560,145 +186,200 @@ struct StripLed
 #include "vu5.h"
 #include "vu6.h"
 
-void StripLed::runFire()
-{
+void StripLed::runFire() {
     Fire fire = Fire();
     fire.runPattern();
 }
 
-void StripLed::runMovingDot()
-{
+void StripLed::runMovingDot() {
     MovingDot movingDot = MovingDot();
     movingDot.runPattern();
 }
 
-void StripLed::runRainbowBeat()
-{
+void StripLed::runRainbowBeat() {
     RainbowBeat rainbowBeat = RainbowBeat();
     rainbowBeat.runPattern();
 }
 
-void StripLed::runRedWhiteBlue()
-{
+void StripLed::runRedWhiteBlue() {
     RedWhiteBlue redWhiteBlue = RedWhiteBlue();
     redWhiteBlue.runPattern();
 }
 
-void StripLed::runRipple()
-{
+void StripLed::runRipple() {
     Ripple ripple = Ripple();
     ripple.runPattern();
 }
 
-void StripLed::runTwinkle()
-{
+void StripLed::runTwinkle() {
     Twinkle twinkle = Twinkle();
     twinkle.runPattern();
 }
 
-void StripLed::runBalls()
-{
+void StripLed::runBalls() {
     Balls balls = Balls();
     balls.runPattern();
 }
 
-void StripLed::runJuggle()
-{
+void StripLed::runJuggle() {
     Juggle juggle = Juggle();
     juggle.runPattern();
 }
 
-void StripLed::runSinelon()
-{
+void StripLed::runSinelon() {
     Sinelon sinelon = Sinelon();
     sinelon.runPattern();
 }
 
-void StripLed::runComet()
-{
+void StripLed::runComet() {
     Comet comet = Comet();
     comet.runPattern();
 }
 
-void StripLed::runBreath()
-{
+void StripLed::runBreath() {
     Breath breath = Breath();
     breath.runPattern();
 }
 
-void StripLed::runColorSweep()
-{
+void StripLed::runColorSweep() {
     ColorSweep colorSweep = ColorSweep();
     colorSweep.runPattern();
 }
 
-void StripLed::runRainbowVU()
-{
+void StripLed::runRainbowVU() {
     RainbowVU VU1 = RainbowVU();
     VU1.runPattern(is_centered, 0);
 }
 
-void StripLed::runOldVU()
-{
+void StripLed::runOldVU() {
     OldskoolVU VU2 = OldskoolVU();
     VU2.runPattern(is_centered, 0);
 }
 
-void StripLed::runRainbowHueVU()
-{
+void StripLed::runRainbowHueVU() {
     RainbowHueVU VU3 = RainbowHueVU();
     VU3.runPattern(is_centered, 0);
 }
 
-void StripLed::runRippleVU()
-{
+void StripLed::runRippleVU() {
     RippleVU VU4 = RippleVU();
     VU4.runPattern(true);
 }
 
-void StripLed::runThreebarsVU()
-{
+void StripLed::runThreebarsVU() {
     ThreebarsVU VU5 = ThreebarsVU();
     VU5.runPattern();
 }
 
-void StripLed::runOceanVU()
-{
+void StripLed::runOceanVU() {
     OceanVU VU6 = OceanVU();
     VU6.runPattern();
 }
 
-void StripLed::runTemperature()
-{
+void StripLed::runTemperature() {
     Temperature temp = Temperature();
     temp.runPattern();
 }
 
-void StripLed::runBattery()
-{
+void StripLed::runBattery() {
     Charge batt = Charge();
     batt.runPattern(lvlCharge);
 }
 
-// ----------------------------------------------------------------------------
-// Definition of objects
-// ----------------------------------------------------------------------------
+void StripLed::update() {
+    switch (effectId)
+    {
+    case 0:
+        simpleColor(R, G, B, brightness);
+        break;
+    case 1:
+        clear();
+        runFire();
+        break;
+    case 2:
+        clear();
+        runMovingDot();
+        break;
+    case 3:
+        clear();
+        runRainbowBeat();
+        break;
+    case 4:
+        clear();
+        runRedWhiteBlue();
+        break;
+    case 5:
+        clear();
+        runRipple();
+        break;
+    case 6:
+        clear();
+        runTwinkle();
+        break;
+    case 7:
+        clear();
+        runBalls();
+        break;
+    case 8:
+        clear();
+        runJuggle();
+        break;
+    case 9:
+        clear();
+        runSinelon();
+        break;
+    case 10:
+        clear();
+        runComet();
+        break;
+    case 11:  // NEW - Breath effect
+        clear();
+        runBreath();
+        break;
+    case 12:  // NEW - ColorSweep effect
+        clear();
+        runColorSweep();
+        break;
+    case 13:  // Was case 12 - RainbowVU
+        clear();
+        runRainbowVU();
+        break;
+    case 14:  // Was case 13 - OldVU
+        clear();
+        runOldVU();
+        break;
+    case 15:  // Was case 14 - RainbowHueVU
+        clear();
+        runRainbowHueVU();
+        break;
+    case 16:  // Was case 15 - RippleVU
+        clear();
+        runRippleVU();
+        break;
+    case 17:  // Was case 16 - ThreebarsVU
+        clear();
+        runThreebarsVU();
+        break;
+    case 18:  // Was case 17 - OceanVU
+        clear();
+        runOceanVU();
+        break;
+    case 19:  // Was case 18 - Temperature
+        clear();
+        runTemperature();
+        break;
+    case 20:  // Was case 19 - Battery
+        clear();
+        runBattery();
+        break;
+    default:
+        break;
+    }
+}
 
-StripLed stripLed;
-Led onboard_led = {LED_BUILTIN, false};
-Battery batt;
-
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // DHT initialization
-//-----------------------------------------------------------------------------
-
-// DHT sensor blocking analysis:
-// - Read time: ~2ms (blocking during sensor read)
-// - Interval: 5000ms (SENSOR_CHECK_INTERVAL)
-// - Duty cycle: 0.04% (2ms / 5000ms = 0.0004)
-// - Impact: Negligible - DHT reading is in separate FreeRTOS task
-// - No action needed unless interval decreases significantly
-// - Alternative: Use async DHT library if blocking becomes issue
+// ----------------------------------------------------------------------------
 
 void readSensor()
 {
@@ -949,6 +630,7 @@ void initWiFi()
 // ----------------------------------------------------------------------------
 // Web server initialization
 // ----------------------------------------------------------------------------
+
 enum Status
 {
     COLOR,
@@ -1134,6 +816,7 @@ void initWebServer()
 // ----------------------------------------------------------------------------
 // WebSocket initialization
 // ----------------------------------------------------------------------------
+
 const char* bars()
 {
     int signal = WiFi.RSSI();
