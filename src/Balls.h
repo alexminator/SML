@@ -1,8 +1,5 @@
 
-// External parameters defined in main.cpp
-extern uint8_t ballsCount;
-extern bool ballsRandomColors;
-
+#include "Globals.h"
 class Balls
 {
 public:
@@ -14,6 +11,7 @@ private:
 
 void Balls::runPattern()
 {
+
   for (int i = 0 ; i < ballsCount ; i++) {
     tCycle[i] =  millis() - tLast[i] ;     // Calculate the time since the last time the ball was on the ground
 
@@ -33,9 +31,9 @@ void Balls::runPattern()
   //Choose color of LEDs, then the "pos" LED on
   for (int i = 0 ; i < ballsCount ; i++) {
     if (ballsRandomColors) {
-      leds[pos[i]] = CHSV(random8(), 255, brightness);
+      leds[pos[i]] = CHSV(random8(), 255, stripLed.brightness);
     } else {
-      leds[pos[i]] = CHSV(uint8_t (i * 40) , 255, brightness);
+      leds[pos[i]] = CHSV(uint8_t (i * 40) , 255, stripLed.brightness);
     }
   }
   FastLED.show();

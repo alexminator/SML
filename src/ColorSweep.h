@@ -1,5 +1,7 @@
 // WLED-based Color Sweep effect - wipes color, turns off opposite
 // Adapted from WLED mode_color_sweep implementation
+
+#include "Globals.h"
 class ColorSweep {
   public:
     ColorSweep(){};
@@ -26,7 +28,7 @@ void ColorSweep::runPattern() {
     leds[prevIndex] = CRGB::Black;
 
     // Set current pixel
-    leds[index] = CHSV(myhue, 255, brightness);
+    leds[index] = CHSV(myhue, 255, stripLed.brightness);
 
     // Move to next pixel
     if (forward) {

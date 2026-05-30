@@ -1,5 +1,6 @@
 // WLED-based Theater Chase effect - theatre-style crawling lights
 // Inspired by Adafruit examples, adapted from WLED mode_theater_chase
+#include "Globals.h"
 class TheaterChase {
   public:
     TheaterChase(){};

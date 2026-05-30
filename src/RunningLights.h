@@ -1,5 +1,6 @@
 // WLED-based Running Lights effect - smooth sine wave transition
 // Adapted from WLED mode_running_lights implementation
+#include "Globals.h"
 class RunningLights {
   public:
     RunningLights(){};

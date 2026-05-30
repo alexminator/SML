@@ -1,5 +1,6 @@
 // WLED-based Dissolve effect - random pixels until full
 // Adapted from WLED mode_dissolve implementation
+#include "Globals.h"
 class Dissolve {
   public:
     Dissolve(){};

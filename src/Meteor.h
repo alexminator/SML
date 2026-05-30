@@ -1,5 +1,6 @@
 // WLED-based Meteor effect - smooth falling meteors with trails
 // Adapted from WLED mode_meteor implementation
+#include "Globals.h"
 class Meteor {
   public:
     Meteor(){};
@@ -41,7 +42,7 @@ void Meteor::runPattern() {
         leds[ledPos] = CHSV(meteorHue, 255, brightnessVal);
       } else {
         // Sharp trail - full brightness
-        leds[ledPos] = CHSV(meteorHue, 255, brightness);
+        leds[ledPos] = CHSV(meteorHue, 255, stripLed.brightness);
       }
     }
   }

@@ -1,5 +1,6 @@
 // WLED-based Sparkle effect - one LED sparkling at a time
 // Adapted from WLED mode_sparkle implementation
+#include "Globals.h"
 class Sparkle {
   public:
     Sparkle(){};

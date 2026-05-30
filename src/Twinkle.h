@@ -1,8 +1,4 @@
-// External parameters defined in main.cpp
-extern uint8_t twinkleSpeed;
-extern uint8_t twinkleIntensity;
-extern bool twinkleRedCool;
-
+#include "Globals.h"
 class Twinkle {
   public:
     Twinkle(){};
@@ -78,7 +74,7 @@ void Twinkle::runPattern() {
 
         // Create color with full saturation and brightness scaled
         // Brightness is scaled by global brightness setting
-        uint8_t scaledBright = scale8(bright, brightness);
+        uint8_t scaledBright = scale8(bright, stripLed.brightness);
         CRGB c = CHSV(hue, 255, scaledBright);
 
         // Optional: incandescent bulb effect

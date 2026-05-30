@@ -1,8 +1,5 @@
 
-// External parameters defined in main.cpp
-extern uint8_t rippleSize;
-extern bool rippleMirror;
-
+#include "Globals.h"
 class Ripple {
   public:
     Ripple(){};
@@ -38,12 +35,12 @@ void Ripple::runPattern() {
 
     if (rippleStep == 0) {
       // Initial ripple center
-      leds[rippleCenter] = CHSV(rippleColor, 255, brightness);
+      leds[rippleCenter] = CHSV(rippleColor, 255, stripLed.brightness);
 
       // Mirror mode: create second ripple at opposite side
       if (rippleMirror) {
         int mirrorCenter = (rippleCenter + N_PIXELS / 2) % N_PIXELS;
-        leds[mirrorCenter] = CHSV(rippleColor, 255, brightness);
+        leds[mirrorCenter] = CHSV(rippleColor, 255, stripLed.brightness);
       }
 
       rippleStep++;

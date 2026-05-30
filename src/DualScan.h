@@ -1,5 +1,6 @@
 // WLED-based Dual Scan effect - two pixels moving in opposite directions
 // Adapted from WLED mode_dual_scan implementation
+#include "Globals.h"
 class DualScan {
   public:
     DualScan(){};

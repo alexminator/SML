@@ -1,7 +1,5 @@
 
-// External parameters defined in main.cpp
-extern uint8_t rainbowSpeed;
-extern uint8_t rainbowDelta;
+#include "Globals.h"
 
 class RainbowBeat {
   public:

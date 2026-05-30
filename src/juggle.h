@@ -1,9 +1,5 @@
 
-// External parameters defined in main.cpp
-extern uint8_t juggleDots;
-extern uint8_t juggleSpeed;
-extern uint8_t juggleIntensity;
-
+#include "Globals.h"
 class Juggle {
   public:
     Juggle(){};
@@ -30,7 +26,7 @@ void Juggle::runPattern() {
     int index = beatsin16((16 + juggleSpeed) * (i + 7), 0, N_PIXELS - 1);
 
     // Additive color blending for brighter overlap
-    leds[index] |= CHSV(dothue, 220, brightness);
+    leds[index] |= CHSV(dothue, 220, stripLed.brightness);
 
     dothue += 32; // WLED uses 32 for hue increment
   }

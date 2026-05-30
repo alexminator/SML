@@ -1,3 +1,4 @@
+// main.cpp
 /**
  * ----------------------------------------------------------------------------
  * SMART MUSIC LAMP
@@ -16,6 +17,7 @@
 #include <DHT_U.h>
 #include <Preferences.h>
 #include "data.h"
+#include "Globals.h"
 
 // Declare the debugging level then include the header file
 #define DEBUGLEVEL DEBUGLEVEL_DEBUGGING
@@ -67,6 +69,7 @@ const uint32_t STACK_CRITICAL_THRESHOLD = 128;     // Stack critical threshold (
 // WiFi connection
 const int WIFI_MAX_ATTEMPTS = 40;                 // Max WiFi connection attempts
 const unsigned long WIFI_RETRY_DELAY = 500;       // WiFi connection retry delay (ms)
+const unsigned long WIFI_MONITOR_INTERVAL = 2000;
 
 // Timing
 const unsigned long LED_ERROR_FLASH_CYCLE = 200;  // LED error flash cycle (ms)
@@ -74,8 +77,6 @@ const unsigned long LED_ERROR_FLASH_ON = 50;      // LED error flash on time (ms
 
 // Battery monitoring
 const unsigned long BATTERY_CHECK_INTERVAL = 3000; // Battery check interval (ms)
-const int BATTERY_MAX_READS = 10;                  // Max battery reads when threshold reached
-const int BATTERY_FULL_READS = 10;                 // Max battery reads when full
 
 // LittleFS timeout
 const unsigned long LITTLEFS_TIMEOUT = 30000;     // LittleFS error timeout (ms)
@@ -106,79 +107,6 @@ const uint8_t WEBSOCKET_STACK_CHECK_CYCLES = 10;       // Check stack every N cy
 // Formula: BIAS = ADC_reading_at_half_VCC (should be ~1850 for 3.3V reference)
 // Typical range: ~1800-1900 for ESP32 with 3.3V reference
 #define BIAS 1850 // ADC value for HALF of 3.22V VCC. Hint: Take the analog reading without signal
-
-// Effects
-#define GRAVITY -1  // Downward (negative) acceleration of gravity in m/s^2
-#define h0 1        // Starting height, in meters, of the ball (strip length)
-#define NUM_BALLS 3 // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way)
-#define FADE_RATE 2 // How long should the trails be. Very low value = longer trails.
-uint8_t volCount = 0; // Frame counter for storing past volume data
-int vol[SAMPLES];     // Collection of prior volume samples
-int lvl = 0;          // Current "dampened" audio level
-
-CRGBPalette16 currentPalette; // Define the current palette
-CRGBPalette16 targetPalette;  // Define the target palette
-
-// Initial brightness (0-255)
-// 130 = ~50% - comfortable starting point for indoor use
-// Prevents eye strain from full brightness while still being visible
-int brightness = 130;
-int effectId = 0;
-uint8_t myhue = 0;           // hue 0. red color
-uint8_t r = 255;
-uint8_t g = 255;
-uint8_t b = 255;
-CRGB leds[N_PIXELS];        //  for FASTLED
-
-// ============================================================================
-// EFFECT PARAMETERS (configurable via web in future)
-// ============================================================================
-
-// Fire Effect Parameters
-uint8_t fireCooling = 55;   // 0-255, default 55 (cooling rate)
-uint8_t fireSparking = 50;  // 0-255, default 50 (sparking probability)
-bool fireReverse = false;   // true = inverted fire
-
-// Balls Effect Parameters
-uint8_t ballsCount = 3;          // 1-16 balls
-bool ballsRandomColors = false;  // true = random, false = sequential
-
-// Sinelon Effect Parameters
-uint8_t sinelonBeat = 23;  // 0-255, beat frequency
-uint8_t sinelonFade = 2;   // 0-255, fade rate
-
-// Twinkle Effect Parameters (WLED TwinkleFOX algorithm)
-uint8_t twinkleSpeed = 8;       // 0-255, twinkle speed
-uint8_t twinkleIntensity = 160; // 0-255, cooling/density
-bool twinkleRedCool = true;     // true = shift to red when fading (like incandescent)
-
-// Rainbow Beat Effect Parameters
-uint8_t rainbowSpeed = 30;     // 0-255, beat frequency
-uint8_t rainbowDelta = 8;      // 0-255, hue delta between LEDs
-
-// Moving Dot Effect Parameters
-uint8_t movingDotSpeed = 30;   // 0-255, movement speed
-uint8_t movingDotFade = 10;    // 0-255, fade rate
-
-// Ripple Effect Parameters
-uint8_t rippleSize = 3;     // 0-7, ripple wave size
-bool rippleMirror = false;  // true = mirrored ripple (better than WLED's overlay)
-
-// Comet Effect Parameters (original improved version)
-uint8_t cometSpeed = 8;      // 0-255, comet movement speed
-uint8_t cometTrail = 4;      // 0-10, trail length
-bool cometBlur = false;      // true = blurred trail
-
-// Breath Effect Parameters (WLED-compatible)
-uint8_t breathSpeed = 128;  // Default: 128, range: 0-255 (breathing speed)
-
-// ColorSweep Effect Parameters (WLED-compatible)
-uint8_t sweepSpeed = 128;  // Default: 128, range: 0-255 (sweep speed)
-
-// Juggle Effect Parameters
-uint8_t juggleDots = 4;       // 1-16, number of dots (better than WLED's 8 hardcoded)
-uint8_t juggleSpeed = 64;     // 0-255, movement frequency (WLED: speed)
-uint8_t juggleIntensity = 128;// 0-255, fade rate/trail (WLED: intensity)
 
 // WEB
 #define HTTP_PORT 80
@@ -243,8 +171,6 @@ bool lampState = false;
 #define BATT_THRESHOLD 30 // Defines battery threshold in %
 #define MAX_READS 10      // Defines the maximum number of readings when the battery reaches the threshold
 #define FULL_READS 10     // Defines the maximum number of readings when the battery is full
-double battVolts;
-int battLvl;
 int readCount = 0;
 int lvlCharge;
 Battery18650Stats battery(ADC_PIN, CONV_FACTOR, READS, MAXV, MINV);
@@ -305,6 +231,74 @@ void initMutexes() {
     }
 }
 
+// ============================================================================
+// DEFINICIONES DE VARIABLES GLOBALES (una sola vez)
+// ============================================================================
+
+// Variables VU
+uint8_t volCount = 0; // Frame counter for storing past volume data
+int vol[SAMPLES];     // Collection of prior volume samples
+int lvl = 0;          // Current "dampened" audio level
+
+CRGBPalette16 currentPalette; // Define the current palette
+CRGBPalette16 targetPalette;  // Define the target palette
+
+// Initial brightness (0-255)
+// 130 = ~50% - comfortable starting point for indoor use
+// Prevents eye strain from full brightness while still being visible
+uint8_t myhue = 0;           // hue 0. red color
+CRGB leds[N_PIXELS];        //  for FASTLED
+
+// ============================================================================
+// EFFECT PARAMETERS (configurable via web in future)
+// ============================================================================
+
+// Fire Effect Parameters
+uint8_t fireCooling = 55;   // 0-255, default 55 (cooling rate)
+uint8_t fireSparking = 50;  // 0-255, default 50 (sparking probability)
+bool fireReverse = false;   // true = inverted fire
+
+// Balls Effect Parameters
+uint8_t ballsCount = 3;          // 1-16 balls
+bool ballsRandomColors = false;  // true = random, false = sequential
+
+// Sinelon Effect Parameters
+uint8_t sinelonBeat = 23;  // 0-255, beat frequency
+uint8_t sinelonFade = 2;   // 0-255, fade rate
+
+// Twinkle Effect Parameters (WLED TwinkleFOX algorithm)
+uint8_t twinkleSpeed = 8;       // 0-255, twinkle speed
+uint8_t twinkleIntensity = 160; // 0-255, cooling/density
+bool twinkleRedCool = true;     // true = shift to red when fading (like incandescent)
+
+// Rainbow Beat Effect Parameters
+uint8_t rainbowSpeed = 30;     // 0-255, beat frequency
+uint8_t rainbowDelta = 8;      // 0-255, hue delta between LEDs
+
+// Moving Dot Effect Parameters
+uint8_t movingDotSpeed = 30;   // 0-255, movement speed
+uint8_t movingDotFade = 10;    // 0-255, fade rate
+
+// Ripple Effect Parameters
+uint8_t rippleSize = 3;     // 0-7, ripple wave size
+bool rippleMirror = false;  // true = mirrored ripple (better than WLED's overlay)
+
+// Comet Effect Parameters (original improved version)
+uint8_t cometSpeed = 8;      // 0-255, comet movement speed
+uint8_t cometTrail = 4;      // 0-10, trail length
+bool cometBlur = false;      // true = blurred trail
+
+// Breath Effect Parameters (WLED-compatible)
+uint8_t breathSpeed = 128;  // Default: 128, range: 0-255 (breathing speed)
+
+// ColorSweep Effect Parameters (WLED-compatible)
+uint8_t sweepSpeed = 128;  // Default: 128, range: 0-255 (sweep speed)
+
+// Juggle Effect Parameters
+uint8_t juggleDots = 4;       // 1-16, number of dots (better than WLED's 8 hardcoded)
+uint8_t juggleSpeed = 64;     // 0-255, movement frequency (WLED: speed)
+uint8_t juggleIntensity = 128;// 0-255, fade rate/trail (WLED: intensity)
+
 // balls effect
 float h[NUM_BALLS];                       // An array of heights
 float vImpact0 = sqrt(-2 * GRAVITY * h0); // Impact velocity of the ball when it hits the ground if "dropped" from the top of the strip
@@ -322,29 +316,7 @@ int minLvlAvgLeft = 0;    // For dynamic adjustment of graph low & high
 int maxLvlAvgLeft = 512;
 bool is_centered = false; // For VU1 effects
 
-// Effects library
-#include "common.h"
-#include "MovingDot.h"
-#include "RainbowBeat.h"
-#include "RedWhiteBlue.h"
-#include "Ripple.h"
-#include "Fire.h"
-#include "Twinkle.h"
-#include "Balls.h"
-#include "Juggle.h"
-#include "Sinelon.h"
-#include "Comet.h"
-#include "Temp.h"
-#include "Breath.h"
-#include "ColorSweep.h"
-#include "Battery.h"
-// VU
-#include "vu1.h"
-#include "vu2.h"
-#include "vu3.h"
-#include "vu4.h"
-#include "vu5.h"
-#include "vu6.h"
+
 
 // ----------------------------------------------------------------------------
 // Definition of Battery component
@@ -357,6 +329,9 @@ struct Battery
     int battLvl;
     bool fullBatt;
     bool chargeState;
+
+    Battery() : battVolts(0), battLvl(0), fullBatt(false), chargeState(false) {}
+
     // methods for monitor battery
     void battMonitor() // Define a function to read the state of the battery and charge
     {
@@ -427,6 +402,8 @@ struct StripLed
     int effectId;
     bool powerState;
 
+    StripLed() : R(255), G(255), B(255), brightness(130), effectId(0), powerState(false) {}
+
     // methods for different effects on stripled
     // SET ALL LEDS TO ONE COLOR
     void simpleColor(int ar, int ag, int ab, int brightness)
@@ -439,132 +416,33 @@ struct StripLed
         FastLED.show();
     }
 
-    void runFire()
-    {
-        Fire fire = Fire();
-        fire.runPattern();
-    }
-
-    void runMovingDot()
-    {
-        MovingDot movingDot = MovingDot();
-        movingDot.runPattern();
-    }
-
-    void runRainbowBeat()
-    {
-        RainbowBeat rainbowBeat = RainbowBeat();
-        rainbowBeat.runPattern();
-    }
-
-    void runRedWhiteBlue()
-    {
-        RedWhiteBlue redWhiteBlue = RedWhiteBlue();
-        redWhiteBlue.runPattern();
-    }
-
-    void runRipple()
-    {
-        Ripple ripple = Ripple();
-        ripple.runPattern();
-    }
-
-    void runTwinkle()
-    {
-        Twinkle twinkle = Twinkle();
-        twinkle.runPattern();
-    }
-
-    void runBalls()
-    {
-        Balls balls = Balls();
-        balls.runPattern();
-    }
-
-    void runJuggle()
-    {
-        Juggle juggle = Juggle();
-        juggle.runPattern();
-    }
-
-    void runSinelon()
-    {
-        Sinelon sinelon = Sinelon();
-        sinelon.runPattern();
-    }
-
-    void runComet()
-    {
-        Comet comet = Comet();
-        comet.runPattern();
-    }
-
-    void runBreath()
-    {
-        Breath breath = Breath();
-        breath.runPattern();
-    }
-
-    void runColorSweep()
-    {
-        ColorSweep colorSweep = ColorSweep();
-        colorSweep.runPattern();
-    }
-
-    void runRainbowVU()
-    {
-        RainbowVU VU1 = RainbowVU();
-        VU1.runPattern(is_centered, 0);
-    }
-
-    void runOldVU()
-    {
-        OldskoolVU VU2 = OldskoolVU();
-        VU2.runPattern(is_centered, 0);
-    }
-
-    void runRainbowHueVU()
-    {
-        RainbowHueVU VU3 = RainbowHueVU();
-        VU3.runPattern(is_centered, 0);
-    }
-
-    void runRippleVU()
-    {
-        RippleVU VU4 = RippleVU();
-        VU4.runPattern(true);
-    }
-
-    void runThreebarsVU()
-    {
-        ThreebarsVU VU5 = ThreebarsVU();
-        VU5.runPattern();
-    }
-
-    void runOceanVU()
-    {
-        OceanVU VU6 = OceanVU();
-        VU6.runPattern();
-    }
-
-    void runTemperature()
-    {
-        Temperature temp = Temperature();
-        temp.runPattern();
-    }
-
-    void runBattery()
-    {
-        Charge batt = Charge();
-        batt.runPattern(lvlCharge);
-    }
+    void runFire();
+    void runMovingDot();
+    void runRainbowBeat();
+    void runRedWhiteBlue();
+    void runRipple();
+    void runTwinkle();
+    void runBalls();
+    void runJuggle();
+    void runSinelon();
+    void runComet();
+    void runBreath();
+    void runColorSweep();
+    void runRainbowVU();
+    void runOldVU();
+    void runRainbowHueVU();
+    void runRippleVU();
+    void runThreebarsVU();
+    void runOceanVU();
+    void runTemperature();
+    void runBattery();
 
     void update()
     {
         switch (effectId)
         {
         case 0:
-            simpleColor(r, g, b, brightness);
+            simpleColor(R, G, B, brightness);
             break;
         case 1:
             clear();
@@ -658,13 +536,157 @@ struct StripLed
     }
 };
 
+// Effects library
+#include "common.h"
+#include "MovingDot.h"
+#include "RainbowBeat.h"
+#include "RedWhiteBlue.h"
+#include "Ripple.h"
+#include "Fire.h"
+#include "Twinkle.h"
+#include "Balls.h"
+#include "Juggle.h"
+#include "Sinelon.h"
+#include "Comet.h"
+#include "Temp.h"
+#include "Breath.h"
+#include "ColorSweep.h"
+#include "Battery.h"
+// VU
+#include "vu1.h"
+#include "vu2.h"
+#include "vu3.h"
+#include "vu4.h"
+#include "vu5.h"
+#include "vu6.h"
+
+void StripLed::runFire()
+{
+    Fire fire = Fire();
+    fire.runPattern();
+}
+
+void StripLed::runMovingDot()
+{
+    MovingDot movingDot = MovingDot();
+    movingDot.runPattern();
+}
+
+void StripLed::runRainbowBeat()
+{
+    RainbowBeat rainbowBeat = RainbowBeat();
+    rainbowBeat.runPattern();
+}
+
+void StripLed::runRedWhiteBlue()
+{
+    RedWhiteBlue redWhiteBlue = RedWhiteBlue();
+    redWhiteBlue.runPattern();
+}
+
+void StripLed::runRipple()
+{
+    Ripple ripple = Ripple();
+    ripple.runPattern();
+}
+
+void StripLed::runTwinkle()
+{
+    Twinkle twinkle = Twinkle();
+    twinkle.runPattern();
+}
+
+void StripLed::runBalls()
+{
+    Balls balls = Balls();
+    balls.runPattern();
+}
+
+void StripLed::runJuggle()
+{
+    Juggle juggle = Juggle();
+    juggle.runPattern();
+}
+
+void StripLed::runSinelon()
+{
+    Sinelon sinelon = Sinelon();
+    sinelon.runPattern();
+}
+
+void StripLed::runComet()
+{
+    Comet comet = Comet();
+    comet.runPattern();
+}
+
+void StripLed::runBreath()
+{
+    Breath breath = Breath();
+    breath.runPattern();
+}
+
+void StripLed::runColorSweep()
+{
+    ColorSweep colorSweep = ColorSweep();
+    colorSweep.runPattern();
+}
+
+void StripLed::runRainbowVU()
+{
+    RainbowVU VU1 = RainbowVU();
+    VU1.runPattern(is_centered, 0);
+}
+
+void StripLed::runOldVU()
+{
+    OldskoolVU VU2 = OldskoolVU();
+    VU2.runPattern(is_centered, 0);
+}
+
+void StripLed::runRainbowHueVU()
+{
+    RainbowHueVU VU3 = RainbowHueVU();
+    VU3.runPattern(is_centered, 0);
+}
+
+void StripLed::runRippleVU()
+{
+    RippleVU VU4 = RippleVU();
+    VU4.runPattern(true);
+}
+
+void StripLed::runThreebarsVU()
+{
+    ThreebarsVU VU5 = ThreebarsVU();
+    VU5.runPattern();
+}
+
+void StripLed::runOceanVU()
+{
+    OceanVU VU6 = OceanVU();
+    VU6.runPattern();
+}
+
+void StripLed::runTemperature()
+{
+    Temperature temp = Temperature();
+    temp.runPattern();
+}
+
+void StripLed::runBattery()
+{
+    Charge batt = Charge();
+    batt.runPattern(lvlCharge);
+}
+
 // ----------------------------------------------------------------------------
 // Definition of objects
 // ----------------------------------------------------------------------------
 
-StripLed stripLed = {r, g, b, brightness, effectId, false};
+StripLed stripLed;
 Led onboard_led = {LED_BUILTIN, false};
-Battery batt = {battVolts, battLvl, false, false};
+Battery batt;
 
 //-----------------------------------------------------------------------------
 // DHT initialization
@@ -971,7 +993,7 @@ const char* processor(const String &var)
         return buffer;
     }
     case BRIGHTNESS:
-        itoa(brightness, buffer, 10);
+        itoa(stripLed.brightness, buffer, 10);
         return buffer;
     case STRIPLED:
         return stripLed.powerState ? "on" : "off";
@@ -1263,16 +1285,16 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         else if (strcmp(action, "picker") == 0)
         {
             JsonObject color = json["color"];
-            stripLed.R = r = color["r"].as<int>();
-            stripLed.G = g = color["g"].as<int>();
-            stripLed.B = b = color["b"].as<int>();
+            stripLed.R = color["r"].as<int>();
+            stripLed.G = color["g"].as<int>();
+            stripLed.B = color["b"].as<int>();
 #ifdef DEBUG_LED
             debugD("RGB: ");
-            debugD_NUM(r, "%d");
+            debugD_NUM(stripLed.R, "%d");
             debugD(", ");
-            debugD_NUM(g, "%d");
+            debugD_NUM(stripLed.G, "%d");
             debugD(", ");
-            debuglnD_NUM(b, "%d");
+            debuglnD_NUM(stripLed.B, "%d");
 #endif
         }
         else if (strcmp(action, "music") == 0)
@@ -1504,12 +1526,6 @@ void TaskLEDControl(void *pvParameters)
     {
         if (stripLed.powerState)
         {
-            // Protect brightness access
-            if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
-                brightness = stripLed.brightness;
-                xSemaphoreGive(dataMutex);
-            }
-
             stripLed.update();
         }
         else
@@ -1568,7 +1584,7 @@ void TaskWiFiMonitor(void *pvParameters)
             xSemaphoreGive(wifiMutex);
         }
 
-        vTaskDelay(pdMS_TO_TICKS(SENSOR_CHECK_INTERVAL));
+        vTaskDelay(pdMS_TO_TICKS(WIFI_MONITOR_INTERVAL));
     }
 }
 
@@ -1727,7 +1743,7 @@ void onPowerSourceChanged(bool nowOnBattery) {
 void onCriticalBatteryLevel() {
     #ifdef DEBUG_POWER_MANAGEMENT
     debugE("⚠️ CRITICAL BATTERY: ");
-    debugD_NUM(battLvl, "%d");
+    debugD_NUM(batt.battLvl, "%d");
     debuglnE("%");
     #endif
 
@@ -2050,7 +2066,7 @@ void setup()
     // For FASTLED library
     FastLED.addLeds<LED_TYPE, STRIP_PIN, COLOR_ORDER>(leds, N_PIXELS).setCorrection(TypicalLEDStrip);
     FastLED.setMaxPowerInVoltsAndMilliamps(VOLTS, MAX_MILLIAMPS);
-    FastLED.setBrightness(brightness);
+    FastLED.setBrightness(stripLed.brightness);
     // Clear all neo's
     FastLED.clear();
     FastLED.show();

@@ -1,8 +1,5 @@
 
-// External parameters defined in main.cpp
-extern uint8_t fireCooling;
-extern uint8_t fireSparking;
-extern bool fireReverse;
+#include "Globals.h"
 
 class Fire {
   public:

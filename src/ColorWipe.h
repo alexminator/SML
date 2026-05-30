@@ -1,5 +1,6 @@
 // WLED-based Color Wipe effect - lights all LEDs one after another
 // Adapted from WLED mode_color_wipe implementation
+#include "Globals.h"
 class ColorWipe {
   public:
     ColorWipe(){};

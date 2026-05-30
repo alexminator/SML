@@ -1,9 +1,5 @@
 
-// External parameters defined in main.cpp
-extern uint8_t cometSpeed;
-extern uint8_t cometTrail;
-extern bool cometBlur;
-
+#include "Globals.h"
 class Comet {
 public:
   Comet(){};
@@ -52,7 +48,7 @@ void Comet::runPattern()
       if (pos >= 0 && pos < N_PIXELS) {
         // Fade intensity along the trail
         uint8_t intensity = map(i, 0, cometSize - 1, 255, 50);
-        leds[pos] = CHSV(hue, 255, brightness * intensity / 255);
+        leds[pos] = CHSV(hue, 255, stripLed.brightness * intensity / 255);
       }
     }
 

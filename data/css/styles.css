@@ -378,29 +378,35 @@ ul.tabs li a .tab-text{
 .oldskoolVU {
     grid-area: oldL;
 }
-#RainbowVU {
-    grid-area: rainbowvu;
-}
-#Old-skoolVU {
-    grid-area: oldvu;
-}
 .rainbowHueVU {
     grid-area: hueL;
 }
-.rippleVU {
-    grid-area: rippleL;
+#RainbowVU {
+    grid-area: rainbowvu;
+}
+#OldSkoolVU {
+    grid-area: oldvu;
 }
 #RainbowHueVU {
     grid-area: huevu;
 }
-#RippleVU {
-    grid-area: ripplevu;
+.rippleVU {
+    grid-area: rippleL;
 }
 .barsVU {
     grid-area: barsL;
 }
 .oceanVU {
     grid-area: oceanL;
+}
+#RippleVU {
+    grid-area: ripplevu;
+}
+#ThreebarsVU {
+    grid-area: barsvu;
+}
+#OceanVU {
+    grid-area: oceanvu;
 }
 
 

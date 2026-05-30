@@ -1,5 +1,6 @@
 // WLED-based Breath effect - "standby-breathing" of well known i-Devices
 // Adapted from WLED mode_breath implementation
+#include "Globals.h"
 class Breath {
   public:
     Breath(){};
@@ -9,6 +10,7 @@ class Breath {
 
 void Breath::runPattern() {
   // WLED-compatible parameter
+
   extern uint8_t breathSpeed;  // Default: 128, range: 0-255 (breathing speed)
 
   // WLED algorithm: time-based counter with speed
@@ -21,7 +23,7 @@ void Breath::runPattern() {
 
   // Apply breath intensity to current color
   for (int i = 0; i < N_PIXELS; i++) {
-    leds[i] = CHSV(myhue, 255, map(breathIntensity, 0, 255, 0, brightness));
+    leds[i] = CHSV(myhue, 255, map(breathIntensity, 0, 255, 0, stripLed.brightness));
   }
 
   // Cycle through colors slowly (optional)
