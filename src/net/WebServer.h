@@ -34,5 +34,6 @@ enum Status {
 void initLittleFS();
 void initWiFi();
 void initWebServer();
+void initMDNS();
 void onRootRequest(AsyncWebServerRequest *request);
 const char* processor(const String &var);

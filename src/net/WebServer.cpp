@@ -155,41 +155,15 @@ void initWiFi()
         }
     }
 
-    // If all connection attempts failed
+    // If all connection attempts failed — let the power management
+    // state machine handle retries (no more ESP.restart()).
     if (!connected)
     {
 #ifdef DEBUG_WIFI
         debuglnD("\n\n*** WiFi CONNECTION FAILED ***");
-        debuglnD("Please check:");
-        debuglnD("1. WiFi router is powered on");
-        debuglnD("2. SSID and password are correct");
-        debuglnD("3. ESP32 is within WiFi range");
-        debuglnD("Restarting in 5 seconds...\n");
+        debuglnD("Power management will retry in the background");
 #endif
-
-        // Blink LED to indicate error (non-blocking)
-        pinMode(STRIP_PIN, OUTPUT);
-        unsigned long blinkStart = millis();
-        int blinkCount = 0;
-        while (blinkCount < 10 && millis() - blinkStart < 4000)
-        {
-            if (millis() - blinkStart >= (blinkCount * 400))
-            {
-                digitalWrite(STRIP_PIN, (blinkCount % 2 == 0) ? HIGH : LOW);
-                blinkCount++;
-            }
-            vTaskDelay(pdMS_TO_TICKS(10));  // Small delay to yield CPU
-        }
-        digitalWrite(STRIP_PIN, LOW);  // Ensure LED is off
-
-        // Non-blocking delay before restart
-        unsigned long restartStart = millis();
-        while (millis() - restartStart < 5000)
-        {
-            vTaskDelay(pdMS_TO_TICKS(100));  // Yield to FreeRTOS
-        }
-
-        ESP.restart();
+        return;  // Nothing else to do — mDNS etc. require WiFi
     }
 
     // Connected successfully
@@ -204,19 +178,7 @@ void initWiFi()
     debugD("\n");
 #endif
 
-    if (!MDNS.begin(WEB_NAME))
-    {
-#ifdef DEBUG_NETWORK
-        debuglnE("Error configurando mDNS — el nombre sml.local no estará disponible");
-        debuglnE("Usa la IP directamente para acceder al dispositivo");
-#endif
-        // Continuar sin mDNS — no bloquear el dispositivo
-    }
-#ifdef DEBUG_NETWORK
-    else {
-        debuglnD("mDNS configurado");
-    }
-#endif
+    initMDNS();
 }
 
 // ============================================================================
@@ -279,6 +241,27 @@ const char* processor(const String &var)
 void onRootRequest(AsyncWebServerRequest *request)
 {
     request->send(LittleFS, "/index.html", "text/html", false, processor);
+}
+
+// ============================================================================
+// Initialize mDNS — safe to call again when WiFi reconnects
+// ============================================================================
+
+void initMDNS() {
+    MDNS.end();  // Stop any previous instance
+    if (MDNS.begin(WEB_NAME)) {
+#ifdef DEBUG_NETWORK
+        debuglnD("mDNS iniciado — sml.local disponible");
+#endif
+        MDNS.addService("http", "tcp", 80);
+#ifdef DEBUG_NETWORK
+        debuglnD("Servicio HTTP registrado en mDNS");
+#endif
+    } else {
+#ifdef DEBUG_NETWORK
+        debuglnW("mDNS no disponible — usa la IP directamente");
+#endif
+    }
 }
 
 // ============================================================================
@@ -380,5 +363,4 @@ void initWebServer()
 #ifdef DEBUG_WEB
     debuglnD("HTTP server started");
 #endif
-    MDNS.addService("http", "tcp", 80);
 }

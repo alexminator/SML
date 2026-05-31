@@ -111,51 +111,33 @@ void TaskLEDControl(void *pvParameters) {
 // ============================================================================
 
 void TaskWiFiMonitor(void *pvParameters) {
-    static int disconnectCount = 0;
-    const int MAX_DISCONNECTS = 5;
-
     while (true) {
-        // Protect WiFi status check
         if (xSemaphoreTake(wifiMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
-            // Only count disconnects if power management is NOT controlling WiFi
-            if (!powerManagementControllingWiFi && WiFi.status() != WL_CONNECTED) {
-                disconnectCount++;
+            // ── AC mode: maintain WiFi ourselves ────────────────────────────
+            if (!powerManagementControllingWiFi) {
+                if (WiFi.status() != WL_CONNECTED) {
+                    static unsigned long lastAttempt = 0;
+                    if (millis() - lastAttempt > 10000) {   // retry every 10s
 #ifdef DEBUG_WIFI
-                debugD("WiFi disconnect count: ");
-                debuglnD_NUM(disconnectCount, "%d");
+                        debuglnD("WiFi — reconnecting...");
 #endif
-
-                if (disconnectCount >= MAX_DISCONNECTS) {
-#ifdef DEBUG_WIFI
-                    debuglnE("Max WiFi disconnects reached, restarting...");
-#endif
-                    vTaskDelay(pdMS_TO_TICKS(1000));
-                    ESP.restart();
+                        WiFi.reconnect();
+                        lastAttempt = millis();
+                    }
                 }
-            } else {
-#ifdef DEBUG_WIFI
-                if (disconnectCount > 0) {
-                    debugD("WiFi reconnected after ");
-                    debugD_NUM(disconnectCount, "%d");
-                    debuglnD(" disconnects");
-                }
-#endif
-                disconnectCount = 0;
             }
-
-            // Debug: Show when power management is controlling WiFi
 #ifdef DEBUG_POWER_MANAGEMENT
-            if (powerManagementControllingWiFi) {
-                static unsigned long lastDebugMsg = 0;
-                if (millis() - lastDebugMsg > 10000) {  // Every 10 seconds
-                    debuglnD("🔋 Power Management controlling WiFi - TaskWiFiMonitor bypassed");
-                    lastDebugMsg = millis();
+            // ── Battery mode: power management handles it ───────────────────
+            else {
+                static unsigned long lastMsg = 0;
+                if (millis() - lastMsg > 10000) {
+                    debuglnD("🔋 PM controlling WiFi — TaskWiFiMonitor idle");
+                    lastMsg = millis();
                 }
             }
 #endif
             xSemaphoreGive(wifiMutex);
         }
-
         vTaskDelay(pdMS_TO_TICKS(WIFI_MONITOR_INTERVAL));
     }
 }

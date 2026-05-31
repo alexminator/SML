@@ -4,6 +4,7 @@
 #include "PowerMgr.h"
 #include "../state/AppState.h"
 #include "net/WebSocket.h"
+#include "net/WebServer.h"
 
 #include "config/debug_config.h"
 
@@ -142,27 +143,37 @@ void handleBatteryConnectingState() {
     unsigned long now = millis();
     unsigned long elapsedInState = now - lastStateChange;
 
+    // Reset per-state counters when entering CONNECTING via a transition
+    static int connectionAttempts = 0;
+    static bool wifiConnectedNotified = false;
+    static unsigned long resetOnEntry = 0;
+    if (lastStateChange != resetOnEntry) {
+        resetOnEntry = lastStateChange;
+        connectionAttempts = 0;
+        wifiConnectedNotified = false;
+    }
+
     // Phase 1: Try to connect WiFi (first 10 seconds)
     if (elapsedInState < 10000) {
         if (WiFi.status() != WL_CONNECTED) {
-            static int connectionAttempts = 0;
             if (connectionAttempts < 3) {
                 WiFi.begin(savedSSID, savedPass);
                 connectionAttempts++;
-                #ifdef DEBUG_POWER_MANAGEMENT
+#ifdef DEBUG_POWER_MANAGEMENT
                 debugD("WiFi attempt ");
                 debugD_NUM(connectionAttempts, "%d");
                 debugD("/3\n");
-                #endif
+#endif
             }
         } else {
-            #ifdef DEBUG_POWER_MANAGEMENT
-            static bool wifiConnectedNotified = false;
             if (!wifiConnectedNotified) {
-                debuglnD("✅ WiFi connected - waiting 30s for WebSocket client");
                 wifiConnectedNotified = true;
+                // Re-initialize mDNS so sml.local resolves (one-shot per connect)
+                initMDNS();
+#ifdef DEBUG_POWER_MANAGEMENT
+                debuglnD("✅ WiFi connected - waiting 30s for WebSocket client");
+#endif
             }
-            #endif
         }
     }
     // Phase 2: Wait for WebSocket client (next 30 seconds)
@@ -199,6 +210,14 @@ void handleBatteryConnectingState() {
 void handleBatterySleepState() {
     unsigned long now = millis();
     unsigned long elapsedInCycle = now - sleepCycleStart;
+
+    // Reset connection attempts on each new sleep cycle
+    static int connectionAttempts = 0;
+    static unsigned long resetOnCycle = 0;
+    if (sleepCycleStart != resetOnCycle) {
+        resetOnCycle = sleepCycleStart;
+        connectionAttempts = 0;
+    }
 
     static bool sleepNotified = false;
     static bool awakeNotified = false;
@@ -241,21 +260,22 @@ void handleBatterySleepState() {
 
         // Attempt to connect if not connected
         if (WiFi.status() != WL_CONNECTED) {
-            static int connectionAttempts = 0;
             if (connectionAttempts < 3) {
                 WiFi.begin(savedSSID, savedPass);
                 connectionAttempts++;
-                #ifdef DEBUG_POWER_MANAGEMENT
+#ifdef DEBUG_POWER_MANAGEMENT
                 debugD("WiFi connection attempt ");
                 debugD_NUM(connectionAttempts, "%d");
                 debugD("/3\n");
-                #endif
+#endif
             }
         } else {
             // WiFi connected! Go to CONNECTING state (wait 30s for client)
-            #ifdef DEBUG_POWER_MANAGEMENT
+            // Re-initialize mDNS so sml.local resolves
+            initMDNS();
+#ifdef DEBUG_POWER_MANAGEMENT
             debuglnD("✅ WiFi connected - checking for WebSocket client");
-            #endif
+#endif
             awakeNotified = false;
             sleepNotified = false;
             transitionToState(POWER_BATTERY_CONNECTING);
