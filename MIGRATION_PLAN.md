@@ -35,7 +35,7 @@ Este plan migra el proyecto en **8 fases independientes**, cada una compilable y
 ## 2. Estado actual
 
 > **Última actualización:** 2026-05-31  
-> **Progreso:** Fases 1-6 completadas ✅ | **main.cpp**: ~285 líneas | **Efectos**: 20 efectos migrados a `Effect` con `params`
+> **Progreso:** Fases 1-7 completadas ✅ | **main.cpp**: ~285 líneas | **Efectos**: 20 efectos migrados a `Effect` con `params` | **WebSocket**: setParams + persistencia
 
 | Fase | Estado | Notas |
 |------|--------|-------|
@@ -45,7 +45,7 @@ Este plan migra el proyecto en **8 fases independientes**, cada una compilable y
 | 4 — EffectRegistry | ✅ Completada | `effects/EffectRegistry.h` creado. Switch de 20 cases eliminado. Array effectNames[] eliminado. |
 | 5 — Partir main.cpp | ✅ Completada | WebSocket, WebServer, PowerMgr, tasks extraídos. main.cpp: ~285 líneas. |
 | 6 — Migrar efectos a Effect base class | ✅ Completada | 20 efectos migrados: heredan Effect, usan params en vez de globals. Variables de efectos eliminadas de AppState. |
-| 7 — Parámetros vía web | ⏳ Pendiente | setParams desde WebSocket |
+| 7 — Parámetros vía web | ✅ Completada | setParams + notifyClients serialize params + persistencia LittleFS |
 | 8 — VU meters como VUEffect | ⏳ Pendiente | Eliminar common.h |
 
 > **Cambios respecto al plan original:** La Fase 1 y 2 se implementaron como Phase 0/1/2 durante la ejecución, pero el contenido es el mismo. Las tareas 1.4 (VLA), 1.5 (mDNS), 1.6 (static instances) se aplicaron directamente en `main.cpp` en lugar de mover el código a EffectRegistry, como paso intermedio antes de la Fase 4.
@@ -1169,8 +1169,9 @@ Cada `vu*.h` hereda `VUEffect` en lugar de leer variables globales. El archivo `
 - [x] **F5:** PowerMgr extraído — toda la máquina de estados en power/PowerMgr.cpp
 - [x] **F6:** Cada efecto migrado — verificar visualmente en el hardware
 - [x] **F6:** Variables globales de efectos eliminadas de `AppState`
-- [ ] **F7:** `setParams` desde WebSocket — cambiar `count` de Balls en vivo
-- [ ] **F7:** `notifyClients` serializa params del efecto activo
+- [x] **F7:** `setParams` desde WebSocket — cambiar `count` de Balls en vivo
+- [x] **F7:** `notifyClients` serializa params del efecto activo
+- [x] **F7b:** Persistencia de params en LittleFS (save/load automático)
 - [ ] **F8:** `common.h` eliminado — VU funciona igual que antes
 
 ### Final

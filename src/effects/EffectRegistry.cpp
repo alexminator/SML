@@ -4,6 +4,9 @@
 #include "../state/AppState.h"   // Must precede EffectRegistry.h (needs StripLed)
 #include "EffectRegistry.h"
 
+#include <LittleFS.h>
+#include <ArduinoJson.h>
+
 // Effect headers (all subclass Effect)
 #include "../Fire.h"
 #include "../MovingDot.h"
@@ -58,3 +61,58 @@ const EffectEntry effectRegistry[] = {
 
 constexpr uint8_t EFFECT_COUNT =
     sizeof(effectRegistry) / sizeof(effectRegistry[0]);
+
+// ============================================================================
+// PERSISTENCIA DE PARÁMETROS
+// ============================================================================
+
+void saveEffectParams() {
+    JsonDocument doc;
+    for (uint8_t i = 0; i < EFFECT_COUNT; i++) {
+        Effect* fx = effectRegistry[i].instance;
+        if (!fx) continue;
+        const char* name = effectRegistry[i].jsonName;
+        JsonObject e = doc[name].to<JsonObject>();
+        e["speed"]     = fx->getSpeed();
+        e["intensity"] = fx->getIntensity();
+        e["custom1"]   = fx->getCustom1();
+        e["custom2"]   = fx->getCustom2();
+        e["custom3"]   = fx->getCustom3();
+        e["check1"]    = fx->getCheck1();
+        e["check2"]    = fx->getCheck2();
+        e["check3"]    = fx->getCheck3();
+    }
+    File f = LittleFS.open("/params.json", "w");
+    if (f) {
+        serializeJson(doc, f);
+        f.close();
+    }
+}
+
+void loadEffectParams() {
+    if (!LittleFS.exists("/params.json")) return;
+    File f = LittleFS.open("/params.json", "r");
+    if (!f) return;
+    JsonDocument doc;
+    DeserializationError err = deserializeJson(doc, f);
+    if (err) {
+        f.close();
+        return;
+    }
+    for (uint8_t i = 0; i < EFFECT_COUNT; i++) {
+        const char* name = effectRegistry[i].jsonName;
+        if (!doc.containsKey(name)) continue;
+        Effect* fx = effectRegistry[i].instance;
+        if (!fx) continue;
+        JsonObject e = doc[name];
+        fx->setSpeed(e["speed"] | DEFAULT_SPEED);
+        fx->setIntensity(e["intensity"] | DEFAULT_INTENSITY);
+        fx->setCustom1(e["custom1"] | DEFAULT_C1);
+        fx->setCustom2(e["custom2"] | DEFAULT_C2);
+        fx->setCustom3(e["custom3"] | DEFAULT_C3);
+        fx->setCheck1(e["check1"] | false);
+        fx->setCheck2(e["check2"] | false);
+        fx->setCheck3(e["check3"] | false);
+    }
+    f.close();
+}

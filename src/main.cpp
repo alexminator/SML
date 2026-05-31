@@ -269,6 +269,7 @@ void setup()
     FastLED.show();
 
     initLittleFS();
+    loadEffectParams();
     initWiFi();
     initWebSocket();
     initWebServer();

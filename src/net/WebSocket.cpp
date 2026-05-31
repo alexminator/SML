@@ -79,6 +79,20 @@ void notifyClients()
         for (uint8_t i = 0; i < EFFECT_COUNT; ++i)
             json[effectRegistry[i].jsonName] = (stripLed.effectId == i + 1 && stripLed.powerState) ? "on" : "off";
 
+        // Serializar parámetros del efecto activo
+        Effect* currentFx = getEffect(stripLed.effectId);
+        if (currentFx) {
+            JsonObject p = json["params"].to<JsonObject>();
+            p["speed"]     = currentFx->getSpeed();
+            p["intensity"] = currentFx->getIntensity();
+            p["custom1"]   = currentFx->getCustom1();
+            p["custom2"]   = currentFx->getCustom2();
+            p["custom3"]   = currentFx->getCustom3();
+            p["check1"]    = currentFx->getCheck1();
+            p["check2"]    = currentFx->getCheck2();
+            p["check3"]    = currentFx->getCheck3();
+        }
+
         // Quick sanity check — reject unusually large payloads
         if (measureJson(json) + 128 > 1024) {
 #ifdef DEBUG_WEBSOCKET
@@ -225,6 +239,28 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             digitalWrite(PLAY_PIN, HIGH);
             vTaskDelay(pdMS_TO_TICKS(short_delay));
             digitalWrite(PLAY_PIN, LOW);
+        }
+        else if (strcmp(action, "setParams") == 0)
+        {
+            uint8_t id = json["effectId"].as<uint8_t>();
+            Effect* fx = getEffect(id);
+            if (fx) {
+                // Usar operador | para mantener valor actual si no se envió el campo
+                fx->setSpeed(json["speed"]     | fx->getSpeed());
+                fx->setIntensity(json["intensity"] | fx->getIntensity());
+                fx->setCustom1(json["custom1"] | fx->getCustom1());
+                fx->setCustom2(json["custom2"] | fx->getCustom2());
+                fx->setCustom3(json["custom3"] | fx->getCustom3());
+                fx->setCheck1(json["check1"]   | fx->getCheck1());
+                fx->setCheck2(json["check2"]   | fx->getCheck2());
+                fx->setCheck3(json["check3"]   | fx->getCheck3());
+#ifdef DEBUG_WEBSOCKET
+                debugD("setParams effectId=");
+                debugD_NUM(id, "%u");
+                debugD("\n");
+#endif
+                saveEffectParams();
+            }
         }
         notifyClients();
     }

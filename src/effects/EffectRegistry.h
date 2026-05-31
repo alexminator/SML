@@ -55,3 +55,19 @@ inline const char* getEffectJsonName(uint8_t id) {
     if (id < 1 || id > EFFECT_COUNT) return "unknown";
     return effectRegistry[id - 1].jsonName;
 }
+
+/// Retorna el puntero a la instancia Effect* para un effectId (1-based)
+inline Effect* getEffect(uint8_t id) {
+    if (id < 1 || id > EFFECT_COUNT) return nullptr;
+    return effectRegistry[id - 1].instance;
+}
+
+// ============================================================================
+// PERSISTENCIA DE PARÁMETROS (definiciones en EffectRegistry.cpp)
+// ============================================================================
+
+/// Guarda todos los params de efectos a LittleFS (/params.json)
+void saveEffectParams();
+
+/// Carga todos los params de efectos desde LittleFS (/params.json)
+void loadEffectParams();
