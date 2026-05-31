@@ -42,7 +42,7 @@ Este plan migra el proyecto en **8 fases independientes**, cada una compilable y
 | 1 — Correcciones críticas | ✅ Completada | 7 bugs arreglados (debug.h, common.h, data.h ODR; VLA; mDNS loop; static instances; vImpact0) |
 | 2 — Separar configuración | ✅ Completada | `config/pins.h`, `config/config.h`, `config/secrets.h` creados; .gitignore actualizado |
 | 3 — Estado global centralizado | ✅ Completada | `state/AppState.h` + `state/AppState.cpp` creados. Settings.h convertido a hub delgado. ODR eliminado. |
-| 4 — EffectRegistry | ⏳ Pendiente | Eliminar switch de 20 cases |
+| 4 — EffectRegistry | ✅ Completada | `effects/EffectRegistry.h` creado. Switch de 20 cases eliminado. Array effectNames[] eliminado. |
 | 5 — Partir main.cpp | ⏳ Pendiente | Reducir de ~1800 a ~60 líneas |
 | 6 — Migrar efectos a Effect base class | ⏳ Pendiente | Heredar Effect, parámetros encapsulados |
 | 7 — Parámetros vía web | ⏳ Pendiente | setParams desde WebSocket |
@@ -584,10 +584,12 @@ En `Settings.h`, borrar todas las definiciones de objetos y variables (las que n
 
 ---
 
-## 8. Fase 4 — EffectRegistry (~3h)
+## 8. Fase 4 — EffectRegistry ✅ (COMPLETADA)
 
-> **Objetivo:** eliminar el `switch` de 20 cases y el bug de instancias por frame.  
-> **Verificación:** todos los efectos deben funcionar igual, ahora con estado persistente.
+> **Objetivo:** eliminar el `switch` de 20 cases y el array `effectNames[]` duplicado.  
+> **Verificación:** todos los efectos deben funcionar igual que antes del refactor.  
+> **Ejecutada:** 2026-05-31 — EffectRegistry.h creado con punteros a función miembro.  
+> **Nota:** A diferencia del plan original que requería subclases de Effect, se usó una tabla de `EffectRunner` (puntero a método `StripLed::run*()`) para evitar depender de la Fase 6. La estructura permite migrar a Effect* en Fase 6 sin cambiar la interfaz del registry.
 
 ### 4.1 Crear `src/effects/EffectRegistry.h`
 
@@ -1160,8 +1162,8 @@ Cada `vu*.h` hereda `VUEffect` en lugar de leer variables globales. El archivo `
 - [x] **F2:** `secrets.h` en `.gitignore` — verificar con `git status`
 - [x] **F3:** `AppState.cpp` compila — no hay símbolos duplicados en el linker
 - [x] **F3:** Eliminar `extern` duplicados del final de `Settings.h`
-- [ ] **F4:** `EffectRegistry` — todos los efectos responden en la UI web
-- [ ] **F4:** `switch` de 20 cases eliminado de `update()`
+- [x] **F4:** `EffectRegistry` — todos los efectos responden en la UI web
+- [x] **F4:** `switch` de 20 cases eliminado de `update()`
 - [ ] **F5:** `main.cpp` < 100 líneas — verificar `wc -l src/main.cpp`
 - [ ] **F5:** `TaskBatteryMonitor` simplificado — solo monitoreo de batería
 - [ ] **F6:** Cada efecto migrado — verificar visualmente en el hardware

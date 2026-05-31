@@ -18,8 +18,9 @@
 // directamente state/AppState.h y eliminar la dependencia de Settings.h.
 // ============================================================================
 
-#include "config/pins.h"     // Pines GPIO
-#include "config/config.h"   // Constantes de comportamiento
-#include "state/AppState.h"  // Structs, enums, externs
+#include "config/pins.h"       // Pines GPIO
+#include "config/config.h"     // Constantes de comportamiento
+#include "state/AppState.h"    // Structs, enums, externs
+#include "effects/EffectRegistry.h"  // Tabla de efectos (requiere AppState.h)
 
 #endif // SETTINGS_H
