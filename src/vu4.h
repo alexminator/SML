@@ -86,7 +86,8 @@ void RippleVU::runPattern(boolean show_background) {
   EVERY_N_MILLISECONDS(20) {
     ripple3(show_background);
   }
-  FastLED.setBrightness(255);
+  // Usar el brillo configurado por el usuario en vez de forzar 255
+  FastLED.setBrightness(stripLed.brightness);
   FastLED.show();
 }
 

@@ -43,7 +43,8 @@ void OceanVU::runPattern() {
     sndwave();
   }
 
-  FastLED.setBrightness(255);
+  // Usar el brillo configurado por el usuario en vez de forzar 255
+  FastLED.setBrightness(stripLed.brightness);
   FastLED.show();
 }
 

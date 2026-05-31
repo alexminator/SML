@@ -171,6 +171,9 @@ const int BATTERY_CRITICAL_LEVEL = 15;  // 15%
 #define h0 1
 #define NUM_BALLS 3
 
+// vImpact0 definido en main.cpp — necesario para Balls.h
+extern float vImpact0;
+
 uint8_t ballsCount = 3;
 bool ballsRandomColors = false;
 float h[NUM_BALLS];

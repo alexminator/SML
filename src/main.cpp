@@ -126,7 +126,7 @@ void Battery::battMonitor() {
     debugD(", Voltaje: ");
     debugD_NUM((int)(battVolts * 1000), "%d");
     debugD(".");
-    debugD_NUM((int)((battVolts * 1000) % 1000), "%03d");
+    debugD_NUM03((int)((battVolts * 1000) % 1000));
     debugD(", Nivel: ");
     debugD_NUM(battLvl, "%d");
     debuglnD("%");
@@ -187,102 +187,102 @@ void StripLed::clear() {
 #include "vu6.h"
 
 void StripLed::runFire() {
-    Fire fire = Fire();
+    static Fire fire;
     fire.runPattern();
 }
 
 void StripLed::runMovingDot() {
-    MovingDot movingDot = MovingDot();
+    static MovingDot movingDot;
     movingDot.runPattern();
 }
 
 void StripLed::runRainbowBeat() {
-    RainbowBeat rainbowBeat = RainbowBeat();
+    static RainbowBeat rainbowBeat;
     rainbowBeat.runPattern();
 }
 
 void StripLed::runRedWhiteBlue() {
-    RedWhiteBlue redWhiteBlue = RedWhiteBlue();
+    static RedWhiteBlue redWhiteBlue;
     redWhiteBlue.runPattern();
 }
 
 void StripLed::runRipple() {
-    Ripple ripple = Ripple();
+    static Ripple ripple;
     ripple.runPattern();
 }
 
 void StripLed::runTwinkle() {
-    Twinkle twinkle = Twinkle();
+    static Twinkle twinkle;
     twinkle.runPattern();
 }
 
 void StripLed::runBalls() {
-    Balls balls = Balls();
+    static Balls balls;
     balls.runPattern();
 }
 
 void StripLed::runJuggle() {
-    Juggle juggle = Juggle();
+    static Juggle juggle;
     juggle.runPattern();
 }
 
 void StripLed::runSinelon() {
-    Sinelon sinelon = Sinelon();
+    static Sinelon sinelon;
     sinelon.runPattern();
 }
 
 void StripLed::runComet() {
-    Comet comet = Comet();
+    static Comet comet;
     comet.runPattern();
 }
 
 void StripLed::runBreath() {
-    Breath breath = Breath();
+    static Breath breath;
     breath.runPattern();
 }
 
 void StripLed::runColorSweep() {
-    ColorSweep colorSweep = ColorSweep();
+    static ColorSweep colorSweep;
     colorSweep.runPattern();
 }
 
 void StripLed::runRainbowVU() {
-    RainbowVU VU1 = RainbowVU();
+    static RainbowVU VU1;
     VU1.runPattern(is_centered, 0);
 }
 
 void StripLed::runOldVU() {
-    OldskoolVU VU2 = OldskoolVU();
+    static OldskoolVU VU2;
     VU2.runPattern(is_centered, 0);
 }
 
 void StripLed::runRainbowHueVU() {
-    RainbowHueVU VU3 = RainbowHueVU();
+    static RainbowHueVU VU3;
     VU3.runPattern(is_centered, 0);
 }
 
 void StripLed::runRippleVU() {
-    RippleVU VU4 = RippleVU();
+    static RippleVU VU4;
     VU4.runPattern(true);
 }
 
 void StripLed::runThreebarsVU() {
-    ThreebarsVU VU5 = ThreebarsVU();
+    static ThreebarsVU VU5;
     VU5.runPattern();
 }
 
 void StripLed::runOceanVU() {
-    OceanVU VU6 = OceanVU();
+    static OceanVU VU6;
     VU6.runPattern();
 }
 
 void StripLed::runTemperature() {
-    Temperature temp = Temperature();
+    static Temperature temp;
     temp.runPattern();
 }
 
 void StripLed::runBattery() {
-    Charge batt = Charge();
+    static Charge batt;
     batt.runPattern(lvlCharge);
 }
 
@@ -395,7 +395,7 @@ void readSensor()
             temp = event.temperature;
 #ifdef DEBUG_TEMPERATURE
             debugD("Temperature: ");
-            debugD_NUM(temp, "%.1f");
+            debugD_FLOAT1(temp);
             debugD("°C\n");
 #endif
             break; // Exit loop on success
@@ -418,7 +418,7 @@ void readSensor()
             hum = event.relative_humidity;
 #ifdef DEBUG_TEMPERATURE
             debugD("Humidity: ");
-            debugD_NUM(hum, "%.1f");
+            debugD_FLOAT1(hum);
             debugD("%\n");
 #endif
             break; // Exit loop on success
@@ -615,15 +615,15 @@ void initWiFi()
     if (!MDNS.begin(WEB_NAME))
     {
 #ifdef DEBUG_NETWORK
-        debuglnD("Error configurando mDNS!");
+        debuglnE("Error configurando mDNS — el nombre sml.local no estará disponible");
+        debuglnE("Usa la IP directamente para acceder al dispositivo");
 #endif
-        while (1)
-        {
-            vTaskDelay(pdMS_TO_TICKS(1000));
-        }
+        // Continuar sin mDNS — no bloquear el dispositivo
     }
 #ifdef DEBUG_NETWORK
-    debuglnD("mDNS configurado");
+    else {
+        debuglnD("mDNS configurado");
+    }
 #endif
 }
 
@@ -871,25 +871,17 @@ void notifyClients()
         for (uint8_t i = 0; i < 20; ++i)
             json[effectNames[i]] = (stripLed.effectId == i + 1 && stripLed.powerState) ? "on" : "off";
 
-        // Calculate required size first
-        const size_t requiredSize = measureJson(json);
-        const size_t safetyMargin = 128;
-        const size_t bufferSize = requiredSize + safetyMargin;
-
-        // Verify reasonable limit
-        if (bufferSize > 1024) {
+        // Quick sanity check — reject unusually large payloads
+        if (measureJson(json) + 128 > 1024) {
 #ifdef DEBUG_WEBSOCKET
             debuglnE("JSON payload too large for WebSocket");
-            debugD("Required size: ");
-            debugD_NUM(bufferSize, "%u");
-            debuglnD(" bytes");
 #endif
             xSemaphoreGive(dataMutex);
             return;
         }
 
-        // Dynamic buffer with exact needed size
-        char buffer[bufferSize];
+        // Fixed-size buffer (no VLA — safer on ESP32 stack)
+        char buffer[1024];
         size_t len = serializeJson(json, buffer, sizeof(buffer));
 
         if (len >= sizeof(buffer)) {
@@ -1485,7 +1477,7 @@ void handleBatteryConnectingState() {
         static unsigned long lastWaitNotice = 0;
         if (now - lastWaitNotice > 10000) {
             debugD("⏳ Waiting for WebSocket client... ");
-            debugD_NUM((40000 - elapsedInState) / 1000, "%lu");
+            debugD_NUM((40000 - elapsedInState) / 1000, "%d");
             debuglnD("s remaining");
             lastWaitNotice = now;
         }
@@ -1712,13 +1704,13 @@ void setup()
     debugD_NUM(sensor.sensor_id, "%u");
     debugD("\n");
     debugD("Max Value: ");
-    debugD_NUM(sensor.max_value, "%.1f");
+    debugD_FLOAT1(sensor.max_value);
     debugD("°C\n");
     debugD("Min Value: ");
-    debugD_NUM(sensor.min_value, "%.1f");
+    debugD_FLOAT1(sensor.min_value);
     debugD("°C\n");
     debugD("Resolution: ");
-    debugD_NUM(sensor.resolution, "%.1f");
+    debugD_FLOAT1(sensor.resolution);
     debugD("°C\n");
     debuglnD("----------------------------------------------------");
 #endif
@@ -1735,13 +1727,13 @@ void setup()
     debugD_NUM(sensor.sensor_id, "%u");
     debugD("\n");
     debugD("Max Value: ");
-    debugD_NUM(sensor.max_value, "%.1f");
+    debugD_FLOAT1(sensor.max_value);
     debugD("%\n");
     debugD("Min Value: ");
-    debugD_NUM(sensor.min_value, "%.1f");
+    debugD_FLOAT1(sensor.min_value);
     debugD("%\n");
     debugD("Resolution: ");
-    debugD_NUM(sensor.resolution, "%.1f");
+    debugD_FLOAT1(sensor.resolution);
     debugD("%\n");
     debuglnD("----------------------------------------------------");
 #endif

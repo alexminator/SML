@@ -163,19 +163,63 @@ inline void copyToDebugStr(const String& src) {
 #define debuglnV(x) debugNothing(x);
 #endif
 
-// Helper macros for debugging with numbers
+// ── Safe numeric debug macros (no snprintf — avoids ESP32 crash) ──────────────
+
+// Integer (uses itoa — safe for %d, %u values up to INT_MAX)
 #define debugD_NUM(val, format) \
     do { \
         char _buf[32]; \
-        snprintf(_buf, sizeof(_buf), format, val); \
+        itoa(val, _buf, 10); \
         debugD(_buf); \
     } while(0)
 
 #define debuglnD_NUM(val, format) \
     do { \
         char _buf[32]; \
-        snprintf(_buf, sizeof(_buf), format, val); \
+        itoa(val, _buf, 10); \
         debuglnD(_buf); \
+    } while(0)
+
+// Float with 1 decimal place (e.g. "23.5")
+// Manual conversion — avoids snprintf %.1f which crashes ESP32
+#define debugD_FLOAT1(val) \
+    do { \
+        char _buf[32]; \
+        int _int = (int)(val); \
+        int _frac = (int)(((val) - _int) * 10); \
+        if (_frac < 0) _frac = -_frac; \
+        itoa(_int, _buf, 10); \
+        size_t _flen = strlen(_buf); \
+        _buf[_flen] = '.'; \
+        _buf[_flen + 1] = '0' + _frac; \
+        _buf[_flen + 2] = '\0'; \
+        debugD(_buf); \
+    } while(0)
+
+#define debuglnD_FLOAT1(val) \
+    do { \
+        char _buf[32]; \
+        int _int = (int)(val); \
+        int _frac = (int)(((val) - _int) * 10); \
+        if (_frac < 0) _frac = -_frac; \
+        itoa(_int, _buf, 10); \
+        size_t _flen = strlen(_buf); \
+        _buf[_flen] = '.'; \
+        _buf[_flen + 1] = '0' + _frac; \
+        _buf[_flen + 2] = '\0'; \
+        debuglnD(_buf); \
+    } while(0)
+
+// Zero-padded 3-digit number (e.g. "007")
+#define debugD_NUM03(val) \
+    do { \
+        char _buf[32]; \
+        int _v = (int)(val); \
+        _buf[0] = '0' + (_v / 100) % 10; \
+        _buf[1] = '0' + (_v / 10) % 10; \
+        _buf[2] = '0' + _v % 10; \
+        _buf[3] = '\0'; \
+        debugD(_buf); \
     } while(0)
 
 #endif  // DEBUG_H
