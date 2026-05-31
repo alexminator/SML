@@ -1,6 +1,6 @@
 // WLED-based Fade effect - smooth fade between colors
 // Adapted from WLED mode_fade implementation
-#include "../Settings.h"
+#include "../state/AppState.h"
 class Fade {
   public:
     Fade(){};

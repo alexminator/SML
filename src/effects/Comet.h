@@ -1,6 +1,6 @@
 #pragma once
 #include "Effect.h"
-#include "../Settings.h"
+#include "../state/AppState.h"
 
 class CometEffect : public Effect {
 private:

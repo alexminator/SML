@@ -2,11 +2,11 @@
 // PowerMgr.cpp — Power Management State Machine
 // ──────────────────────────────────────────────────────────────────────────────
 #include "PowerMgr.h"
-#include "Settings.h"
+#include "../state/AppState.h"
 #include "net/WebSocket.h"
 
 #define DEBUGLEVEL DEBUGLEVEL_DEBUGGING
-#include "debug.h"
+#include "../config/debug.h"
 
 #include <WiFi.h>
 

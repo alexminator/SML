@@ -1,6 +1,6 @@
 #pragma once
 #include "../effects/Effect.h"
-#include "../Settings.h"
+#include "../state/AppState.h"
 
 // VU: Ocean waves (stereo)
 class OceanVUEffect : public Effect {

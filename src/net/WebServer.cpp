@@ -2,11 +2,11 @@
 // WebServer.cpp — Web server + WiFi + LittleFS
 // ──────────────────────────────────────────────────────────────────────────────
 #include "WebServer.h"
-#include "Settings.h"
+#include "state/AppState.h"
 #include "data.h"
 
 #define DEBUGLEVEL DEBUGLEVEL_DEBUGGING
-#include "debug.h"
+#include "config/debug.h"
 
 #include <WiFi.h>
 #include <LittleFS.h>

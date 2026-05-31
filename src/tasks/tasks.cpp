@@ -2,12 +2,12 @@
 // tasks.cpp — FreeRTOS Task implementations
 // ──────────────────────────────────────────────────────────────────────────────
 #include "tasks.h"
-#include "Settings.h"
+#include "../state/AppState.h"
 #include "net/WebSocket.h"
 #include "power/PowerMgr.h"
 
 #define DEBUGLEVEL DEBUGLEVEL_DEBUGGING
-#include "debug.h"
+#include "../config/debug.h"
 
 #include <WiFi.h>
 

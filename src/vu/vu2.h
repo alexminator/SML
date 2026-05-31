@@ -1,6 +1,6 @@
 #pragma once
 #include "../effects/Effect.h"
-#include "../Settings.h"
+#include "../state/AppState.h"
 #include "VUEffect.h"
 
 // VU: Old-skool green and red from bottom or middle

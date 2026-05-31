@@ -23,8 +23,9 @@ const char *WIFI_SSID = DEFAULT_WIFI_SSID;
 const char *WIFI_PASS = DEFAULT_WIFI_PASS;
 const char *WEB_NAME = "sml";
 
-#include "data.h"
-#include "Settings.h"
+#include "net/data.h"
+#include "state/AppState.h"
+#include "effects/EffectRegistry.h"
 #include "net/WebSocket.h"
 #include "net/WebServer.h"
 #include "power/PowerMgr.h"
@@ -33,7 +34,7 @@ const char *WEB_NAME = "sml";
 // Declare the debugging level then include the header file
 #define DEBUGLEVEL DEBUGLEVEL_DEBUGGING
 // #define DEBUGLEVEL DEBUGLEVEL_NONE
-#include "debug.h"
+#include "config/debug.h"
 
 // ============================================================================
 // DEBUG CATEGORIES - Uncomment to enable specific debug messages

@@ -1,6 +1,6 @@
 #pragma once
 #include "Effect.h"
-#include "../Settings.h"
+#include "../state/AppState.h"
 
 // WLED-based Color Sweep effect
 class ColorSweepEffect : public Effect {

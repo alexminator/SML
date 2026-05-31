@@ -2,7 +2,8 @@
 // WebSocket.cpp — WebSocket server implementation
 // ──────────────────────────────────────────────────────────────────────────────
 #include "WebSocket.h"
-#include "Settings.h"
+#include "state/AppState.h"
+#include "effects/EffectRegistry.h"
 #include "net/WebServer.h"
 
 // Debug level (needed before debug.h for macros to compile).
@@ -10,7 +11,7 @@
 // al compilar este .cpp por separado, los #ifdef DEBUG_* son false,
 // por lo que los mensajes de depuración no se muestran desde aquí.
 #define DEBUGLEVEL DEBUGLEVEL_DEBUGGING
-#include "debug.h"
+#include "config/debug.h"
 
 #include <WiFi.h>
 

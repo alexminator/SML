@@ -44,12 +44,10 @@
 SML/
 ├── src/                    # Main source code
 │   ├── main.cpp           # Main application file (~60 lines, setup + loop)
-│   ├── Settings.h          # Config hub — includes all sub-modules
-│   ├── data.h              # Data structures and WebSocket handling
-│   ├── debug.h             # Debug logging utilities
-│   ├── config/
-│   │   ├── pins.h          # GPIO pin definitions
+│   ├── config/             # System configuration
 │   │   ├── config.h        # N_PIXELS, VOLTS, thresholds, timings
+│   │   ├── pins.h          # GPIO pin definitions
+│   │   ├── debug.h         # Debug logging utilities
 │   │   └── secrets.h       # WiFi credentials (.gitignore)
 │   ├── state/
 │   │   ├── AppState.h      # Extern declarations (stripLed, batt, leds, …)
@@ -59,14 +57,15 @@ SML/
 │   │   ├── EffectRegistry.h/.cpp  # Effect table & param persistence
 │   │   ├── effects.h       # Single include of all effects
 │   │   ├── utils.h         # wheel(), addGlitter()
-│   │   ├── Balls.h … Twinkle.h    # 12 active visual effects
-│   │   ├── BouncingBalls.h …      # 10 future/unused effects
-│   │   └── Battery.h, Temp.h      # Indicator effects
+│   │   ├── Balls.h …       # 12 active visual effects
+│   │   ├── BouncingBalls.h …  # 10 future effects
+│   │   └── Battery.h, Temp.h  # Indicator effects
 │   ├── vu/
 │   │   ├── VUEffect.h      # Base class for VU meters
 │   │   ├── vu.h            # Single include of all VU effects
-│   │   ├── vu1.h … vu6.h   # 6 VU meter implementations
+│   │   └── vu1.h … vu6.h   # 6 VU meter implementations
 │   ├── net/
+│   │   ├── data.h          # WiFi credentials (extern)
 │   │   ├── WebSocket.h/.cpp    # WebSocket server + handler
 │   │   └── WebServer.h/.cpp    # HTTP server, OTA, WiFi init
 │   ├── power/
