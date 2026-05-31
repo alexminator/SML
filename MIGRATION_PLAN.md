@@ -35,13 +35,13 @@ Este plan migra el proyecto en **8 fases independientes**, cada una compilable y
 ## 2. Estado actual
 
 > **Última actualización:** 2026-05-31  
-> **Progreso:** Fase 1 y Fase 2 completadas ✅
+> **Progreso:** Fase 1, 2 y 3 completadas ✅ | **Settings.h eliminado** (reemplazado por state/AppState.h + config/*.h)
 
 | Fase | Estado | Notas |
 |------|--------|-------|
 | 1 — Correcciones críticas | ✅ Completada | 7 bugs arreglados (debug.h, common.h, data.h ODR; VLA; mDNS loop; static instances; vImpact0) |
-| 2 — Separar configuración | ✅ Completada | `config/pins.h`, `config/config.h`, `config/secrets.h` creados; Settings.h como hub; .gitignore actualizado |
-| 3 — Estado global centralizado | ⏳ Pendiente | Mover objetos globales de Settings.h a AppState.h/.cpp |
+| 2 — Separar configuración | ✅ Completada | `config/pins.h`, `config/config.h`, `config/secrets.h` creados; .gitignore actualizado |
+| 3 — Estado global centralizado | ✅ Completada | `state/AppState.h` + `state/AppState.cpp` creados. Settings.h convertido a hub delgado. ODR eliminado. |
 | 4 — EffectRegistry | ⏳ Pendiente | Eliminar switch de 20 cases |
 | 5 — Partir main.cpp | ⏳ Pendiente | Reducir de ~1800 a ~60 líneas |
 | 6 — Migrar efectos a Effect base class | ⏳ Pendiente | Heredar Effect, parámetros encapsulados |
@@ -142,10 +142,11 @@ smart-music-lamp/
 
 ---
 
-## 5. Fase 1 — Correcciones críticas sin refactor ✅ (completada)
+## 5. Fase 1 — Correcciones críticas sin refactor ✅ (COMPLETADA)
 
 > **Objetivo:** eliminar los bugs A1–A4 y M3–M6 sin mover ningún archivo.  
-> **Verificación:** el proyecto compila igual que antes.
+> **Verificación:** el proyecto compila igual que antes.  
+> **Ejecutada:** 2026-05-31 — todos los items 1.1 a 1.7 aplicados.
 
 ### 1.1 Corregir `debug.h`
 
@@ -278,10 +279,11 @@ extern float vImpact0;   // definido en main.cpp
 
 ---
 
-## 6. Fase 2 — Separar configuración ✅ (completada)
+## 6. Fase 2 — Separar configuración ✅ (COMPLETADA)
 
 > **Objetivo:** crear `config/` con tres archivos especializados.  
-> **Verificación:** compilar cambiando solo los paths de include en `Settings.h` y `main.cpp`.
+> **Verificación:** compilar cambiando solo los paths de include en `Settings.h` y `main.cpp`.  
+> **Ejecutada:** 2026-05-31 — todos los items 2.1 a 2.4 aplicados.
 
 ### 2.1 Crear `src/config/pins.h`
 
@@ -420,10 +422,11 @@ En `main.cpp`, antes de `#include "Settings.h"`:
 
 ---
 
-## 7. Fase 3 — Estado global centralizado (~2h)
+## 7. Fase 3 — Estado global centralizado ✅ (COMPLETADA)
 
 > **Objetivo:** eliminar el ODR de `Settings.h` moviendo definiciones a un `.cpp`.  
-> **Verificación:** compilar; en especial verificar que los objetos `dht`, `batt`, `stripLed` funcionan igual.
+> **Verificación:** compilar; en especial verificar que los objetos `dht`, `batt`, `stripLed` funcionan igual.  
+> **Ejecutada:** 2026-05-31 — todos los items 3.1 a 3.3 aplicados.
 
 ### 3.1 Crear `src/state/AppState.h`
 
@@ -1147,16 +1150,16 @@ Cada `vu*.h` hereda `VUEffect` en lugar de leer variables globales. El archivo `
 ## 13. Checklist de verificación
 
 ### Por fase
-- [ ] **F1:** `debug.h` tiene `static`/`inline` — proyecto compila sin warnings ODR
-- [ ] **F1:** `common.h` tiene `static`/`inline` — ídem
-- [ ] **F1:** `data.h` sin definiciones — `main.cpp` define los punteros
-- [ ] **F1:** Sin VLA en `notifyClients()` — buffer de tamaño fijo
-- [ ] **F1:** mDNS falla gracefully — dispositivo no se congela
-- [ ] **F1:** Efectos con `static instance` — estado persiste entre frames
-- [ ] **F2:** `config/pins.h` compila solo sin errores
-- [ ] **F2:** `secrets.h` en `.gitignore` — verificar con `git status`
-- [ ] **F3:** `AppState.cpp` compila — no hay símbolos duplicados en el linker
-- [ ] **F3:** Eliminar `extern` duplicados del final de `Settings.h`
+- [x] **F1:** `debug.h` tiene `static`/`inline` — proyecto compila sin warnings ODR
+- [x] **F1:** `common.h` tiene `static`/`inline` — ídem
+- [x] **F1:** `data.h` sin definiciones — `main.cpp` define los punteros
+- [x] **F1:** Sin VLA en `notifyClients()` — buffer de tamaño fijo
+- [x] **F1:** mDNS falla gracefully — dispositivo no se congela
+- [x] **F1:** Efectos con `static instance` — estado persiste entre frames
+- [x] **F2:** `config/pins.h` compila solo sin errores
+- [x] **F2:** `secrets.h` en `.gitignore` — verificar con `git status`
+- [x] **F3:** `AppState.cpp` compila — no hay símbolos duplicados en el linker
+- [x] **F3:** Eliminar `extern` duplicados del final de `Settings.h`
 - [ ] **F4:** `EffectRegistry` — todos los efectos responden en la UI web
 - [ ] **F4:** `switch` de 20 cases eliminado de `update()`
 - [ ] **F5:** `main.cpp` < 100 líneas — verificar `wc -l src/main.cpp`
@@ -1177,7 +1180,7 @@ Cada `vu*.h` hereda `VUEffect` en lugar de leer variables globales. El archivo `
 
 ---
 
-## 13. Referencia rápida de patrones
+## 14. Referencia rápida de patrones
 
 ### Agregar un nuevo efecto (post-refactor)
 

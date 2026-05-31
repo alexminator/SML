@@ -78,8 +78,7 @@ AsyncWebSocket ws("/ws");
 // ----------------------------------------------------------------------------
 // RTOS Mutex Protection
 // ----------------------------------------------------------------------------
-SemaphoreHandle_t dataMutex = NULL;
-SemaphoreHandle_t wifiMutex = NULL;
+// dataMutex y wifiMutex definidos en state/AppState.cpp
 
 void initMutexes() {
     dataMutex = xSemaphoreCreateMutex();
@@ -96,12 +95,6 @@ void initMutexes() {
 #endif
     }
 }
-
-// ============================================================================
-// DEFINICIÓN DE vImpact0 (SOLO UNA VEZ, AQUÍ)
-// ============================================================================
-
-float vImpact0 = sqrt(-2 * GRAVITY * h0);
 
 // ============================================================================
 // DEFINICIÓN DE MÉTODOS DEL STRUCT BATTERY
@@ -141,16 +134,9 @@ void Battery::battMonitor() {
 }
 
 // ============================================================================
-// DEFINICIÓN DE OBJETOS GLOBALES
-// ============================================================================
-
-StripLed stripLed;
-Led onboard_led = {ONBOARD_LED_PIN, false};
-Battery batt;
-
-// ============================================================================
 // DEFINICIÓN DEL STRUCT STRIPLED (MÉTODOS)
 // ============================================================================
+// stripLed, onboard_led, batt — definidos en state/AppState.cpp
 
 StripLed::StripLed() : R(255), G(255), B(255), brightness(130), effectId(0), powerState(false) {}  // Inicializado con el color blanco el brillo en la mitad y efecto 0
 
