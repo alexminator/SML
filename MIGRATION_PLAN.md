@@ -1172,7 +1172,7 @@ Cada `vu*.h` hereda `VUEffect` en lugar de leer variables globales. El archivo `
 - [x] **F7:** `setParams` desde WebSocket — cambiar `count` de Balls en vivo
 - [x] **F7:** `notifyClients` serializa params del efecto activo
 - [x] **F7b:** Persistencia de params en LittleFS (save/load automático)
-- [ ] **F8:** `common.h` eliminado — VU funciona igual que antes
+- [x] **F8:** `common.h` eliminado — VU funciona igual que antes
 
 ### Final
 - [ ] Sin warnings de ODR al compilar (`-Wall`)

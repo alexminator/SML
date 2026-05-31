@@ -106,14 +106,6 @@ extern SemaphoreHandle_t wifiMutex;
 // VU METER VARIABLES
 // ============================================================================
 
-extern uint8_t volCount;
-extern int vol[SAMPLES];
-extern int lvl;
-extern uint8_t volCountLeft;
-extern int volLeft[SAMPLES];
-extern int lvlLeft;
-extern int minLvlAvgLeft;
-extern int maxLvlAvgLeft;
 extern bool is_centered;
 
 // ============================================================================

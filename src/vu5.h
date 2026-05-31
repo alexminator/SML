@@ -1,12 +1,12 @@
 #pragma once
 #include "Effect.h"
 #include "Settings.h"
-#include "common.h"
+#include "vu/VUEffect.h"
 
 // VU: Hue cycling, three bars (shatter, mono)
-class ThreebarsVUEffect : public Effect {
+class ThreebarsVUEffect : public VUEffect {
 public:
-    ThreebarsVUEffect(CRGB* l, uint16_t n) : Effect(l, n) {}
+    ThreebarsVUEffect(CRGB* l, uint16_t n) : VUEffect(l, n) {}
     void render() override {
         const uint8_t DRAW_MAX = 30;
         const uint8_t SEGMENTS = 3;
@@ -20,7 +20,7 @@ public:
         static bool growing = false;
         static bool fall_from_left = true;
 
-        int intensity = auxReading(0);
+        int intensity = auxReading();
 
         if (growing && intensity < last_intensity) {
             growing = false;
@@ -74,7 +74,7 @@ public:
         }
 
         FastLED.show();
-        averageReadings(0);
+        averageReadings();
 
         EVERY_N_MILLISECONDS(20) {
             scroll_color = ++scroll_color % 255;

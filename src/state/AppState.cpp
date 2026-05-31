@@ -41,17 +41,9 @@ CRGBPalette16 currentPalette;
 CRGBPalette16 targetPalette;
 
 // ============================================================================
-// VU METER VARIABLES
+// VU METER VARIABLES (is_centered shared across vu1/vu2/vu3)
 // ============================================================================
 
-uint8_t volCount = 0;
-int vol[SAMPLES];
-int lvl = 0;
-uint8_t volCountLeft = 0;
-int volLeft[SAMPLES];
-int lvlLeft = 0;
-int minLvlAvgLeft = 0;
-int maxLvlAvgLeft = 512;
 bool is_centered = false;
 
 // ============================================================================

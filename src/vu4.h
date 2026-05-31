@@ -1,11 +1,12 @@
 #pragma once
 #include "Effect.h"
 #include "Settings.h"
+#include "vu/VUEffect.h"
 
 // VU: Ripple (mono) with or without background
-class RippleVUEffect : public Effect {
+class RippleVUEffect : public VUEffect {
 public:
-    RippleVUEffect(CRGB* l, uint16_t n) : Effect(l, n) {}
+    RippleVUEffect(CRGB* l, uint16_t n) : VUEffect(l, n) {}
     void render() override {
         EVERY_N_MILLISECONDS(1000) {
             peakspersec = peakcount;
@@ -75,9 +76,9 @@ private:
         unsigned long newtime = millis();
         unsigned int sample = abs((analogRead(AUDIO_IN_PIN)) - BIAS);
 
-        samplesum = samplesum + sample - volLeft[samplecount];
+        samplesum = samplesum + sample - _vol[samplecount];
         sampleavg = samplesum / SAMPLES;
-        volLeft[samplecount] = sample;
+        _vol[samplecount] = sample;
         samplecount = (samplecount + 1) % SAMPLES;
 
         if ((sample > (sampleavg + 50)) && (newtime > (oldtime + 100))) {

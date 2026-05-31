@@ -1,23 +1,21 @@
 #pragma once
 #include "Effect.h"
 #include "Settings.h"
-#include "common.h"
+#include "vu/VUEffect.h"
 
 // VU: Old-skool green and red from bottom or middle
-class OldskoolVUEffect : public Effect {
+class OldskoolVUEffect : public VUEffect {
 public:
-    OldskoolVUEffect(CRGB* l, uint16_t n) : Effect(l, n) {}
+    OldskoolVUEffect(CRGB* l, uint16_t n) : VUEffect(l, n) {}
     void render() override {
         CRGB* vuleds;
         uint8_t i = 0;
-        uint8_t *peak;
-        uint16_t height = auxReading(0);
+        uint16_t height = auxReading();
 
         vuleds = leds;
-        peak = &peakLeft;
 
-        if (height > *peak)
-            *peak = height;
+        if (height > _peak)
+            _peak = height;
 
         if (is_centered) {
             for (uint8_t i = 0; i < N_PIXELS_HALF; i++) {
@@ -35,13 +33,13 @@ public:
                 }
             }
 
-            if (*peak > 0 && *peak <= N_PIXELS_HALF - 1) {
-                if (*peak > N_PIXELS_HALF - (N_PIXELS_HALF / 3)) {
-                    vuleds[N_PIXELS_HALF - *peak - 1] = CRGB::Red;
-                    vuleds[N_PIXELS_HALF + *peak] = CRGB::Red;
+            if (_peak > 0 && _peak <= N_PIXELS_HALF - 1) {
+                if (_peak > N_PIXELS_HALF - (N_PIXELS_HALF / 3)) {
+                    vuleds[N_PIXELS_HALF - _peak - 1] = CRGB::Red;
+                    vuleds[N_PIXELS_HALF + _peak] = CRGB::Red;
                 } else {
-                    vuleds[N_PIXELS_HALF - *peak - 1] = CRGB::Green;
-                    vuleds[N_PIXELS_HALF + *peak] = CRGB::Green;
+                    vuleds[N_PIXELS_HALF - _peak - 1] = CRGB::Green;
+                    vuleds[N_PIXELS_HALF + _peak] = CRGB::Green;
                 }
             }
         } else {
@@ -51,13 +49,13 @@ public:
                 else vuleds[i] = CRGB::Green;
             }
 
-            if (*peak > 0 && *peak <= N_PIXELS - 1)
-                if (*peak > N_PIXELS - (N_PIXELS / 3)) vuleds[*peak] = CRGB::Red;
-                else vuleds[*peak] = CRGB::Green;
+            if (_peak > 0 && _peak <= N_PIXELS - 1)
+                if (_peak > N_PIXELS - (N_PIXELS / 3)) vuleds[_peak] = CRGB::Red;
+                else vuleds[_peak] = CRGB::Green;
         }
 
-        dropPeak(0);
-        averageReadings(0);
+        dropPeak();
+        averageReadings();
         FastLED.show();
     }
 };
