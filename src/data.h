@@ -7,7 +7,8 @@
 #define DEFAULT_WIFI_PASS ""
 #endif
 
-const char *WIFI_SSID = DEFAULT_WIFI_SSID;
-const char *WIFI_PASS = DEFAULT_WIFI_PASS;
-const char *WEB_NAME = "sml";
+// Solo declaraciones — definiciones en main.cpp
+extern const char *WIFI_SSID;
+extern const char *WIFI_PASS;
+extern const char *WEB_NAME;
 

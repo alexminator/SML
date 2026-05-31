@@ -52,16 +52,16 @@ To change this, type in your sketch:   \
 before the #include statement
 #endif
 
-void debugNothing(...)
+inline void debugNothing(...)
 {
     // This does nothing and will be zapped by the compiler
 }
 
 // By default we want a trace stamp output in the first instance
-bool traceStampRequired = true;
+static bool traceStampRequired = true;
 
-char debugStr[128];  // Buffer for debug messages
-bool foundNL = false;
+static char debugStr[128];  // Buffer for debug messages
+static bool foundNL = false;
 
 // Helper function to copy string to debug buffer (SAFE version - no snprintf)
 inline void copyToDebugStr(const char* src) {

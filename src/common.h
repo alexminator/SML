@@ -5,9 +5,9 @@
 /*
  * Function for dropping the peak
  */
-uint8_t peakLeft;
+static uint8_t peakLeft = 0;
 
-uint16_t auxReading(uint8_t channel) {
+inline uint16_t auxReading(uint8_t channel) {
 
   int n = 0;
   uint16_t height = 0;
@@ -28,7 +28,7 @@ uint16_t auxReading(uint8_t channel) {
   return height;
 }
 
-void dropPeak(uint8_t channel) {
+inline void dropPeak(uint8_t channel) {
   
   static uint8_t dotCountLeft;
  
@@ -43,7 +43,7 @@ void dropPeak(uint8_t channel) {
 /*
  * Function for averaging the sample readings
  */
-void averageReadings(uint8_t channel) {
+inline void averageReadings(uint8_t channel) {
 
   uint16_t minLvl, maxLvl;
 
@@ -66,13 +66,13 @@ void averageReadings(uint8_t channel) {
   }
 }
 
-void addGlitter( fract8 chanceOfGlitter) {             // Let's add some glitter, thanks to Mark
+inline void addGlitter( fract8 chanceOfGlitter) {             // Let's add some glitter, thanks to Mark
   if( random8() < chanceOfGlitter) {
     leds[random16(N_PIXELS)] += CRGB::White;
   }
 } 
 
-CRGB wheel(byte WheelPos)
+inline CRGB wheel(byte WheelPos)
 {
 
   if (WheelPos < 85)

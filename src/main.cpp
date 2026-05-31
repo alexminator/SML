@@ -16,6 +16,12 @@
 #include <DHT.h>
 #include <DHT_U.h>
 #include <Preferences.h>
+
+// ── WIFI credentials — definiciones reales (data.h tiene solo extern) ──────────
+const char *WIFI_SSID = DEFAULT_WIFI_SSID;
+const char *WIFI_PASS = DEFAULT_WIFI_PASS;
+const char *WEB_NAME = "sml";
+
 #include "data.h"
 #include "Settings.h"
 
