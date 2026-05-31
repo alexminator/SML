@@ -1,7 +1,7 @@
 #pragma once
-#include "Effect.h"
-#include "Settings.h"
-#include "vu/VUEffect.h"
+#include "../effects/Effect.h"
+#include "../Settings.h"
+#include "VUEffect.h"
 
 // VU: Ripple (mono) with or without background
 class RippleVUEffect : public VUEffect {

@@ -43,23 +43,40 @@
 ```
 SML/
 ├── src/                    # Main source code
-│   ├── main.cpp           # Main application file
-│   ├── common.h           # Common definitions and utilities
-│   ├── data.h             # Data structures and WebSocket handling
-│   ├── debug.h            # Debug logging utilities
-│   ├── *.h                # Effect headers (MovingDot, Fire, Twinkle, etc.)
-│   └── vu*.h              # VU meter effect implementations (vu1-vu6)
-├── data/                   # Web interface files (SPIFFS/LittleFS)
-│   ├── index.html         # Main web interface
-│   ├── css/               # Stylesheets
-│   ├── js/                # JavaScript files
-│   ├── fonts/             # Font files
-│   └── img/               # Images and icons
-├── include/               # Additional include files
-├── lib/                   # Project-specific libraries
-├── platformio.ini         # PlatformIO configuration
-├── README_es.md          # Spanish documentation
-└── README.md             # English documentation
+│   ├── main.cpp           # Main application file (~60 lines, setup + loop)
+│   ├── Settings.h          # Config hub — includes all sub-modules
+│   ├── data.h              # Data structures and WebSocket handling
+│   ├── debug.h             # Debug logging utilities
+│   ├── config/
+│   │   ├── pins.h          # GPIO pin definitions
+│   │   ├── config.h        # N_PIXELS, VOLTS, thresholds, timings
+│   │   └── secrets.h       # WiFi credentials (.gitignore)
+│   ├── state/
+│   │   ├── AppState.h      # Extern declarations (stripLed, batt, leds, …)
+│   │   └── AppState.cpp    # Single definitions (ODR-safe)
+│   ├── effects/
+│   │   ├── Effect.h        # Base class with EffectParams
+│   │   ├── EffectRegistry.h/.cpp  # Effect table & param persistence
+│   │   ├── effects.h       # Single include of all effects
+│   │   ├── utils.h         # wheel(), addGlitter()
+│   │   ├── Balls.h … Twinkle.h    # 12 active visual effects
+│   │   ├── BouncingBalls.h …      # 10 future/unused effects
+│   │   └── Battery.h, Temp.h      # Indicator effects
+│   ├── vu/
+│   │   ├── VUEffect.h      # Base class for VU meters
+│   │   ├── vu.h            # Single include of all VU effects
+│   │   ├── vu1.h … vu6.h   # 6 VU meter implementations
+│   ├── net/
+│   │   ├── WebSocket.h/.cpp    # WebSocket server + handler
+│   │   └── WebServer.h/.cpp    # HTTP server, OTA, WiFi init
+│   ├── power/
+│   │   └── PowerMgr.h/.cpp     # Power state machine
+│   └── tasks/
+│       └── tasks.h/.cpp        # FreeRTOS task creation
+├── data/                   # Web interface files (LittleFS)
+│   ├── index.html, css/, js/, fonts/, img/
+├── lib/                    # Custom libraries (Battery18650Stats)
+└── platformio.ini
 ```
 
 ## Key Configuration Variables

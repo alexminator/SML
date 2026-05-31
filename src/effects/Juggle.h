@@ -1,6 +1,6 @@
 #pragma once
 #include "Effect.h"
-#include "Settings.h"
+#include "../Settings.h"
 
 class JuggleEffect : public Effect {
 public:

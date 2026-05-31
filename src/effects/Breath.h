@@ -1,6 +1,6 @@
 #pragma once
 #include "Effect.h"
-#include "Settings.h"
+#include "../Settings.h"
 
 // WLED-based Breath effect - "standby-breathing" of well known i-Devices
 class BreathEffect : public Effect {

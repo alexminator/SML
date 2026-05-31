@@ -8,7 +8,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 #pragma once
 
-#include "../Effect.h"
+#include "../effects/Effect.h"
 
 class VUEffect : public Effect {
 public:

@@ -1,6 +1,6 @@
 #pragma once
 #include "Effect.h"
-#include "Settings.h"
+#include "../Settings.h"
 
 class RainbowBeatEffect : public Effect {
 public:

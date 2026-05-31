@@ -1,7 +1,7 @@
 #pragma once
-#include "Effect.h"
-#include "Settings.h"
-#include "vu/VUEffect.h"
+#include "../effects/Effect.h"
+#include "../Settings.h"
+#include "VUEffect.h"
 
 // VU: Rainbow from bottom or middle, green through purple
 class RainbowVUEffect : public VUEffect {

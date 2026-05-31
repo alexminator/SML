@@ -1,7 +1,7 @@
 #pragma once
-#include "Effect.h"
-#include "Settings.h"
-#include "vu/VUEffect.h"
+#include "../effects/Effect.h"
+#include "../Settings.h"
+#include "VUEffect.h"
 
 // VU: Old-skool green and red from bottom or middle
 class OldskoolVUEffect : public VUEffect {

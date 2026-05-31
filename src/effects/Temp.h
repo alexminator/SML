@@ -1,7 +1,7 @@
 #pragma once
 #include "Effect.h"
-#include "Settings.h"
-#include "effects/utils.h"
+#include "../Settings.h"
+#include "utils.h"
 
 class TemperatureEffect : public Effect {
 public:

@@ -1,6 +1,6 @@
 #pragma once
 #include "Effect.h"
-#include "Settings.h"
+#include "../Settings.h"
 
 // TwinkleFOX by Mark Kriegsman - WLED compatible implementation
 class TwinkleEffect : public Effect {
