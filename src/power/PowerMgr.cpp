@@ -5,8 +5,7 @@
 #include "../state/AppState.h"
 #include "net/WebSocket.h"
 
-#define DEBUGLEVEL DEBUGLEVEL_DEBUGGING
-#include "../config/debug.h"
+#include "config/debug_config.h"
 
 #include <WiFi.h>
 

@@ -1,10 +1,15 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// AppState.cpp — Definiciones ÚNICAS de todo el estado global
+// AppState.cpp — Definiciones ÚNICAS de todo el estado global + métodos
 // ──────────────────────────────────────────────────────────────────────────────
 // Cada símbolo definido aquí existe una sola vez en el binario.
 // Ningún otro .cpp puede definir estos mismos símbolos (fin del ODR).
 // ──────────────────────────────────────────────────────────────────────────────
+
+#include <Arduino.h>
+#include <FastLED.h>
 #include "AppState.h"
+#include "../effects/EffectRegistry.h"
+#include "config/debug_config.h"
 
 // ============================================================================
 // RTOS SYNCHRONIZATION
@@ -12,6 +17,22 @@
 
 SemaphoreHandle_t dataMutex = NULL;
 SemaphoreHandle_t wifiMutex = NULL;
+
+void initMutexes() {
+    dataMutex = xSemaphoreCreateMutex();
+    wifiMutex = xSemaphoreCreateMutex();
+
+    if (dataMutex == NULL || wifiMutex == NULL) {
+#ifdef DEBUG_SYSTEM
+        debuglnE("Failed to create mutexes!");
+        debuglnE("System may experience race conditions");
+#endif
+    } else {
+#ifdef DEBUG_SYSTEM
+        debuglnD("Mutexes initialized successfully");
+#endif
+    }
+}
 
 // ============================================================================
 // GLOBAL OBJECTS
@@ -57,3 +78,72 @@ unsigned long sleepCycleStart = 0;
 bool webSocketClientConnected = false;
 bool onBatteryPower = false;
 bool powerManagementControllingWiFi = false;
+
+// ============================================================================
+// BATTERY METHODS
+// ============================================================================
+
+void Battery::battMonitor() {
+    int isCharging = digitalRead(CHARGE_PIN);
+    chargeState = isCharging == LOW;
+    int fullyCharge = digitalRead(FULL_CHARGE_PIN);
+    fullBatt = fullyCharge == LOW;
+    battVolts = batteryStats.getBatteryVolts();
+    battLvl = batteryStats.getBatteryChargeLevel(true);
+
+#ifdef DEBUG_BATTERY
+    debugD(chargeState ? "Cargador conectado" : "Cargador desconectado");
+    debugD("\n");
+    debugD("Estado del pin carga: ");
+    debugD(fullyCharge ? "LOW (charging)" : "HIGH (full/not charging)");
+    debugD("\n");
+    if (!fullBatt && !chargeState) {
+        debuglnD("Batería usándose");
+    } else if (fullBatt) {
+        debuglnD("Batería completamente cargada");
+    } else {
+        debuglnD("Batería cargándose");
+    }
+    debugD("Lectura promedio: ");
+    debugD_NUM(batteryStats.pinRead(), "%d");
+    debugD(", Voltaje: ");
+    debugD_NUM((int)(battVolts * 1000), "%d");
+    debugD(".");
+    debugD_NUM03((int)((battVolts * 1000) % 1000));
+    debugD(", Nivel: ");
+    debugD_NUM(battLvl, "%d");
+    debuglnD("%");
+#endif
+}
+
+// ============================================================================
+// STRIPLED METHODS
+// ============================================================================
+
+StripLed::StripLed() : R(255), G(255), B(255), brightness(130), effectId(0), powerState(false) {}
+
+void StripLed::simpleColor(int ar, int ag, int ab, int brightness) {
+    for (int i = 0; i < N_PIXELS; i++) {
+        leds[i] = CRGB(ar, ag, ab);
+    }
+    FastLED.setBrightness(brightness);
+    FastLED.show();
+}
+
+void StripLed::clear() {
+    FastLED.clear();
+    FastLED.show();
+}
+
+void StripLed::update() {
+    if (!powerState) {
+        clear();
+        return;
+    }
+    if (effectId == 0) {
+        simpleColor(R, G, B, brightness);
+        return;
+    }
+    clear();
+    runEffectById(effectId);
+}

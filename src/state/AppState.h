@@ -102,6 +102,9 @@ extern CRGBPalette16 targetPalette;
 extern SemaphoreHandle_t dataMutex;
 extern SemaphoreHandle_t wifiMutex;
 
+/// Initialize RTOS mutexes (dataMutex, wifiMutex)
+void initMutexes();
+
 // ============================================================================
 // VU METER VARIABLES
 // ============================================================================

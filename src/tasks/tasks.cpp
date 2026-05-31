@@ -6,8 +6,7 @@
 #include "net/WebSocket.h"
 #include "power/PowerMgr.h"
 
-#define DEBUGLEVEL DEBUGLEVEL_DEBUGGING
-#include "../config/debug.h"
+#include "config/debug_config.h"
 
 #include <WiFi.h>
 

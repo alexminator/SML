@@ -8,178 +8,13 @@
  */
 
 #include <Arduino.h>
-#include <LittleFS.h>
-#include <ArduinoJson.h>
 #include <FastLED.h>
-#include <Battery18650Stats.h>
-#include <Adafruit_Sensor.h>
-#include <DHT.h>
-#include <DHT_U.h>
-#include <Preferences.h>
-#include "config/secrets.h"
-
-// ── WIFI credentials — definiciones reales (data.h tiene solo extern) ──────────
-const char *WIFI_SSID = DEFAULT_WIFI_SSID;
-const char *WIFI_PASS = DEFAULT_WIFI_PASS;
-const char *WEB_NAME = "sml";
-
-#include "net/data.h"
 #include "state/AppState.h"
 #include "effects/EffectRegistry.h"
 #include "net/WebSocket.h"
 #include "net/WebServer.h"
-#include "power/PowerMgr.h"
 #include "tasks/tasks.h"
-
-// Declare the debugging level then include the header file
-#define DEBUGLEVEL DEBUGLEVEL_DEBUGGING
-// #define DEBUGLEVEL DEBUGLEVEL_NONE
-#include "config/debug.h"
-
-// ============================================================================
-// DEBUG CATEGORIES - Uncomment to enable specific debug messages
-// ============================================================================
-// System-level messages (initialization, mutex, errors)
-#define DEBUG_SYSTEM
-
-// WiFi connection and authentication
-#define DEBUG_WIFI
-
-// Web server and LittleFS filesystem
-// #define DEBUG_WEB
-
-// WebSocket communication and JSON
-// #define DEBUG_WEBSOCKET
-
-// LED strip control and effects
-// #define DEBUG_LED
-
-// Battery monitoring and charging
-// #define DEBUG_BATTERY
-
-// Temperature and humidity sensor (DHT)
-// #define DEBUG_TEMPERATURE
-
-// Network services (mDNS)
-#define DEBUG_NETWORK
-
-// BLUETOOTH
-// #define DEBUG_BLUETOOTH
-
-// Power Management State Machine debugging
-#define DEBUG_POWER_MANAGEMENT
-
-#include <WiFi.h>
-#include <AsyncTCP.h>
-#include <ESPmDNS.h>
-#include <ESPAsyncWebServer.h>
-#include <ElegantOTA.h>
-
-// server definido en net/WebServer.cpp
-
-// ----------------------------------------------------------------------------
-// RTOS Mutex Protection
-// ----------------------------------------------------------------------------
-// dataMutex y wifiMutex definidos en state/AppState.cpp
-
-void initMutexes() {
-    dataMutex = xSemaphoreCreateMutex();
-    wifiMutex = xSemaphoreCreateMutex();
-
-    if (dataMutex == NULL || wifiMutex == NULL) {
-#ifdef DEBUG_SYSTEM
-        debuglnE("Failed to create mutexes!");
-        debuglnE("System may experience race conditions");
-#endif
-    } else {
-#ifdef DEBUG_SYSTEM
-        debuglnD("Mutexes initialized successfully");
-#endif
-    }
-}
-
-// ============================================================================
-// DEFINICIÓN DE MÉTODOS DEL STRUCT BATTERY
-// ============================================================================
-
-void Battery::battMonitor() {
-    int isCharging = digitalRead(CHARGE_PIN);
-    chargeState = isCharging == LOW;
-    int fullyCharge = digitalRead(FULL_CHARGE_PIN);
-    fullBatt = fullyCharge == LOW;
-    battVolts = batteryStats.getBatteryVolts();
-    battLvl = batteryStats.getBatteryChargeLevel(true);
-
-#ifdef DEBUG_BATTERY
-    debugD(chargeState ? "Cargador conectado" : "Cargador desconectado");
-    debugD("\n");
-    debugD("Estado del pin carga: ");
-    debugD(fullyCharge ? "LOW (charging)" : "HIGH (full/not charging)");
-    debugD("\n");
-    if (!fullBatt && !chargeState) {
-        debuglnD("Batería usándose");
-    } else if (fullBatt) {
-        debuglnD("Batería completamente cargada");
-    } else {
-        debuglnD("Batería cargándose");
-    }
-    debugD("Lectura promedio: ");
-    debugD_NUM(batteryStats.pinRead(), "%d");
-    debugD(", Voltaje: ");
-    debugD_NUM((int)(battVolts * 1000), "%d");
-    debugD(".");
-    debugD_NUM03((int)((battVolts * 1000) % 1000));
-    debugD(", Nivel: ");
-    debugD_NUM(battLvl, "%d");
-    debuglnD("%");
-#endif
-}
-
-// ============================================================================
-// DEFINICIÓN DEL STRUCT STRIPLED (MÉTODOS)
-// ============================================================================
-// stripLed, onboard_led, batt — definidos en state/AppState.cpp
-
-StripLed::StripLed() : R(255), G(255), B(255), brightness(130), effectId(0), powerState(false) {}  // Inicializado con el color blanco el brillo en la mitad y efecto 0
-
-void StripLed::simpleColor(int ar, int ag, int ab, int brightness) {
-    for (int i = 0; i < N_PIXELS; i++) {
-        leds[i] = CRGB(ar, ag, ab);
-    }
-    FastLED.setBrightness(brightness);
-    FastLED.show();
-}
-
-void StripLed::clear() {
-    FastLED.clear();
-    FastLED.show();
-}
-
-
-void StripLed::update() {
-    if (!powerState) {
-        clear();
-        return;
-    }
-    if (effectId == 0) {
-        simpleColor(R, G, B, brightness);
-        return;
-    }
-    clear();
-    runEffectById(effectId);
-}
-
-// readSensor() → tasks/tasks.cpp
-// SPIFFS initialization
-// ----------------------------------------------------------------------------
-
-// initLittleFS(), initWiFi(), initWebServer(), processor(), onRootRequest()
-// → extraídos a net/WebServer.h / net/WebServer.cpp
-
-// notifyClients(), handleWebSocketMessage(), onWsEvent(), initWebSocket()
-// bars() → extraídos a net/WebSocket.h / net/WebSocket.cpp
-
-// Task functions → tasks/tasks.h / tasks/tasks.cpp
+#include "config/debug_config.h"
 
 // ----------------------------------------------------------------------------
 // Initialization
@@ -211,7 +46,6 @@ void setup()
     Serial.begin(115200);
     initMutexes();
 
-    // Initialize DHT22 device.
     dht.begin();
     // Print temperature sensor details.
     sensor_t sensor;
@@ -260,7 +94,7 @@ void setup()
     debugD("%\n");
     debuglnD("----------------------------------------------------");
 #endif
-    
+
     // For FASTLED library
     FastLED.addLeds<LED_TYPE, STRIP_PIN, COLOR_ORDER>(leds, N_PIXELS).setCorrection(TypicalLEDStrip);
     FastLED.setMaxPowerInVoltsAndMilliamps(VOLTS, MAX_MILLIAMPS);
@@ -274,7 +108,6 @@ void setup()
     initWiFi();
     initWebSocket();
     initWebServer();
-
     initTasks();
 }
 
