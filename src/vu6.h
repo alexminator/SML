@@ -1,51 +1,47 @@
-/*
- * VU: Ocean waves (stereo)
- */
+#pragma once
+#include "Effect.h"
+#include "Settings.h"
 
-class OceanVU {
-  public:
-    OceanVU(){};
-    void runPattern();
-  private:
-};
+// VU: Ocean waves (stereo)
+class OceanVUEffect : public Effect {
+public:
+    OceanVUEffect(CRGB* l, uint16_t n) : Effect(l, n) {}
+    void render() override {
+        currentPalette = PartyColors_p;
+        EVERY_N_SECONDS(5) {
+            for (int i = 0; i < 16; i++) {
+                targetPalette[i] = CHSV(random8(), 255, 255);
+            }
+        }
 
-void sndwave() {
-  int n = analogRead(AUDIO_IN_PIN);
-  int sampleLeft = abs(n - BIAS - DC_OFFSET);
-  leds[N_PIXELS_HALF] = ColorFromPalette(currentPalette, sampleLeft, sampleLeft * 2, LINEARBLEND); // Put the sample into the center
-  
-  for (int i = N_PIXELS - 1; i > N_PIXELS_HALF; i--) { //move to the left      // Copy to the left, and let the fade do the rest.
-   leds[i] = leds[i - 1];
-  }
+        EVERY_N_MILLISECONDS(100) {
+            uint8_t maxChanges = 24;
+            nblendPaletteTowardPalette(currentPalette, targetPalette, maxChanges);
+        }
 
-  for (int i = 0; i < N_PIXELS_HALF; i++) { // move to the right    // Copy to the right, and let the fade do the rest.
-    leds[i] = leds[i + 1];
-  }
-}
+        EVERY_N_MILLIS_I(thistimer, 20) {
+            uint8_t timeval = beatsin8(10, 20, 50);
+            thistimer.setPeriod(timeval);
+            fadeToBlackBy(leds, N_PIXELS, 16);
+            sndwave();
+        }
 
-void OceanVU::runPattern() {
-  currentPalette = PartyColors_p; // Initial palette.
-  EVERY_N_SECONDS(5) { // Change the palette every 5 seconds.
-    for (int i = 0; i < 16; i++) {
-      targetPalette[i] = CHSV(random8(), 255, 255);
+        FastLED.setBrightness(stripLed.brightness);
+        FastLED.show();
     }
-  }
 
-  EVERY_N_MILLISECONDS(100) { // Palette blending capability once they do change.
-    uint8_t maxChanges = 24;
-    nblendPaletteTowardPalette(currentPalette, targetPalette, maxChanges);
-  }
+private:
+    void sndwave() {
+        int n = analogRead(AUDIO_IN_PIN);
+        int sampleLeft = abs(n - BIAS - DC_OFFSET);
+        leds[N_PIXELS_HALF] = ColorFromPalette(currentPalette, sampleLeft, sampleLeft * 2, LINEARBLEND);
 
-  EVERY_N_MILLIS_I(thistimer, 20) { // For fun, let's make the animation have a variable rate.
-    uint8_t timeval = beatsin8(10, 20, 50); // Use a sinewave for the line below. Could also use peak/beat detection.
-    thistimer.setPeriod(timeval); // Allows you to change how often this routine runs.
-    fadeToBlackBy(leds, N_PIXELS, 16); // 1 = slow, 255 = fast fade. Depending on the faderate, the LED's further away will fade out.
-    sndwave();
-  }
+        for (int i = N_PIXELS - 1; i > N_PIXELS_HALF; i--) {
+            leds[i] = leds[i - 1];
+        }
 
-  // Usar el brillo configurado por el usuario en vez de forzar 255
-  FastLED.setBrightness(stripLed.brightness);
-  FastLED.show();
-}
-
-
+        for (int i = 0; i < N_PIXELS_HALF; i++) {
+            leds[i] = leds[i + 1];
+        }
+    }
+};

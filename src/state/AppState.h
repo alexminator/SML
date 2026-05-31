@@ -55,26 +55,6 @@ struct StripLed {
     void simpleColor(int ar, int ag, int ab, int brightness);
     void update();
     void clear();
-    void runFire();
-    void runMovingDot();
-    void runRainbowBeat();
-    void runRedWhiteBlue();
-    void runRipple();
-    void runTwinkle();
-    void runBalls();
-    void runJuggle();
-    void runSinelon();
-    void runComet();
-    void runBreath();
-    void runColorSweep();
-    void runRainbowVU();
-    void runOldVU();
-    void runRainbowHueVU();
-    void runRippleVU();
-    void runThreebarsVU();
-    void runOceanVU();
-    void runTemperature();
-    void runBattery();
 };
 
 // ============================================================================
@@ -123,78 +103,6 @@ extern SemaphoreHandle_t dataMutex;
 extern SemaphoreHandle_t wifiMutex;
 
 // ============================================================================
-// EFECTO FIRE PARAMS
-// ============================================================================
-
-extern uint8_t fireCooling;
-extern uint8_t fireSparking;
-extern bool fireReverse;
-
-// ============================================================================
-// EFECTO SINELON PARAMS
-// ============================================================================
-
-extern uint8_t sinelonBeat;
-extern uint8_t sinelonFade;
-
-// ============================================================================
-// EFECTO TWINKLE PARAMS
-// ============================================================================
-
-extern uint8_t twinkleSpeed;
-extern uint8_t twinkleIntensity;
-extern bool twinkleRedCool;
-
-// ============================================================================
-// EFECTO RAINBOW BEAT PARAMS
-// ============================================================================
-
-extern uint8_t rainbowSpeed;
-extern uint8_t rainbowDelta;
-
-// ============================================================================
-// EFECTO MOVING DOT PARAMS
-// ============================================================================
-
-extern uint8_t movingDotSpeed;
-extern uint8_t movingDotFade;
-
-// ============================================================================
-// EFECTO RIPPLE PARAMS
-// ============================================================================
-
-extern uint8_t rippleSize;
-extern bool rippleMirror;
-
-// ============================================================================
-// EFECTO COMET PARAMS
-// ============================================================================
-
-extern uint8_t cometSpeed;
-extern uint8_t cometTrail;
-extern bool cometBlur;
-
-// ============================================================================
-// EFECTO BREATH PARAMS
-// ============================================================================
-
-extern uint8_t breathSpeed;
-
-// ============================================================================
-// EFECTO COLOR SWEEP PARAMS
-// ============================================================================
-
-extern uint8_t sweepSpeed;
-
-// ============================================================================
-// EFECTO JUGGLE PARAMS
-// ============================================================================
-
-extern uint8_t juggleDots;
-extern uint8_t juggleSpeed;
-extern uint8_t juggleIntensity;
-
-// ============================================================================
 // VU METER VARIABLES
 // ============================================================================
 
@@ -207,21 +115,6 @@ extern int lvlLeft;
 extern int minLvlAvgLeft;
 extern int maxLvlAvgLeft;
 extern bool is_centered;
-
-// ============================================================================
-// BALLS VARIABLES
-// ============================================================================
-
-extern float vImpact0;
-
-extern uint8_t ballsCount;
-extern bool ballsRandomColors;
-extern float h[NUM_BALLS];
-extern float vImpact[NUM_BALLS];
-extern float tCycle[NUM_BALLS];
-extern int pos[NUM_BALLS];
-extern long tLast[NUM_BALLS];
-extern float COR[NUM_BALLS];
 
 // ============================================================================
 // POWER MANAGEMENT STATE

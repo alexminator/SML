@@ -1,54 +1,51 @@
-// WLED-based Color Sweep effect - wipes color, turns off opposite
-// Adapted from WLED mode_color_sweep implementation
-
+#pragma once
+#include "Effect.h"
 #include "Settings.h"
-class ColorSweep {
-  public:
-    ColorSweep(){};
-    void runPattern();
-  private:
-};
 
-void ColorSweep::runPattern() {
-  // WLED-compatible parameter
-  extern uint8_t sweepSpeed;    // Default: 128, range: 0-255 (sweep speed)
+// WLED-based Color Sweep effect
+class ColorSweepEffect : public Effect {
+private:
+    uint16_t _index = 0;
+    bool _forward = true;
+    unsigned long _lastTime = 0;
 
-  static uint16_t index = 0;
-  static bool forward = true;
-  static unsigned long lastTime = 0;
-
-  unsigned long currentTime = millis();
-  uint32_t cycleTime = (256 - sweepSpeed) * 2;
-
-  if (currentTime - lastTime >= cycleTime) {
-    lastTime = currentTime;
-
-    // Turn off previous pixel
-    int prevIndex = forward ? (index - 1 + N_PIXELS) % N_PIXELS : (index + 1) % N_PIXELS;
-    leds[prevIndex] = CRGB::Black;
-
-    // Set current pixel
-    leds[index] = CHSV(myhue, 255, stripLed.brightness);
-
-    // Move to next pixel
-    if (forward) {
-      index++;
-      if (index >= N_PIXELS) {
-        index = N_PIXELS - 1;
-        forward = false;
-        myhue++;  // Change color on direction change
-      }
-    } else {
-      if (index == 0) {
-        index = 0;
-        forward = true;
-        myhue++;  // Change color on direction change
-      } else {
-        index--;
-      }
+public:
+    ColorSweepEffect(CRGB* l, uint16_t n) : Effect(l, n) {
+        params.speed = 128;  // sweepSpeed default
     }
-  }
 
-  FastLED.show();
-  vTaskDelay(pdMS_TO_TICKS(20));  // 50 FPS
-}
+    void render() override {
+        uint8_t speedVal = params.speed;
+        unsigned long currentTime = millis();
+        uint32_t cycleTime = (256 - speedVal) * 2;
+
+        if (currentTime - _lastTime >= cycleTime) {
+            _lastTime = currentTime;
+
+            int prevIndex = _forward ? (_index - 1 + N_PIXELS) % N_PIXELS : (_index + 1) % N_PIXELS;
+            leds[prevIndex] = CRGB::Black;
+
+            leds[_index] = CHSV(myhue, 255, stripLed.brightness);
+
+            if (_forward) {
+                _index++;
+                if (_index >= N_PIXELS) {
+                    _index = N_PIXELS - 1;
+                    _forward = false;
+                    myhue++;
+                }
+            } else {
+                if (_index == 0) {
+                    _index = 0;
+                    _forward = true;
+                    myhue++;
+                } else {
+                    _index--;
+                }
+            }
+        }
+
+        FastLED.show();
+        vTaskDelay(pdMS_TO_TICKS(20));
+    }
+};

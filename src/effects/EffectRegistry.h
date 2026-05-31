@@ -1,26 +1,19 @@
 // ──────────────────────────────────────────────────────────────────────────────
-// EffectRegistry.h — Tabla única de efectos (reemplaza switch + effectNames[])
+// EffectRegistry.h — Tabla única de efectos (instancias Effect*)
 // ──────────────────────────────────────────────────────────────────────────────
-// Cada efecto se registra con su nombre JSON (para el frontend) y un puntero
-// al método StripLed::run*() que lo ejecuta. El orden en la tabla define el
-// effectId (index 0 = ID 1).
+// Cada efecto se registra con su nombre JSON (para el frontend) y una instancia
+// Effect* que lo ejecuta. El orden en la tabla define el effectId (index 0 = ID 1).
 //
 // Uso:
-//   runEffectById(effectId);       // ejecuta el efecto
+//   runEffectById(effectId);       // ejecuta el efecto via instance->run()
 //   getEffectJsonName(effectId);   // nombre para el JSON del WebSocket
 //
-// Para agregar un efecto nuevo: añadir línea en effectRegistry[] (y el botón
-// en el frontend). El switch de 20 cases ya no existe.
+// Para agregar un efecto nuevo: crear subclase de Effect, añadir línea en
+// effectRegistry[] (y el botón en el frontend).
 // ──────────────────────────────────────────────────────────────────────────────
 #pragma once
 
-#include <stdint.h>
-
-// ============================================================================
-// TIPO: puntero a función miembro de StripLed que ejecuta un efecto
-// ============================================================================
-
-using EffectRunner = void (StripLed::*)();
+#include "Effect.h"
 
 // ============================================================================
 // STRUCT: entrada del registro de efectos
@@ -28,7 +21,7 @@ using EffectRunner = void (StripLed::*)();
 
 struct EffectEntry {
     const char* jsonName;     // Clave JSON usada por el frontend (e.g. "fireStatus")
-    EffectRunner runner;      // Puntero al método StripLed::run*()
+    Effect*     instance;     // Instancia del efecto (puntero a subclase de Effect)
 };
 
 // ============================================================================
@@ -54,7 +47,7 @@ extern const uint8_t EFFECT_COUNT;
 inline void runEffectById(uint8_t id) {
     if (id < 1 || id > EFFECT_COUNT) return;
     const EffectEntry& entry = effectRegistry[id - 1];
-    (stripLed.*(entry.runner))();
+    if (entry.instance) entry.instance->run();
 }
 
 /// Retorna el nombre JSON para un effectId

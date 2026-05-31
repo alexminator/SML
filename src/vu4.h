@@ -1,95 +1,89 @@
-/*
- * VU: Ripple (mono) with or without background
- */
-class RippleVU {
-  public:
-    RippleVU(){};
-    void runPattern(boolean show_background);
-  private:
-};
+#pragma once
+#include "Effect.h"
+#include "Settings.h"
 
-int rippleStep = -1;
-const float RIPPLE_FADE_RATE = 0.80;
-int peakspersec = 0;
-int peakcount = 0;
-unsigned int sampleavg;
-uint8_t rippleHue = 0;
-uint8_t bgcol = 0;
+// VU: Ripple (mono) with or without background
+class RippleVUEffect : public Effect {
+public:
+    RippleVUEffect(CRGB* l, uint16_t n) : Effect(l, n) {}
+    void render() override {
+        EVERY_N_MILLISECONDS(1000) {
+            peakspersec = peakcount;
+            peakcount = 0;
+        }
 
-void ripple3(bool show_background) {
+        soundmems();
 
-  const uint8_t MAX_STEPS = 16;
-  static int center = 0;
-  
-  if(show_background) {
-    for (int i = 0; i < N_PIXELS; i++) {
-      leds[i] = CHSV(bgcol, 255, sampleavg * 2); // Set the background colour.
+        EVERY_N_MILLISECONDS(20) {
+            ripple3(true);
+        }
+
+        FastLED.setBrightness(stripLed.brightness);
+        FastLED.show();
     }
-  } else {
-    fadeToBlackBy(leds, N_PIXELS, 64);
-  }
 
-  switch (rippleStep) {
+private:
+    static constexpr float RIPPLE_FADE_RATE = 0.80;
+    static constexpr uint8_t MAX_STEPS = 16;
 
-  case -1: // Initialize ripple variables.
-    center = random(N_PIXELS);
-    rippleHue = (peakspersec * 10) % 255; // More peaks/s = higher the hue colour.
-    rippleStep = 0;
-    bgcol = bgcol + 8;
-    break;
+    int rippleStep = -1;
+    int peakspersec = 0;
+    int peakcount = 0;
+    unsigned int sampleavg = 0;
+    uint8_t rippleHue = 0;
+    uint8_t bgcol = 0;
 
-  case 0:
-    leds[center] = CHSV(rippleHue, 255, 255); // Display the first pixel of the ripple.
-    rippleStep++;
-    break;
+    void ripple3(bool show_background) {
+        static int center = 0;
 
-  case MAX_STEPS: // At the end of the ripples.
-    break;
+        if (show_background) {
+            for (int i = 0; i < N_PIXELS; i++) {
+                leds[i] = CHSV(bgcol, 255, sampleavg * 2);
+            }
+        } else {
+            fadeToBlackBy(leds, N_PIXELS, 64);
+        }
 
-  default: // Middle of the ripples.
-    leds[(center + rippleStep + N_PIXELS) % N_PIXELS] += CHSV(rippleHue, 255, 255 / rippleStep * 2); // Simple wrap from Marc Miller.
-    leds[(center - rippleStep + N_PIXELS) % N_PIXELS] += CHSV(rippleHue, 255, 255 / rippleStep * 2);
-    rippleStep++; // Next step.
-    break;
-  }
-}
+        switch (rippleStep) {
+            case -1:
+                center = random(N_PIXELS);
+                rippleHue = (peakspersec * 10) % 255;
+                rippleStep = 0;
+                bgcol = bgcol + 8;
+                break;
 
-void soundmems() { // Rolling average counter - means we don't have to go through an array each time.
-  
-  static int samplecount;
-  static unsigned long samplesum;
-  static unsigned long oldtime;
-  unsigned long newtime = millis();
-  unsigned int sample = abs((analogRead(AUDIO_IN_PIN)) - BIAS);
+            case 0:
+                leds[center] = CHSV(rippleHue, 255, 255);
+                rippleStep++;
+                break;
 
-  samplesum = samplesum + sample - volLeft[samplecount]; // Add the new sample and remove the oldest sample in the array 
-  sampleavg = samplesum / SAMPLES; // Get an average
-  volLeft[samplecount] = sample; // Update oldest sample in the array with new sample
-  samplecount = (samplecount + 1) % SAMPLES; // Update the counter for the array
+            case MAX_STEPS:
+                break;
 
-  if ((sample > (sampleavg + 50)) && (newtime > (oldtime + 100))) { // Check for a peak, which is 50 > the average, but wait at least 100ms for another.
-    rippleStep = -1;
-    peakcount++;
-    oldtime = newtime;
-  }
-}
+            default:
+                leds[(center + rippleStep + N_PIXELS) % N_PIXELS] += CHSV(rippleHue, 255, 255 / rippleStep * 2);
+                leds[(center - rippleStep + N_PIXELS) % N_PIXELS] += CHSV(rippleHue, 255, 255 / rippleStep * 2);
+                rippleStep++;
+                break;
+        }
+    }
 
-void RippleVU::runPattern(boolean show_background) {
-  
-  EVERY_N_MILLISECONDS(1000) {
-    peakspersec = peakcount; // Count the peaks per second. This value will become the foreground rippleHue.
-    peakcount = 0; // Reset the counter every second.
-  }
+    void soundmems() {
+        static int samplecount;
+        static unsigned long samplesum;
+        static unsigned long oldtime;
+        unsigned long newtime = millis();
+        unsigned int sample = abs((analogRead(AUDIO_IN_PIN)) - BIAS);
 
-  soundmems();
+        samplesum = samplesum + sample - volLeft[samplecount];
+        sampleavg = samplesum / SAMPLES;
+        volLeft[samplecount] = sample;
+        samplecount = (samplecount + 1) % SAMPLES;
 
-  EVERY_N_MILLISECONDS(20) {
-    ripple3(show_background);
-  }
-  // Usar el brillo configurado por el usuario en vez de forzar 255
-  FastLED.setBrightness(stripLed.brightness);
-  FastLED.show();
-}
-
-
-
+        if ((sample > (sampleavg + 50)) && (newtime > (oldtime + 100))) {
+            rippleStep = -1;
+            peakcount++;
+            oldtime = newtime;
+        }
+    }
+};
