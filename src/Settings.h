@@ -1,187 +1,11 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-
 // ============================================================================
-// LED STRIP (NEOPIXEL)
+// CONFIGURACIÓN — extraída a archivos especializados en src/config/
 // ============================================================================
-
-#define STRIP_PIN 4
-#define N_PIXELS 24
-#define VOLTS 5
-#define MAX_MILLIAMPS 500
-#define COLOR_ORDER GRB
-#define LED_TYPE WS2812B
-
-// ============================================================================
-// ONBOARD LED
-// ============================================================================
-
-#define ONBOARD_LED_PIN LED_BUILTIN
-
-// ============================================================================
-// DHT SENSOR (TEMPERATURA Y HUMEDAD)
-// ============================================================================
-
-#define DHTPIN 23
-#define DHTTYPE DHT22
-
-// ============================================================================
-// BLUETOOTH MODULE RELAY
-// ============================================================================
-
-#define SWITCH_PIN 18
-
-// ============================================================================
-// BLUETOOTH BUTTON EMULATION (MOSFETS)
-// ============================================================================
-
-#define VOLUMENUP_PIN 5
-#define VOLUMENDOWN_PIN 19
-#define PLAY_PIN 21
-
-// ============================================================================
-// LAMP RELAY
-// ============================================================================
-
-#define LAMP_PIN 32
-
-// ============================================================================
-// BATTERY MONITORING (TP4056)
-// ============================================================================
-
-#define CHARGE_PIN 34
-#define FULL_CHARGE_PIN 35
-#define ADC_PIN 33
-#define CONV_FACTOR 1.702
-#define READS 30
-#define MAXV 4.00
-#define MINV 3.20
-#define BATT_THRESHOLD 30
-#define MAX_READS 10
-#define FULL_READS 10
-
-// ============================================================================
-// VU METER (AUDIO)
-// ============================================================================
-
-#define AUDIO_IN_PIN 36
-#define DC_OFFSET 0
-#define NOISE 30
-#define SAMPLES 60
-#define TOP (N_PIXELS + 2)
-#define PEAK_FALL 20
-#define N_PIXELS_HALF (N_PIXELS / 2)
-#define BIAS 1850
-
-// ----------------------------------------------------------------------------
-// Definition of macros
-// ----------------------------------------------------------------------------
-// Constants (Magic Numbers)
-// ----------------------------------------------------------------------------
-// Stack monitoring thresholds
-const uint32_t STACK_WARNING_THRESHOLD = 256;      // Stack low warning threshold (bytes)
-const uint32_t STACK_CRITICAL_THRESHOLD = 128;     // Stack critical threshold (bytes)
-
-// WiFi connection
-const int WIFI_MAX_ATTEMPTS = 40;                 // Max WiFi connection attempts
-const unsigned long WIFI_RETRY_DELAY = 500;       // WiFi connection retry delay (ms)
-const unsigned long WIFI_MONITOR_INTERVAL = 2000;
-
-// Timing
-const unsigned long LED_ERROR_FLASH_CYCLE = 200;  // LED error flash cycle (ms)
-const unsigned long LED_ERROR_FLASH_ON = 50;      // LED error flash on time (ms)
-
-// Battery monitoring
-const unsigned long BATTERY_CHECK_INTERVAL = 3000; // Battery check interval (ms)
-
-// LittleFS timeout
-const unsigned long LITTLEFS_TIMEOUT = 30000;     // LittleFS error timeout (ms)
-
-// WebSocket
-const unsigned long WEBSOCKET_UPDATE_INTERVAL = 1000;  // 1 second for responsive UI
-const uint8_t WEBSOCKET_STACK_CHECK_CYCLES = 10;       // Check stack every N cycles
-
-// ----------------------------------------------------------------------------
-// Definition of global constants
-// ----------------------------------------------------------------------------
-
-// DHT Sensor
-DHT_Unified dht(DHTPIN, DHTTYPE);
-float temp;
-float hum;
-
-// Temperature/Humidity sensor monitoring
-const unsigned long SENSOR_CHECK_INTERVAL = 5000;  // Sensor check interval (ms)
-
-// Power Switch for Bluetooth Module
-bool bt_powerState = false;
-
-// Emulate BT Button
-const unsigned long long_delay = 1000; // More than 1s (Volumen + -)
-const unsigned long short_delay = 200; // Short time (FF, RW, PLAY and PAUSE)
-
-// Lamp Switch
-bool lampState = false;
-
-// Battery
-int readCount = 0;
-int lvlCharge;
-Battery18650Stats batteryStats(ADC_PIN, CONV_FACTOR, READS, MAXV, MINV);
-
-// WiFi credentials (loaded from Preferences in setup())
-char savedSSID[33] = {0};  // SSID max 32 chars + null
-char savedPass[65] = {0};  // Password max 64 chars + null
-
-//-----------------------------------------------------------------------------
-// Power Management State Machine
-//-----------------------------------------------------------------------------
-
-// State definitions
-enum PowerState {
-    POWER_AC_MODE,            // AC power connected - full operation
-    POWER_BATTERY_ACTIVE,     // Battery + WebSocket client connected
-    POWER_BATTERY_SLEEP,      // Battery + no clients (savings mode)
-    POWER_BATTERY_CONNECTING   // Battery + attempting connection
-};
-
-// State machine variables
-PowerState currentPowerState = POWER_AC_MODE;
-PowerState previousPowerState = POWER_AC_MODE;
-unsigned long lastStateChange = 0;
-unsigned long sleepCycleStart = 0;
-bool webSocketClientConnected = false;
-bool onBatteryPower = false;
-bool powerManagementControllingWiFi = false;  // Signal to TaskWiFiMonitor
-
-// Timing constants
-const unsigned long SLEEP_DURATION = 60000;        // 60 seconds WiFi sleep
-const unsigned long AWAKE_DURATION = 10000;         // 10 seconds WiFi awake
-const unsigned long POWER_CHANGE_DEBOUNCE = 3000;   // 3 seconds debounce
-const unsigned long WS_WAIT_DURATION = 30000;        // 30 seconds wait for WebSocket
-
-// Critical battery threshold
-const int BATTERY_CRITICAL_LEVEL = 15;  // 15%
-
-// ============================================================================
-// EFECTO BALLS
-// ============================================================================
-
-#define GRAVITY -1
-#define h0 1
-#define NUM_BALLS 3
-
-// vImpact0 definido en main.cpp — necesario para Balls.h
-extern float vImpact0;
-
-uint8_t ballsCount = 3;
-bool ballsRandomColors = false;
-float h[NUM_BALLS];
-float vImpact[NUM_BALLS];
-float tCycle[NUM_BALLS];
-int pos[NUM_BALLS];
-long tLast[NUM_BALLS];
-float COR[NUM_BALLS];
+#include "config/pins.h"     // Pines GPIO
+#include "config/config.h"   // Constantes de comportamiento
 
 // ============================================================================
 // EFECTO FIRE
@@ -279,7 +103,67 @@ int maxLvlAvgLeft = 512;
 bool is_centered = false;
 
 // ============================================================================
-// VARIABLES DE ESTADO GLOBALES
+// OBJECTOS GLOBALES (definiciones)
+// ============================================================================
+
+// DHT Sensor
+DHT_Unified dht(DHTPIN, DHTTYPE);
+float temp;
+float hum;
+
+// Power Switch for Bluetooth Module
+bool bt_powerState = false;
+
+// Lamp Switch
+bool lampState = false;
+
+// Battery
+int readCount = 0;
+int lvlCharge;
+Battery18650Stats batteryStats(ADC_PIN, CONV_FACTOR, READS, MAXV, MINV);
+
+// WiFi credentials (loaded from Preferences in setup())
+char savedSSID[33] = {0};  // SSID max 32 chars + null
+char savedPass[65] = {0};  // Password max 64 chars + null
+
+// ============================================================================
+// VARIABLES BALLS
+// ============================================================================
+
+// vImpact0 definido en main.cpp
+extern float vImpact0;
+
+uint8_t ballsCount = 3;
+bool ballsRandomColors = false;
+float h[NUM_BALLS];
+float vImpact[NUM_BALLS];
+float tCycle[NUM_BALLS];
+int pos[NUM_BALLS];
+long tLast[NUM_BALLS];
+float COR[NUM_BALLS];
+
+// ============================================================================
+// POWER MANAGEMENT STATE MACHINE
+// ============================================================================
+
+enum PowerState {
+    POWER_AC_MODE,            // AC power connected - full operation
+    POWER_BATTERY_ACTIVE,     // Battery + WebSocket client connected
+    POWER_BATTERY_SLEEP,      // Battery + no clients (savings mode)
+    POWER_BATTERY_CONNECTING   // Battery + attempting connection
+};
+
+// State machine variables
+PowerState currentPowerState = POWER_AC_MODE;
+PowerState previousPowerState = POWER_AC_MODE;
+unsigned long lastStateChange = 0;
+unsigned long sleepCycleStart = 0;
+bool webSocketClientConnected = false;
+bool onBatteryPower = false;
+bool powerManagementControllingWiFi = false;
+
+// ============================================================================
+// GLOBAL EXTERN DECLARATIONS
 // ============================================================================
 
 extern float temp;

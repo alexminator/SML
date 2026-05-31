@@ -16,6 +16,7 @@
 #include <DHT.h>
 #include <DHT_U.h>
 #include <Preferences.h>
+#include "config/secrets.h"
 
 // ── WIFI credentials — definiciones reales (data.h tiene solo extern) ──────────
 const char *WIFI_SSID = DEFAULT_WIFI_SSID;

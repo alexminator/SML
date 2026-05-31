@@ -8,18 +8,19 @@
 ## Índice
 
 1. [Resumen ejecutivo](#1-resumen-ejecutivo)
-2. [Inventario de problemas actuales](#2-inventario-de-problemas-actuales)
-3. [Estructura objetivo](#3-estructura-objetivo)
-4. [Fase 1 — Correcciones críticas sin refactor](#fase-1--correcciones-críticas-sin-refactor-~2h)
-5. [Fase 2 — Separar configuración](#fase-2--separar-configuración-~1h)
-6. [Fase 3 — Estado global centralizado](#fase-3--estado-global-centralizado-~2h)
-7. [Fase 4 — EffectRegistry](#fase-4--effectregistry-~3h)
-8. [Fase 5 — Partir main.cpp](#fase-5--partir-maincpp-~3h)
-9. [Fase 6 — Migrar efectos a Effect base class](#fase-6--migrar-efectos-a-effect-base-class-~4h)
-10. [Fase 7 — Parámetros de efectos vía web](#fase-7--parámetros-de-efectos-vía-web-~3h)
-11. [Fase 8 — VU meters como VUEffect](#fase-8--vu-meters-como-vueffect-~2h)
-12. [Checklist de verificación](#12-checklist-de-verificación)
-13. [Referencia rápida de patrones](#13-referencia-rápida-de-patrones)
+2. [Estado actual](#2-estado-actual)
+3. [Inventario de problemas actuales](#3-inventario-de-problemas-actuales)
+4. [Estructura objetivo](#4-estructura-objetivo)
+5. [Fase 1 — Correcciones críticas sin refactor ✅](#fase-1--correcciones-críticas-sin-refactor-✅-completada)
+6. [Fase 2 — Separar configuración ✅](#fase-2--separar-configuración-✅-completada)
+7. [Fase 3 — Estado global centralizado](#fase-3--estado-global-centralizado-~2h)
+8. [Fase 4 — EffectRegistry](#fase-4--effectregistry-~3h)
+9. [Fase 5 — Partir main.cpp](#fase-5--partir-maincpp-~3h)
+10. [Fase 6 — Migrar efectos a Effect base class](#fase-6--migrar-efectos-a-effect-base-class-~4h)
+11. [Fase 7 — Parámetros de efectos vía web](#fase-7--parámetros-de-efectos-vía-web-~3h)
+12. [Fase 8 — VU meters como VUEffect](#fase-8--vu-meters-como-vueffect-~2h)
+13. [Checklist de verificación](#13-checklist-de-verificación)
+14. [Referencia rápida de patrones](#14-referencia-rápida-de-patrones)
 
 ---
 
@@ -31,9 +32,27 @@ Este plan migra el proyecto en **8 fases independientes**, cada una compilable y
 
 **Principio rector:** en cada fase, el firmware debe compilar y los efectos deben funcionar antes de pasar a la siguiente.
 
+## 2. Estado actual
+
+> **Última actualización:** 2026-05-31  
+> **Progreso:** Fase 1 y Fase 2 completadas ✅
+
+| Fase | Estado | Notas |
+|------|--------|-------|
+| 1 — Correcciones críticas | ✅ Completada | 7 bugs arreglados (debug.h, common.h, data.h ODR; VLA; mDNS loop; static instances; vImpact0) |
+| 2 — Separar configuración | ✅ Completada | `config/pins.h`, `config/config.h`, `config/secrets.h` creados; Settings.h como hub; .gitignore actualizado |
+| 3 — Estado global centralizado | ⏳ Pendiente | Mover objetos globales de Settings.h a AppState.h/.cpp |
+| 4 — EffectRegistry | ⏳ Pendiente | Eliminar switch de 20 cases |
+| 5 — Partir main.cpp | ⏳ Pendiente | Reducir de ~1800 a ~60 líneas |
+| 6 — Migrar efectos a Effect base class | ⏳ Pendiente | Heredar Effect, parámetros encapsulados |
+| 7 — Parámetros vía web | ⏳ Pendiente | setParams desde WebSocket |
+| 8 — VU meters como VUEffect | ⏳ Pendiente | Eliminar common.h |
+
+> **Cambios respecto al plan original:** La Fase 1 y 2 se implementaron como Phase 0/1/2 durante la ejecución, pero el contenido es el mismo. Las tareas 1.4 (VLA), 1.5 (mDNS), 1.6 (static instances) se aplicaron directamente en `main.cpp` en lugar de mover el código a EffectRegistry, como paso intermedio antes de la Fase 4.
+
 ---
 
-## 2. Inventario de problemas actuales
+## 3. Inventario de problemas actuales
 
 ### Severidad alta — pueden causar comportamiento indefinido
 
@@ -70,7 +89,7 @@ Este plan migra el proyecto en **8 fases independientes**, cada una compilable y
 
 ---
 
-## 3. Estructura objetivo
+## 4. Estructura objetivo
 
 ```
 smart-music-lamp/
@@ -123,7 +142,7 @@ smart-music-lamp/
 
 ---
 
-## Fase 1 — Correcciones críticas sin refactor (~2h)
+## 5. Fase 1 — Correcciones críticas sin refactor ✅ (completada)
 
 > **Objetivo:** eliminar los bugs A1–A4 y M3–M6 sin mover ningún archivo.  
 > **Verificación:** el proyecto compila igual que antes.
@@ -259,7 +278,7 @@ extern float vImpact0;   // definido en main.cpp
 
 ---
 
-## Fase 2 — Separar configuración (~1h)
+## 6. Fase 2 — Separar configuración ✅ (completada)
 
 > **Objetivo:** crear `config/` con tres archivos especializados.  
 > **Verificación:** compilar cambiando solo los paths de include en `Settings.h` y `main.cpp`.
@@ -401,7 +420,7 @@ En `main.cpp`, antes de `#include "Settings.h"`:
 
 ---
 
-## Fase 3 — Estado global centralizado (~2h)
+## 7. Fase 3 — Estado global centralizado (~2h)
 
 > **Objetivo:** eliminar el ODR de `Settings.h` moviendo definiciones a un `.cpp`.  
 > **Verificación:** compilar; en especial verificar que los objetos `dht`, `batt`, `stripLed` funcionan igual.
@@ -562,7 +581,7 @@ En `Settings.h`, borrar todas las definiciones de objetos y variables (las que n
 
 ---
 
-## Fase 4 — EffectRegistry (~3h)
+## 8. Fase 4 — EffectRegistry (~3h)
 
 > **Objetivo:** eliminar el `switch` de 20 cases y el bug de instancias por frame.  
 > **Verificación:** todos los efectos deben funcionar igual, ahora con estado persistente.
@@ -683,7 +702,7 @@ Include único de todos los efectos:
 
 ---
 
-## Fase 5 — Partir `main.cpp` (~3h)
+## 9. Fase 5 — Partir `main.cpp` (~3h)
 
 > **Objetivo:** reducir `main.cpp` de 1788 a ~60 líneas extrayendo módulos.  
 > **Orden:** extraer de menor a mayor dependencia.
@@ -843,7 +862,7 @@ void loop() {
 
 ---
 
-## Fase 6 — Migrar efectos a `Effect` base class (~4h)
+## 10. Fase 6 — Migrar efectos a `Effect` base class (~4h)
 
 > **Objetivo:** cada efecto hereda `Effect`, recibe `leds*` y `numLeds`, lee parámetros de `params`.  
 > **Estrategia:** migrar uno por uno, empezando por el más simple (`Breath`) y terminando con el más complejo (`Balls`).
@@ -966,7 +985,7 @@ Empezar por efectos sin estado interno (más fáciles):
 
 ---
 
-## Fase 7 — Parámetros de efectos vía web (~3h)
+## 11. Fase 7 — Parámetros de efectos vía web (~3h)
 
 > **Objetivo:** permitir cambiar parámetros de cualquier efecto desde el WebSocket sin tocar código C++.
 
@@ -1062,7 +1081,7 @@ void loadEffectParams() {
 
 ---
 
-## Fase 8 — VU meters como `VUEffect` (~2h)
+## 12. Fase 8 — VU meters como `VUEffect` (~2h)
 
 > **Objetivo:** eliminar las variables globales de VU de `common.h` encapsulándolas en la clase base.
 
@@ -1125,7 +1144,7 @@ Cada `vu*.h` hereda `VUEffect` en lugar de leer variables globales. El archivo `
 
 ---
 
-## 12. Checklist de verificación
+## 13. Checklist de verificación
 
 ### Por fase
 - [ ] **F1:** `debug.h` tiene `static`/`inline` — proyecto compila sin warnings ODR
