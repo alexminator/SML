@@ -32,41 +32,19 @@ struct EffectEntry {
 };
 
 // ============================================================================
-// EFFECT REGISTRY — fuente única de verdad
+// EFFECT REGISTRY — fuente única de verdad (definición en EffectRegistry.cpp)
 // ============================================================================
 // El orden debe coincidir con effectMap del frontend (data/js/main.js)
 // y con los IDs históricos del switch original.
 // ============================================================================
 
-inline const EffectEntry effectRegistry[] = {
-    { "fireStatus",             &StripLed::runFire },
-    { "movingdotStatus",        &StripLed::runMovingDot },
-    { "rainbowbeatStatus",      &StripLed::runRainbowBeat },
-    { "rwbStatus",              &StripLed::runRedWhiteBlue },
-    { "rippleStatus",           &StripLed::runRipple },
-    { "twinkleStatus",          &StripLed::runTwinkle },
-    { "ballsStatus",            &StripLed::runBalls },
-    { "juggleStatus",           &StripLed::runJuggle },
-    { "sinelonStatus",          &StripLed::runSinelon },
-    { "cometStatus",            &StripLed::runComet },
-    { "breathStatus",           &StripLed::runBreath },
-    { "colorSweepStatus",       &StripLed::runColorSweep },
-    { "rainbowVUStatus",        &StripLed::runRainbowVU },
-    { "oldVUStatus",            &StripLed::runOldVU },
-    { "rainbowHueVUStatus",     &StripLed::runRainbowHueVU },
-    { "rippleVUStatus",         &StripLed::runRippleVU },
-    { "threebarsVUStatus",      &StripLed::runThreebarsVU },
-    { "oceanVUStatus",          &StripLed::runOceanVU },
-    { "tempNEOStatus",          &StripLed::runTemperature },
-    { "battNEOStatus",          &StripLed::runBattery },
-};
+extern const EffectEntry effectRegistry[];
 
 // ============================================================================
 // CONSTANTES
 // ============================================================================
 
-inline constexpr uint8_t EFFECT_COUNT =
-    sizeof(effectRegistry) / sizeof(effectRegistry[0]);
+extern const uint8_t EFFECT_COUNT;
 
 // ============================================================================
 // HELPERS INLINE

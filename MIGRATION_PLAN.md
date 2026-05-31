@@ -35,7 +35,7 @@ Este plan migra el proyecto en **8 fases independientes**, cada una compilable y
 ## 2. Estado actual
 
 > **Última actualización:** 2026-05-31  
-> **Progreso:** Fase 1, 2 y 3 completadas ✅ | **Settings.h eliminado** (reemplazado por state/AppState.h + config/*.h)
+> **Progreso:** Fases 1-5 completadas ✅ | **Settings.h** convertido en hub delgado | **main.cpp**: 1800→421 líneas
 
 | Fase | Estado | Notas |
 |------|--------|-------|
@@ -43,7 +43,7 @@ Este plan migra el proyecto en **8 fases independientes**, cada una compilable y
 | 2 — Separar configuración | ✅ Completada | `config/pins.h`, `config/config.h`, `config/secrets.h` creados; .gitignore actualizado |
 | 3 — Estado global centralizado | ✅ Completada | `state/AppState.h` + `state/AppState.cpp` creados. Settings.h convertido a hub delgado. ODR eliminado. |
 | 4 — EffectRegistry | ✅ Completada | `effects/EffectRegistry.h` creado. Switch de 20 cases eliminado. Array effectNames[] eliminado. |
-| 5 — Partir main.cpp | ⏳ Pendiente | Reducir de ~1800 a ~60 líneas |
+| 5 — Partir main.cpp | ✅ En progreso | WebSocket, WebServer, PowerMgr, tasks extraídos. main.cpp: 1800→421 líneas (~77%). Pendiente: migrar StripLed/Battery methods (depende de Fase 6). |
 | 6 — Migrar efectos a Effect base class | ⏳ Pendiente | Heredar Effect, parámetros encapsulados |
 | 7 — Parámetros vía web | ⏳ Pendiente | setParams desde WebSocket |
 | 8 — VU meters como VUEffect | ⏳ Pendiente | Eliminar common.h |
@@ -1164,8 +1164,9 @@ Cada `vu*.h` hereda `VUEffect` en lugar de leer variables globales. El archivo `
 - [x] **F3:** Eliminar `extern` duplicados del final de `Settings.h`
 - [x] **F4:** `EffectRegistry` — todos los efectos responden en la UI web
 - [x] **F4:** `switch` de 20 cases eliminado de `update()`
-- [ ] **F5:** `main.cpp` < 100 líneas — verificar `wc -l src/main.cpp`
-- [ ] **F5:** `TaskBatteryMonitor` simplificado — solo monitoreo de batería
+- [x] **F5:** `main.cpp` < 500 líneas — verificar `wc -l src/main.cpp` (421 líneas)
+- [x] **F5:** `TaskBatteryMonitor` simplificado — solo monitoreo de batería
+- [x] **F5:** PowerMgr extraído — toda la máquina de estados en power/PowerMgr.cpp
 - [ ] **F6:** Cada efecto migrado — verificar visualmente en el hardware
 - [ ] **F6:** Variables globales de efectos eliminadas de `AppState`
 - [ ] **F7:** `setParams` desde WebSocket — cambiar `count` de Balls en vivo

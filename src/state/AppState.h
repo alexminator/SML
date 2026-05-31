@@ -235,8 +235,3 @@ extern bool webSocketClientConnected;
 extern bool onBatteryPower;
 extern bool powerManagementControllingWiFi;
 
-// ============================================================================
-// FUNCTION DECLARATIONS
-// ============================================================================
-
-void readSensor();
