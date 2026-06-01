@@ -56,6 +56,10 @@ const SML = {
   currentTab: 'tabLamp',
   isDesktop: window.innerWidth >= 768,
   theme: localStorage.getItem('sml-theme') || 'sml-classic',
+
+  // Volume (15 steps, 0-14, middle = 7)
+  volumeLevel: 7,
+  playing: false,
 };
 
 // ============================================================================
@@ -572,8 +576,10 @@ function handleMessage(data) {
   // ── BLUETOOTH ──
   if (data.btstatus !== undefined) {
     SML.btPower = data.btstatus === 'on';
-    const btToggle = document.getElementById('btToggle');
-    if (btToggle) btToggle.classList.toggle('on', SML.btPower);
+    // Bridge to player.js sync (star-tab UI update)
+    if (typeof window.playerSync === 'function') {
+      window.playerSync({ bt_powerState: SML.btPower });
+    }
   }
 
   // ── WIFI / NETWORK ──
@@ -657,9 +663,7 @@ function updateConnectionStatus(connected) {
 // ============================================================================
 
 function initPlayerBridge() {
-  // player.js will find these after DOMContentLoaded
-  // It uses: play, back, forward, volUp, volDown, controlBtn
-  // and calls sendWebSocketCommand(action)
+  // player.js (IIFE) auto-initializes — no bridge action needed here.
 }
 
 // sendWebSocketCommand is already declared in player.js — bridge not needed here.
@@ -727,14 +731,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Lamp controls
   initLampControls();
 
-  // BT toggle
-  const btToggle = document.getElementById('btToggle');
-  if (btToggle) {
-    btToggle.addEventListener('click', () => {
-      sendCmd({ action: 'music' });
-      btToggle.classList.toggle('on');
-    });
-  }
+  // Volume + BT are now handled by player.js (IIFE auto-inits)
+  // player.js handles: play/pause, skip, BT star-tab, volume ring drag
 
   // Offcanvas close
   const closeOffcanvas = () => {
