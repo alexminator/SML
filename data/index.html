@@ -1,283 +1,337 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" data-theme="sml-classic">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0f0f1e">
   <meta name="author" content="Alexminator">
   <meta name="description" content="Smart Music Lamp">
   <title>Smart Music Lamp</title>
   <link rel="icon" href="SML.ico" type="image/x-icon">
-  <!--=============== CSS ===============-->
+
+  <!-- ===== CSS ===== -->
+  <link rel="stylesheet" href="css/themes.css">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="stylesheet" href="css/fontawesome.css">
   <link rel="stylesheet" href="css/solid.css">
-  <!--=============== MAIN JS ===============-->
-  <script src="js/main.js" defer></script>
+
+  <!-- ===== PRESERVED SCRIPTS (load first) ===== -->
   <script src="js/iro.min.js" defer></script>
-  <script src="js/slider.js" defer></script>
+  <script src="js/date.js" defer></script>
+  <script src="js/battery.js" defer></script>
+  <script src="js/player.js" defer></script>
+
+  <!-- ===== NEW SCRIPTS ===== -->
+  <script src="js/peek.js" defer></script>
+  <script src="js/config.js" defer></script>
+  <script src="js/main.js" defer></script>
 </head>
+<body>
+  <div id="app">
 
-<body class="grid-container">
-
-  <ul class="circles">
-    <li></li>
-    <li></li>
-    <li></li>
-    <li></li>
-    <li></li>
-    <li></li>
-    <li></li>
-    <li></li>
-    <li></li>
-    <li></li>
-  </ul>
-
-  <header class="header">
-    <div id="butterfly">
-      <div class="wings"></div>
-    </div>
-    <div class="glowing"><span>S</span><span>M</span><span>L</span></div>
-    <p>Smart Music Lamp</p>
-  </header>
-
-  <main class="main">
-
-    <div class="wrap">
-      <ul class="tabs">
-        <li><a href="#tab-lamp"><span class="fas fa-lightbulb"></span><span class="tab-text">Lamp</span></a></li>
-        <li><a href="#tab-music"><span class="fas fa-music"></span><span class="tab-text">Music</span></a></li>
-        <li><a href="#tab-temp"><span class="fas fa-thermometer-half"></span><span class="tab-text">Weather</span></a></li>
-        <li><a href="#tab-battery"><span class="fas fa-battery"></span><span class="tab-text">Battery</span></a></li>
-      </ul>
-
-      <div class="sections">
-        <div id="tab-lamp">
-          <div class="power-button">
-            <h2 class="power-label">Power <span class="fas fa-power-off"></span></h2>
-            <h4 class="power-lamp">Lamp</h4>
-            <div id="lamp" class="%LAMP%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
-            </div>
-
-            <h4 class="power-neo">Neopixel</h4>
-            <div id="Neo" class="%STRIPLED%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
-            </div>
+    <!-- ============================================================
+         STATUS BAR
+         ============================================================ -->
+    <header id="statusBar">
+      <div class="status-left">
+        <span id="connectionIndicator" style="font-size:0.7rem;color:var(--accent-danger)">○</span>
+        <div class="wifi-signal" id="wifiBars">
+          <div class="wifi-bar"></div>
+          <div class="wifi-bar"></div>
+          <div class="wifi-bar"></div>
+          <div class="wifi-bar"></div>
+        </div>
+      </div>
+      <div class="status-center" id="statusClock">
+        <span id="clockDisplay">--:--</span>
+      </div>
+      <div class="status-right">
+        <div class="batt-indicator">
+          <span class="batt-percent">--%</span>
+          <div class="batt-icon">
+            <div class="batt-fill high" style="width:50%"></div>
           </div>
+          <span class="charging-icon" style="display:none">⚡</span>
+        </div>
+      </div>
+    </header>
 
-          <div class="picker">
-            <h2 class="colorpicker">Color <span class="fas fa-paint-brush"></span></h2>
-            <div class="picker-container">
-              <div class="ColorPicker" id="wheelPicker"></div>
-            </div>
-            <span id="picker_bridge" data-color='{"r":255,"g":255,"b":255}'></span>
-          </div>
+    <!-- ============================================================
+         SIDEBAR (desktop)
+         ============================================================ -->
+    <nav class="sidebar" id="sidebar">
+      <button class="sidebar-btn active" data-tab="tabLamp">
+        <span class="nav-icon fas fa-lightbulb"></span>
+        <span class="nav-label">Lamp</span>
+      </button>
+      <button class="sidebar-btn" data-tab="tabMusic">
+        <span class="nav-icon fas fa-music"></span>
+        <span class="nav-label">Music</span>
+      </button>
+      <button class="sidebar-btn" data-tab="tabPeek">
+        <span class="nav-icon fas fa-eye"></span>
+        <span class="nav-label">Peek</span>
+      </button>
+      <button class="sidebar-btn" data-tab="tabWeather">
+        <span class="nav-icon fas fa-thermometer-half"></span>
+        <span class="nav-label">Weather</span>
+      </button>
+      <button class="sidebar-btn" data-tab="tabBattery">
+        <span class="nav-icon fas fa-battery-three-quarters"></span>
+        <span class="nav-label">Battery</span>
+      </button>
+      <div class="sidebar-spacer"></div>
+      <button class="sidebar-btn" data-tab="tabConfig">
+        <span class="nav-icon fas fa-cog"></span>
+        <span class="nav-label">Config</span>
+      </button>
+    </nav>
 
-          <div class="slider">
-            <h2 class="brigthness">Brightness <span class="fas fa-sun"></span></h2>
-            <div class="range">
-              <div class="sliderValue">
-                <span id="textSliderValue" class="mark">%BRIGHTNESS%</span>
+    <!-- ============================================================
+         MAIN CONTENT
+         ============================================================ -->
+    <div class="content-area">
+
+      <!-- ===== SML HEADER (sticky) ===== -->
+      <header id="smlHeader">
+        <h1 class="glowing" id="smlGlow"><span>S</span><span>M</span><span>L</span></h1>
+        <p id="smlSubtitle">Smart Music Lamp</p>
+      </header>
+
+      <!-- ===== TAB: LAMP ===== -->
+      <section id="tabLamp" class="tab-content active">
+        <div class="card">
+          <!-- Power toggles: Lamp & Neopixel (FA power-off cards) -->
+          <div class="power-section">
+            <h2 class="card-title">Power</h2>
+            <div class="power-row">
+              <div class="power-card on" id="lampToggle">
+                <div class="power-card-icon"><span class="fas fa-power-off"></span></div>
+                <span class="power-card-label">Lamp</span>
               </div>
-              <div class="field">
-                <div class="value left">25</div>
-                <input type="range" id="pwmSlider" min="25" max="255" value="%BRIGHTNESS%" steps="1">
-                <div class="value right">255</div>
+              <div class="power-card on" id="neoToggle">
+                <div class="power-card-icon"><span class="fas fa-power-off"></span></div>
+                <span class="power-card-label">Neopixel</span>
               </div>
             </div>
           </div>
 
-          <div class="effects-button">
-            <h2 class="power-label">Effects <span class="fas fa-wand-sparkles"></span></h2>
-            <h3 class="fire">Fire</h3>
-            <div id="Firebutton" class="%FIRE_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
-            </div>
-            <h3 class="movingdot">Dots</h3>
-            <div id="MovingDotbutton" class="%MOVINGDOT_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
-            </div>
-            <h3 class="rainbow">Rainbow</h3>
-            <div id="RainbowBeatbutton" class="%RAINBOWBEAT_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
-            </div>
-            <h3 class="rwb">RWB</h3>
-            <div id="RWBbutton" class="%RWB_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
-            </div>
-            <h3 class="ripple">Ripple</h3>
-            <div id="Ripplebutton" class="%RIPPLE_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
-            </div>
-            <h3 class="twinkle">Twinkle</h3>
-            <div id="Twinklebutton" class="%TWINKLE_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
-            </div>
-            <h3 class="balls">Balls</h3>
-            <div id="Ballsbutton" class="%BALLS_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
-            </div>
-            <h3 class="juggle">Juggle</h3>
-            <div id="Jugglebutton" class="%JUGGLE_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
-            </div>
-            <h3 class="sinelon">Sinelon</h3>
-            <div id="Sinelonbutton" class="%SINELON_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
-            </div>
-            <h3 class="comet">Comet</h3>
-            <div id="Cometbutton" class="%COMET_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
-            </div>
-            <h3 class="breath">Breath</h3>
-            <div id="Breathbutton" class="%BREATH_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
-            </div>
-            <h3 class="colorsweep">ColorSweep</h3>
-            <div id="ColorSweepbutton" class="%COLORSWEEP_STATE%">
-              <span class="button">
-                <span class="slide"></span>
-              </span>
-            </div>
+          <!-- Color picker (value slider = brightness control) -->
+          <div class="color-picker-container">
+            <div id="colorPicker"></div>
           </div>
         </div>
 
-        <div id="tab-music">
-          <div class="music">
-            <div class="power-music">
-              <h2 class="power-bt">Bluetooth</h2>
-              <div id="Bluetooth" class="%BLUETOOTH%">
-                <span class="button">
-                  <span class="slide"></span>
-                </span>
-              </div>
-            </div>
-            <h2 class="power-label">VU Meter <span class="fas fa-tachometer"></span></h2>
-            <div class="effects-vu">
-              <h3 class="rainbowVU">Rainbow</h3>
-              <div id="RainbowVU" class="%VU1%">
-                <span class="button">
-                  <span class="slide"></span>
-                </span>
-              </div>
-              <h3 class="oldskoolVU">Old</h3>
-              <div id="OldSkoolVU" class="%VU2%">
-                <span class="button">
-                  <span class="slide"></span>
-                </span>
-              </div>
-              <h3 class="rainbowHueVU">Hue</h3>
-              <div id="RainbowHueVU" class="%VU3%">
-                <span class="button">
-                  <span class="slide"></span>
-                </span>
-              </div>
-              <h3 class="rippleVU">Ripple</h3>
-              <div id="RippleVU" class="%VU4%">
-                <span class="button">
-                  <span class="slide"></span>
-                </span>
-              </div>
-              <h3 class="barsVU">3 bars</h3>
-              <div id="ThreebarsVU" class="%VU5%">
-                <span class="button">
-                  <span class="slide"></span>
-                </span>
-              </div>
-              <h3 class="oceanVU">Ocean</h3>
-              <div id="OceanVU" class="%VU6%">
-                <span class="button">
-                  <span class="slide"></span>
-                </span>
+        <!-- Effects (ONLY non-VU: IDs 0-11) -->
+        <div class="card">
+          <h2 class="card-title">✨ Effects</h2>
+          <div class="effects-grid" id="effectsGrid">
+            <button class="effect-card active" data-effect-id="0">
+              <div class="effect-icon" style="background:linear-gradient(135deg,#ffd700,#ff6b6b)"></div>
+              <span class="effect-name">Solid</span>
+            </button>
+            <button class="effect-card" data-effect-id="1">
+              <div class="effect-icon" style="background:linear-gradient(135deg,#ff4500,#ff8c00)"></div>
+              <span class="effect-name">Fire</span>
+            </button>
+            <button class="effect-card" data-effect-id="2">
+              <div class="effect-icon" style="background:linear-gradient(135deg,#00d4ff,#7b2ff7)"></div>
+              <span class="effect-name">Moving Dot</span>
+            </button>
+            <button class="effect-card" data-effect-id="3">
+              <div class="effect-icon" style="background:conic-gradient(from 0deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)"></div>
+              <span class="effect-name">Rainbow Beat</span>
+            </button>
+            <button class="effect-card" data-effect-id="4">
+              <div class="effect-icon" style="background:linear-gradient(135deg,#ff1744,#d50000)"></div>
+              <span class="effect-name">Red White Blue</span>
+            </button>
+            <button class="effect-card" data-effect-id="5">
+              <div class="effect-icon" style="background:radial-gradient(circle,#ffd700,#ff6b00)"></div>
+              <span class="effect-name">Ripple</span>
+            </button>
+            <button class="effect-card" data-effect-id="6">
+              <div class="effect-icon" style="background:radial-gradient(circle,#fff,#ffd700)"></div>
+              <span class="effect-name">Twinkle</span>
+            </button>
+            <button class="effect-card" data-effect-id="7">
+              <div class="effect-icon" style="background:linear-gradient(135deg,#00e676,#00bcd4)"></div>
+              <span class="effect-name">Bouncing Balls</span>
+            </button>
+            <button class="effect-card" data-effect-id="8">
+              <div class="effect-icon" style="background:linear-gradient(135deg,#e040fb,#7c4dff)"></div>
+              <span class="effect-name">Juggle</span>
+            </button>
+            <button class="effect-card" data-effect-id="9">
+              <div class="effect-icon" style="background:linear-gradient(135deg,#00bcd4,#fff)"></div>
+              <span class="effect-name">Sinelon</span>
+            </button>
+            <button class="effect-card" data-effect-id="10">
+              <div class="effect-icon" style="background:radial-gradient(circle at 30% 50%,#fff,#448aff)"></div>
+              <span class="effect-name">Comet</span>
+            </button>
+            <button class="effect-card" data-effect-id="11">
+              <div class="effect-icon" style="background:linear-gradient(135deg,#76ff03,#00e676)"></div>
+              <span class="effect-name">Breath</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== TAB: MUSIC ===== -->
+      <section id="tabMusic" class="tab-content">
+        <div class="card">
+          <h2 class="card-title">🎵 Music</h2>
+          <div class="music-container">
+            <!-- BT Toggle -->
+            <div class="bt-toggle-row">
+              <span style="font-size:0.9rem;color:var(--text-secondary)">Bluetooth</span>
+              <div class="toggle on" id="btToggle">
+                <span class="toggle-knob"></span>
               </div>
             </div>
 
-            <div class="button-controls">
-              <div class="btn-overlay">
+            <!-- Player controls (preserved from original — player.js selectors) -->
+              <div class="button-controls">
+            <div class="btn-overlay" id="playerControls">
+              <div class="vol-down" id="volDown">
+                <img src="img/Volume Down Icon.svg" alt="Vol Down" width="32" height="11">
+              </div>
+              <div class="skip-left" id="skipLeft">
+                <img src="img/Skip Left Icon.svg" alt="Previous" width="40" height="25">
+              </div>
+              <div class="play-btn play-pause" id="playPause">
                 <div class="play-btn-shadow"></div>
-                <div class="play-btn">
-                  <div class="play-btn-overlay">
-                    <div class="play-icon">
-                      <img src="img/play button icon.svg" alt="Play Button" width="48" height="31" />
-                    </div>
+                <div class="play-btn-overlay">
+                  <div class="play-icon">
+                    <img src="img/play button icon.svg" alt="Play/Pause" width="48" height="31">
                   </div>
                 </div>
-                <div class="skip-left">
-                  <img src="img/Skip Left Icon.svg" alt="Skip Left" width="40" height="25" />
-                </div>
-                <div class="skip-right">
-                  <img src="img/Skip Right Icon.svg" alt="Skip Right" width="40" height="25" />
-                </div>
-                <div class="vol-up">
-                  <img src="img/Volume Up Icon.svg" alt="Volume Up" width="32" height="31" />
-                </div>
-                <div class="vol-down">
-                  <img src="img/Volume Down Icon.svg" alt="Volume Down" width="32" height="11" />
-                </div>
-
+              </div>
+              <div class="skip-right" id="skipRight">
+                <img src="img/Skip Right Icon.svg" alt="Next" width="40" height="25">
+              </div>
+              <div class="vol-up" id="volUp">
+                <img src="img/Volume Up Icon.svg" alt="Vol Up" width="32" height="31">
               </div>
             </div>
+            </div>
+
+            <p class="text-muted" style="font-size:0.8rem">Controls your Bluetooth speaker module</p>
           </div>
         </div>
 
-        <div id="tab-temp">
-          <div class="weather">
-            <div class="weather-label">
-              <h2 class="weather-text">Weather</h2>
-              <div id="TempNEO" class="%TEMPNEO%">
-                <span class="button">
-                  <span class="slide"></span>
-                </span>
-                <span class="light"></span>
+        <!-- VU Meter effects in music tab -->
+        <div class="card">
+          <h2 class="card-title">📊 VU Meter Effects</h2>
+          <p class="card-subtitle">Audio-reactive LED effects that pulse to music</p>
+          <div class="effects-grid">
+            <button class="effect-card" data-effect-id="12">
+              <div class="effect-icon" style="background:linear-gradient(135deg,#00e5ff,#d500f9)"></div>
+              <span class="effect-name">Rainbow</span>
+            </button>
+            <button class="effect-card" data-effect-id="13">
+              <div class="effect-icon" style="background:linear-gradient(135deg,#76ff03,#00bfa5)"></div>
+              <span class="effect-name">Old Skool</span>
+            </button>
+            <button class="effect-card" data-effect-id="14">
+              <div class="effect-icon" style="background:linear-gradient(135deg,#ffd700,#ff4081)"></div>
+              <span class="effect-name">Hue</span>
+            </button>
+            <button class="effect-card" data-effect-id="15">
+              <div class="effect-icon" style="background:linear-gradient(135deg,#448aff,#e040fb)"></div>
+              <span class="effect-name">Ripple</span>
+            </button>
+            <button class="effect-card" data-effect-id="16">
+              <div class="effect-icon" style="background:linear-gradient(90deg,#f44336,#ffeb3b,#4caf50)"></div>
+              <span class="effect-name">3 Bars</span>
+            </button>
+            <button class="effect-card" data-effect-id="17">
+              <div class="effect-icon" style="background:linear-gradient(135deg,#00bcd4,#006064)"></div>
+              <span class="effect-name">Ocean</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== TAB: PEEK ===== -->
+      <section id="tabPeek" class="tab-content">
+        <div class="card">
+          <h2 class="card-title">👁 Live Preview</h2>
+          <p class="card-subtitle">Real-time LED strip visualization via WebSocket</p>
+          <div class="peek-container">
+            <div class="peek-toolbar">
+              <button class="active" data-peek-mode="strip">━━━ Strip</button>
+              <button data-peek-mode="circle">◉ Circle</button>
+              <select id="peekResolution">
+                <option value="1">Full (1:1)</option>
+                <option value="2">1/2</option>
+                <option value="3">1/3</option>
+                <option value="4">1/4</option>
+              </select>
+              <button id="peekToggle" class="active">▶ Live</button>
+            </div>
+            <div class="peek-canvas-wrapper">
+              <canvas id="peekCanvas" width="320" height="320"></canvas>
+            </div>
+            <p class="text-muted" style="font-size:0.75rem">
+              ⚡ Higher resolution = more data. Reduce if ESP32 struggles.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== TAB: WEATHER ===== -->
+      <section id="tabWeather" class="tab-content">
+        <div class="card">
+          <div class="weather-container">
+            <!-- Temperature -->
+            <div class="weather-temp">
+              <span id="weatherTemp">--.-</span>
+              <span class="celsius">°C</span>
+            </div>
+
+            <!-- Thermometer animation container (preserved) -->
+            <div id="thermometerContainer" style="width:100%;display:flex;justify-content:center">
+              <div class="wrapper" style="display:inline-block">
+                <div id="termometer">
+                  <div id="temperature" style="height:0" data-value="0°C"></div>
+                  <div id="graduations"></div>
+                </div>
               </div>
-
             </div>
 
-            <div class="temp">
-              <h2 id="temp">%TEMPERATURE%</h2>
-            </div>
-
-            <div class="wrapper">
-              <div id="termometer">
-                <div id="temperature" style="height:0" data-value="0°C"></div>
-                <div id="graduations"></div>
+            <!-- Weather details -->
+            <div class="weather-details">
+              <div class="weather-stat">
+                <div class="stat-value" id="weatherTempVal">--.-</div>
+                <div class="stat-label">Temperature</div>
+              </div>
+              <div class="weather-stat">
+                <div class="stat-value" id="weatherHumVal">--</div>
+                <div class="stat-label">Humidity %</div>
+              </div>
+              <div class="weather-stat">
+                <div class="stat-value" id="weatherHeatIndex">--.-</div>
+                <div class="stat-label">Feels Like</div>
               </div>
             </div>
 
-            <div class="humidity">
-              <i class="fas fa-droplet"></i> <span id="hum">%HUMIDITY%</span>
+            <!-- Temperature LED effect -->
+            <div class="card" style="margin-top:var(--space-md)">
+              <h2 class="card-title">🌡️ Temperature Effect</h2>
+              <div class="effects-grid">
+                <button class="effect-card" data-effect-id="18">
+                  <div class="effect-icon" style="background:linear-gradient(135deg,#3dcadf,#f17a65)"></div>
+                  <span class="effect-name">Temp Glow</span>
+                </button>
+              </div>
             </div>
 
-            <div class="widget">
-              <div class="fecha">
+            <!-- Date/Time widget (preserved) -->
+            <div class="widget" style="width:100%;text-align:center;margin-top:var(--space-sm)">
+              <div class="fecha" style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;font-size:0.9rem">
                 <p id="diaSemana" class="diaSemana"></p>
                 <p id="dia" class="dia"></p>
                 <p>de</p>
@@ -285,12 +339,12 @@
                 <p>del</p>
                 <p id="anio" class="anio"></p>
               </div>
-              <div class="reloj">
+              <div class="reloj" style="display:flex;gap:4px;justify-content:center;font-size:1.1rem;margin-top:4px">
                 <span id="time-icon"></span>
                 <p id="horas" class="horas"></p>
                 <p>:</p>
                 <p id="minutos" class="minutos"></p>
-                <div class="cajaSegundos">
+                <div class="cajaSegundos" style="display:flex;flex-direction:column;align-items:flex-start;font-size:0.7rem">
                   <p id="ampm" class="ampm"></p>
                   <p id="segundos" class="segundos"></p>
                 </div>
@@ -298,91 +352,230 @@
             </div>
           </div>
         </div>
+      </section>
 
-        <div id="tab-battery">
-          <section class="battery">
-            <div class="battery__card">
-              <div class="battery__data">
-                <div class="battery__header">
-                  <h2 class="battery__text">Battery</h2>
-                  <div id="BattNEO" class="%BATTNEO%">
-                    <span class="button">
-                      <span class="slide"></span>
-                    </span>
-                    <span class="light"></span>
+      <!-- ===== TAB: BATTERY ===== -->
+      <section id="tabBattery" class="tab-content">
+        <div class="card">
+          <div class="battery-container">
+            <!-- Battery visualization (preserved from original) -->
+            <div id="batteryVisualization" style="width:100%;display:flex;justify-content:center">
+              <section class="battery">
+                <div class="battery__card">
+                  <div class="battery__data">
+                    <div class="battery__header">
+                      <h2 class="battery__text">Battery</h2>
+                    </div>
+                    <p id="battVolt">%BATTVOLTAGE%</p>
+                    <h1 id="battlevel" class="battery__percentage">0</h1>
+                    <p id="battCharge" class="battery__status">
+                      Low Battery <span class="fas fa-plug"></span>
+                    </p>
+                  </div>
+                  <div class="battery__pill">
+                    <div class="battery__level">
+                      <div class="battery__liquid"></div>
+                      <div class="bubbles battery-bubbles">
+                        <span>&nbsp;</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <p id="battVolt">%BATTVOLTAGE%</p>
-                <h1 id="battlevel" class="battery__percentage">0</h1>
-                <p id="battCharge" class="battery__status">
-                  Low Battery <span class="fas fa-plug"></span>
-                </p>
-              </div>
-              <div class="battery__pill">
-                <div class="battery__level">
-                  <div class="battery__liquid"></div>
-                  <div class="bubbles battery-bubbles">
-                    <span>&nbsp;</span>
-                  </div>
-                </div>
+              </section>
+            </div>
+
+            <!-- Battery LED effect -->
+            <div class="card" style="margin-top:var(--space-md)">
+              <h2 class="card-title">🔋 Battery Effect</h2>
+              <div class="effects-grid">
+                <button class="effect-card" data-effect-id="19">
+                  <div class="effect-icon" style="background:linear-gradient(135deg,#00e676,#ff9100,#ff1744)"></div>
+                  <span class="effect-name">Batt Level</span>
+                </button>
               </div>
             </div>
-          </section>
-        </div>
-      </div>
-    </div>
-  </main>
 
-  <footer class="footer">
-    <div id="Signal" class="%BARS%" onclick="openWiFiModal()">
-      <div class="wv4 wave">
-        <div class="wv3 wave">
-          <div class="wv2 wave">
-            <div class="wv1 wave"></div>
+            <!-- Battery stats grid -->
+            <div class="battery-stats">
+              <div class="battery-stat">
+                <div class="stat-value" id="battPercentDetail">--%</div>
+                <div class="stat-label">Level</div>
+              </div>
+              <div class="battery-stat">
+                <div class="stat-value" id="battVoltageDetail">--.--V</div>
+                <div class="stat-label">Voltage</div>
+              </div>
+              <div class="battery-stat">
+                <div class="stat-value" id="battStatus">--</div>
+                <div class="stat-label">Status</div>
+              </div>
+              <div class="battery-stat">
+                <div class="stat-value" id="battChargeDetail">--</div>
+                <div class="stat-label">Charge</div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-    <p id="status">Disconnected</p>
-    <div id="indicator"></div>
-  </footer>
+      </section>
 
-  <!-- WiFi Configuration Modal -->
-  <div id="wifiModal" class="wifi-modal">
-    <div class="wifi-modal-content">
-      <div class="wifi-modal-header">
-        <h2>WiFi Configuration</h2>
-        <span class="wifi-close" onclick="closeWiFiModal()">&times;</span>
-      </div>
-      <div class="wifi-modal-body">
-        <div class="wifi-info">
-          <p><strong>SSID:</strong> <span id="currentSSID">-</span></p>
-          <p><strong>Signal:</strong> <span id="currentSignal">-</span></p>
-          <p><strong>IP:</strong> <span id="currentIP">-</span></p>
+      <!-- ===== TAB: CONFIG ===== -->
+      <section id="tabConfig" class="tab-content">
+        <!-- Theme Config -->
+        <div class="config-section">
+          <div class="config-card">
+            <h3>🎨 Theme</h3>
+            <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:var(--space-md)">
+              Choose your preferred color palette for the web interface
+            </p>
+            <div class="theme-options">
+              <div class="theme-option active" data-theme="sml-classic">
+                <span class="theme-swatch"></span>
+                <span>SML Classic</span>
+              </div>
+              <div class="theme-option" data-theme="wled-dark">
+                <span class="theme-swatch"></span>
+                <span>WLED Dark</span>
+              </div>
+              <div class="theme-option" data-theme="midnight-amoled">
+                <span class="theme-swatch"></span>
+                <span>Midnight<br>AMOLED</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <form id="wifiConfigForm" onsubmit="saveWiFiConfig(event)">
-          <div class="form-group">
-            <label for="newSSID">New SSID <span class="optional">(optional)</span>:</label>
-            <input type="text" id="newSSID" name="ssid" placeholder="Leave empty to keep current SSID">
-            <small class="help-text">Leave empty to keep current WiFi name</small>
+
+        <!-- WiFi Config -->
+        <div class="config-section">
+          <div class="config-card">
+            <h3>📶 WiFi</h3>
+            <div class="config-input-group">
+              <label for="wifiSsid">SSID</label>
+              <input type="text" id="wifiSsid" placeholder="Enter WiFi name">
+            </div>
+            <div class="config-input-group">
+              <label for="wifiPass">Password</label>
+              <input type="password" id="wifiPass" placeholder="Enter WiFi password">
+            </div>
+            <button class="config-btn" id="wifiSaveBtn">Save & Reconnect</button>
+            <p class="config-hint">Current IP: <span id="deviceIP">--</span></p>
           </div>
-          <div class="form-group">
-            <label for="newPassword"><span class="required">*</span> New Password:</label>
-            <input type="password" id="newPassword" name="password" required placeholder="Enter new WiFi password">
-            <small class="help-text">Minimum 8 characters</small>
+        </div>
+
+        <!-- LED Config -->
+        <div class="config-section">
+          <div class="config-card">
+            <h3>💡 LED Strip</h3>
+            <div class="config-input-group">
+              <label for="ledCount">Number of LEDs</label>
+              <input type="number" id="ledCount" min="1" max="300" value="24">
+            </div>
+            <div class="config-input-group">
+              <label for="ledMaxMA">Max Current (mA)</label>
+              <input type="number" id="ledMaxMA" min="100" max="5000" value="500">
+            </div>
+            <button class="config-btn" id="ledSaveBtn">Save & Reboot</button>
+            <p class="config-hint">⚠️ Requires reboot to take effect</p>
           </div>
-          <div class="wifi-modal-footer">
-            <button type="button" class="btn-cancel" onclick="closeWiFiModal()">Cancel</button>
-            <button type="submit" class="btn-save">Save & Restart</button>
+        </div>
+
+        <!-- System Info -->
+        <div class="config-section">
+          <div class="config-card">
+            <h3>ℹ️ System Info</h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Uptime</div>
+                <div class="info-value" id="sysUptime">--</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Free Heap</div>
+                <div class="info-value" id="sysHeap">--</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">WiFi RSSI</div>
+                <div class="info-value" id="sysRSSI">--</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Firmware</div>
+                <div class="info-value" id="sysVersion">%VERSION%</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">LEDs</div>
+                <div class="info-value" id="sysLEDs">%NLEDS%</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">IP Address</div>
+                <div class="info-value" id="sysIP">--</div>
+              </div>
+            </div>
           </div>
-        </form>
-        <div id="wifiStatus" class="wifi-status"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============================================================
+         BOTTOM NAV (mobile)
+         ============================================================ -->
+    <nav id="bottomNav">
+      <button class="nav-btn active" data-tab="tabLamp">
+        <span class="nav-icon fas fa-lightbulb"></span>
+        <span>Lamp</span>
+      </button>
+      <button class="nav-btn" data-tab="tabMusic">
+        <span class="nav-icon fas fa-music"></span>
+        <span>Music</span>
+      </button>
+      <button class="nav-btn" data-tab="tabPeek">
+        <span class="nav-icon fas fa-eye"></span>
+        <span>Peek</span>
+      </button>
+      <button class="nav-btn" data-tab="tabWeather">
+        <span class="nav-icon fas fa-thermometer-half"></span>
+        <span>Weather</span>
+      </button>
+      <button class="nav-btn" data-tab="tabBattery">
+        <span class="nav-icon fas fa-battery-three-quarters"></span>
+        <span>Battery</span>
+      </button>
+      <button class="nav-btn" data-tab="tabConfig">
+        <span class="nav-icon fas fa-cog"></span>
+        <span>Config</span>
+      </button>
+    </nav>
+
+    <!-- ============================================================
+         OFFCANVAS (desktop effect config)
+         ============================================================ -->
+    <div class="offcanvas-overlay" id="offcanvasOverlay"></div>
+    <aside class="offcanvas" id="effectOffcanvas">
+      <div class="offcanvas-header">
+        <h2 id="effectOffcanvasTitle">Effect</h2>
+        <button class="offcanvas-close">&times;</button>
+      </div>
+      <div class="offcanvas-body" id="effectOffcanvasBody">
+        <p class="text-muted">Select an effect to configure</p>
+      </div>
+    </aside>
+
+    <!-- ============================================================
+         MOBILE BOTTOM SHEET (effect params on mobile)
+         ============================================================ -->
+    <div class="modal-overlay" id="paramModalOverlay"></div>
+    <div class="param-bottom-sheet" id="paramBottomSheet">
+      <div class="param-bottom-sheet-header">
+        <div class="param-bottom-sheet-handle"></div>
+        <h3 id="paramSheetTitle">Effect Parameters</h3>
+        <button class="param-sheet-close">&times;</button>
+      </div>
+      <div class="param-bottom-sheet-body" id="paramSheetBody">
+        <p class="text-muted">Select an effect to configure</p>
       </div>
     </div>
+
+    <!-- ============================================================
+         TOAST CONTAINER
+         ============================================================ -->
+    <div class="toast-container" id="toastContainer"></div>
   </div>
-  <script src="js/battery.js" defer></script>
-  <script src="js/date.js" defer></script>
-  <script src="js/player.js" defer></script>
 </body>
-
 </html>

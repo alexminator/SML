@@ -1,0 +1,195 @@
+/* ──────────────────────────────────────────────────────────────────────────────
+   themes.css — SML Theme System (3 color palettes via CSS variables)
+   ──────────────────────────────────────────────────────────────────────────────
+   Usage: <html data-theme="sml-classic|wled-dark|midnight-amoled">
+   Persisted in localStorage key "sml-theme".
+   ────────────────────────────────────────────────────────────────────────────── */
+
+/* ===== Theme Common (shared across all themes) ===== */
+:root {
+  /* Layout constants */
+  --status-h: 44px;
+  --sml-header-h: 96px;
+  --nav-h: 64px;
+  --sidebar-w: 220px;
+  --sidebar-collapsed-w: 64px;
+  --max-content-w: 960px;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* Border radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 50%;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px var(--accent);
+
+  /* Transitions */
+  --t-fast: 0.15s ease;
+  --t-normal: 0.25s ease;
+  --t-slow: 0.4s ease;
+
+  /* Fonts */
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Handmade', cursive;
+  --font-mono: 'Courier New', monospace;
+}
+
+/* ===== THEME 1: SML Classic (default) ===== */
+/* Gold accent (#ffd700) + Cyan accent (#00d4ff) on dark navy */
+:root[data-theme="sml-classic"] {
+  --bg-primary: #0f0f1e;
+  --bg-secondary: #1a1a2e;
+  --bg-tertiary: #16213e;
+  --bg-card: #1e2a4a;
+  --bg-card-hover: #25355a;
+  --bg-elevated: #222244;
+  --bg-input: #0f0f1e;
+
+  --text-primary: #e8e8e8;
+  --text-secondary: #a0a0b0;
+  --text-muted: #6a6a7a;
+  --text-inverse: #0f0f1e;
+
+  --accent: #ffd700;
+  --accent-hover: #ffe44d;
+  --accent-secondary: #00d4ff;
+  --accent-secondary-hover: #33ddff;
+  --accent-success: #00e676;
+  --accent-warning: #ff9100;
+  --accent-danger: #ff1744;
+
+  --nav-bg: #0a0a18;
+  --nav-active: #ffd700;
+  --nav-inactive: #5a5a6a;
+  --nav-hover: #8a8a9a;
+
+  --status-bar-bg: #080812;
+  --status-bar-text: #c0c0d0;
+
+  --border: #2a3a5a;
+  --border-light: #1a2a3a;
+
+  --scrollbar-thumb: #2a3a5a;
+  --scrollbar-track: #0f0f1e;
+
+  --toggle-bg: #2a3a5a;
+  --toggle-active: #ffd700;
+
+  --slider-track: #2a3a5a;
+  --slider-fill: #ffd700;
+  --slider-thumb: #ffd700;
+
+  --card-border: 1px solid var(--border);
+  --player-icon-opacity: 0.35;
+}
+
+/* ===== THEME 2: WLED Dark ===== */
+/* Blue accent (#58a6ff) + Green (#3fb950) on GitHub-dark */
+:root[data-theme="wled-dark"] {
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #1c2128;
+  --bg-card: #1c2333;
+  --bg-card-hover: #252c3a;
+  --bg-elevated: #21262d;
+  --bg-input: #0d1117;
+
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #5a6070;
+  --text-inverse: #0d1117;
+
+  --accent: #58a6ff;
+  --accent-hover: #79b8ff;
+  --accent-secondary: #3fb950;
+  --accent-secondary-hover: #56d364;
+  --accent-success: #3fb950;
+  --accent-warning: #d29922;
+  --accent-danger: #f85149;
+
+  --nav-bg: #090c10;
+  --nav-active: #58a6ff;
+  --nav-inactive: #484f58;
+  --nav-hover: #6e7681;
+
+  --status-bar-bg: #06080a;
+  --status-bar-text: #8b949e;
+
+  --border: #30363d;
+  --border-light: #21262d;
+
+  --scrollbar-thumb: #30363d;
+  --scrollbar-track: #0d1117;
+
+  --toggle-bg: #30363d;
+  --toggle-active: #58a6ff;
+
+  --slider-track: #30363d;
+  --slider-fill: #58a6ff;
+  --slider-thumb: #58a6ff;
+
+  --card-border: 1px solid var(--border);
+  --player-icon-opacity: 0.45;
+}
+
+/* ===== THEME 3: Midnight AMOLED ===== */
+/* Purple accent (#bb86fc) + Teal (#03dac6) on pure black */
+/* Saves battery on OLED screens */
+:root[data-theme="midnight-amoled"] {
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0a;
+  --bg-tertiary: #111111;
+  --bg-card: #111111;
+  --bg-card-hover: #1a1a1a;
+  --bg-elevated: #1a1a1a;
+  --bg-input: #000000;
+
+  --text-primary: #ffffff;
+  --text-secondary: #999999;
+  --text-muted: #555555;
+  --text-inverse: #000000;
+
+  --accent: #bb86fc;
+  --accent-hover: #ce9cff;
+  --accent-secondary: #03dac6;
+  --accent-secondary-hover: #05f0d8;
+  --accent-success: #4caf50;
+  --accent-warning: #ff9800;
+  --accent-danger: #cf6679;
+
+  --nav-bg: #000000;
+  --nav-active: #bb86fc;
+  --nav-inactive: #444444;
+  --nav-hover: #666666;
+
+  --status-bar-bg: #000000;
+  --status-bar-text: #888888;
+
+  --border: #1a1a1a;
+  --border-light: #111111;
+
+  --scrollbar-thumb: #1a1a1a;
+  --scrollbar-track: #000000;
+
+  --toggle-bg: #1a1a1a;
+  --toggle-active: #bb86fc;
+
+  --slider-track: #1a1a1a;
+  --slider-fill: #bb86fc;
+  --slider-thumb: #bb86fc;
+
+  --card-border: 1px solid var(--border);
+  --player-icon-opacity: 0.30;
+}
