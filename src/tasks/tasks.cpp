@@ -5,9 +5,7 @@
 #include "../state/AppState.h"
 #include "net/WebSocket.h"
 #include "power/PowerMgr.h"
-
 #include "config/debug_config.h"
-
 #include <WiFi.h>
 
 // ============================================================================

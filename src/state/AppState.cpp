@@ -119,6 +119,7 @@ void Battery::battMonitor() {
 // ============================================================================
 // STRIPLED METHODS
 // ============================================================================
+// Init white color, center brightness and effect 0
 
 StripLed::StripLed() : R(255), G(255), B(255), brightness(130), effectId(0), powerState(false) {}
 

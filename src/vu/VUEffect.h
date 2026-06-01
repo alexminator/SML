@@ -2,7 +2,7 @@
 // VUEffect.h — Base class for VU meter effects
 // ──────────────────────────────────────────────────────────────────────────────
 // Encapsulates shared audio state (circular buffer, level detection, peak
-// tracking) that was previously global in common.h / AppState.
+// tracking).
 // All VUEffect subclasses share no state between them; each has its own
 // buffer since only one is active at a time in the EffectRegistry.
 // ──────────────────────────────────────────────────────────────────────────────
