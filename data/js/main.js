@@ -74,23 +74,81 @@ const $$ = (sel) => document.querySelectorAll(sel);
 // ============================================================================
 
 function initTabs() {
+  // Set ARIA roles on nav containers
+  const sidebar = document.getElementById('sidebar');
+  const bottomNav = document.getElementById('bottomNav');
+  if (sidebar) sidebar.setAttribute('role', 'tablist');
+  if (bottomNav) bottomNav.setAttribute('role', 'tablist');
+
   const navBtns = $$('.nav-btn, .sidebar-btn');
   navBtns.forEach(btn => {
+    btn.setAttribute('role', 'tab');
+    btn.setAttribute('aria-selected', 'false');
+    btn.setAttribute('tabindex', '-1');
+    const tabId = btn.dataset.tab;
+    if (tabId) {
+      const panel = document.getElementById(tabId);
+      if (panel) {
+        btn.setAttribute('aria-controls', tabId);
+        panel.setAttribute('role', 'tabpanel');
+        panel.setAttribute('aria-labelledby', tabId + '-tab');
+        btn.id = tabId + '-tab';
+      }
+    }
     btn.addEventListener('click', () => {
-      const tabId = btn.dataset.tab;
       if (tabId) switchTab(tabId);
     });
+  });
+
+  // Mark active tab
+  const activeBtn = document.querySelector(`.nav-btn.active, .sidebar-btn.active`);
+  if (activeBtn) activeBtn.setAttribute('aria-selected', 'true');
+
+  // Keyboard navigation for tabs
+  document.addEventListener('keydown', (e) => {
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) return;
+    const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+    if (tabs.length === 0) return;
+    // Only handle if focus is inside a tablist
+    const focused = document.activeElement;
+    if (!focused || focused.getAttribute('role') !== 'tab') return;
+
+    e.preventDefault();
+    const currentIdx = tabs.indexOf(focused);
+    let nextIdx = currentIdx;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') nextIdx = (currentIdx + 1) % tabs.length;
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') nextIdx = (currentIdx - 1 + tabs.length) % tabs.length;
+    else if (e.key === 'Home') nextIdx = 0;
+    else if (e.key === 'End') nextIdx = tabs.length - 1;
+    if (nextIdx !== currentIdx && tabs[nextIdx]) {
+      const tabId = tabs[nextIdx].dataset.tab;
+      if (tabId) switchTab(tabId);
+      tabs[nextIdx].focus();
+    }
   });
 }
 
 function switchTab(tabId) {
   $$('.nav-btn, .sidebar-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.tab === tabId);
+    const isActive = btn.dataset.tab === tabId;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    btn.setAttribute('tabindex', isActive ? '0' : '-1');
   });
   $$('.tab-content').forEach(tab => {
     tab.classList.toggle('active', tab.id === tabId);
   });
   SML.currentTab = tabId;
+
+  // Stop peek render when leaving peek tab
+  if (tabId !== 'tabPeek' && typeof peek !== 'undefined' && peek) {
+    peek.stop();
+    const peekToggle = document.getElementById('peekToggle');
+    if (peekToggle) {
+      peekToggle.textContent = '▶ Live';
+      peekToggle.classList.remove('active');
+    }
+  }
 
   // Init peek when tab activated
   if (tabId === 'tabPeek' && typeof initPeek === 'function') {
@@ -311,13 +369,14 @@ function renderEffectParams(effId, container) {
 // ============================================================================
 
 const EFFECT_PARAMS = {
-  4: { name: 'Ripple', params: [
-    { key: 'speed', label: 'Speed', type: 'range', min: 0, max: 255, default: 120 },
-    { key: 'intensity', label: 'Intensity', type: 'range', min: 0, max: 255, default: 50 },
+  // NOTE: keys = HTML effectId (matches ESP32 effectId). Params list the actual
+  // setters each Effect subclass uses (from EffectRegistry order).
+  1: { name: 'Fire', params: [
+    { key: 'custom1', label: 'Cooling', type: 'range', min: 0, max: 255, default: 55 },
+    { key: 'custom2', label: 'Sparking', type: 'range', min: 0, max: 255, default: 50 },
   ]},
-  5: { name: 'Fire', params: [
-    { key: 'speed', label: 'Speed', type: 'range', min: 0, max: 255, default: 80 },
-    { key: 'intensity', label: 'Intensity', type: 'range', min: 0, max: 255, default: 120 },
+  5: { name: 'Ripple', params: [
+    { key: 'custom1', label: 'Size', type: 'range', min: 1, max: 50, default: 3 },
   ]},
   6: { name: 'Twinkle', params: [
     { key: 'speed', label: 'Speed', type: 'range', min: 0, max: 255, default: 100 },
@@ -329,15 +388,16 @@ const EFFECT_PARAMS = {
   ]},
   8: { name: 'Juggle', params: [
     { key: 'speed', label: 'Speed', type: 'range', min: 0, max: 255, default: 100 },
+    { key: 'intensity', label: 'Intensity', type: 'range', min: 0, max: 255, default: 128 },
     { key: 'custom1', label: 'Dots', type: 'range', min: 1, max: 8, default: 3 },
   ]},
   9: { name: 'Sinelon', params: [
-    { key: 'speed', label: 'Speed', type: 'range', min: 0, max: 255, default: 100 },
-    { key: 'intensity', label: 'Size', type: 'range', min: 1, max: 100, default: 20 },
+    { key: 'speed', label: 'BPM', type: 'range', min: 0, max: 255, default: 23 },
+    { key: 'custom1', label: 'Fade', type: 'range', min: 1, max: 50, default: 2 },
   ]},
   10: { name: 'Comet', params: [
     { key: 'speed', label: 'Speed', type: 'range', min: 0, max: 255, default: 80 },
-    { key: 'intensity', label: 'Tail', type: 'range', min: 1, max: 50, default: 10 },
+    { key: 'custom1', label: 'Trail', type: 'range', min: 1, max: 50, default: 10 },
   ]},
 };
 
@@ -366,11 +426,20 @@ function connectWS() {
     SML.connected = true;
     updateConnectionStatus(true);
     clearTimeout(SML.wsReconnectTimer);
+    // Remove skeletons when connected
+    document.querySelectorAll('.skeleton').forEach(el => el.classList.remove('skeleton'));
   };
 
   SML.ws.onclose = () => {
     SML.connected = false;
     updateConnectionStatus(false);
+    // Re-add skeleton to data elements when disconnected
+    document.querySelectorAll('.stat-value, .info-value, #weatherTemp, #weatherHumVal, #weatherHeatIndex, #battVolt, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #deviceIP, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
+      .forEach(el => {
+        if (el.textContent === '--' || el.textContent === '--.-' || el.textContent === '--.--V' || el.textContent === '--%') {
+          el.classList.add('skeleton');
+        }
+      });
     scheduleReconnect();
   };
 
@@ -471,8 +540,8 @@ function handleMessage(data) {
   }
   const bcd = document.getElementById('battChargeDetail');
   if (bcd) {
-    if (SML.charging) bcd.textContent = '⚡ Charging';
-    else if (SML.fullBatt) bcd.textContent = '✓ Full';
+    if (SML.charging) bcd.innerHTML = '<span class="fas fa-bolt"></span> Charging';
+    else if (SML.fullBatt) bcd.innerHTML = '<span class="fas fa-check"></span> Full';
     else bcd.textContent = 'Battery';
   }
 
@@ -705,6 +774,7 @@ function saveWiFiConfig() {
   const ssid = document.getElementById('wifiSsid')?.value.trim();
   const pass = document.getElementById('wifiPass')?.value;
   if (!ssid) { showToast('Please enter an SSID'); return; }
+  if (!confirm(`Change WiFi to "${ssid}"? The device will reconnect and you may lose connection.`)) return;
   sendCmd({ ssid, pass });
   showToast('WiFi saved. Reconnecting...');
 }
@@ -713,8 +783,20 @@ function saveLEDConfig() {
   const count = parseInt(document.getElementById('ledCount')?.value);
   if (!count || count < 1 || count > 300) { showToast('LED count must be 1-300'); return; }
   const maxMA = parseInt(document.getElementById('ledMaxMA')?.value) || 500;
+  if (!confirm(`Save LED config (${count} LEDs, ${maxMA}mA) and reboot?`)) return;
   sendCmd({ ledcfg: { n: count, ma: maxMA } });
   showToast('LED config saved. Rebooting...');
+}
+
+// ============================================================================
+// SKELETON HELPER
+// ============================================================================
+
+/** Sets textContent on an element and removes its skeleton loading state. */
+function setDataValue(el, value, suffix) {
+  if (!el) return;
+  el.textContent = (value !== undefined && value !== null) ? (value + (suffix || '')) : '--';
+  el.classList.remove('skeleton');
 }
 
 // ============================================================================
@@ -724,6 +806,10 @@ function saveLEDConfig() {
 document.addEventListener('DOMContentLoaded', () => {
   // Theme
   initTheme();
+
+  // Add skeleton loading to all data-bearing elements
+  document.querySelectorAll('.stat-value, .info-value, #weatherTemp, #weatherHumVal, #weatherHeatIndex, #battVolt, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #deviceIP, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
+    .forEach(el => el.classList.add('skeleton'));
 
   // Tabs
   initTabs();

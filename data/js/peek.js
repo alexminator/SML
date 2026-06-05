@@ -102,6 +102,13 @@ class PeekRenderer {
   tick() {
     if (!this.running) return;
 
+    // Auto-stop if peek tab is no longer active or page is hidden
+    const peekTab = document.getElementById('tabPeek');
+    if (!peekTab || !peekTab.classList.contains('active') || document.hidden) {
+      this.running = false;
+      return;
+    }
+
     // If no live data, generate demo
     if (this.ledData.length === 0 || !this.liveActive) {
       this.generateDemo();
@@ -280,5 +287,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Window resize
   window.addEventListener('resize', () => {
     if (peek) peek.resize();
+  });
+
+  // Page Visibility — stop render when tab is backgrounded
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && peek) peek.stop();
   });
 });

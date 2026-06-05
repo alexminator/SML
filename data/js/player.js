@@ -38,17 +38,17 @@
   const scrubThumb= document.querySelector('#scrubThumb');      // dot SVG
   const scrubLabel= document.querySelector('#scrubLabel');      // nº paso
 
-  if (!bigBtn) return; // guard: tab music no montado aún
+  if (!bigBtn || !skipL || !skipR || !starTab || !scrubBg) return; // guard: tab music no montado aún
 
-  /* ── Constantes del arco ───────────────────────────────────────────────── */
+  /* ── Constantes del arco (R=48 para separar thumb del botón play) ────── */
   const STEPS      = 15;
-  const C          = 282.74;          // circunferencia
-  const ARC_PX     = 211.95;          // 270° en px
-  const GAP_OFFSET = 70.69;           // dashoffset cuando step=15 (lleno)
-  const STEP_PX    = ARC_PX / STEPS;  // ≈ 14.13
+  const C          = 301.59;          // 2*π*48
+  const ARC_PX     = 226.19;          // 270° en px
+  const GAP_OFFSET = 75.40;           // dashoffset cuando step=15 (lleno)
+  const STEP_PX    = ARC_PX / STEPS;  // ≈ 15.08
   const START_DEG  = 225;             // ángulo de inicio del arco (desde arriba)
   const DEG_STEP   = 270 / STEPS;     // 18° por paso
-  const CX = 50, CY = 50, R = 45;    // centro y radio del SVG
+  const CX = 50, CY = 50, R = 48;    // centro y radio del SVG
 
   /* ── Estado ────────────────────────────────────────────────────────────── */
   let volStep  = 7;      // 0–15, arranca en el medio

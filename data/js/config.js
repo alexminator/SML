@@ -1,6 +1,6 @@
 /* ──────────────────────────────────────────────────────────────────────────────
-   config.js — SML Config Tab
-   Theme selector, WiFi settings, LED strip config, system info
+   config.js — SML Config Tab — System Info only
+   NOTE: WiFi/LED save handlers live in main.js (single source of truth).
    ────────────────────────────────────────────────────────────────────────────── */
 
 // ============================================================================
@@ -52,76 +52,3 @@ function updateSystemInfo(data) {
     if (el) el.textContent = data.ver;
   }
 }
-
-// ============================================================================
-// WIFI CREDENTIALS
-// ============================================================================
-
-function saveWiFiConfig() {
-  const ssid = document.getElementById('wifiSsid')?.value.trim();
-  const pass = document.getElementById('wifiPass')?.value;
-
-  if (!ssid) {
-    showToast('Please enter an SSID');
-    return;
-  }
-
-  if (typeof sendCmd === 'function') {
-    sendCmd({ ssid: ssid, pass: pass || '' });
-  }
-
-  showToast('WiFi saved. Reconnecting...');
-}
-
-// ============================================================================
-// LED CONFIG
-// ============================================================================
-
-function saveLEDStripConfig() {
-  const countEl = document.getElementById('ledCount');
-  const maEl = document.getElementById('ledMaxMA');
-
-  const count = parseInt(countEl?.value);
-  const maxMA = parseInt(maEl?.value) || 500;
-
-  if (!count || count < 1 || count > 300) {
-    showToast('LED count must be 1-300');
-    return;
-  }
-
-  if (typeof sendCmd === 'function') {
-    sendCmd({ ledcfg: { n: count, ma: maxMA } });
-  }
-
-  showToast('LED config saved. Rebooting...');
-}
-
-// ============================================================================
-// THEME SELECTOR (handled in main.js, but we bind the UI here)
-// ============================================================================
-
-document.addEventListener('DOMContentLoaded', () => {
-  // WiFi save button
-  const wifiBtn = document.getElementById('wifiSaveBtn');
-  if (wifiBtn) wifiBtn.addEventListener('click', saveWiFiConfig);
-
-  // LED save button
-  const ledBtn = document.getElementById('ledSaveBtn');
-  if (ledBtn) ledBtn.addEventListener('click', saveLEDStripConfig);
-
-  // Mark LED count as user-changed
-  const ledCount = document.getElementById('ledCount');
-  if (ledCount) {
-    ledCount.addEventListener('input', () => {
-      ledCount.dataset.userChanged = 'true';
-    });
-  }
-
-  // Enter key on WiFi password field
-  const wifiPass = document.getElementById('wifiPass');
-  if (wifiPass) {
-    wifiPass.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') saveWiFiConfig();
-    });
-  }
-});
