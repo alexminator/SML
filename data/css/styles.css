@@ -1131,24 +1131,47 @@ input[type="range"]::-moz-range-thumb {
   gap: var(--space-lg);
 }
 
-.weather-temp {
-  font-size: 4rem;
-  font-weight: 300;
-  letter-spacing: -2px;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-.weather-temp .celsius {
-  font-size: 2rem;
-  color: var(--text-muted);
-  vertical-align: super;
-}
-
-.weather-details {
+.weather-main {
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
   gap: var(--space-xl);
   width: 100%;
+  padding: var(--space-md) 0;
+}
+
+/* Clickable thermometer */
+.temp-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform var(--t-fast);
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.temp-visual:active {
+  transform: scale(0.95);
+}
+/* Glow when temp effect active */
+.temp-visual.active #termometer {
+  box-shadow:
+    0 0 24px var(--accent),
+    0 0 48px var(--accent);
+}
+
+.weather-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.weather-stats {
+  display: flex;
+  gap: var(--space-xl);
   justify-content: center;
 }
 
@@ -1487,7 +1510,12 @@ input[type="range"]::-moz-range-thumb {
   margin-top: 2px;
 }
 
-/* ===== PRESERVED: THERMOMETER ANIMATION ===== */
+/* ===== THERMOMETER ===== */
+/* Restored original structure adapted with transparent glass effect.
+   - 3px border (thinner glass walls)
+   - Bulbo con gradiente (siempre lleno) detrás del tubo transparente
+   - Líquido #temperature en el tubo, se superpone al bulbo
+   - Graduaciones por encima del líquido (z-index más alto) */
 .wrapper {
   display: flex;
   align-items: center;
@@ -1495,44 +1523,37 @@ input[type="range"]::-moz-range-thumb {
 }
 
 #termometer {
-  width: 25px;
-  height: 240px;
+  width: var(--termometer-w, 25px);
+  height: var(--termometer-h, 240px);
   position: relative;
-  background: #38383f;
-  border: 9px solid #2a2a2e;
+  background: var(--termometer-bg);
+  border: var(--termometer-border-w) solid var(--border);
   border-radius: 20px;
-  box-shadow: inset 20px 0 48px hsl(0, 0%, 16%),
-              inset -4px 12px 48px hsl(0, 0%, 56%),
-              5px 10px 8px hsl(0, 0%, 15%);
+  box-shadow: var(--termometer-shadow);
   margin-bottom: 50px;
   z-index: 1;
+  transition: box-shadow var(--t-fast);
 }
 
-#termometer:before,
+/* Bulbo — color CIAN que coincide con la base del gradiente del
+   líquido (#temperature). Original: coral→cyan con anchor bottom,
+   así que la base del líquido es CIAN. El bulbo (cian sólido) es
+   invisible en la unión.
+   Dentro del contexto de #termometer (z-index:1), el ::after con
+   z-index:-1 pinta DETRÁS del contenido (líquido, graduaciones) pero
+   DELANTE del fondo y borde del tubo. */
 #termometer:after {
   position: absolute;
-  content: "";
+  content: '';
+  width: var(--termometer-bulb-size, 50px);
+  height: var(--termometer-bulb-size, 50px);
   border-radius: 50%;
-}
-
-#termometer:before {
-  width: 100%;
-  height: 34px;
-  bottom: 9px;
-  background: #38383f;
-  z-index: -1;
-}
-
-#termometer:after {
-  width: 50px;
-  height: 50px;
-  background-color: #3dcadf;
-  border: 9px solid #2a2a2e;
+  background: #3dcadf;
+  border: var(--termometer-border-w) solid var(--border);
   bottom: -41px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: -3;
-  box-shadow: 5px 10px 8px hsl(0, 0%, 15%);
+  z-index: -1;
 }
 
 #termometer #graduations {
@@ -1540,28 +1561,30 @@ input[type="range"]::-moz-range-thumb {
   height: 59%;
   top: 20%;
   width: 50%;
-  border-top: 2px solid rgba(0, 0, 0, 0.5);
-  border-bottom: 2px solid rgba(0, 0, 0, 0.5);
+  border-top: 2px solid rgba(0, 0, 0, 0.3);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.3);
+  z-index: 3;
 }
 
 #termometer #graduations:before {
-  content: "";
+  content: '';
   position: absolute;
   height: 34%;
   width: 100%;
   top: 32%;
-  border-top: 2px solid rgba(0, 0, 0, 0.5);
-  border-bottom: 2px solid rgba(0, 0, 0, 0.5);
+  border-top: 2px solid rgba(0, 0, 0, 0.3);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.3);
 }
 
 #termometer #temperature {
   position: absolute;
   bottom: 0;
   width: 100%;
-  background: linear-gradient(#f17a65, #3dcadf) no-repeat bottom;
-  background-size: 100% 240px;
+  background: var(--temperature-gradient) no-repeat bottom;
+  background-size: 100% var(--termometer-h, 240px);
   border-radius: 20px;
-  transition: all 0.2s ease-in-out;
+  transition: height 0.3s ease;
+  z-index: 2;
 }
 
 /* ===== PRESERVED: BATTERY ANIMATION ===== */
@@ -2068,10 +2091,6 @@ input[type="range"]::-moz-range-thumb {
   }
   .scrub-bg { clip-path: inset(-0.4em 8.8em 8.2em -0.4em); }
 
-  .weather-temp {
-    font-size: 3rem;
-  }
-
   .nav-btn {
     font-size: 0.6rem;
   }
@@ -2102,10 +2121,6 @@ input[type="range"]::-moz-range-thumb {
   .lamp-controls {
     flex-direction: row;
     flex-wrap: wrap;
-  }
-
-  .weather-temp {
-    font-size: 2.5rem;
   }
 }
 
@@ -2189,6 +2204,16 @@ input[type="range"]::-moz-range-thumb {
 .peek-hint { font-size: 0.75rem; }
 
 /* Date/time widget */
+.widget-datetime {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--space-md);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  min-width: 160px;
+}
 .widget-date { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; font-size: 0.9rem; }
 .widget-clock { display: flex; gap: 4px; justify-content: center; font-size: 1.1rem; margin-top: 4px; }
 .widget-seconds { display: flex; flex-direction: column; align-items: flex-start; font-size: 0.7rem; }

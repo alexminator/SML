@@ -51,6 +51,7 @@ const SML = {
   previousBattery: -1,  // para detectar cruce de umbrales
   btPower: false,
   battEffectActive: false,
+  tempEffectActive: false,
   wifiRSSI: -70,
   deviceIP: '0.0.0.0',
   uptime: 0,
@@ -457,7 +458,7 @@ function connectWS() {
     SML.connected = false;
     updateConnectionStatus(false);
     // Re-add skeleton to data elements when disconnected
-    document.querySelectorAll('.stat-value, .info-value, #weatherTemp, #weatherHumVal, #weatherHeatIndex, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #deviceIP, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
+    document.querySelectorAll('.stat-value, .info-value, #weatherHumVal, #weatherHeatIndex, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #deviceIP, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
       .forEach(el => {
         if (el.textContent === '--' || el.textContent === '--.-' || el.textContent === '--.--V' || el.textContent === '--%') {
           el.classList.add('skeleton');
@@ -513,8 +514,7 @@ function handleMessage(data) {
       tempEl.dataset.value = value.toFixed(1) + '°C';
     }
 
-    // Weather display — use setDataValue to remove skeleton per-field
-    setDataValue(document.getElementById('weatherTemp'), value.toFixed(1));
+    // Weather display
     setDataValue(document.getElementById('weatherTempVal'), value.toFixed(1));
   }
 
@@ -730,6 +730,13 @@ function handleMessage(data) {
     if (bToggle) bToggle.classList.toggle('active', SML.battEffectActive);
   }
 
+  // ── TEMPERATURE EFFECT STATUS ──
+  if (data.tempNEOStatus !== undefined) {
+    SML.tempEffectActive = data.tempNEOStatus === 'on';
+    const tToggle = document.getElementById('tempToggle');
+    if (tToggle) tToggle.classList.toggle('active', SML.tempEffectActive);
+  }
+
   // ── WIFI / NETWORK ──
   if (data.rssi !== undefined) {
     SML.wifiRSSI = data.rssi;
@@ -888,7 +895,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme();
 
   // Add skeleton loading to all data-bearing elements
-  document.querySelectorAll('.stat-value, .info-value, #weatherTemp, #weatherHumVal, #weatherHeatIndex, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #deviceIP, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
+  document.querySelectorAll('.stat-value, .info-value, #weatherHumVal, #weatherHeatIndex, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #deviceIP, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
     .forEach(el => el.classList.add('skeleton'));
 
   // Tabs
@@ -902,6 +909,14 @@ document.addEventListener('DOMContentLoaded', () => {
   if (battToggle) {
     battToggle.addEventListener('click', () => {
       sendCmd({ effectId: 20 });
+    });
+  }
+
+  // Temperature toggle (tap thermometer to toggle temp LED effect)
+  const tempToggle = document.getElementById('tempToggle');
+  if (tempToggle) {
+    tempToggle.addEventListener('click', () => {
+      sendCmd({ effectId: 19 });
     });
   }
 

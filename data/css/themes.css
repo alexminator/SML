@@ -44,6 +44,18 @@
   --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Handmade', cursive;
   --font-mono: 'Courier New', monospace;
+
+  /* Thermometer (structured like original, transparent glass) */
+  --termometer-bg: transparent;
+  --termometer-w: 25px;
+  --termometer-h: 240px;
+  --termometer-border-w: 3px;
+  --termometer-bulb-size: 50px;
+  --termometer-shadow:
+    inset -6px 0 18px hsla(0, 0%, 80%, 0.08),
+    inset 8px 0 18px hsla(0, 0%, 0%, 0.15),
+    5px 10px 12px hsla(0, 0%, 0%, 0.2);
+  --temperature-gradient: linear-gradient(#f17a65, #3dcadf);
 }
 
 /* ===== THEME 1: SML Classic (default) ===== */
