@@ -1,5 +1,5 @@
 /*=============== BUBBLES ===============*/
-const sArray = [4, 6, 8, 10]; // Array con tamaños de burbujas
+const sArray = [4, 6, 8, 10];
 let bubbleInterval;
 
 const randomValue = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -59,34 +59,25 @@ const stopBubbles = () => {
 /*=============== BATTERY ===============*/
 const initBattery = (batt) => {
   const batteryLiquid = document.querySelector('.battery__liquid');
-  const batteryStatus = document.querySelector('.battery__status');
-  const batteryPercentage = document.querySelector('.battery__percentage');
 
   stopBubbles();
 
   const updateBattery = () => {
     const level = batt.level;
-    batteryPercentage.textContent = `${level}%`;
+
+    // Liquid fill
     batteryLiquid.style.height = `${level}%`;
 
-    if (level === 100 && !batt.charging) {
-      batteryStatus.innerHTML = 'Full battery <span class="fas fa-battery-full green-color"></span>';
-      batteryLiquid.style.height = '103%';
-    } else if (level <= 30) {
-      batteryStatus.innerHTML = 'Low battery <span class="fas fa-plug animated-red"></span>';
-    } else if (batt.fullbatt) {
-      batteryStatus.innerHTML = 'Power in use... <span class="fas fa-plug animated-green"></span>';
-    } else if (batt.charging) {
-      batteryStatus.innerHTML = 'Charging... <span class="fas fa-bolt-lightning animated-green"></span>';
-      startBubbles();
-    } else {
-      batteryStatus.innerHTML = 'In use... <span class="fas fa-battery-quarter animated-green"></span>';
-    }
-
+    // Color by level
     const colors = ['gradient-color-red', 'gradient-color-orange', 'gradient-color-yellow', 'gradient-color-green'];
     const colorIndex = level <= 20 ? 0 : level <= 40 ? 1 : level <= 80 ? 2 : 3;
     batteryLiquid.classList.remove(...colors);
     batteryLiquid.classList.add(colors[colorIndex]);
+
+    // Bubbles when charging
+    if (batt.charging) {
+      startBubbles();
+    }
   };
 
   updateBattery();

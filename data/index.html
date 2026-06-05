@@ -428,44 +428,22 @@
       <section id="tabBattery" class="tab-content">
         <div class="card">
           <div class="battery-container">
-            <!-- Battery visualization (preserved from original) -->
-            <div id="batteryVisualization" class="w-full flex-center">
+            <!-- Battery pill (clickable — toggle batt effect) -->
+            <div class="battery-visual" id="batteryToggle">
               <section class="battery">
-                <div class="battery__card">
-                  <div class="battery__data">
-                    <div class="battery__header">
-                      <h2 class="battery__text">Battery</h2>
-                    </div>
-                    <p id="battVolt">%BATTVOLTAGE%</p>
-                    <h1 id="battlevel" class="battery__percentage">0</h1>
-                    <p id="battCharge" class="battery__status">
-                      Low Battery <span class="fas fa-plug"></span>
-                    </p>
-                  </div>
-                  <div class="battery__pill">
-                    <div class="battery__level">
-                      <div class="battery__liquid"></div>
-                      <div class="bubbles battery-bubbles">
-                        <span>&nbsp;</span>
-                      </div>
+                <div class="battery__pill">
+                  <div class="battery__level">
+                    <div class="battery__liquid"></div>
+                    <div class="bubbles battery-bubbles">
+                      <span>&nbsp;</span>
                     </div>
                   </div>
                 </div>
               </section>
+              <span class="battery-hint">Tap for effect</span>
             </div>
 
-            <!-- Battery LED effect -->
-            <div class="card mt-md">
-              <h2 class="card-title"><span class="fas fa-battery-three-quarters"></span> Battery Effect</h2>
-              <div class="effects-grid">
-                <button class="effect-card" data-effect-id="20">
-                  <div class="effect-icon" style="background:linear-gradient(135deg,#00e676,#ff9100,#ff1744)"></div>
-                  <span class="effect-name">Batt Level</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Battery stats grid -->
+            <!-- Stats grid (2×2) -->
             <div class="battery-stats">
               <div class="battery-stat">
                 <div class="stat-value" id="battPercentDetail">--%</div>

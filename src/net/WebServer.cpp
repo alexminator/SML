@@ -192,7 +192,7 @@ const char* processor(const String &var)
     {
     case COLOR:
     {
-        JsonDocument doc;  // Modern API - auto sizing
+        StaticJsonDocument<64> doc;
         doc["color"]["r"] = stripLed.R;
         doc["color"]["g"] = stripLed.G;
         doc["color"]["b"] = stripLed.B;
@@ -274,7 +274,7 @@ void initWebServer()
     server.on("/wifi-info", HTTP_GET, [](AsyncWebServerRequest *request)
     {
       AsyncResponseStream *response = request->beginResponseStream("application/json");
-      JsonDocument json;  // Modern API
+      StaticJsonDocument<256> json;
       json["status"] = "ok";
       json["ssid"] = WiFi.SSID();
       json["ip"] = WiFi.localIP().toString();

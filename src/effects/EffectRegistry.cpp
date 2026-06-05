@@ -67,7 +67,7 @@ constexpr uint8_t EFFECT_COUNT =
 // ============================================================================
 
 void saveEffectParams() {
-    JsonDocument doc;
+    DynamicJsonDocument doc(4096);
     for (uint8_t i = 0; i < EFFECT_COUNT; i++) {
         Effect* fx = effectRegistry[i].instance;
         if (!fx) continue;
@@ -93,7 +93,7 @@ void loadEffectParams() {
     if (!LittleFS.exists("/params.json")) return;
     File f = LittleFS.open("/params.json", "r");
     if (!f) return;
-    JsonDocument doc;
+    DynamicJsonDocument doc(4096);
     DeserializationError err = deserializeJson(doc, f);
     if (err) {
         f.close();

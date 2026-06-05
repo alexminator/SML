@@ -45,7 +45,7 @@ void notifyClients()
 {
     // Take mutex for reading shared data
     if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
-        JsonDocument json;  // Modern API - auto sizing
+        DynamicJsonDocument json(4096);
 
         // Usar valores numéricos directamente en JSON
         json["bars"] = bars();
@@ -135,7 +135,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
     {
-        JsonDocument json;  // Modern API - auto sizing
+        DynamicJsonDocument json(2048);
         DeserializationError err = deserializeJson(json, data);
         if (err)
         {

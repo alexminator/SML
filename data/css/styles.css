@@ -191,6 +191,15 @@ input:focus, select:focus {
 .batt-fill.medium { background: var(--accent-warning); }
 .batt-fill.low { background: var(--accent-danger); }
 
+/* Critical (≤15%) — pulse más rápido */
+.batt-fill.critical {
+  animation: criticalPulse 0.5s ease-in-out infinite;
+}
+@keyframes criticalPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
 .batt-charging .batt-fill {
   animation: battPulse 1.5s ease-in-out infinite;
 }
@@ -200,10 +209,35 @@ input:focus, select:focus {
   50% { opacity: 0.5; }
 }
 
+/* Percent text color by level */
+.batt-percent {
+  transition: color var(--t-fast);
+}
+.batt-percent.high-text { color: var(--accent-success); }
+.batt-percent.medium-text { color: var(--accent-warning); }
+.batt-percent.low-text { color: var(--accent-danger); }
+.batt-percent.critical-text {
+  color: var(--accent-danger);
+  animation: percentUrgent 0.5s ease-in-out infinite;
+}
+.batt-percent.charging-text {
+  color: var(--accent-success);
+  animation: percentCharging 1.2s ease-in-out infinite;
+}
+@keyframes percentUrgent {
+  0%, 100% { opacity: 1; text-shadow: 0 0 6px var(--accent-danger); }
+  50% { opacity: 0.5; text-shadow: 0 0 12px var(--accent-danger); }
+}
+@keyframes percentCharging {
+  0%, 100% { opacity: 1; text-shadow: 0 0 4px var(--accent-success); }
+  50% { opacity: 0.6; text-shadow: 0 0 10px var(--accent-success); }
+}
+
 .charging-icon {
   color: var(--accent-success);
   font-size: 0.7rem;
   margin-left: 1px;
+  transition: filter var(--t-fast);
 }
 
 /* ===== SML HEADER (sticky) ===== */
@@ -1138,23 +1172,48 @@ input[type="range"]::-moz-range-thumb {
 /* ===== BATTERY TAB ===== */
 .battery-container {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: var(--space-lg);
+  justify-content: center;
+  gap: var(--space-xl);
   padding: var(--space-md) 0;
 }
 
+/* Clickable battery pill */
 .battery-visual {
-  width: 120px;
-  height: 200px;
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: pointer;
+  transition: transform var(--t-fast);
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.battery-visual:active {
+  transform: scale(0.95);
+}
+/* Glow when batt effect is active */
+.battery-visual.active .battery__pill {
+  box-shadow:
+    0 0 24px var(--accent),
+    0 0 48px var(--accent),
+    inset 0 0 24px rgba(255, 215, 0, 0.15);
+}
+.battery-hint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-align: center;
+  letter-spacing: 0.3px;
 }
 
 .battery-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-md);
-  width: 100%;
+  flex: 1;
+  max-width: 280px;
 }
 
 .battery-stat {
@@ -1171,12 +1230,29 @@ input[type="range"]::-moz-range-thumb {
   font-variant-numeric: tabular-nums;
 }
 
+/* Iconos grandes en los stats de batería */
+.battery-stat .stat-value .fas,
+.battery-stat .stat-value .far {
+  font-size: 1.8rem;
+  display: inline-block;
+}
+
+/* Rayo atenuado cuando NO está cargando */
+.charge-idle {
+  opacity: 0.25;
+  color: var(--text-muted);
+}
+
 .battery-stat .stat-label {
   font-size: 0.7rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-top: 4px;
+}
+
+.battery-stat .dim {
+  opacity: 0.35;
 }
 
 /* ===== PEEK TAB ===== */
@@ -1542,12 +1618,15 @@ input[type="range"]::-moz-range-thumb {
   position: relative;
   width: 95px;
   height: 200px;
-  background-color: hsl(0, 0%, 15%);
-  box-shadow: inset 20px 0 48px hsl(0, 0%, 16%),
-              inset -4px 12px 48px hsl(0, 0%, 56%),
-              5px 10px 8px hsl(0, 0%, 15%);
+  background: transparent;
+  border: 1px solid var(--border);
   border-radius: 3rem;
   justify-self: center;
+  /* Efecto vidrio: brillo a la derecha, sombra a la izquierda */
+  box-shadow:
+    inset -6px 0 24px hsla(0, 0%, 80%, 0.15),
+    inset 12px 0 24px hsla(0, 0%, 0%, 0.25),
+    5px 10px 12px hsla(0, 0%, 0%, 0.2);
 }
 
 .battery__level {
@@ -1563,18 +1642,28 @@ input[type="range"]::-moz-range-thumb {
   left: 0;
   right: 0;
   height: 36px;
-  background: var(--gradient-color-red, linear-gradient(90deg, hsl(7, 89%, 46%) 15%, hsl(11, 93%, 68%) 100%));
-  box-shadow: inset -10px 0 12px hsla(0, 0%, 0%, .1),
-              inset 12px 0 12px hsla(0, 0%, 0%, .15);
-  transition: .3s;
+  /* Overlay vertical: luz arriba → sombra abajo + gradiente base */
+  background:
+    linear-gradient(180deg,
+      hsla(0, 0%, 100%, 0.12) 0%,
+      transparent 40%,
+      hsla(0, 0%, 0%, 0.08) 100%),
+    var(--gradient-color-red, linear-gradient(90deg, hsl(7, 55%, 38%) 15%, hsl(11, 60%, 52%) 100%));
+  box-shadow:
+    inset -15px 0 20px hsla(0, 0%, 0%, 0.18),
+    inset 15px 0 20px hsla(0, 0%, 0%, 0.12),
+    inset 0 -6px 12px hsla(0, 0%, 0%, 0.1);
+  transition: height .3s ease;
 }
 
 .battery__liquid::after {
   content: '';
   position: absolute;
   height: 8px;
-  background: var(--gradient-color-red, linear-gradient(90deg, hsl(7, 89%, 46%) 15%, hsl(11, 93%, 68%) 100%));
-  box-shadow: inset 0 -3px 6px hsla(0, 0%, 0%, .2);
+  background:
+    linear-gradient(180deg, hsla(0, 0%, 100%, 0.1) 0%, transparent 100%),
+    var(--gradient-color-red, linear-gradient(90deg, hsl(7, 55%, 38%) 15%, hsl(11, 60%, 52%) 100%));
+  box-shadow: inset 0 -2px 4px hsla(0, 0%, 0%, 0.2);
   left: 0;
   right: 0;
   margin: 0 auto;
@@ -1585,27 +1674,35 @@ input[type="range"]::-moz-range-thumb {
 /* Gradient color classes for battery liquid */
 .gradient-color-red,
 .gradient-color-red::after {
-  background: linear-gradient(90deg, hsl(7, 89%, 46%) 15%, hsl(11, 93%, 68%) 100%);
+  background:
+    linear-gradient(180deg, hsla(0, 0%, 100%, 0.12) 0%, transparent 40%, hsla(0, 0%, 0%, 0.08) 100%),
+    linear-gradient(90deg, hsl(7, 55%, 38%) 15%, hsl(11, 60%, 52%) 100%);
 }
 
 .gradient-color-orange,
 .gradient-color-orange::after {
-  background: linear-gradient(90deg, hsl(22, 89%, 46%) 15%, hsl(54, 90%, 45%) 100%);
+  background:
+    linear-gradient(180deg, hsla(0, 0%, 100%, 0.12) 0%, transparent 40%, hsla(0, 0%, 0%, 0.08) 100%),
+    linear-gradient(90deg, hsl(25, 55%, 38%) 15%, hsl(45, 60%, 50%) 100%);
 }
 
 .gradient-color-yellow,
 .gradient-color-yellow::after {
-  background: linear-gradient(90deg, hsl(54, 89%, 46%) 15%, hsl(92, 90%, 45%) 100%);
+  background:
+    linear-gradient(180deg, hsla(0, 0%, 100%, 0.12) 0%, transparent 40%, hsla(0, 0%, 0%, 0.08) 100%),
+    linear-gradient(90deg, hsl(50, 55%, 38%) 15%, hsl(80, 60%, 48%) 100%);
 }
 
 .gradient-color-green,
 .gradient-color-green::after {
-  background: linear-gradient(90deg, hsl(92, 89%, 46%) 15%, hsl(92, 90%, 68%) 100%);
+  background:
+    linear-gradient(180deg, hsla(0, 0%, 100%, 0.12) 0%, transparent 40%, hsla(0, 0%, 0%, 0.08) 100%),
+    linear-gradient(90deg, hsl(100, 48%, 35%) 15%, hsl(100, 55%, 52%) 100%);
 }
 
 /* Battery animations */
 .green-color {
-  background: linear-gradient(90deg, hsl(92, 89%, 46%) 15%, hsl(92, 90%, 68%) 100%);
+  background: linear-gradient(90deg, hsl(100, 48%, 40%) 15%, hsl(100, 55%, 55%) 100%);
 }
 
 .animated-green {
@@ -1630,11 +1727,62 @@ input[type="range"]::-moz-range-thumb {
   100% { text-shadow: 0 0 6px hsl(92, 90%, 68%); }
 }
 
+/* Fast pulse for urgent low battery (≤15%) */
+.animated-red-fast {
+  background: linear-gradient(90deg, hsl(7, 89%, 46%) 15%, hsl(11, 93%, 68%) 100%);
+  animation: fastPulse 0.5s ease-in-out infinite;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+@keyframes fastPulse {
+  0%, 100% { text-shadow: 0 0 4px hsl(7, 89%, 46%); }
+  50% { text-shadow: 0 0 16px hsl(7, 89%, 46%); }
+}
+
+/* Orange pulse (25-50%) */
+.animated-orange {
+  background: linear-gradient(90deg, hsl(22, 89%, 46%) 15%, hsl(54, 90%, 45%) 100%);
+  animation: animated-chargin-battery 1.2s infinite alternate;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* Yellow pulse (50-75%) */
+.animated-yellow {
+  background: linear-gradient(90deg, hsl(54, 89%, 46%) 15%, hsl(92, 90%, 45%) 100%);
+  animation: animated-chargin-battery 1.2s infinite alternate;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+/* Glow on charging bolt */
+.charging-glow {
+  filter: drop-shadow(0 0 6px var(--accent-success));
+  animation: glowPulse 1s ease-in-out infinite;
+}
+@keyframes glowPulse {
+  0%, 100% { filter: drop-shadow(0 0 4px var(--accent-success)); }
+  50% { filter: drop-shadow(0 0 12px var(--accent-success)); }
+}
+
+/* Flash on percent detail reaching 100% */
+.stat-value.flash {
+  animation: numberFlash 1s ease-in-out 3;
+}
+@keyframes numberFlash {
+  0%, 100% { color: var(--accent-success); text-shadow: 0 0 8px var(--accent-success); }
+  50% { color: var(--text-primary); text-shadow: none; }
+}
+
 /* Battery bubbles */
 .bubbles {
   position: absolute;
   bottom: 0;
-  background: var(--gradient-color-red, linear-gradient(90deg, hsl(7, 89%, 46%) 15%, hsl(11, 93%, 68%) 100%));
+  left: 0;
+  right: 0;
+  top: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 .individual-bubble {
@@ -1642,7 +1790,7 @@ input[type="range"]::-moz-range-thumb {
   bottom: 0;
   border-radius: 50%;
   background: #ffffffe6;
-  opacity: 0.3;
+  opacity: 0.5;
   z-index: 1;
 }
 
@@ -1884,6 +2032,13 @@ input[type="range"]::-moz-range-thumb {
 @media (max-width: 767px) {
   .player {
     font-size: 1.6rem;
+  }
+  .battery-container {
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+  .battery-stats {
+    max-width: 100%;
   }
 }
 

@@ -44,10 +44,13 @@ const SML = {
   temp: 0,
   hum: 0,
   battery: 0,
+  battDisplayLevel: 0,
   batteryV: 0,
   charging: false,
   fullBatt: false,
+  previousBattery: -1,  // para detectar cruce de umbrales
   btPower: false,
+  battEffectActive: false,
   wifiRSSI: -70,
   deviceIP: '0.0.0.0',
   uptime: 0,
@@ -186,14 +189,34 @@ function updateBatteryBar(level, charging) {
   fill.style.width = clamped + '%';
   percent.textContent = clamped + '%';
 
+  // Fill bar classes: high / medium / low / critical
   fill.className = 'batt-fill';
-  if (clamped > 60) fill.classList.add('high');
-  else if (clamped > 20) fill.classList.add('medium');
-  else fill.classList.add('low');
+  if (clamped <= 15) fill.classList.add('critical');
+  else if (clamped <= 20) fill.classList.add('low');
+  else if (clamped <= 60) fill.classList.add('medium');
+  else fill.classList.add('high');
+
+  // Percent text color + animation
+  percent.className = 'batt-percent';
+  if (charging) {
+    percent.classList.add('charging-text');
+  } else if (clamped <= 15) {
+    percent.classList.add('critical-text');
+  } else if (clamped <= 20) {
+    percent.classList.add('low-text');
+  } else if (clamped <= 60) {
+    percent.classList.add('medium-text');
+  } else {
+    percent.classList.add('high-text');
+  }
 
   iconContainer?.classList.toggle('batt-charging', charging);
   iconContainer?.classList.toggle('charging', charging);
-  if (chargingEl) chargingEl.style.display = charging ? 'inline' : 'none';
+  if (chargingEl) {
+    chargingEl.style.display = charging ? 'inline' : 'none';
+    if (charging) chargingEl.classList.add('charging-glow');
+    else chargingEl.classList.remove('charging-glow');
+  }
 }
 
 // ============================================================================
@@ -434,7 +457,7 @@ function connectWS() {
     SML.connected = false;
     updateConnectionStatus(false);
     // Re-add skeleton to data elements when disconnected
-    document.querySelectorAll('.stat-value, .info-value, #weatherTemp, #weatherHumVal, #weatherHeatIndex, #battVolt, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #deviceIP, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
+    document.querySelectorAll('.stat-value, .info-value, #weatherTemp, #weatherHumVal, #weatherHeatIndex, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #deviceIP, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
       .forEach(el => {
         if (el.textContent === '--' || el.textContent === '--.-' || el.textContent === '--.--V' || el.textContent === '--%') {
           el.classList.add('skeleton');
@@ -473,47 +496,51 @@ function sendCmd(obj) {
 }
 
 function handleMessage(data) {
+  // ── CONSOLE LOG — valores que manda el ESP32 ──
+  console.log('[SML ← ESP32]', JSON.stringify(data));
+
   // ── TEMPERATURE / HUMIDITY ──
   if (data.temperature !== undefined) {
     SML.temp = data.temperature;
 
     // Update thermometer animation
+    const value = parseFloat(data.temperature);
     const tempEl = document.getElementById('temperature');
     if (tempEl) {
-      const value = parseFloat(data.temperature);
       const minTemp = 0, maxTemp = 50;
       const pct = Math.min(100, Math.max(0, ((value - minTemp) / (maxTemp - minTemp)) * 100));
       tempEl.style.height = pct + '%';
       tempEl.dataset.value = value.toFixed(1) + '°C';
     }
 
-    // Weather display
-    const wt = document.getElementById('weatherTemp');
-    const wtv = document.getElementById('weatherTempVal');
-    if (wt) wt.textContent = value.toFixed(1);
-    if (wtv) wtv.textContent = value.toFixed(1);
+    // Weather display — use setDataValue to remove skeleton per-field
+    setDataValue(document.getElementById('weatherTemp'), value.toFixed(1));
+    setDataValue(document.getElementById('weatherTempVal'), value.toFixed(1));
   }
 
   if (data.humidity !== undefined) {
     SML.hum = data.humidity;
-    const wh = document.getElementById('weatherHum');
-    const whv = document.getElementById('weatherHumVal');
-    if (wh) wh.textContent = Math.round(data.humidity);
-    if (whv) whv.textContent = Math.round(data.humidity);
+    setDataValue(document.getElementById('weatherHumVal'), Math.round(data.humidity));
   }
 
   // ── BATTERY ──
   if (data.level !== undefined) {
     SML.battery = data.level;
     batt.level = data.level;
-    updateBatteryBar(data.level, data.charging || false);
+
+    // Smart capping: la librería da 100% al llegar a MAXV (4.0V), pero el
+    // TP4056 aún no ha terminado la carga CV. Mostramos 99% hasta que
+    // fullBatt confirme que la batería está realmente llena.
+    const isCharging = data.charging !== undefined ? data.charging : !!SML.charging;
+    const isFullBatt = data.fullbatt !== undefined ? data.fullbatt : !!SML.fullBatt;
+    const displayLevel = (isCharging && !isFullBatt && data.level >= 99) ? 99 : data.level;
+
+    SML.battDisplayLevel = displayLevel;
+    updateBatteryBar(displayLevel, isCharging);
   }
   if (data.battVoltage !== undefined) {
     SML.batteryV = data.battVoltage;
-    const bv = document.getElementById('battVolt');
-    const bvd = document.getElementById('battVoltageDetail');
-    if (bv) bv.textContent = data.battVoltage.toFixed(2) + ' V';
-    if (bvd) bvd.textContent = data.battVoltage.toFixed(2) + 'V';
+    setDataValue(document.getElementById('battVoltageDetail'), data.battVoltage.toFixed(2), 'V');
   }
   if (data.charging !== undefined) {
     SML.charging = data.charging;
@@ -529,20 +556,65 @@ function handleMessage(data) {
     if (typeof initBattery === 'function') initBattery(batt);
   }
 
-  // Battery detail stats
+  // ── Battery detail stats ──
+  const prevLevel = SML.previousBattery;       // raw level anterior
+  const rawLevel  = SML.battery || 0;           // raw level actual (sin cap)
+  const dispLevel = SML.battDisplayLevel ?? rawLevel;  // con smart capping
+  SML.previousBattery = rawLevel;
+
+  // Flash al llegar a 100% real (fullBatt o rawLevel>=100 sin cap)
   const bpd = document.getElementById('battPercentDetail');
-  if (bpd) bpd.textContent = (SML.battery || 0) + '%';
-  const bs = document.getElementById('battStatus');
-  if (bs) {
-    if (SML.charging) bs.textContent = 'Charging';
-    else if (SML.fullBatt) bs.textContent = 'Full';
-    else bs.textContent = 'In Use';
+  if (bpd) {
+    setDataValue(bpd, dispLevel, '%');
+    if (rawLevel >= 100 && (prevLevel < 100 || prevLevel === undefined || prevLevel === -1)) {
+      bpd.classList.add('flash');
+      setTimeout(() => bpd.classList.remove('flash'), 3000);
+    }
   }
+
+  // ── STATUS + CHARGE — iconos puros (sin texto) ──
+  const bs = document.getElementById('battStatus');
   const bcd = document.getElementById('battChargeDetail');
-  if (bcd) {
-    if (SML.charging) bcd.innerHTML = '<span class="fas fa-bolt"></span> Charging';
-    else if (SML.fullBatt) bcd.innerHTML = '<span class="fas fa-check"></span> Full';
-    else bcd.textContent = 'Battery';
+
+  // CHARGE: ⚡ verde pulsante si cargando, ⚡ gris atenuado si no
+  const setCharge = (pulse) => {
+    if (!bcd) return;
+    if (pulse) {
+      bcd.innerHTML = '<span class="fas fa-bolt-lightning animated-green charging-glow"></span>';
+    } else {
+      bcd.innerHTML = '<span class="fas fa-bolt-lightning charge-idle"></span>';
+    }
+  };
+
+  if (bs) {
+    if (SML.fullBatt) {
+      setDataHTML(bs, '<span class="fas fa-check-circle animated-green"></span>');
+      setCharge(false);
+    } else if (SML.charging) {
+      // Enchufado, cargando
+      setDataHTML(bs, '<span class="fas fa-plug animated-green"></span>');
+      setCharge(true);
+    } else if (dispLevel <= 30) {
+      // Batería baja sin corriente
+      const cls = dispLevel <= 15 ? 'animated-red-fast' : 'animated-red';
+      setDataHTML(bs, `<span class="fas fa-exclamation-triangle ${cls}"></span>`);
+      setCharge(false);
+    } else {
+      // Funcionando a batería — icono según nivel
+      let icon, cls;
+      if (dispLevel <= 50) {
+        icon = 'fa-battery-quarter';
+        cls = 'animated-orange';
+      } else if (dispLevel <= 75) {
+        icon = 'fa-battery-half';
+        cls = 'animated-yellow';
+      } else {
+        icon = 'fa-battery-three-quarters';
+        cls = 'animated-green';
+      }
+      setDataHTML(bs, `<span class="fas ${icon} ${cls}"></span>`);
+      setCharge(false);
+    }
   }
 
   // ── LAMP / NEOPIXEL ──
@@ -651,21 +723,24 @@ function handleMessage(data) {
     }
   }
 
+  // ── BATTERY EFFECT STATUS ──
+  if (data.battNEOStatus !== undefined) {
+    SML.battEffectActive = data.battNEOStatus === 'on';
+    const bToggle = document.getElementById('batteryToggle');
+    if (bToggle) bToggle.classList.toggle('active', SML.battEffectActive);
+  }
+
   // ── WIFI / NETWORK ──
   if (data.rssi !== undefined) {
     SML.wifiRSSI = data.rssi;
     updateWiFiBars(data.rssi);
-
-    const rssiEl = document.getElementById('sysRSSI');
-    if (rssiEl) rssiEl.textContent = data.rssi + ' dBm';
+    setDataValue(document.getElementById('sysRSSI'), data.rssi, ' dBm');
   }
 
   if (data.ip !== undefined) {
     SML.deviceIP = data.ip;
-    const ipEl = document.getElementById('deviceIP');
-    const sysIp = document.getElementById('sysIP');
-    if (ipEl) ipEl.textContent = data.ip;
-    if (sysIp) sysIp.textContent = data.ip;
+    setDataValue(document.getElementById('deviceIP'), data.ip);
+    setDataValue(document.getElementById('sysIP'), data.ip);
   }
 
   if (data.ssid !== undefined) {
@@ -681,19 +756,17 @@ function handleMessage(data) {
       const d = Math.floor(s / 86400);
       const h = Math.floor((s % 86400) / 3600);
       const m = Math.floor((s % 3600) / 60);
-      el.textContent = (d > 0 ? d + 'd ' : '') + (h > 0 || d > 0 ? h + 'h ' : '') + m + 'm';
+      setDataValue(el, (d > 0 ? d + 'd ' : '') + (h > 0 || d > 0 ? h + 'h ' : '') + m + 'm');
     }
   }
 
   if (data.heap !== undefined) {
-    const el = document.getElementById('sysHeap');
-    if (el) el.textContent = data.heap + ' KB';
+    setDataValue(document.getElementById('sysHeap'), data.heap, ' KB');
   }
 
   // ── LED COUNT (if server sends it) ──
   if (data.n !== undefined) {
-    const el = document.getElementById('sysLEDs');
-    if (el) el.textContent = data.n;
+    setDataValue(document.getElementById('sysLEDs'), data.n);
     const countEl = document.getElementById('ledCount');
     if (countEl && !countEl.dataset.userChanged) countEl.value = data.n;
   }
@@ -712,7 +785,7 @@ function handleMessage(data) {
                - 0.016424828 * H * H + 0.002211732 * T * T * H
                + 0.00072546 * T * H * H - 0.000003582 * T * T * H * H;
       }
-      hi.textContent = feels.toFixed(1);
+      setDataValue(hi, feels.toFixed(1));
     }
   }
 }
@@ -799,6 +872,13 @@ function setDataValue(el, value, suffix) {
   el.classList.remove('skeleton');
 }
 
+/** Sets innerHTML on an element and removes its skeleton loading state. */
+function setDataHTML(el, html) {
+  if (!el) return;
+  el.innerHTML = html || '--';
+  el.classList.remove('skeleton');
+}
+
 // ============================================================================
 // INIT
 // ============================================================================
@@ -808,7 +888,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme();
 
   // Add skeleton loading to all data-bearing elements
-  document.querySelectorAll('.stat-value, .info-value, #weatherTemp, #weatherHumVal, #weatherHeatIndex, #battVolt, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #deviceIP, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
+  document.querySelectorAll('.stat-value, .info-value, #weatherTemp, #weatherHumVal, #weatherHeatIndex, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #deviceIP, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
     .forEach(el => el.classList.add('skeleton'));
 
   // Tabs
@@ -816,6 +896,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Lamp controls
   initLampControls();
+
+  // Battery toggle (tap pill to toggle batt LED effect)
+  const battToggle = document.getElementById('batteryToggle');
+  if (battToggle) {
+    battToggle.addEventListener('click', () => {
+      sendCmd({ effectId: 20 });
+    });
+  }
 
   // Volume + BT are now handled by player.js (IIFE auto-inits)
   // player.js handles: play/pause, skip, BT star-tab, volume ring drag
