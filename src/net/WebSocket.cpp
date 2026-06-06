@@ -38,6 +38,67 @@ const char* bars()
 }
 
 // ============================================================================
+// sendPeekData — Broadcast current LED colors as binary frame (WLED-compatible)
+// ============================================================================
+// Binary format:
+//   [0] = 0x4C (magic 'L')
+//   [1] = 0x01 (version)
+//   [2] = N_PIXELS (width in LEDs)
+//   [3] = 1 (height, single row)
+//   [4..] = RGB data (R,G,B per pixel)
+// Sends to ALL clients that opted in via {"lv": true}. Uses binaryAll()
+// which copies data internally — safe for local buffer.
+// Called from TaskLEDControl after stripLed.update().
+// ============================================================================
+
+static bool wsLiveActive = false; // any client wants live preview
+
+void sendPeekData() {
+    if (!wsLiveActive) return; // no client opted in
+
+    // Rate limit to ~20fps (50ms)
+    static uint32_t lastPeek = 0;
+    uint32_t now = millis();
+    if (now - lastPeek < 50) return;
+    lastPeek = now;
+
+    // Build binary frame and broadcast to all clients
+    // WARNING: buf es stack-local (76 bytes para 24 LEDs) — seguro para TaskLEDControl
+    // que tiene 2048 bytes de stack.
+    uint8_t buf[4 + N_PIXELS * 3];
+    buf[0] = 0x4C;  // magic 'L'
+    buf[1] = 0x01;  // version 1 (single strip)
+    buf[2] = N_PIXELS;
+    buf[3] = 1;     // height = 1 row
+
+    for (uint16_t i = 0; i < N_PIXELS; i++) {
+        buf[4 + i * 3]     = leds[i].r;
+        buf[4 + i * 3 + 1] = leds[i].g;
+        buf[4 + i * 3 + 2] = leds[i].b;
+    }
+
+#ifdef DEBUG_WEBSOCKET
+    static uint32_t lastPeekLog = 0;
+    if (now - lastPeekLog > 5000) {  // log cada 5s para no saturar
+        lastPeekLog = now;
+        debugD("📤 sendPeekData: ");
+        debugD_NUM(sizeof(buf), "%u");
+        debugD(" bytes to ");
+        debugD_NUM(ws.count(), "%u");
+        debugD(" clients  |  sample pixel[0]: RGB(");
+        debugD_NUM(leds[0].r, "%d");
+        debugD(",");
+        debugD_NUM(leds[0].g, "%d");
+        debugD(",");
+        debugD_NUM(leds[0].b, "%d");
+        debugD(")\n");
+    }
+#endif
+
+    ws.binaryAll(buf, sizeof(buf));
+}
+
+// ============================================================================
 // Notify all WebSocket clients with current state
 // ============================================================================
 
@@ -207,11 +268,25 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             return;
         }
 
+        // ▸ WLED-style peek live view opt-in (multi-client) — procesar ANTES
+        //   del early return de action==nullptr, porque {"lv":true} no lleva action.
+        if (json.containsKey("lv")) {
+            wsLiveActive = json["lv"].as<bool>();
+#ifdef DEBUG_WEBSOCKET
+            debugD("🔴 Peek live view: ");
+            debuglnD(wsLiveActive ? "ENABLED" : "DISABLED");
+#endif
+            // Si solo venía lv, responder con el estado completo + retornar
+            stateGeneration++;
+            notifyClients();
+            return;
+        }
+
         const char *action = json["action"];
         const int effectId = json["effectId"] | -1;
 
-        // ⚠ Solo asignar effectId si el campo existe (evita pisar con 0)
-        if (effectId > 0) {
+        // ⚠ Solo asignar effectId si el campo existe. effectId 0 = Solid (color simple)
+        if (effectId >= 0) {
             stripLed.effectId = effectId;
             // Si el Neo está encendido aplicar el nuevo efecto
             if (stripLed.powerState) stripLed.update();

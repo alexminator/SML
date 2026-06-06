@@ -98,6 +98,7 @@ void TaskLEDControl(void *pvParameters) {
     while (true) {
         if (stripLed.powerState) {
             stripLed.update();
+            sendPeekData();  // Live preview via WebSocket binary frame
         } else {
             stripLed.clear();
         }

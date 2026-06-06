@@ -26,7 +26,7 @@
 #define DEBUG_SYSTEM              // System-level (init, mutex, errors)
 #define DEBUG_WIFI                // WiFi connection and authentication
 //#define DEBUG_WEB               // Web server and LittleFS filesystem
-//#define DEBUG_WEBSOCKET         // WebSocket communication and JSON
+#define DEBUG_WEBSOCKET         // WebSocket communication and JSON
 //#define DEBUG_LED               // LED strip control and effects
 //#define DEBUG_BATTERY           // Battery monitoring and charging
 //#define DEBUG_TEMPERATURE       // Temperature and humidity sensor (DHT)

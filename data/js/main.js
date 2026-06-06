@@ -149,9 +149,11 @@ function switchTab(tabId) {
     peek.stop();
     const peekToggle = document.getElementById('peekToggle');
     if (peekToggle) {
-      peekToggle.textContent = '▶ Live';
+      peekToggle.textContent = '▶ Start';
       peekToggle.classList.remove('active');
     }
+    // Stop ESP32 live stream
+    if (typeof sendCmd === 'function') sendCmd({ lv: false });
   }
 
   // Init peek when tab activated
@@ -335,6 +337,12 @@ function initEffectCards() {
     card.addEventListener('click', () => {
       const effId = parseInt(card.dataset.effectId);
       if (isNaN(effId)) return;
+
+      // Toast warning if NeoPixel is off
+      if (!SML.powerOn) {
+        showToast('⚠️ Turn on the NeoPixel strip first');
+        return;
+      }
 
       const wasActive = card.classList.contains('active');
 
@@ -600,6 +608,7 @@ function connectWS() {
 
   try {
     SML.ws = new WebSocket(url);
+    SML.ws.binaryType = 'arraybuffer';
   } catch (e) {
     console.error('WS connection failed:', e);
     scheduleReconnect();
@@ -633,7 +642,7 @@ function connectWS() {
   SML.ws.onerror = () => {};
 
   SML.ws.onmessage = (event) => {
-    // Binary data for Peek (Phase 3)
+    // Binary data for Peek (real-time LED stream from ESP32)
     if (event.data instanceof ArrayBuffer) {
       if (typeof handlePeekBinary === 'function') handlePeekBinary(event.data);
       return;
@@ -1097,6 +1106,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const battToggle = document.getElementById('batteryToggle');
   if (battToggle) {
     battToggle.addEventListener('click', () => {
+      if (!SML.powerOn) { showToast('⚠️ Turn on the NeoPixel strip first'); return; }
       sendCmd({ action: 'toggleBatt' });
     });
   }
@@ -1105,6 +1115,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const tempToggle = document.getElementById('tempToggle');
   if (tempToggle) {
     tempToggle.addEventListener('click', () => {
+      if (!SML.powerOn) { showToast('⚠️ Turn on the NeoPixel strip first'); return; }
       sendCmd({ action: 'toggleTemp' });
     });
   }
