@@ -71,7 +71,8 @@ constexpr unsigned long LED_ERROR_FLASH_CYCLE = 200;
 constexpr unsigned long LED_ERROR_FLASH_ON    = 50;
 constexpr unsigned long BATTERY_CHECK_INTERVAL = 3000;
 constexpr unsigned long LITTLEFS_TIMEOUT       = 30000;
-constexpr unsigned long WEBSOCKET_UPDATE_INTERVAL = 1000;
+constexpr unsigned long WEBSOCKET_UPDATE_INTERVAL = 3000;
+constexpr unsigned long WEBSOCKET_SENSOR_INTERVAL = 3000;
 constexpr uint8_t       WEBSOCKET_STACK_CHECK_CYCLES = 10;
 constexpr unsigned long SENSOR_CHECK_INTERVAL  = 5000;
 

@@ -28,7 +28,7 @@ void TaskWebSocket(void *pvParameters) {
 
     while (true) {
         ws.cleanupClients();
-        notifyClients();
+        notifySensorData();    // Solo sensores — ~180 bytes vs ~940
 
         // Monitor stack every 10 cycles
         static uint8_t cycleCount = 0;
@@ -56,6 +56,7 @@ void TaskWebSocket(void *pvParameters) {
 void TaskBatteryMonitor(void *pvParameters) {
     while (true) {
         batt.battMonitor();
+        stateGeneration++;  // Signal new battery data available
 
         // Protect shared variable access
         if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
@@ -204,6 +205,7 @@ void readSensor() {
         dht.temperature().getEvent(&event);
         if (!isnan(event.temperature)) {
             temp = event.temperature;
+            stateGeneration++;  // Signal new temp data
 #ifdef DEBUG_TEMPERATURE
             debugD("Temperature: ");
             debugD_FLOAT1(temp);
@@ -224,6 +226,7 @@ void readSensor() {
         dht.humidity().getEvent(&event);
         if (!isnan(event.relative_humidity)) {
             hum = event.relative_humidity;
+            stateGeneration++;  // Signal new humidity data
 #ifdef DEBUG_TEMPERATURE
             debugD("Humidity: ");
             debugD_FLOAT1(hum);

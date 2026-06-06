@@ -2,26 +2,48 @@
 #include "Effect.h"
 #include "../state/AppState.h"
 
+// ──────────────────────────────────────────────────────────────────────────────
+// SinelonEffect — WLED Sinelon adapted for SML
+// ──────────────────────────────────────────────────────────────────────────────
+// Parameters (from metadata):
+//   speed     → Beat frequency  (sx=23) — higher = faster movement
+//   intensity → Trail fade rate (ix=128) — higher = shorter trail
+// ──────────────────────────────────────────────────────────────────────────────
+
 class SinelonEffect : public Effect {
+private:
+    static const char _meta[];
+    uint8_t _hue = 0;
+
 public:
     SinelonEffect(CRGB* l, uint16_t n) : Effect(l, n) {
-        params.speed    = 23;  // sinelonBeat default (bpm)
-        params.custom1  = 2;   // sinelonFade default
+        setToDefaults(_meta);
+    }
+
+    const char* getMeta() const override {
+        return _meta;
     }
 
     void render() override {
-        uint8_t bpm  = params.speed;
-        uint8_t fade = params.custom1;
+        // Speed controls beatsin16 frequency (movement speed)
+        // Intensity controls trail fade rate
+        uint8_t fade = map(params.intensity, 0, 255, 2, 200);
 
-        fadeToBlackBy(leds, N_PIXELS, fade);
-        int pos1 = beatsin16(bpm, 0, N_PIXELS - 1);
-        int pos2 = beatsin16(bpm + 5, 0, N_PIXELS - 1);
-        leds[(pos1 + pos2) / 2] += CHSV(myhue, 255, stripLed.brightness);
+        fadeToBlackBy(leds, numLeds, fade);
 
-        EVERY_N_MILLISECONDS(10) {
-            myhue++;
+        unsigned pos = beatsin16(params.speed, 0, numLeds - 1);
+        leds[pos] = CHSV(_hue, 255, stripLed.brightness);
+
+        // Advance hue slowly for color cycling
+        EVERY_N_MILLISECONDS(20) {
+            _hue++;
         }
 
         FastLED.show();
     }
 };
+
+// Metadata: "Name@labels;defaults"
+// Labels: speed, intensity, custom1, custom2, custom3, (reserved), check1, check2, check3
+const char SinelonEffect::_meta[] =
+    "Sinelon@Beat,Trail,,,,,,,,;;;;sx=23,ix=128";

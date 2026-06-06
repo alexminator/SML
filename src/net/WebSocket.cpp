@@ -41,11 +41,11 @@ const char* bars()
 // Notify all WebSocket clients with current state
 // ============================================================================
 
-void notifyClients()
+void notifyClients(bool includeParams)
 {
     // Take mutex for reading shared data
     if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
-        DynamicJsonDocument json(4096);
+        DynamicJsonDocument json(6144);
 
         // Usar valores numéricos directamente en JSON
         json["bars"] = bars();
@@ -75,22 +75,36 @@ void notifyClients()
         for (uint8_t i = 0; i < EFFECT_COUNT; ++i)
             json[effectRegistry[i].jsonName] = (stripLed.effectId == i + 1 && stripLed.powerState) ? "on" : "off";
 
-        // Serializar parámetros del efecto activo
-        Effect* currentFx = getEffect(stripLed.effectId);
-        if (currentFx) {
-            JsonObject p = json["params"].to<JsonObject>();
-            p["speed"]     = currentFx->getSpeed();
-            p["intensity"] = currentFx->getIntensity();
-            p["custom1"]   = currentFx->getCustom1();
-            p["custom2"]   = currentFx->getCustom2();
-            p["custom3"]   = currentFx->getCustom3();
-            p["check1"]    = currentFx->getCheck1();
-            p["check2"]    = currentFx->getCheck2();
-            p["check3"]    = currentFx->getCheck3();
+        // Params + meta solo en respuesta a acciones del usuario (evita que el
+        // sync periódico sobreescriba sliders/checkboxes con valores viejos).
+        if (includeParams) {
+            Effect* currentFx = getEffect(stripLed.effectId);
+            if (currentFx) {
+                JsonObject p = json["params"].to<JsonObject>();
+                p["speed"]     = currentFx->getSpeed();
+                p["intensity"] = currentFx->getIntensity();
+                p["custom1"]   = currentFx->getCustom1();
+                p["custom2"]   = currentFx->getCustom2();
+                p["custom3"]   = currentFx->getCustom3();
+                p["check1"]    = currentFx->getCheck1();
+                p["check2"]    = currentFx->getCheck2();
+                p["check3"]    = currentFx->getCheck3();
+#ifdef DEBUG_WEBSOCKET
+                debugD("notifyClients effectId=");
+                debugD_NUM(stripLed.effectId, "%u");
+                debugD(" check1=");
+                debugD_NUM(currentFx->getCheck1(), "%d");
+                debugD("\n");
+#endif
+
+                // Metadata del efecto activo
+                const char* meta = currentFx->getMeta();
+                if (meta) json["meta"] = meta;
+            }
         }
 
         // Quick sanity check — reject unusually large payloads
-        if (measureJson(json) + 128 > 1024) {
+        if (measureJson(json) + 256 > 2048) {
 #ifdef DEBUG_WEBSOCKET
             debuglnE("JSON payload too large for WebSocket");
 #endif
@@ -98,8 +112,8 @@ void notifyClients()
             return;
         }
 
-        // Fixed-size buffer (no VLA — safer on ESP32 stack)
-        char buffer[1024];
+        // Fixed-size buffer (static — NOT on task stack, TaskWebSocket solo tiene 4KB)
+        static char buffer[2048];
         size_t len = serializeJson(json, buffer, sizeof(buffer));
 
         if (len >= sizeof(buffer)) {
@@ -127,6 +141,53 @@ void notifyClients()
 }
 
 // ============================================================================
+// notifySensorData — Broadcast only sensor/battery/WiFi data (lightweight)
+// ============================================================================
+
+void notifySensorData()
+{
+    // Take mutex for reading shared data
+    if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+        // Dirty flag: skip if no state changes since last send
+        static uint32_t lastGen = 0;
+        if (stateGeneration == lastGen) {
+            xSemaphoreGive(dataMutex);
+            return;
+        }
+        lastGen = stateGeneration;
+
+        // Small document — only real-time sensor/status fields (~180 bytes)
+        DynamicJsonDocument json(1024);
+
+        json["bars"] = bars();
+        json["level"] = batt.battLvl;
+        json["battVoltage"] = batt.battVolts;
+        json["charging"] = batt.chargeState;
+        json["fullbatt"] = batt.fullBatt;
+        json["temperature"] = temp;
+        json["humidity"] = hum;
+        json["ssid"] = WiFi.SSID();
+        json["ip"] = WiFi.localIP().toString();
+        json["rssi"] = WiFi.RSSI();
+
+        // Static buffer (not on task stack — TaskWebSocket solo tiene 4KB)
+        static char buffer[512];
+        size_t len = serializeJson(json, buffer, sizeof(buffer));
+
+        if (len > 0 && len < sizeof(buffer)) {
+#ifdef DEBUG_WEBSOCKET
+            debugD("Sensor payload size: ");
+            debuglnD_NUM(len, "%u");
+            debuglnD(" bytes");
+#endif
+            ws.textAll(buffer, len);
+        }
+
+        xSemaphoreGive(dataMutex);
+    }
+}
+
+// ============================================================================
 // Handle incoming WebSocket messages
 // ============================================================================
 
@@ -147,8 +208,21 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         }
 
         const char *action = json["action"];
-        const int effectId = json["effectId"];
-        stripLed.effectId = effectId;
+        const int effectId = json["effectId"] | -1;
+
+        // ⚠ Solo asignar effectId si el campo existe (evita pisar con 0)
+        if (effectId > 0) {
+            stripLed.effectId = effectId;
+            // Si el Neo está encendido aplicar el nuevo efecto
+            if (stripLed.powerState) stripLed.update();
+        }
+
+        // ⚠ action puede ser NULL si el mensaje solo trae effectId
+        if (action == nullptr) {
+            stateGeneration++;
+            notifyClients();
+            return;
+        }
 
         if (strcmp(action, "toggle") == 0)
         {
@@ -178,6 +252,24 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             debuglnD_NUM(brightness, "%d");
 #endif
             stripLed.brightness = brightness;
+        }
+        else if (strcmp(action, "toggleBatt") == 0) {
+            // Toggle battery indicator effect (effectId 20)
+            if (stripLed.effectId == 20) {
+                stripLed.effectId = 0;   // Volver a color simple
+            } else {
+                stripLed.effectId = 20;  // Mostrar indicador de batería
+            }
+            if (stripLed.powerState) stripLed.update();
+        }
+        else if (strcmp(action, "toggleTemp") == 0) {
+            // Toggle temperature indicator effect (effectId 19)
+            if (stripLed.effectId == 19) {
+                stripLed.effectId = 0;   // Volver a color simple
+            } else {
+                stripLed.effectId = 19;  // Mostrar indicador de temperatura
+            }
+            if (stripLed.powerState) stripLed.update();
         }
         else if (strcmp(action, "picker") == 0)
         {
@@ -247,17 +339,24 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
                 fx->setCustom1(json["custom1"] | fx->getCustom1());
                 fx->setCustom2(json["custom2"] | fx->getCustom2());
                 fx->setCustom3(json["custom3"] | fx->getCustom3());
-                fx->setCheck1(json["check1"]   | fx->getCheck1());
-                fx->setCheck2(json["check2"]   | fx->getCheck2());
-                fx->setCheck3(json["check3"]   | fx->getCheck3());
+                // ⚠ `|` operator with bool devuelve `false` si el JSON trae
+                // integer (1/0) en vez de bool nativo. Usamos containsKey explícito.
+                if (json.containsKey("check1")) fx->setCheck1(json["check1"].as<int>() != 0);
+                if (json.containsKey("check2")) fx->setCheck2(json["check2"].as<int>() != 0);
+                if (json.containsKey("check3")) fx->setCheck3(json["check3"].as<int>() != 0);
 #ifdef DEBUG_WEBSOCKET
                 debugD("setParams effectId=");
                 debugD_NUM(id, "%u");
+                debugD(" | check1 raw=");
+                debugD_NUM(json["check1"].as<int>(), "%d");
+                debugD(" current=");
+                debugD_NUM(fx->getCheck1(), "%d");
                 debugD("\n");
 #endif
                 saveEffectParams();
             }
         }
+        stateGeneration++;
         notifyClients();
     }
 }
@@ -291,6 +390,12 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
 #endif
             transitionToState(POWER_BATTERY_ACTIVE);
         }
+
+        // Metadata disponible via HTTP GET /fxdata (cargado por la UI al iniciar)
+
+        // Enviar estado completo al conectar
+        stateGeneration++;
+        notifyClients(true);
         break;
     case WS_EVT_DISCONNECT:
 #ifdef DEBUG_WEBSOCKET

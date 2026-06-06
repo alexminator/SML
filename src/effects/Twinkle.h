@@ -2,13 +2,25 @@
 #include "Effect.h"
 #include "../state/AppState.h"
 
-// TwinkleFOX by Mark Kriegsman - WLED compatible implementation
+// ──────────────────────────────────────────────────────────────────────────────
+// TwinkleEffect — TwinkleFOX by Mark Kriegsman (WLED-compatible)
+// ──────────────────────────────────────────────────────────────────────────────
+// Parameters (from metadata):
+//   speed     → Animation speed (sx=8) — higher = faster twinkling
+//   intensity → Twinkle density (ix=160) — higher = more simultaneous twinkles
+//   check1    → RedCool (m1=1) — cools red tones for a bluer palette
+// ──────────────────────────────────────────────────────────────────────────────
+
 class TwinkleEffect : public Effect {
+    static const char _meta[];
+
 public:
     TwinkleEffect(CRGB* l, uint16_t n) : Effect(l, n) {
-        params.speed     = 8;    // twinkleSpeed default
-        params.intensity = 160;  // twinkleIntensity default
-        params.check1    = true; // twinkleRedCool default
+        setToDefaults(_meta);
+    }
+
+    const char* getMeta() const override {
+        return _meta;
     }
 
     void render() override {
@@ -16,7 +28,7 @@ public:
         uint8_t intensityVal   = params.intensity;
         bool redCool           = params.check1;
 
-        static uint16_t PRNG16 = 11337;
+        uint16_t PRNG16 = 11337;
         static unsigned long lastUpdate = 0;
         uint32_t ms = millis();
 
@@ -31,14 +43,13 @@ public:
         uint32_t ticks = ms / speedDelay;
         uint8_t twinkleDensity = (intensityVal >> 5) + 1;
 
-        fadeToBlackBy(leds, N_PIXELS, 200);
+        fadeToBlackBy(leds, numLeds, 200);
 
         PRNG16 = 11337;
-        for (unsigned i = 0; i < N_PIXELS; i++) {
+        for (unsigned i = 0; i < numLeds; i++) {
             uint8_t salt = i * 3;
 
-            uint16_t prng = PRNG16;
-            prng = (prng * 2053) + 1384;
+            uint16_t prng = (PRNG16 * 2053) + 1384;
 
             uint8_t fastcycle8 = ticks & 0xFF;
             uint16_t slowcycle16 = (ticks >> 8) + salt;
@@ -78,3 +89,7 @@ public:
         FastLED.show();
     }
 };
+
+// Metadata: "Name@labels;defaults"
+const char TwinkleEffect::_meta[] =
+    "Twinkle@Speed,Density,,,,,,,,RedCool;;;;sx=8,ix=160,m1=1";

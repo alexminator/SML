@@ -40,12 +40,6 @@ function updateSystemInfo(data) {
     if (ipEl) ipEl.textContent = data.ip;
   }
 
-  if (data.n !== undefined) {
-    const el = document.getElementById('sysLEDs');
-    if (el) el.textContent = data.n;
-    const countEl = document.getElementById('ledCount');
-    if (countEl && !countEl.dataset.userChanged) countEl.value = data.n;
-  }
 
   if (data.ver !== undefined) {
     const el = document.getElementById('sysVersion');

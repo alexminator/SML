@@ -314,21 +314,40 @@ function initEffectCards() {
       const effId = parseInt(card.dataset.effectId);
       if (isNaN(effId)) return;
 
-      // Update active state
+      const wasActive = card.classList.contains('active');
+
+      // Si cambia a otro efecto, cerrar config abierta
+      if (activeCard && activeCard !== card) {
+        closeEffectConfig();
+      }
+
+      // Enviar comando de efecto siempre
+      SML.effectId = effId;
+      sendCmd({ effectId: effId });
+
+      // Actualizar estado visual
       cards.forEach(c => c.classList.remove('active'));
       card.classList.add('active');
       activeCard = card;
 
-      SML.effectId = effId;
-
-      // Send effect command to ESP32
-      sendCmd({ effectId: effId });
-
-      // Show params panel only if effect has configurable params
-      const hasParams = EFFECT_PARAMS[effId] && EFFECT_PARAMS[effId].params && EFFECT_PARAMS[effId].params.length > 0;
-      if (hasParams) showEffectConfig(effId, card);
+      // Segundo click en la misma card → mostrar config (si tiene parámetros)
+      if (wasActive) {
+        const hasParams = EFFECT_PARAMS[effId] && EFFECT_PARAMS[effId].params && EFFECT_PARAMS[effId].params.length > 0;
+        if (hasParams) showEffectConfig(effId, card);
+      }
     });
   });
+}
+
+function closeEffectConfig() {
+  const offcanvas = document.getElementById('effectOffcanvas');
+  const sheet = document.getElementById('paramBottomSheet');
+  const ocOverlay = document.getElementById('offcanvasOverlay');
+  const modOv = document.getElementById('paramModalOverlay');
+  if (offcanvas) offcanvas.classList.remove('open');
+  if (sheet) sheet.classList.remove('open');
+  if (ocOverlay) ocOverlay.classList.remove('open');
+  if (modOv) modOv.classList.remove('open');
 }
 
 function showEffectConfig(effId, cardEl) {
@@ -362,21 +381,43 @@ function showEffectConfig(effId, cardEl) {
 }
 
 function renderEffectParams(effId, container) {
-  const config = EFFECT_PARAMS[effId];
+  // Intentar usar metadata del servidor primero (fuente única de verdad)
+  let config = effectMetaCache[effId];
+  if (!config) {
+    // Fallback: EFFECT_PARAMS hardcodeados (para efectos aún no migrados)
+    config = EFFECT_PARAMS[effId];
+  }
   if (!config || !config.params || config.params.length === 0) {
     container.innerHTML = '';
     return;
   }
 
-  container.innerHTML = config.params.map(p => `
-    <div class="param-row">
-      <label>${p.label}</label>
-      <input type="range" min="${p.min}" max="${p.max}" value="${p.default}"
-             data-key="${p.key}">
-      <span class="param-value">${p.default}</span>
-    </div>
-  `).join('');
+  container.innerHTML = config.params.map(p => {
+    if (p.type === 'checkbox') {
+      return `
+        <div class="param-row">
+          <label>${p.label}</label>
+          <label class="switch">
+            <input type="checkbox" data-key="${p.key}" ${p.default ? 'checked' : ''}>
+            <span class="slider"></span>
+          </label>
+        </div>`;
+    }
+    return `
+      <div class="param-row">
+        <label>${p.label}</label>
+        <input type="range" min="${p.min}" max="${p.max}" value="${p.default}"
+               data-key="${p.key}">
+        <span class="param-value">${p.default}</span>
+      </div>`;
+  }).join('') + `
+    <div class="param-reset-row">
+      <button class="btn-reset-params" data-effect-id="${effId}">↺ Reset to Defaults</button>
+    </div>`;
 
+  // Sliders — envía en change (al soltar) para no saturar al ESP32 con
+  // cientos de writes a LittleFS durante el arrastre. El guard
+  // document.activeElement en el sync evita que notifyClients() overwrite.
   container.querySelectorAll('input[type="range"]').forEach(input => {
     const valSpan = input.nextElementSibling;
     input.addEventListener('input', () => { valSpan.textContent = input.value; });
@@ -386,6 +427,43 @@ function renderEffectParams(effId, container) {
       sendCmd(msg);
     });
   });
+
+  // Checkboxes
+  container.querySelectorAll('input[type="checkbox"]').forEach(input => {
+    input.addEventListener('change', () => {
+      const newVal = input.checked ? 1 : 0;
+      console.log(`[DEBUG] Checkbox ${input.dataset.key} → ${newVal} (input.checked=${input.checked})`);
+      const msg = { action: 'setParams', effectId: effId };
+      msg[input.dataset.key] = newVal;
+      sendCmd(msg);
+    });
+  });
+
+  // Reset to defaults button
+  const resetBtn = container.querySelector('.btn-reset-params');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      // Usar defaults de metadata si está disponible, sino EFFECT_PARAMS
+      const cfg = effectMetaCache[effId] || EFFECT_PARAMS[effId];
+      if (cfg && cfg.params) {
+        const msg = { action: 'setParams', effectId: effId };
+        cfg.params.forEach(p => {
+          msg[p.key] = p.default;
+          const input = container.querySelector(`input[data-key="${p.key}"]`);
+          if (input) {
+            if (input.type === 'checkbox') {
+              input.checked = !!p.default;
+            } else {
+              input.value = p.default;
+              const valSpan = input.nextElementSibling;
+              if (valSpan) valSpan.textContent = p.default;
+            }
+          }
+        });
+        sendCmd(msg);
+      }
+    });
+  }
 }
 
 // ============================================================================
@@ -411,19 +489,127 @@ const EFFECT_PARAMS = {
     { key: 'custom2', label: 'Gravity', type: 'range', min: 1, max: 20, default: 10 },
   ]},
   8: { name: 'Juggle', params: [
-    { key: 'speed', label: 'Speed', type: 'range', min: 0, max: 255, default: 100 },
-    { key: 'intensity', label: 'Intensity', type: 'range', min: 0, max: 255, default: 128 },
-    { key: 'custom1', label: 'Dots', type: 'range', min: 1, max: 8, default: 3 },
+    { key: 'speed', label: 'Speed', type: 'range', min: 0, max: 40, default: 20 },
+    { key: 'intensity', label: 'Trail', type: 'range', min: 0, max: 255, default: 128 },
+    { key: 'custom1', label: 'Dots', type: 'range', min: 1, max: 5, default: 3 },
   ]},
   9: { name: 'Sinelon', params: [
-    { key: 'speed', label: 'BPM', type: 'range', min: 0, max: 255, default: 23 },
-    { key: 'custom1', label: 'Fade', type: 'range', min: 1, max: 50, default: 2 },
+    { key: 'speed', label: 'Beat', type: 'range', min: 0, max: 255, default: 23 },
+    { key: 'intensity', label: 'Trail', type: 'range', min: 0, max: 255, default: 128 },
   ]},
   10: { name: 'Comet', params: [
-    { key: 'speed', label: 'Speed', type: 'range', min: 0, max: 255, default: 80 },
-    { key: 'custom1', label: 'Trail', type: 'range', min: 1, max: 50, default: 10 },
+    { key: 'speed', label: 'Speed', type: 'range', min: 0, max: 255, default: 64 },
+    { key: 'intensity', label: 'Glow', type: 'range', min: 0, max: 255, default: 128 },
+    { key: 'custom1', label: 'Size', type: 'range', min: 1, max: 8, default: 4 },
+    { key: 'check1', label: 'Blur', type: 'checkbox', default: false },
   ]},
 };
+
+// ============================================================================
+// EFFECT METADATA SYSTEM (WLED-style)
+// ============================================================================
+// Almacena la metadata parseada de cada efecto, recibida desde el ESP32.
+// La metadata es la ÚNICA fuente de verdad para labels y defaults.
+// Mientras no llega la metadata, se usa EFFECT_PARAMS como fallback.
+// ============================================================================
+
+let effectMetaCache = {};  // { [effectId]: { name, params } }
+
+/**
+ * Parsea una cadena de metadatos estilo WLED y retorna { name, params[] }.
+ * Formato: "Name@label_speed,label_intensity,label_c1,...,label_m3;;;;sx=64,ix=128,c1=55,..."
+ * Labels vacías = sin slider para ese parámetro.
+ */
+function parseEffectMeta(metaStr) {
+  const atIdx = metaStr.indexOf('@');
+  if (atIdx < 0) return null;
+  const name = metaStr.substring(0, atIdx);
+  const rest = metaStr.substring(atIdx + 1);
+
+  // Defaults section: after last ';'
+  const lastSemi = rest.lastIndexOf(';');
+  const mainPart = lastSemi >= 0 ? rest.substring(0, lastSemi) : rest;
+  const defaultsPart = lastSemi >= 0 ? rest.substring(lastSemi + 1) : '';
+
+  // Labels section: first segment (before first ';')
+  const firstSemi = mainPart.indexOf(';');
+  const labelsStr = firstSemi >= 0 ? mainPart.substring(0, firstSemi) : mainPart;
+  const labels = labelsStr.split(',');
+
+  // Parse key=value defaults
+  const defaults = {};
+  if (defaultsPart) {
+    defaultsPart.split(',').forEach(pair => {
+      pair = pair.trim();
+      if (!pair) return;
+      const eq = pair.indexOf('=');
+      if (eq < 0) return;
+      defaults[pair.substring(0, eq).trim()] = pair.substring(eq + 1).trim();
+    });
+  }
+
+  // Map label positions to param keys and their default keys
+  // Position: 0=speed, 1=intensity, 2=c1, 3=c2, 4=c3, 5=reserved, 6=m1, 7=m2, 8=m3
+  const paramKeys   = ['speed', 'intensity', 'custom1', 'custom2', 'custom3', null, 'check1', 'check2', 'check3'];
+  const defaultKeys = ['sx',    'ix',        'c1',      'c2',      'c3',      null, 'm1',      'm2',      'm3'];
+
+  const params = [];
+  labels.forEach((label, i) => {
+    label = label.trim();
+    if (!label || !paramKeys[i]) return;
+
+    // Parse optional range from label: "Label:min:max" → { displayLabel, min, max }
+    let parts = label.split(':');
+    let displayLabel = parts[0];
+    let min = 0, max = 255;
+    if (parts.length === 3) {
+      min = parseInt(parts[1]) || 0;
+      max = parseInt(parts[2]) || 255;
+    }
+
+    const isBool = paramKeys[i].startsWith('check');
+    const dk = defaultKeys[i];
+    let defVal;
+
+    if (isBool) {
+      defVal = (dk && defaults[dk] !== undefined) ? (parseInt(defaults[dk]) !== 0) : false;
+    } else {
+      defVal = (dk && defaults[dk] !== undefined) ? parseInt(defaults[dk]) : 128;
+    }
+
+    params.push({
+      key: paramKeys[i],
+      label: displayLabel,
+      type: isBool ? 'checkbox' : 'range',
+      min: isBool ? 0 : min,
+      max: isBool ? 1 : max,
+      default: defVal
+    });
+  });
+
+  return { name, params };
+}
+
+// ============================================================================
+// FETCH FX DATA (metadata de efectos vía HTTP)
+// ============================================================================
+// Carga la metadata de todos los efectos desde el ESP32 via HTTP GET /fxdata.
+// Esto reemplaza el envío masivo por WebSocket (Opción B).
+// ============================================================================
+
+async function fetchFxdata() {
+  try {
+    const resp = await fetch('/fxdata');
+    const data = await resp.json();
+    // data = { "1": "Fire@...", "2": "MovingDot@...", ... }
+    Object.entries(data).forEach(([id, metaStr]) => {
+      const parsed = parseEffectMeta(metaStr);
+      if (parsed) effectMetaCache[parseInt(id)] = parsed;
+    });
+  } catch (e) {
+    // Silencioso — si falla el fetch, se usará EFFECT_PARAMS como fallback
+  }
+}
 
 // ============================================================================
 // WEBSOCKET
@@ -705,13 +891,33 @@ function handleMessage(data) {
     containers.forEach(container => {
       Object.entries(data.params).forEach(([key, val]) => {
         const input = container.querySelector(`input[data-key="${key}"]`);
-        if (input && parseInt(input.value) !== val) {
-          input.value = val;
-          const valSpan = input.nextElementSibling;
-          if (valSpan) valSpan.textContent = val;
+        if (!input) return;
+        if (input.type === 'checkbox') {
+          const shouldCheck = val === true || val === 1 || val === '1';
+          if (input.checked !== shouldCheck) {
+            console.log(`[DEBUG] Sync check1: server sent ${JSON.stringify(val)}, shouldCheck=${shouldCheck}, was=${input.checked} → setting to ${shouldCheck}`);
+            input.checked = shouldCheck;
+          }
+        } else {
+          const numVal = parseInt(val);
+          if (parseInt(input.value) !== numVal) {
+            input.value = numVal;
+            const valSpan = input.nextElementSibling;
+            if (valSpan) valSpan.textContent = numVal;
+          }
         }
       });
     });
+  }
+
+  // ── EFFECT METADATA (del efecto activo, refresco continuo) ──
+  // Solo cacheamos — NO re-renderizar (eso resetea sliders al default).
+  // La UI se actualiza via data.params arriba y via HTTP /fxdata al iniciar.
+  if (data.meta && typeof data.meta === 'string' && SML.effectId > 0) {
+    const parsed = parseEffectMeta(data.meta);
+    if (parsed) {
+      if (!effectMetaCache[SML.effectId]) effectMetaCache[SML.effectId] = parsed;
+    }
   }
 
   // ── BLUETOOTH ──
@@ -769,13 +975,6 @@ function handleMessage(data) {
 
   if (data.heap !== undefined) {
     setDataValue(document.getElementById('sysHeap'), data.heap, ' KB');
-  }
-
-  // ── LED COUNT (if server sends it) ──
-  if (data.n !== undefined) {
-    setDataValue(document.getElementById('sysLEDs'), data.n);
-    const countEl = document.getElementById('ledCount');
-    if (countEl && !countEl.dataset.userChanged) countEl.value = data.n;
   }
 
   // ── WEATHER HEAT INDEX ──
@@ -859,15 +1058,6 @@ function saveWiFiConfig() {
   showToast('WiFi saved. Reconnecting...');
 }
 
-function saveLEDConfig() {
-  const count = parseInt(document.getElementById('ledCount')?.value);
-  if (!count || count < 1 || count > 300) { showToast('LED count must be 1-300'); return; }
-  const maxMA = parseInt(document.getElementById('ledMaxMA')?.value) || 500;
-  if (!confirm(`Save LED config (${count} LEDs, ${maxMA}mA) and reboot?`)) return;
-  sendCmd({ ledcfg: { n: count, ma: maxMA } });
-  showToast('LED config saved. Rebooting...');
-}
-
 // ============================================================================
 // SKELETON HELPER
 // ============================================================================
@@ -908,7 +1098,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const battToggle = document.getElementById('batteryToggle');
   if (battToggle) {
     battToggle.addEventListener('click', () => {
-      sendCmd({ effectId: 20 });
+      sendCmd({ action: 'toggleBatt' });
     });
   }
 
@@ -916,38 +1106,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const tempToggle = document.getElementById('tempToggle');
   if (tempToggle) {
     tempToggle.addEventListener('click', () => {
-      sendCmd({ effectId: 19 });
+      sendCmd({ action: 'toggleTemp' });
     });
   }
 
   // Volume + BT are now handled by player.js (IIFE auto-inits)
   // player.js handles: play/pause, skip, BT star-tab, volume ring drag
 
-  // Offcanvas close
-  const closeOffcanvas = () => {
-    const oc = document.getElementById('effectOffcanvas');
-    const ov = document.getElementById('offcanvasOverlay');
-    if (oc) oc.classList.remove('open');
-    if (ov) ov.classList.remove('open');
-  };
+  // Close config panels (uses shared helper)
   document.querySelectorAll('.offcanvas-close').forEach(el => {
-    el.addEventListener('click', closeOffcanvas);
+    el.addEventListener('click', closeEffectConfig);
   });
   const overlay = document.getElementById('offcanvasOverlay');
-  if (overlay) overlay.addEventListener('click', closeOffcanvas);
-
-  // Bottom sheet close
-  const closeParamSheet = () => {
-    const sheet = document.getElementById('paramBottomSheet');
-    const modOv = document.getElementById('paramModalOverlay');
-    if (sheet) sheet.classList.remove('open');
-    if (modOv) modOv.classList.remove('open');
-  };
+  if (overlay) overlay.addEventListener('click', closeEffectConfig);
   document.querySelectorAll('.param-sheet-close').forEach(el => {
-    el.addEventListener('click', closeParamSheet);
+    el.addEventListener('click', closeEffectConfig);
   });
   const modOv = document.getElementById('paramModalOverlay');
-  if (modOv) modOv.addEventListener('click', closeParamSheet);
+  if (modOv) modOv.addEventListener('click', closeEffectConfig);
 
   // Theme options
   $$('.theme-option').forEach(opt => {
@@ -957,8 +1133,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Config save buttons
   const wifiBtn = document.getElementById('wifiSaveBtn');
   if (wifiBtn) wifiBtn.addEventListener('click', saveWiFiConfig);
-  const ledBtn = document.getElementById('ledSaveBtn');
-  if (ledBtn) ledBtn.addEventListener('click', saveLEDConfig);
 
   // Enter key on WiFi pass
   const wifiPass = document.getElementById('wifiPass');
@@ -968,14 +1142,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // LED count user-change marker
-  const ledCount = document.getElementById('ledCount');
-  if (ledCount) {
-    ledCount.addEventListener('input', () => { ledCount.dataset.userChanged = 'true'; });
-  }
 
   // Resize
   window.addEventListener('resize', handleResize);
+
+  // Load effect metadata from server (caches into effectMetaCache)
+  fetchFxdata();
 
   // Connect WebSocket
   connectWS();

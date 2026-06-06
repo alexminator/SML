@@ -4,6 +4,7 @@
 #include "WebServer.h"
 #include "state/AppState.h"
 #include "data.h"
+#include "effects/EffectRegistry.h"
 
 #include "config/debug_config.h"
 
@@ -353,6 +354,21 @@ void initWebServer()
 #endif
           request->send(500, "application/json", "{\"status\":\"error\",\"message\":\"Mutex busy\"}");
       }
+    });
+
+    // Endpoint: metadata de todos los efectos (estilo WLED /json/fxda)
+    server.on("/fxdata", HTTP_GET, [](AsyncWebServerRequest *request) {
+      DynamicJsonDocument fxJson(4096);
+      JsonObject metas = fxJson.to<JsonObject>();
+      for (uint8_t i = 0; i < EFFECT_COUNT; i++) {
+        Effect* fx = effectRegistry[i].instance;
+        if (!fx) continue;
+        const char* m = fx->getMeta();
+        if (m) metas[String(i + 1)] = m;
+      }
+      String body;
+      serializeJson(fxJson, body);
+      request->send(200, "application/json", body);
     });
 
     server.serveStatic("/", LittleFS, "/").setDefaultFile("index.html").setTryGzipFirst(false);

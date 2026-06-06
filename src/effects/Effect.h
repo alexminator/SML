@@ -9,6 +9,8 @@
 #pragma once
 
 #include <FastLED.h>
+#include <string.h>
+#include <stdlib.h>
 
 // Default parameter values
 #define DEFAULT_SPEED 128
@@ -79,6 +81,59 @@ public:
      */
     void run() {
         render();
+    }
+
+    /**
+     * Get metadata string for this effect (WLED-style format)
+     * Format: "Name@label_speed,label_intensity,label_c1,...,label_c3,,label_m1,label_m2,label_m3;...;...;...;sx=64,ix=128,c1=55,c2=50,c3=16,m1=0,m2=0,m3=0"
+     * Returns nullptr if effect has no metadata (no parameters to configure).
+     */
+    virtual const char* getMeta() const {
+        return nullptr;
+    }
+
+    /**
+     * Parse WLED-style metadata defaults and apply them to params.
+     * Extracts sx=, ix=, c1=, c2=, c3=, m1=, m2=, m3= from the defaults
+     * section (after the last ';') and sets corresponding params.
+     * Resets all params to global defaults first, then overrides with meta values.
+     */
+    void setToDefaults(const char* metaStr) {
+        // Reset to global defaults first
+        params.speed     = DEFAULT_SPEED;
+        params.intensity = DEFAULT_INTENSITY;
+        params.custom1   = DEFAULT_C1;
+        params.custom2   = DEFAULT_C2;
+        params.custom3   = DEFAULT_C3;
+        params.check1    = false;
+        params.check2    = false;
+        params.check3    = false;
+
+        if (!metaStr) return;
+
+        // Find last semicolon — defaults section
+        const char* defs = strrchr(metaStr, ';');
+        if (!defs || *(defs+1) == '\0') return;
+        defs++;
+
+        // Parse key=value pairs (comma or space separated)
+        while (*defs) {
+            // Skip whitespace and commas
+            while (*defs == ' ' || *defs == ',') { defs++; }
+            if (!*defs) break;
+
+            if      (strncmp(defs, "sx=", 3) == 0) { params.speed     = (uint8_t)atoi(defs + 3); }
+            else if (strncmp(defs, "ix=", 3) == 0) { params.intensity = (uint8_t)atoi(defs + 3); }
+            else if (strncmp(defs, "c1=", 3) == 0) { params.custom1   = (uint8_t)atoi(defs + 3); }
+            else if (strncmp(defs, "c2=", 3) == 0) { params.custom2   = (uint8_t)atoi(defs + 3); }
+            else if (strncmp(defs, "c3=", 3) == 0) { params.custom3   = (uint8_t)atoi(defs + 3); }
+            else if (strncmp(defs, "m1=", 3) == 0) { params.check1    = atoi(defs + 3) != 0; }
+            else if (strncmp(defs, "m2=", 3) == 0) { params.check2    = atoi(defs + 3) != 0; }
+            else if (strncmp(defs, "m3=", 3) == 0) { params.check3    = atoi(defs + 3) != 0; }
+
+            // Advance past the value (until next comma or whitespace)
+            while (*defs && *defs != ',' && *defs != ' ') defs++;
+        }
     }
 
     // ========== Setter Methods ==========

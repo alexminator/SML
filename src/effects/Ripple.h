@@ -15,6 +15,9 @@ public:
     }
 
     void render() override {
+        // Limpiar buffer — necesitamos buffer limpio porque solo pintamos anillos,
+        // no todos los LEDs. Los efectos con fadeToBlackBy gestionan su propia persistencia.
+        FastLED.clear();
         const float RIPPLE_FADE_RATE = 0.80;
         const uint8_t MAX_STEPS = 16;
         uint8_t size    = params.custom1;

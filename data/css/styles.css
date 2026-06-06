@@ -785,6 +785,41 @@ input[type="range"]::-moz-range-thumb {
   font-variant-numeric: tabular-nums;
 }
 
+.param-reset-row {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-light);
+}
+
+.btn-reset-params {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all var(--t-fast);
+  letter-spacing: 0.3px;
+}
+
+.btn-reset-params:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(255, 215, 0, 0.06);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.08);
+}
+
+.btn-reset-params:active {
+  transform: scale(0.96);
+}
+
 /* ===== MUSIC TAB ===== */
 .music-container {
   display: flex;

@@ -11,7 +11,6 @@ class Fade {
 void Fade::runPattern() {
   // WLED-compatible parameter
   extern uint8_t fadeSpeed;     // Default: 128, range: 0-255 (fade speed)
-
   static uint8_t currentHue = 0;
   static uint8_t targetHue = 0;
   static uint8_t fadeProgress = 0;

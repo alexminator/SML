@@ -55,6 +55,7 @@ bool bt_powerState = false;
 bool lampState = false;
 int readCount = 0;
 int lvlCharge = 0;
+uint32_t stateGeneration = 0;
 char savedSSID[33] = {0};
 char savedPass[65] = {0};
 uint8_t myhue = 0;
@@ -145,6 +146,14 @@ void StripLed::update() {
         simpleColor(R, G, B, brightness);
         return;
     }
-    clear();
+    // Clear buffer solo al CAMBIAR de efecto (evita superposición entre efectos
+    // distintos). Si es el mismo efecto, NO se borra — los efectos que usan
+    // fadeToBlackBy (Juggle, Sinelon, Comet, Twinkle) necesitan persistencia
+    // entre frames para el trail.
+    static int lastEffectId = -1;
+    if (effectId != lastEffectId) {
+        clear();
+        lastEffectId = effectId;
+    }
     runEffectById(effectId);
 }
