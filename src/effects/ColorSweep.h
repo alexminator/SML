@@ -2,50 +2,76 @@
 #include "Effect.h"
 #include "../state/AppState.h"
 
-// WLED-based Color Sweep effect
+// ──────────────────────────────────────────────────────────────────────────────
+// ColorSweepEffect — WLED color_sweep adaptado para SML
+// ──────────────────────────────────────────────────────────────────────────────
+// Barrido de color desde ambos extremos hacia el centro.
+// Algoritmo basado en WLED color_wipe(rev=true, back=false):
+//   - Llena LEDs desde ambos extremos gradualmente
+//   - El color evoluciona lentamente a través del espectro
+//
+// Parámetros:
+//   speed → Sweep speed (sx=128) — higher = faster sweep
+//   intensity → Gradient width (ix=128) — higher = wider gradient trail
+// ──────────────────────────────────────────────────────────────────────────────
+
 class ColorSweepEffect : public Effect {
 private:
-    uint16_t _index = 0;
-    bool _forward = true;
-    unsigned long _lastTime = 0;
+    static const char _meta[];
 
 public:
     ColorSweepEffect(CRGB* l, uint16_t n) : Effect(l, n) {
-        params.speed = 128;  // sweepSpeed default
+        setToDefaults(_meta);
+    }
+
+    const char* getMeta() const override {
+        return _meta;
     }
 
     void render() override {
-        uint8_t speedVal = params.speed;
-        unsigned long currentTime = millis();
-        uint32_t cycleTime = (256 - speedVal) * 2;
+        // ── WLED-style timing ───────────────────────────────────────────────
+        // cycleTime: how fast the sweep moves (ms per step)
+        uint32_t cycleTime = map(params.speed, 0, 255, 150, 10);
+        if (cycleTime < 1) cycleTime = 1;
 
-        if (currentTime - _lastTime >= cycleTime) {
-            _lastTime = currentTime;
+        // Progress: position of the sweep wave (0 → numLeds/2)
+        uint32_t now = millis();
+        unsigned halfLen = numLeds / 2;
+        unsigned prog = (now / cycleTime) % (halfLen + 1);
 
-            int prevIndex = _forward ? (_index - 1 + N_PIXELS) % N_PIXELS : (_index + 1) % N_PIXELS;
-            leds[prevIndex] = CRGB::Black;
+        // ── Color: hue evolves slowly ───────────────────────────────────────
+        uint8_t hue = (now >> 11) * 3;
 
-            leds[_index] = CHSV(myhue, 255, stripLed.brightness);
+        // ── Gradient width from intensity ───────────────────────────────────
+        uint8_t gradient = map(params.intensity, 0, 255, 1, halfLen / 2 + 1);
+        if (gradient < 1) gradient = 1;
 
-            if (_forward) {
-                _index++;
-                if (_index >= N_PIXELS) {
-                    _index = N_PIXELS - 1;
-                    _forward = false;
-                    myhue++;
-                }
-            } else {
-                if (_index == 0) {
-                    _index = 0;
-                    _forward = true;
-                    myhue++;
-                } else {
-                    _index--;
-                }
+        // ── Render ──────────────────────────────────────────────────────────
+        fill_solid(leds, numLeds, CRGB::Black);
+
+        // Fill from both ends with gradient
+        for (unsigned i = 0; i <= prog && i < halfLen; i++) {
+            // Gradient: brighter near the tip, dimmer near the base
+            uint8_t bright = stripLed.brightness;
+            if (i + gradient > prog) {
+                // Trail gradient
+                unsigned distToTip = prog - i;
+                bright = scale8(bright, map(distToTip, 0, gradient, 255, 20));
             }
+            CRGB color = CHSV(hue + i * 6, 255, bright);
+            leds[i] = color;
+            leds[numLeds - 1 - i] = color;
+        }
+
+        // Center LED (odd length)
+        if (prog == halfLen && (numLeds & 1)) {
+            leds[halfLen] = CHSV(hue + halfLen * 6, 255, stripLed.brightness);
         }
 
         FastLED.show();
-        vTaskDelay(pdMS_TO_TICKS(20));
     }
 };
+
+// Metadata: speed (sweep rate), intensity (gradient width)
+const char ColorSweepEffect::_meta[] =
+    "Sweep@Speed,Gradient,,,,,,,,;;;;sx=128,ix=128";

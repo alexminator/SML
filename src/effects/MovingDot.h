@@ -2,31 +2,54 @@
 #include "Effect.h"
 #include "../state/AppState.h"
 
+// ──────────────────────────────────────────────────────────────────────────────
+// MovingDotEffect — Múltiples dots con beatsin16 (WLED-style)
+// ──────────────────────────────────────────────────────────────────────────────
+// 4 dots que se mueven sinusoidalmente a lo largo de la tira con fases offset.
+// Basado en WLED mode_two_dots pero ampliado a 4 dots con beatsin16.
+//
+// Parámetros:
+//   speed     → Bounce BPM (sx=128) — higher = faster
+//   intensity → Trail fade (ix=128) — higher = more persistent trail
+// ──────────────────────────────────────────────────────────────────────────────
+
 class MovingDotEffect : public Effect {
+private:
+    static const char _meta[];
+
 public:
     MovingDotEffect(CRGB* l, uint16_t n) : Effect(l, n) {
-        params.speed    = 30;  // bpm for main beatsin
-        params.custom1  = 10;  // fade amount
+        setToDefaults(_meta);
+    }
+
+    const char* getMeta() const override {
+        return _meta;
     }
 
     void render() override {
-        uint8_t bpm  = params.speed;
-        uint8_t fade = params.custom1;
+        // ── CRITICAL: fade FIRST, draw AFTER ─────────────────────────────────
+        // Si se dibuja antes del fade, los dots aparecen más tenues
+        uint8_t bpm  = max((uint8_t)1, params.speed);
+        uint8_t fade = params.intensity;
 
-        uint16_t posBeat  = beatsin16(bpm, 0, N_PIXELS - 1, 0, 0);
-        uint16_t posBeat2 = beatsin16(bpm * 2, 0, N_PIXELS - 1, 0, 0);
+        fadeToBlackBy(leds, numLeds, fade);
 
-        uint16_t posBeat3 = beatsin16(bpm, 0, N_PIXELS - 1, 0, 32767);
-        uint16_t posBeat4 = beatsin16(bpm * 2, 0, N_PIXELS - 1, 0, 32767);
+        // ── 4 dots con beatsin16 ────────────────────────────────────────────
+        // Pares con fases 0° y 180° para movimiento contrapuesto
+        uint16_t pos1 = beatsin16(bpm, 0, numLeds - 1, 0, 0);
+        uint16_t pos2 = beatsin16(bpm * 2, 0, numLeds - 1, 0, 0);
+        uint16_t pos3 = beatsin16(bpm, 0, numLeds - 1, 0, 32767);
+        uint16_t pos4 = beatsin16(bpm * 2, 0, numLeds - 1, 0, 32767);
 
-        // Wave for LED color
-        uint8_t colBeat  = beatsin8(45, 0, 255, 0, 0);
+        uint8_t hue = beatsin8(45, 0, 255);
 
-        leds[(posBeat + posBeat2) / 2]  = CHSV(colBeat, 255, stripLed.brightness);
-        leds[(posBeat3 + posBeat4) / 2]  = CHSV(colBeat, 255, stripLed.brightness);
-
-        fadeToBlackBy(leds, N_PIXELS, fade);
+        leds[(pos1 + pos2) / 2] = CHSV(hue, 255, stripLed.brightness);
+        leds[(pos3 + pos4) / 2] = CHSV(hue + 128, 255, stripLed.brightness);
 
         FastLED.show();
     }
 };
+
+// Metadata: speed (BPM), intensity (trail fade)
+const char MovingDotEffect::_meta[] =
+    "MovingDot@Speed,Trail,,,,,,,,;;;;sx=128,ix=128";

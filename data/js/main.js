@@ -268,36 +268,58 @@ function initLampControls() {
     });
   }
 
-  // Color picker (iro.js) — value slider = brightness control
+  // ── Color picker (iro.js) — wheel ONLY, sin value slider ─────────────
+  // El brillo tiene su propio slider HTML aparte para evitar
+  // enviar brillo+cada vez que se cambia color (race condition).
   if (typeof iro !== 'undefined' && document.getElementById('colorPicker')) {
     const colorPicker = new iro.ColorPicker('#colorPicker', {
       width: 220,
-      color: { h: 0, s: 0, v: 51 },  // V=51% = brightness 130
+      color: { h: 0, s: 0, v: 51 },  // V fijo, no controla brillo real
       borderWidth: 0,
       handleRadius: 8,
       layout: [
         { component: iro.ui.Wheel },
-        { component: iro.ui.Slider, options: { sliderType: 'value' } },
+        // NOTA: sin Slider value — el brillo va en slider HTML separado
       ],
     });
 
-    let isRemoteUpdate = false;
-    let lastBrightness = -1; // force first send
+    SML._colorRemoteLock = false;
+    SML._colorDragging = false;
+    colorPicker.on('input:start', () => {
+      SML._colorDragging = true;
+    });
     colorPicker.on('color:change', (color) => {
-      if (isRemoteUpdate) return;
+      if (SML._colorRemoteLock) return;
       SML.r = color.rgb.r;
       SML.g = color.rgb.g;
       SML.b = color.rgb.b;
-      // Map HSV value (0-100) to brightness (0-255)
-      SML.brightness = Math.round(color.hsv.v * 2.55);
+      // NOTA: no tocamos SML.brightness aquí — el brillo es independiente
     });
 
     colorPicker.on('input:end', () => {
-      sendCmd({ action: 'slider', brightness: SML.brightness });
+      SML._colorDragging = false;
+      SML._lastColorSent = Date.now(); // para ignorar broadcasts stale
+      // Solo color, sin brightness — mensaje limpio
       sendCmd({ action: 'picker', color: { r: SML.r, g: SML.g, b: SML.b } });
     });
 
     SML.colorPicker = colorPicker;
+  }
+
+  // ── Brightness slider standalone ──────────────────────────────────────
+  const brightSlider = document.getElementById('brightnessSlider');
+  const brightVal = document.getElementById('brightnessValue');
+  if (brightSlider && brightVal) {
+    brightSlider.addEventListener('input', () => {
+      const v = parseInt(brightSlider.value);
+      SML.brightness = v;
+      brightVal.textContent = v;
+    });
+    brightSlider.addEventListener('change', () => {
+      SML._lastBrightnessSent = Date.now();
+      sendCmd({ action: 'slider', brightness: SML.brightness });
+    });
+    SML._brightnessSlider = brightSlider;
   }
 
   // Effect cards
@@ -332,7 +354,8 @@ function initEffectCards() {
 
       // Segundo click en la misma card → mostrar config (si tiene parámetros)
       if (wasActive) {
-        const hasParams = EFFECT_PARAMS[effId] && EFFECT_PARAMS[effId].params && EFFECT_PARAMS[effId].params.length > 0;
+        const meta = effectMetaCache[effId];
+        const hasParams = meta && meta.params && meta.params.length > 0;
         if (hasParams) showEffectConfig(effId, card);
       }
     });
@@ -381,12 +404,7 @@ function showEffectConfig(effId, cardEl) {
 }
 
 function renderEffectParams(effId, container) {
-  // Intentar usar metadata del servidor primero (fuente única de verdad)
-  let config = effectMetaCache[effId];
-  if (!config) {
-    // Fallback: EFFECT_PARAMS hardcodeados (para efectos aún no migrados)
-    config = EFFECT_PARAMS[effId];
-  }
+  const config = effectMetaCache[effId];
   if (!config || !config.params || config.params.length === 0) {
     container.innerHTML = '';
     return;
@@ -443,8 +461,7 @@ function renderEffectParams(effId, container) {
   const resetBtn = container.querySelector('.btn-reset-params');
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
-      // Usar defaults de metadata si está disponible, sino EFFECT_PARAMS
-      const cfg = effectMetaCache[effId] || EFFECT_PARAMS[effId];
+      const cfg = effectMetaCache[effId];
       if (cfg && cfg.params) {
         const msg = { action: 'setParams', effectId: effId };
         cfg.params.forEach(p => {
@@ -467,50 +484,10 @@ function renderEffectParams(effId, container) {
 }
 
 // ============================================================================
-// EFFECT PARAMETERS DEFINITIONS
-// ============================================================================
-
-const EFFECT_PARAMS = {
-  // NOTE: keys = HTML effectId (matches ESP32 effectId). Params list the actual
-  // setters each Effect subclass uses (from EffectRegistry order).
-  1: { name: 'Fire', params: [
-    { key: 'custom1', label: 'Cooling', type: 'range', min: 0, max: 255, default: 55 },
-    { key: 'custom2', label: 'Sparking', type: 'range', min: 0, max: 255, default: 50 },
-  ]},
-  5: { name: 'Ripple', params: [
-    { key: 'custom1', label: 'Size', type: 'range', min: 1, max: 50, default: 3 },
-  ]},
-  6: { name: 'Twinkle', params: [
-    { key: 'speed', label: 'Speed', type: 'range', min: 0, max: 255, default: 100 },
-    { key: 'intensity', label: 'Density', type: 'range', min: 0, max: 255, default: 50 },
-  ]},
-  7: { name: 'Bouncing Balls', params: [
-    { key: 'custom1', label: 'Balls', type: 'range', min: 1, max: 10, default: 3 },
-    { key: 'custom2', label: 'Gravity', type: 'range', min: 1, max: 20, default: 10 },
-  ]},
-  8: { name: 'Juggle', params: [
-    { key: 'speed', label: 'Speed', type: 'range', min: 0, max: 40, default: 20 },
-    { key: 'intensity', label: 'Trail', type: 'range', min: 0, max: 255, default: 128 },
-    { key: 'custom1', label: 'Dots', type: 'range', min: 1, max: 5, default: 3 },
-  ]},
-  9: { name: 'Sinelon', params: [
-    { key: 'speed', label: 'Beat', type: 'range', min: 0, max: 255, default: 23 },
-    { key: 'intensity', label: 'Trail', type: 'range', min: 0, max: 255, default: 128 },
-  ]},
-  10: { name: 'Comet', params: [
-    { key: 'speed', label: 'Speed', type: 'range', min: 0, max: 255, default: 64 },
-    { key: 'intensity', label: 'Glow', type: 'range', min: 0, max: 255, default: 128 },
-    { key: 'custom1', label: 'Size', type: 'range', min: 1, max: 8, default: 4 },
-    { key: 'check1', label: 'Blur', type: 'checkbox', default: false },
-  ]},
-};
-
-// ============================================================================
 // EFFECT METADATA SYSTEM (WLED-style)
 // ============================================================================
-// Almacena la metadata parseada de cada efecto, recibida desde el ESP32.
-// La metadata es la ÚNICA fuente de verdad para labels y defaults.
-// Mientras no llega la metadata, se usa EFFECT_PARAMS como fallback.
+// Almacena la metadata parseada de cada efecto, recibida desde el ESP32
+// vía HTTP /fxdata. Es la ÚNICA fuente de verdad para labels y defaults.
 // ============================================================================
 
 let effectMetaCache = {};  // { [effectId]: { name, params } }
@@ -607,7 +584,7 @@ async function fetchFxdata() {
       if (parsed) effectMetaCache[parseInt(id)] = parsed;
     });
   } catch (e) {
-    // Silencioso — si falla el fetch, se usará EFFECT_PARAMS como fallback
+    // Silencioso — sin fallback, la UI espera al próximo fetch
   }
 }
 
@@ -814,22 +791,35 @@ function handleMessage(data) {
     if (neo) togglePowerCard(neo, SML.powerOn);
   }
 
+  // ── BRIGHTNESS (slider standalone) ──
   if (data.neobrightness !== undefined) {
-    SML.brightness = data.neobrightness;
-    // Sync iro.js value slider (brightness = V * 2.55)
-    if (SML.colorPicker) {
-      const hsv = SML.colorPicker.color.hsv;
-      SML.colorPicker.color.set({ h: hsv.h, s: hsv.s, v: Math.round(data.neobrightness / 2.55) });
+    // Ignorar broadcasts stale si el usuario acaba de cambiar brillo
+    if (SML._lastBrightnessSent && Date.now() - SML._lastBrightnessSent < 400) {
+      // skip — nuestro propio eco o broadcast anterior
+    } else {
+      SML.brightness = data.neobrightness;
+      if (SML._brightnessSlider) {
+        SML._brightnessSlider.value = data.neobrightness;
+        const val = document.getElementById('brightnessValue');
+        if (val) val.textContent = data.neobrightness;
+      }
     }
   }
 
   // ── COLOR ──
   if (data.color) {
-    SML.r = data.color.r || SML.r;
-    SML.g = data.color.g || SML.g;
-    SML.b = data.color.b || SML.b;
-    if (SML.colorPicker) {
-      SML.colorPicker.color.set({ r: SML.r, g: SML.g, b: SML.b });
+    // Ignorar broadcasts stale si el usuario acaba de cambiar color
+    // (evita que un broadcast de una acción anterior salte el puntero
+    //  cuando haces clics rápidos en el picker)
+    if (!SML._lastColorSent || Date.now() - SML._lastColorSent >= 400) {
+      SML.r = data.color.r ?? SML.r;
+      SML.g = data.color.g ?? SML.g;
+      SML.b = data.color.b ?? SML.b;
+      if (SML.colorPicker && !SML._colorDragging) {
+        SML._colorRemoteLock = true;
+        SML.colorPicker.color.set({ r: SML.r, g: SML.g, b: SML.b });
+        SML._colorRemoteLock = false;
+      }
     }
   }
 
@@ -859,6 +849,15 @@ function handleMessage(data) {
     'oceanVUStatus': 18,
     'tempNEOStatus': 19,
     'battNEOStatus': 20,
+    'colorWipeStatus': 21,
+    'theaterChaseStatus': 22,
+    'runningLightsStatus': 23,
+    'dissolveStatus': 24,
+    'dualScanStatus': 25,
+    'fadeStatus': 26,
+    'meteorStatus': 27,
+    'sparkleStatus': 28,
+    'fire2012Status': 29,
   };
 
   // Find which effect is "on"

@@ -277,6 +277,13 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             stripLed.R = color["r"].as<int>();
             stripLed.G = color["g"].as<int>();
             stripLed.B = color["b"].as<int>();
+
+            // Si el mensaje incluye brightness, aplicarlo también
+            // (evita race condition de dos mensajes separados)
+            if (json.containsKey("brightness")) {
+                stripLed.brightness = json["brightness"].as<int>();
+            }
+
 #ifdef DEBUG_LED
             debugD("RGB: ");
             debugD_NUM(stripLed.R, "%d");

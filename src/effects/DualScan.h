@@ -1,42 +1,75 @@
-// WLED-based Dual Scan effect - two pixels moving in opposite directions
-// Adapted from WLED mode_dual_scan implementation
+#pragma once
+#include "Effect.h"
 #include "../state/AppState.h"
-class DualScan {
-  public:
-    DualScan(){};
-    void runPattern();
-  private:
+
+// ──────────────────────────────────────────────────────────────────────────────
+// DualScanEffect — WLED mode_dual_scan (port completo)
+// ──────────────────────────────────────────────────────────────────────────────
+// Dos puntos que se mueven en direcciones opuestas (ping-pong).
+// Algoritmo WLED scan(dual=true):
+//   cycleTime = 750 + (255-speed)*150
+//   perc = strip.now % cycleTime
+//   prog = (perc * 65535) / cycleTime
+//   size = 1 + ((intensity * SEGLEN) >> 9)
+//   ledIndex = (prog * ((SEGLEN*2) - size*2)) >> 16
+//   led_offset = abs(ledIndex - (SEGLEN - size))
+//
+// Parámetros:
+//   speed     → Scan speed (sx=128) — higher = faster
+//   intensity → Dot size (ix=64) — tamaño del punto
+//   check2    → Overlay (m2=0) — no limpia el fondo
+// ──────────────────────────────────────────────────────────────────────────────
+
+class DualScanEffect : public Effect {
+private:
+    static const char _meta[];
+
+public:
+    DualScanEffect(CRGB* l, uint16_t n) : Effect(l, n) {
+        setToDefaults(_meta);
+    }
+
+    const char* getMeta() const override {
+        return _meta;
+    }
+
+    void render() override {
+        if (numLeds <= 1) return;
+
+        // ── WLED scan(dual=true) ─────────────────────────────────────────────
+        uint32_t cycleTime = 750 + (255 - params.speed) * 150;
+        uint32_t perc = millis() % cycleTime;
+        int prog = (perc * 65535) / cycleTime;
+        int size = 1 + ((params.intensity * numLeds) >> 9);
+        if (size < 1) size = 1;
+
+        int ledIndex = (prog * ((int)(numLeds * 2) - size * 2)) >> 16;
+
+        // ── Background ──────────────────────────────────────────────────────
+        if (!params.check2) {
+            fill_solid(leds, numLeds, CRGB::Black);
+        }
+
+        int led_offset = ledIndex - ((int)numLeds - size);
+        led_offset = abs(led_offset);
+
+        // ── Dual: segundo punto en dirección opuesta ─────────────────────────
+        for (int j = led_offset; j < led_offset + size && j < (int)numLeds; j++) {
+            unsigned i2 = numLeds - 1 - j;
+            // Color secundario (complementario)
+            uint8_t hue2 = uint8_t((millis() >> 9) + 128);
+            leds[i2] = CHSV(hue2, 255, stripLed.brightness);
+        }
+
+        // ── Primer punto ────────────────────────────────────────────────────
+        for (int j = led_offset; j < led_offset + size && j < (int)numLeds; j++) {
+            uint8_t hue = uint8_t(millis() >> 9);
+            leds[j] = CHSV(hue, 255, stripLed.brightness);
+        }
+
+        FastLED.show();
+    }
 };
 
-void DualScan::runPattern() {
-  // WLED-compatible parameter
-  extern uint8_t scanSpeed;     // Default: 128, range: 0-255 (scan speed)
-  extern bool scanOverlay;      // Default: false (true = overlay mode)
-
-  int pos1, pos2;
-  static uint16_t counter = 0;
-
-  // Clear or overlay
-  if (!scanOverlay) {
-    fadeToBlackBy(leds, N_PIXELS, 200);
-  }
-
-  // Update position
-  counter += (scanSpeed >> 3) + 1;
-
-  // Use beatsin16 for smooth back-and-forth motion
-  pos1 = beatsin16((scanSpeed >> 3) + 1, 0, N_PIXELS - 1);
-  pos2 = N_PIXELS - 1 - pos1;  // Opposite direction
-
-  // Set pixels at both positions
-  leds[pos1] = CHSV(myhue, 255, brightness);
-  leds[pos2] = CHSV(myhue + 128, 255, brightness);  // Complementary color
-
-  // Cycle through colors slowly
-  EVERY_N_MILLISECONDS(100) {
-    myhue++;
-  }
-
-  FastLED.show();
-  vTaskDelay(pdMS_TO_TICKS(20));  // 50 FPS
-}
+const char DualScanEffect::_meta[] =
+    "DualScan@Speed,Size:1:8,,,,,Overlay;;;;sx=128,ix=64,m2=0";

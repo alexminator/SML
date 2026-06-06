@@ -20,6 +20,18 @@
 #include "Comet.h"
 #include "Breath.h"
 #include "ColorSweep.h"
+
+// ── Nuevos efectos WLED ──
+#include "ColorWipe.h"
+#include "TheaterChase.h"
+#include "RunningLights.h"
+#include "Dissolve.h"
+#include "DualScan.h"
+#include "Fade.h"
+#include "Meteor.h"
+#include "Sparkle.h"
+#include "Fire2012.h"
+
 #include "Temp.h"
 #include "Battery.h"
 #include "../vu/vu1.h"
@@ -57,6 +69,17 @@ const EffectEntry effectRegistry[] = {
     { "oceanVUStatus",          new OceanVUEffect(leds, N_PIXELS) },
     { "tempNEOStatus",          new TemperatureEffect(leds, N_PIXELS) },
     { "battNEOStatus",          new ChargeEffect(leds, N_PIXELS) },
+
+    // ── Nuevos efectos WLED (21-29) ────────────────────────────────────────
+    { "colorWipeStatus",        new ColorWipeEffect(leds, N_PIXELS) },
+    { "theaterChaseStatus",     new TheaterChaseEffect(leds, N_PIXELS) },
+    { "runningLightsStatus",    new RunningLightsEffect(leds, N_PIXELS) },
+    { "dissolveStatus",         new DissolveEffect(leds, N_PIXELS) },
+    { "dualScanStatus",         new DualScanEffect(leds, N_PIXELS) },
+    { "fadeStatus",             new FadeEffect(leds, N_PIXELS) },
+    { "meteorStatus",           new MeteorEffect(leds, N_PIXELS) },
+    { "sparkleStatus",          new SparkleEffect(leds, N_PIXELS) },
+    { "fire2012Status",         new Fire2012Effect(leds, N_PIXELS) },
 };
 
 constexpr uint8_t EFFECT_COUNT =

@@ -114,13 +114,20 @@
             </div>
           </div>
 
-          <!-- Color picker (value slider = brightness control) -->
+          <!-- Color picker (wheel-only, brightness slider separado) -->
           <div class="color-picker-container">
             <div id="colorPicker"></div>
           </div>
+          <div class="brightness-slider-container">
+            <label class="brightness-label">
+              <span class="fas fa-sun"></span>
+              <input type="range" id="brightnessSlider" min="0" max="255" value="130">
+              <span id="brightnessValue">130</span>
+            </label>
+          </div>
         </div>
 
-        <!-- Effects (ONLY non-VU: IDs 0-11) -->
+        <!-- Visual Effects (IDs 0-12 + 21-29 WLED ports) -->
         <div class="card">
           <h2 class="card-title"><span class="fas fa-star"></span> Effects</h2>
           <div class="effects-grid" id="effectsGrid">
@@ -171,6 +178,47 @@
             <button class="effect-card" data-effect-id="11">
               <div class="effect-icon" style="background:linear-gradient(135deg,#76ff03,#00e676)"></div>
               <span class="effect-name">Breath</span>
+            </button>
+            <button class="effect-card" data-effect-id="12">
+              <div class="effect-icon" style="background:linear-gradient(135deg,#00e5ff,#d500f9)"></div>
+              <span class="effect-name">Color Sweep</span>
+            </button>
+            <!-- ── WLED Ports (IDs 21-29) ── -->
+            <button class="effect-card" data-effect-id="21">
+              <div class="effect-icon" style="background:linear-gradient(135deg,#ff6f00,#ffab00)"></div>
+              <span class="effect-name">Color Wipe</span>
+            </button>
+            <button class="effect-card" data-effect-id="22">
+              <div class="effect-icon" style="background:repeating-linear-gradient(45deg,#e91e63,#e91e63 4px,#f06292 4px,#f06292 8px)"></div>
+              <span class="effect-name">Theater Chase</span>
+            </button>
+            <button class="effect-card" data-effect-id="23">
+              <div class="effect-icon" style="background:linear-gradient(90deg,#ff5722,#ffb300,#76ff03,#00e5ff,#2979ff,#d500f9,#ff1744)"></div>
+              <span class="effect-name">Running Lights</span>
+            </button>
+            <button class="effect-card" data-effect-id="24">
+              <div class="effect-icon" style="background:radial-gradient(circle at 50% 50%,#fff 10%,#3d5afe 10%,#3d5afe 20%,#fff 20%,#fff 30%,#7c4dff 30%,#7c4dff 40%,#fff 40%)"></div>
+              <span class="effect-name">Dissolve</span>
+            </button>
+            <button class="effect-card" data-effect-id="25">
+              <div class="effect-icon" style="background:linear-gradient(90deg,#00e676,#fff 50%,#d500f9)"></div>
+              <span class="effect-name">Dual Scan</span>
+            </button>
+            <button class="effect-card" data-effect-id="26">
+              <div class="effect-icon" style="background:linear-gradient(135deg,#1a237e,#b388ff)"></div>
+              <span class="effect-name">Fade</span>
+            </button>
+            <button class="effect-card" data-effect-id="27">
+              <div class="effect-icon" style="background:linear-gradient(180deg,#fff 10%,#ff6f00 40%,#ff3d00)"></div>
+              <span class="effect-name">Meteor</span>
+            </button>
+            <button class="effect-card" data-effect-id="28">
+              <div class="effect-icon" style="background:radial-gradient(circle at 20% 30%,#fff 5%,#ffea00 5%,#ffea00 15%,#fff 15%,#fff 20%,#ff6d00 20%)"></div>
+              <span class="effect-name">Sparkle</span>
+            </button>
+            <button class="effect-card" data-effect-id="29">
+              <div class="effect-icon" style="background:linear-gradient(180deg,#ff6f00 20%,#ff1744 40%,#d50000 60%,#1a0000)"></div>
+              <span class="effect-name">Fire 2012</span>
             </button>
           </div>
         </div>
@@ -290,10 +338,6 @@
           <h2 class="card-title"><span class="fas fa-chart-bar"></span> VU Meter Effects</h2>
           <p class="card-subtitle">Audio-reactive LED effects that pulse to music</p>
           <div class="effects-grid">
-            <button class="effect-card" data-effect-id="12">
-              <div class="effect-icon" style="background:linear-gradient(135deg,#00e5ff,#d500f9)"></div>
-              <span class="effect-name">Color Sweep</span>
-            </button>
             <button class="effect-card" data-effect-id="13">
               <div class="effect-icon" style="background:linear-gradient(135deg,#76ff03,#00bfa5)"></div>
               <span class="effect-name">Rainbow VU</span>

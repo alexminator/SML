@@ -1,45 +1,56 @@
-// WLED-based Fade effect - smooth fade between colors
-// Adapted from WLED mode_fade implementation
+#pragma once
+#include "Effect.h"
 #include "../state/AppState.h"
-class Fade {
-  public:
-    Fade(){};
-    void runPattern();
-  private:
+
+// ──────────────────────────────────────────────────────────────────────────────
+// FadeEffect — WLED mode_fade (port completo)
+// ──────────────────────────────────────────────────────────────────────────────
+// Fundido suave entre colores usando triwave16.
+// Algoritmo WLED:
+//   counter = strip.now * ((speed >> 3) + 10)
+//   lum = triwave16(counter) >> 8
+//   color = blend(color1, color_from_palette(), lum)
+//
+// Parámetros:
+//   speed → Fade speed (sx=128) — higher = faster fade
+// ──────────────────────────────────────────────────────────────────────────────
+
+class FadeEffect : public Effect {
+private:
+    static const char _meta[];
+
+public:
+    FadeEffect(CRGB* l, uint16_t n) : Effect(l, n) {
+        setToDefaults(_meta);
+    }
+
+    const char* getMeta() const override {
+        return _meta;
+    }
+
+    void render() override {
+        if (numLeds <= 1) return;
+
+        // ── WLED triwave16 fade ──────────────────────────────────────────────
+        unsigned counter = millis() * ((params.speed >> 3) + 10);
+        uint8_t lum = triwave8(counter >> 8);
+
+        // Color destino = hue que evoluciona lentamente
+        uint8_t hueTarget = uint8_t(millis() >> 10);
+
+        for (unsigned i = 0; i < numLeds; i++) {
+            // Color base = negro (fondo)
+            CRGB color1 = CRGB::Black;
+            // Color palette = basado en hue + posición
+            uint8_t hue = hueTarget + (i * 256 / numLeds);
+            CRGB color2 = CHSV(hue, 255, stripLed.brightness);
+            // Blend según lum
+            leds[i] = blend(color1, color2, lum);
+        }
+
+        FastLED.show();
+    }
 };
 
-void Fade::runPattern() {
-  // WLED-compatible parameter
-  extern uint8_t fadeSpeed;     // Default: 128, range: 0-255 (fade speed)
-  static uint8_t currentHue = 0;
-  static uint8_t targetHue = 0;
-  static uint8_t fadeProgress = 0;
-
-  // Calculate fade increment based on speed
-  uint8_t fadeIncrement = map(fadeSpeed, 0, 255, 1, 10);
-
-  // Update fade progress
-  fadeProgress += fadeIncrement;
-
-  if (fadeProgress >= 255) {
-    // Fade complete, start new fade
-    fadeProgress = 0;
-    currentHue = targetHue;
-    targetHue = random8();  // New random target color
-  }
-
-  // Interpolate between current and target hue
-  uint8_t displayHue = map(fadeProgress, 0, 255, 0, 255);
-
-  // Blend colors
-  CRGB color1 = CHSV(currentHue, 255, brightness);
-  CRGB color2 = CHSV(targetHue, 255, brightness);
-
-  // Apply blended color to all LEDs
-  for (int i = 0; i < N_PIXELS; i++) {
-    leds[i] = color1.lerp8(color2, fadeProgress);
-  }
-
-  FastLED.show();
-  vTaskDelay(pdMS_TO_TICKS(20));  // 50 FPS
-}
+const char FadeEffect::_meta[] =
+    "Fade@Speed;;;;;;;;sx=128";
