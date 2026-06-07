@@ -889,6 +889,8 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .effect-card {
+  position: relative;
+  overflow: hidden;
   background: var(--glass-card-bg);
   border: 1px solid color-mix(in srgb, var(--border) 25%, transparent);
   border-radius: var(--radius-md);
@@ -905,15 +907,57 @@ input[type="range"]::-moz-range-thumb {
   transform: scale(0.95);
 }
 
+/* ── Elegant glass hover — lift, glow, and shimmer shine ── */
 .effect-card:hover {
-  background: color-mix(in srgb, var(--bg-card) 85%, transparent);
-  border-color: color-mix(in srgb, var(--border) 50%, transparent);
+  transform: translateY(-5px);
+  background: color-mix(in srgb, var(--bg-card) 80%, var(--bg-elevated) 20%);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border) 70%);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.35),
+    0 4px 12px color-mix(in srgb, var(--accent) 15%, transparent),
+    0 0 40px color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+/* ── Glass shimmer sweep across card on hover ── */
+.effect-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.03) 45%,
+    rgba(255, 255, 255, 0.07) 50%,
+    rgba(255, 255, 255, 0.03) 55%,
+    transparent 60%
+  );
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.effect-card:hover::after {
+  opacity: 1;
+  background-position: -100% 0;
+  transition: opacity 0.15s ease, background-position 0.6s ease;
 }
 
 .effect-card.active {
   border-color: var(--accent);
   box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 25%, transparent),
               inset 0 0 20px color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+.effect-card.active:hover {
+  border-color: var(--accent);
+  box-shadow:
+    0 12px 36px rgba(0, 0, 0, 0.35),
+    0 0 24px color-mix(in srgb, var(--accent) 35%, transparent),
+    0 0 50px color-mix(in srgb, var(--accent) 15%, transparent),
+    inset 0 0 20px color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 .effect-card .effect-icon {
@@ -925,16 +969,23 @@ input[type="range"]::-moz-range-thumb {
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
-  transition: transform var(--t-spring);
+  transition: transform var(--t-spring), box-shadow var(--t-normal);
+  z-index: 1;
+  position: relative;
 }
 
 .effect-card:hover .effect-icon {
-  transform: scale(1.08);
+  transform: scale(1.12);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .effect-card.active .effect-icon {
-  transform: scale(1.05);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 20%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.effect-card.active:hover .effect-icon {
+  transform: scale(1.15);
+  box-shadow: 0 0 30px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .effect-card .effect-name {
@@ -943,6 +994,12 @@ input[type="range"]::-moz-range-thumb {
   color: var(--text-secondary);
   transition: color var(--t-fast);
   line-height: 1.3;
+  position: relative;
+  z-index: 1;
+}
+
+.effect-card:hover .effect-name {
+  color: var(--text-primary);
 }
 
 .effect-card.active .effect-name {
@@ -1613,7 +1670,72 @@ input[type="range"]::-moz-range-thumb {
   border-color: var(--accent);
 }
 
+/* ── Peek canvas header overlay (effect name + config gear) ── */
+.peek-canvas-header {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  z-index: 2;
+  background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, transparent 100%);
+  pointer-events: none;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.peek-canvas-effect-name {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  transition: color var(--t-fast);
+}
+
+.peek-canvas-effect-name.has-effect {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.peek-canvas-config-btn {
+  pointer-events: auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all var(--t-fast);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.peek-canvas-config-btn:hover {
+  background: rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.peek-canvas-config-btn:active {
+  transform: scale(0.88);
+}
+
+.peek-canvas-config-btn .fa-cog {
+  font-size: 0.7rem;
+  transition: transform var(--t-spring);
+}
+
+.peek-canvas-config-btn:hover .fa-cog {
+  transform: rotate(60deg);
+}
+
 .peek-canvas-wrapper {
+  position: relative;
   width: 100%;
   max-width: 400px;
   aspect-ratio: 1;
@@ -1637,6 +1759,65 @@ input[type="range"]::-moz-range-thumb {
   font-size: 0.7rem;
   color: var(--text-muted);
   text-align: center;
+}
+
+/* ── Peek brightness slider ── */
+.peek-brightness {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 350px;
+  margin: 0 auto;
+  padding: 0 4px;
+}
+
+.peek-brightness input[type="range"] {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--slider-track);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+}
+
+.peek-brightness input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--slider-thumb);
+  border: 2px solid var(--bg-card);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--slider-fill) 30%, transparent);
+  cursor: pointer;
+  transition: transform var(--t-fast);
+}
+
+.peek-brightness input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.peek-brightness input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--slider-thumb);
+  border: 2px solid var(--bg-card);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--slider-fill) 30%, transparent);
+  cursor: pointer;
+}
+
+.peek-brightness-val {
+  min-width: 2.2em;
+  text-align: right;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ===== CONFIG TAB ===== */
@@ -2507,19 +2688,6 @@ input[type="range"]::-moz-range-thumb {
 .theme-option:active,
 .peek-toolbar button:active {
   transform: scale(0.94) !important;
-}
-
-/* ── 3D hover lift for effect-card ── */
-.effect-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 12%, transparent),
-              var(--shadow-sm);
-}
-
-.effect-card.active:hover {
-  box-shadow: 0 8px 28px color-mix(in srgb, var(--accent) 25%, transparent),
-              0 0 20px color-mix(in srgb, var(--accent) 25%, transparent),
-              inset 0 0 20px color-mix(in srgb, var(--accent) 5%, transparent);
 }
 
 /* ── Focus-visible (keyboard accessibility) ── */

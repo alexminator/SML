@@ -276,6 +276,7 @@ function initLampControls() {
       sendCmd({ action: 'toggle' });
       SML.powerOn = !SML.powerOn;
       togglePowerCard(neoToggle, SML.powerOn);
+      updatePeekEffectInfo();
     });
   }
 
@@ -328,6 +329,11 @@ function initLampControls() {
       // Update gradient fill on slider track
       const pct = (v / brightSlider.max) * 100;
       brightSlider.style.setProperty('--slider-pct', pct + '%');
+      // Sync peek brightness slider
+      const peekBright = document.getElementById('peekBrightness');
+      const peekBrightVal = document.getElementById('peekBrightnessVal');
+      if (peekBright) peekBright.value = v;
+      if (peekBrightVal) peekBrightVal.textContent = v;
     });
     brightSlider.addEventListener('change', () => {
       SML._lastBrightnessSent = Date.now();
@@ -337,6 +343,29 @@ function initLampControls() {
     // Init gradient fill position
     const initPct = (parseInt(brightSlider.value) / brightSlider.max) * 100;
     brightSlider.style.setProperty('--slider-pct', initPct + '%');
+  }
+
+  // ── Peek brightness slider (synced with main brightness) ──
+  const peekBright = document.getElementById('peekBrightness');
+  const peekBrightVal = document.getElementById('peekBrightnessVal');
+  if (peekBright && peekBrightVal) {
+    peekBright.addEventListener('input', () => {
+      const v = parseInt(peekBright.value);
+      peekBrightVal.textContent = v;
+      SML.brightness = v;
+      // Sync main slider
+      if (SML._brightnessSlider) {
+        SML._brightnessSlider.value = v;
+        const pct = (v / SML._brightnessSlider.max) * 100;
+        SML._brightnessSlider.style.setProperty('--slider-pct', pct + '%');
+      }
+      const bv = document.getElementById('brightnessValue');
+      if (bv) bv.textContent = v;
+    });
+    peekBright.addEventListener('change', () => {
+      SML._lastBrightnessSent = Date.now();
+      sendCmd({ action: 'slider', brightness: SML.brightness });
+    });
   }
 
   // Effect cards
@@ -375,6 +404,9 @@ function initEffectCards() {
       card.classList.add('active');
       activeCard = card;
 
+      // Sincronizar botón de configuración en la tarjeta Peek
+      updatePeekEffectInfo();
+
       // Segundo click en la misma card → mostrar config (si tiene parámetros)
       if (wasActive) {
         const meta = effectMetaCache[effId];
@@ -394,6 +426,30 @@ function closeEffectConfig() {
   if (sheet) sheet.classList.remove('open');
   if (ocOverlay) ocOverlay.classList.remove('open');
   if (modOv) modOv.classList.remove('open');
+}
+
+/**
+ * Update the Peek canvas overlay with the currently active effect name.
+ * Shows "—" when NeoPixel is off or no effect is active.
+ */
+function updatePeekEffectInfo() {
+  const nameEl = document.getElementById('peekCanvasEffectName');
+  const btn = document.getElementById('peekCanvasConfigBtn');
+  if (!nameEl || !btn) return;
+
+  const activeCard = document.querySelector('.effect-card.active');
+  if (activeCard && SML.powerOn) {
+    const name = activeCard.querySelector('.effect-name')?.textContent || 'Effect';
+    nameEl.textContent = name;
+    nameEl.classList.add('has-effect');
+    btn.title = 'Configure ' + name;
+    btn.style.display = 'flex';
+  } else {
+    nameEl.textContent = '—';
+    nameEl.classList.remove('has-effect');
+    btn.title = 'Turn on NeoPixel to configure';
+    btn.style.display = 'none';
+  }
 }
 
 function showEffectConfig(effId, cardEl) {
@@ -433,13 +489,17 @@ function renderEffectParams(effId, container) {
     return;
   }
 
+  // Usar valores activos del ESP32 si existen, sino los defaults del metadata
+  const live = liveEffectParams[effId] || {};
+
   container.innerHTML = config.params.map(p => {
+    const liveVal = live[p.key] !== undefined ? live[p.key] : p.default;
     if (p.type === 'checkbox') {
       return `
         <div class="param-row">
           <label>${p.label}</label>
           <label class="switch">
-            <input type="checkbox" data-key="${p.key}" ${p.default ? 'checked' : ''}>
+            <input type="checkbox" data-key="${p.key}" ${liveVal ? 'checked' : ''}>
             <span class="slider"></span>
           </label>
         </div>`;
@@ -447,9 +507,9 @@ function renderEffectParams(effId, container) {
     return `
       <div class="param-row">
         <label>${p.label}</label>
-        <input type="range" min="${p.min}" max="${p.max}" value="${p.default}"
+        <input type="range" min="${p.min}" max="${p.max}" value="${liveVal}"
                data-key="${p.key}">
-        <span class="param-value">${p.default}</span>
+        <span class="param-value">${liveVal}</span>
       </div>`;
   }).join('') + `
     <div class="param-reset-row">
@@ -484,6 +544,9 @@ function renderEffectParams(effId, container) {
   const resetBtn = container.querySelector('.btn-reset-params');
   if (resetBtn) {
     resetBtn.addEventListener('click', () => {
+      // Limpiar cache de valores activos para que al reabrir
+      // se vean los defaults reales, no valores stale
+      delete liveEffectParams[effId];
       const cfg = effectMetaCache[effId];
       if (cfg && cfg.params) {
         const msg = { action: 'setParams', effectId: effId };
@@ -514,6 +577,12 @@ function renderEffectParams(effId, container) {
 // ============================================================================
 
 let effectMetaCache = {};  // { [effectId]: { name, params } }
+
+// Cache de valores activos de parámetros recibidos vía WebSocket.
+// { [effectId]: { speed: 120, intensity: 50, ... } }
+// renderEffectParams() prioriza estos valores sobre effectMetaCache[].default
+// para que los sliders reflejen el estado real del ESP32 al abrir la config.
+let liveEffectParams = {};
 
 /**
  * Parsea una cadena de metadatos estilo WLED y retorna { name, params[] }.
@@ -813,6 +882,7 @@ function handleMessage(data) {
     SML.powerOn = data.neostatus === 'on';
     const neo = document.getElementById('neoToggle');
     if (neo) togglePowerCard(neo, SML.powerOn);
+    updatePeekEffectInfo();
   }
 
   // ── BRIGHTNESS (slider standalone) ──
@@ -829,6 +899,11 @@ function handleMessage(data) {
         const val = document.getElementById('brightnessValue');
         if (val) val.textContent = data.neobrightness;
       }
+      // Sync peek brightness slider
+      const peekBright = document.getElementById('peekBrightness');
+      const peekBrightVal = document.getElementById('peekBrightnessVal');
+      if (peekBright) peekBright.value = data.neobrightness;
+      if (peekBrightVal) peekBrightVal.textContent = data.neobrightness;
     }
   }
 
@@ -907,9 +982,18 @@ function handleMessage(data) {
     });
   }
 
+  // Sincronizar botón de configuración en Peek
+  updatePeekEffectInfo();
+
   // ── EFFECT PARAMS (real-time from server) ──
   // ESP32 sends { effectId: N, params: { speed: 120, intensity: 50, ... } }
   if (data.params && typeof data.params === 'object') {
+    // Guardar en cache de valores activos para que renderEffectParams()
+    // use los valores reales del ESP32, no los defaults del metadata.
+    const paramsEffId = data.effectId !== undefined ? data.effectId : SML.effectId;
+    if (!liveEffectParams[paramsEffId]) liveEffectParams[paramsEffId] = {};
+    Object.assign(liveEffectParams[paramsEffId], data.params);
+
     const offcanvasBody = document.getElementById('effectOffcanvasBody');
     const sheetBody = document.getElementById('paramSheetBody');
     const containers = [offcanvasBody, sheetBody].filter(Boolean);
@@ -1169,6 +1253,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const modOv = document.getElementById('paramModalOverlay');
   if (modOv) modOv.addEventListener('click', closeEffectConfig);
 
+  // Peek canvas config gear — abre el panel del efecto actual
+  document.getElementById('peekCanvasConfigBtn')?.addEventListener('click', () => {
+    const activeCard = document.querySelector('.effect-card.active');
+    if (!activeCard) return;
+    const effId = parseInt(activeCard.dataset.effectId);
+    showEffectConfig(effId, activeCard);
+  });
+
   // Theme options
   $$('.theme-option').forEach(opt => {
     opt.addEventListener('click', () => setTheme(opt.dataset.theme));
@@ -1198,6 +1290,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Activate initial tab
   switchTab(SML.currentTab);
+
+  // Initial sync for Peek config button state
+  updatePeekEffectInfo();
 
   // Notify preserved modules are ready
   if (typeof initBatteryAnimation === 'function') initBatteryAnimation();

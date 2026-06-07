@@ -389,10 +389,23 @@
               <button id="peekToggle">▶ Start</button>
             </div>
             <div class="peek-canvas-wrapper">
+              <div class="peek-canvas-header">
+                <span class="peek-canvas-effect-name" id="peekCanvasEffectName">—</span>
+                <button class="peek-canvas-config-btn" id="peekCanvasConfigBtn" title="Configure effect">
+                  <span class="fas fa-cog"></span>
+                </button>
+              </div>
               <canvas id="peekCanvas" width="320" height="320"></canvas>
             </div>
+            <div class="peek-brightness">
+              <span class="fas fa-sun" style="font-size:0.75rem;opacity:0.5"></span>
+              <input type="range" id="peekBrightness" min="0" max="255" value="130">
+              <span class="peek-brightness-val" id="peekBrightnessVal">130</span>
+            </div>
             <p class="text-muted peek-hint">
-              ⚡ Higher resolution = more data. Reduce if ESP32 struggles.
+              <span class="fas fa-info-circle"></span>
+              <strong>Full (1:1)</strong> sends every LED — crispest preview, most bandwidth.
+              1/2 skips every other LED, 1/4 sends a quarter. Halve the resolution if the stream stutters.
             </p>
           </div>
         </div>

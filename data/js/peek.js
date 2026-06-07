@@ -240,6 +240,17 @@ class PeekRenderer {
       ctx.strokeStyle = 'rgba(255,255,255,0.1)';
       ctx.lineWidth = 1;
       ctx.stroke();
+
+      // Pin 1 marker — small dot outside the ring at LED 0 position
+      if (i === 0) {
+        const pinDist = radius + dotR + 5;
+        const px = cx + Math.cos(angle) * pinDist;
+        const py = cy + Math.sin(angle) * pinDist;
+        ctx.beginPath();
+        ctx.arc(px, py, 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.fill();
+      }
     });
 
     // Center hub
