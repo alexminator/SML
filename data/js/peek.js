@@ -307,7 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         if (typeof SML !== 'undefined' && !SML.powerOn) {
           if (typeof showToast === 'function') {
-            showToast('⚠️ Turn on the NeoPixel strip first');
+            showToast('Turn on the NeoPixel strip first', 'warning');
           }
           return;
         }

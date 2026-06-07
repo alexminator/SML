@@ -22,7 +22,7 @@ class MeteorEffect : public Effect {
 private:
     static const char _meta[];
     uint16_t _meteorPos = 0;
-    uint8_t _trail[24]; // max 24 LEDs
+    uint8_t _trail[N_PIXELS];
 
 public:
     MeteorEffect(CRGB* l, uint16_t n) : Effect(l, n) {

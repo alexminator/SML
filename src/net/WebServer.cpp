@@ -225,10 +225,10 @@ const char* processor(const String &var)
     case VU4:
     case VU5:
     case VU6:
+    case LAMP:
+        return lampState ? "on" : "off";
     case TEMPNEO:
     case BATTNEO:
-    case LAMP:
-        return "off";
     default:
         buffer[0] = '\0';
         return buffer;

@@ -3,6 +3,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 #include "../state/AppState.h"   // Must precede EffectRegistry.h (needs StripLed)
 #include "EffectRegistry.h"
+#include "../config/debug_config.h"
 
 #include <LittleFS.h>
 #include <ArduinoJson.h>
@@ -90,6 +91,13 @@ constexpr uint8_t EFFECT_COUNT =
 // ============================================================================
 
 void saveEffectParams() {
+    if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(500)) != pdTRUE) {
+#ifdef DEBUG_SYSTEM
+        debuglnW("saveEffectParams: could not acquire mutex");
+#endif
+        return;
+    }
+
     DynamicJsonDocument doc(4096);
     for (uint8_t i = 0; i < EFFECT_COUNT; i++) {
         Effect* fx = effectRegistry[i].instance;
@@ -110,6 +118,7 @@ void saveEffectParams() {
         serializeJson(doc, f);
         f.close();
     }
+    xSemaphoreGive(dataMutex);
 }
 
 void loadEffectParams() {
@@ -133,9 +142,11 @@ void loadEffectParams() {
         fx->setCustom1(e["custom1"] | DEFAULT_C1);
         fx->setCustom2(e["custom2"] | DEFAULT_C2);
         fx->setCustom3(e["custom3"] | DEFAULT_C3);
-        fx->setCheck1(e["check1"] | false);
-        fx->setCheck2(e["check2"] | false);
-        fx->setCheck3(e["check3"] | false);
+        // ⚠ Usar containsKey explícito — el operador `|` de ArduinoJson
+        // devuelve false si el JSON guardó 0/1 (int) en vez de bool nativo.
+        if (e.containsKey("check1")) fx->setCheck1(e["check1"].as<int>() != 0);
+        if (e.containsKey("check2")) fx->setCheck2(e["check2"].as<int>() != 0);
+        if (e.containsKey("check3")) fx->setCheck3(e["check3"].as<int>() != 0);
     }
     f.close();
 }

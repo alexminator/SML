@@ -236,9 +236,18 @@ function initTheme() {
 function setTheme(themeName) {
   SML.theme = themeName;
   localStorage.setItem('sml-theme', themeName);
-  document.documentElement.setAttribute('data-theme', themeName);
-  $$('.theme-option').forEach(opt => {
-    opt.classList.toggle('active', opt.dataset.theme === themeName);
+
+  // Smooth theme transition: add class, change attr, remove after settle
+  document.documentElement.classList.add('theme-transitioning');
+  requestAnimationFrame(() => {
+    document.documentElement.setAttribute('data-theme', themeName);
+    $$('.theme-option').forEach(opt => {
+      opt.classList.toggle('active', opt.dataset.theme === themeName);
+    });
+    // Remove after transition completes
+    setTimeout(() => {
+      document.documentElement.classList.remove('theme-transitioning');
+    }, 400);
   });
 }
 
@@ -316,12 +325,18 @@ function initLampControls() {
       const v = parseInt(brightSlider.value);
       SML.brightness = v;
       brightVal.textContent = v;
+      // Update gradient fill on slider track
+      const pct = (v / brightSlider.max) * 100;
+      brightSlider.style.setProperty('--slider-pct', pct + '%');
     });
     brightSlider.addEventListener('change', () => {
       SML._lastBrightnessSent = Date.now();
       sendCmd({ action: 'slider', brightness: SML.brightness });
     });
     SML._brightnessSlider = brightSlider;
+    // Init gradient fill position
+    const initPct = (parseInt(brightSlider.value) / brightSlider.max) * 100;
+    brightSlider.style.setProperty('--slider-pct', initPct + '%');
   }
 
   // Effect cards
@@ -340,7 +355,7 @@ function initEffectCards() {
 
       // Toast warning if NeoPixel is off
       if (!SML.powerOn) {
-        showToast('⚠️ Turn on the NeoPixel strip first');
+        showToast('Turn on the NeoPixel strip first', 'warning');
         return;
       }
 
@@ -809,6 +824,8 @@ function handleMessage(data) {
       SML.brightness = data.neobrightness;
       if (SML._brightnessSlider) {
         SML._brightnessSlider.value = data.neobrightness;
+        const pct = (data.neobrightness / SML._brightnessSlider.max) * 100;
+        SML._brightnessSlider.style.setProperty('--slider-pct', pct + '%');
         const val = document.getElementById('brightnessValue');
         if (val) val.textContent = data.neobrightness;
       }
@@ -951,38 +968,19 @@ function handleMessage(data) {
     if (tToggle) tToggle.classList.toggle('active', SML.tempEffectActive);
   }
 
-  // ── WIFI / NETWORK ──
+  // ── WIFI / NETWORK (state + status bar) ──
   if (data.rssi !== undefined) {
     SML.wifiRSSI = data.rssi;
     updateWiFiBars(data.rssi);
-    setDataValue(document.getElementById('sysRSSI'), data.rssi, ' dBm');
   }
 
   if (data.ip !== undefined) {
     SML.deviceIP = data.ip;
-    setDataValue(document.getElementById('deviceIP'), data.ip);
-    setDataValue(document.getElementById('sysIP'), data.ip);
   }
 
-  if (data.ssid !== undefined) {
-    const ssidEl = document.getElementById('wifiSsid');
-    if (ssidEl && !ssidEl.value) ssidEl.placeholder = data.ssid;
-  }
-
-  // ── SYSTEM INFO ──
-  if (data.uptime !== undefined) {
-    const el = document.getElementById('sysUptime');
-    if (el) {
-      const s = data.uptime;
-      const d = Math.floor(s / 86400);
-      const h = Math.floor((s % 86400) / 3600);
-      const m = Math.floor((s % 3600) / 60);
-      setDataValue(el, (d > 0 ? d + 'd ' : '') + (h > 0 || d > 0 ? h + 'h ' : '') + m + 'm');
-    }
-  }
-
-  if (data.heap !== undefined) {
-    setDataValue(document.getElementById('sysHeap'), data.heap, ' KB');
+  // ── CONFIG TAB (delegado a config.js) ──
+  if (typeof updateSystemInfo === 'function') {
+    updateSystemInfo(data);
   }
 
   // ── WEATHER HEAT INDEX ──
@@ -1028,12 +1026,30 @@ function initPlayerBridge() {
 // TOAST
 // ============================================================================
 
-function showToast(message) {
+function showToast(message, type) {
   const container = document.getElementById('toastContainer');
   if (!container) return;
   const toast = document.createElement('div');
   toast.className = 'toast';
-  toast.textContent = message;
+
+  // Type (success, error, warning, info — defaults to info)
+  type = type || 'info';
+  toast.classList.add(type);
+
+  // Icon map
+  const icons = {
+    success: '<span class="fas fa-check-circle" style="color:var(--accent-success)"></span>',
+    error:   '<span class="fas fa-exclamation-circle" style="color:var(--accent-danger)"></span>',
+    warning: '<span class="fas fa-exclamation-triangle" style="color:var(--accent-warning)"></span>',
+    info:    '<span class="fas fa-info-circle" style="color:var(--accent-secondary)"></span>',
+  };
+
+  toast.innerHTML = `
+    <span class="toast-icon">${icons[type] || icons.info}</span>
+    <span class="toast-text">${message}</span>
+    <span class="toast-progress"></span>
+  `;
+
   container.appendChild(toast);
   setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
 }
@@ -1057,13 +1073,31 @@ function handleResize() {
 // WIFI / LED SAVE
 // ============================================================================
 
-function saveWiFiConfig() {
+async function saveWiFiConfig() {
   const ssid = document.getElementById('wifiSsid')?.value.trim();
   const pass = document.getElementById('wifiPass')?.value;
-  if (!ssid) { showToast('Please enter an SSID'); return; }
+  if (!ssid) { showToast('Please enter an SSID', 'warning'); return; }
   if (!confirm(`Change WiFi to "${ssid}"? The device will reconnect and you may lose connection.`)) return;
-  sendCmd({ ssid, pass });
-  showToast('WiFi saved. Reconnecting...');
+
+  try {
+    const params = new URLSearchParams();
+    params.append('ssid', ssid);
+    params.append('password', pass || '');
+
+    const resp = await fetch('/save-wifi', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString()
+    });
+    const data = await resp.json();
+    if (data.status === 'success') {
+      showToast('WiFi saved. Reconnecting...', 'success');
+    } else {
+      showToast('Error: ' + (data.message || 'unknown'), 'error');
+    }
+  } catch (e) {
+    showToast('Connection lost — device is restarting', 'error');
+  }
 }
 
 // ============================================================================
@@ -1093,7 +1127,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme();
 
   // Add skeleton loading to all data-bearing elements
-  document.querySelectorAll('.stat-value, .info-value, #weatherHumVal, #weatherHeatIndex, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #deviceIP, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
+  document.querySelectorAll('.stat-value, .info-value, #weatherHumVal, #weatherHeatIndex, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #deviceIP, #sysLEDs, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
     .forEach(el => el.classList.add('skeleton'));
 
   // Tabs
@@ -1106,7 +1140,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const battToggle = document.getElementById('batteryToggle');
   if (battToggle) {
     battToggle.addEventListener('click', () => {
-      if (!SML.powerOn) { showToast('⚠️ Turn on the NeoPixel strip first'); return; }
+      if (!SML.powerOn) { showToast('Turn on the NeoPixel strip first', 'warning'); return; }
       sendCmd({ action: 'toggleBatt' });
     });
   }
@@ -1115,7 +1149,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const tempToggle = document.getElementById('tempToggle');
   if (tempToggle) {
     tempToggle.addEventListener('click', () => {
-      if (!SML.powerOn) { showToast('⚠️ Turn on the NeoPixel strip first'); return; }
+      if (!SML.powerOn) { showToast('Turn on the NeoPixel strip first', 'warning'); return; }
       sendCmd({ action: 'toggleTemp' });
     });
   }

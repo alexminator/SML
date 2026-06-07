@@ -1,13 +1,16 @@
 /* ──────────────────────────────────────────────────────────────────────────────
-   config.js — SML Config Tab — System Info only
-   NOTE: WiFi/LED save handlers live in main.js (single source of truth).
+   config.js — SML Config Tab — System Info & WiFi management
+   Called from main.js handleMessage() for config-related fields.
+   Uses global helpers: setDataValue(), setDataHTML(), showToast()
    ────────────────────────────────────────────────────────────────────────────── */
 
-// ============================================================================
-// SYSTEM INFO UPDATES (called from main.js via WebSocket data)
-// ============================================================================
-
+/**
+ * Update Config tab UI elements from WebSocket data.
+ * Called by main.js handleMessage() — single source of truth for config fields.
+ * @param {Object} data - WebSocket JSON payload from ESP32
+ */
 function updateSystemInfo(data) {
+  // ── UPTIME ──
   if (data.uptime !== undefined) {
     const el = document.getElementById('sysUptime');
     if (el) {
@@ -19,30 +22,40 @@ function updateSystemInfo(data) {
       if (d > 0) str += d + 'd ';
       if (h > 0 || d > 0) str += h + 'h ';
       str += m + 'm';
-      el.textContent = str;
+      setDataValue(el, str);
     }
   }
 
+  // ── FREE HEAP ──
   if (data.heap !== undefined) {
-    const el = document.getElementById('sysHeap');
-    if (el) el.textContent = data.heap + ' KB';
+    setDataValue(document.getElementById('sysHeap'), data.heap, ' KB');
   }
 
+  // ── RSSI / SIGNAL ──
   if (data.rssi !== undefined) {
-    const el = document.getElementById('sysRSSI');
-    if (el) el.textContent = data.rssi + ' dBm';
+    setDataValue(document.getElementById('sysRSSI'), data.rssi, ' dBm');
   }
 
+  // ── IP ADDRESS ──
   if (data.ip !== undefined) {
-    const el = document.getElementById('deviceIP');
-    if (el) el.textContent = data.ip;
-    const ipEl = document.getElementById('sysIP');
-    if (ipEl) ipEl.textContent = data.ip;
+    setDataValue(document.getElementById('deviceIP'), data.ip);
+    setDataValue(document.getElementById('sysIP'), data.ip);
   }
 
-
+  // ── VERSION ──
   if (data.ver !== undefined) {
-    const el = document.getElementById('sysVersion');
-    if (el) el.textContent = data.ver;
+    setDataValue(document.getElementById('sysVersion'), data.ver);
+  }
+
+  // ── SSID placeholder (cuando el input está vacío) ──
+  if (data.ssid !== undefined) {
+    const ssidEl = document.getElementById('wifiSsid');
+    if (ssidEl && !ssidEl.value) ssidEl.placeholder = data.ssid;
+  }
+
+  // ── LED COUNT (static — defined in config.h) ──
+  const ledsEl = document.getElementById('sysLEDs');
+  if (ledsEl && ledsEl.textContent === '--') {
+    setDataValue(ledsEl, 24);
   }
 }

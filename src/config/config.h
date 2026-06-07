@@ -90,3 +90,8 @@ constexpr unsigned long AWAKE_DURATION        = 10000;
 constexpr unsigned long POWER_CHANGE_DEBOUNCE = 3000;
 constexpr unsigned long WS_WAIT_DURATION      = 30000;
 constexpr int           BATTERY_CRITICAL_LEVEL = 15;
+
+// ============================================================================
+// VERSION STRING (mostrado en Config tab)
+// ============================================================================
+#define SML_VERSION "2.0.0"

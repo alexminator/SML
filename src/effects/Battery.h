@@ -36,11 +36,11 @@ private:
         int Position = 0;
         for (int j = 0; j < count * 2; j++) {
             for (int i = 0; i < count; i++) {
-                float level = sin(i + j) * 127 + 128 / 255;
+                float level = (sin(i + j) * 127 + 128) / 255.0f;
                 setPixel(i, level * red, level * green, level * blue);
             }
             FastLED.show();
-            delay(WaveDelay);
+            vTaskDelay(pdMS_TO_TICKS(WaveDelay));
         }
     }
 

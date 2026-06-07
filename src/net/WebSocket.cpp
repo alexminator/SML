@@ -126,6 +126,11 @@ void notifyClients(bool includeParams)
         json["ip"] = WiFi.localIP().toString();
         json["rssi"] = WiFi.RSSI();
 
+        // System info (for Config tab)
+        json["uptime"] = millis() / 1000;
+        json["heap"] = ESP.getFreeHeap() / 1024;
+        json["ver"] = SML_VERSION;
+
         // Añade el color actual (modern API)
         JsonObject color = json["color"].to<JsonObject>();
         color["r"] = stripLed.R;
@@ -230,6 +235,11 @@ void notifySensorData()
         json["ssid"] = WiFi.SSID();
         json["ip"] = WiFi.localIP().toString();
         json["rssi"] = WiFi.RSSI();
+
+        // System info (for Config tab)
+        json["uptime"] = millis() / 1000;
+        json["heap"] = ESP.getFreeHeap() / 1024;
+        json["ver"] = SML_VERSION;
 
         // Static buffer (not on task stack — TaskWebSocket solo tiene 4KB)
         static char buffer[512];

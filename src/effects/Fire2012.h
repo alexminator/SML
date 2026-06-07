@@ -22,14 +22,16 @@
 class Fire2012Effect : public Effect {
 private:
     static const char _meta[];
-    uint8_t _heat[24];
+    uint8_t _heat[N_PIXELS];
     CRGBPalette16 _palette;
+    uint32_t _lastIt;     // frame counter for step 2/3 throttling
 
 public:
     Fire2012Effect(CRGB* l, uint16_t n) : Effect(l, n) {
         setToDefaults(_meta);
         memset(_heat, 0, sizeof(_heat));
         _palette = HeatColors_p;
+        _lastIt = 0;
     }
 
     const char* getMeta() const override {
@@ -41,24 +43,34 @@ public:
 
         const unsigned ignition = (numLeds < 10) ? 3 : numLeds / 10;
 
-        // ── Step 1. Cool down ───────────────────────────────────────────────
+        // Frame counter — only re-diffuse & re-spark every ~32ms
+        uint32_t it = millis() >> 5;
+
+        // ── Step 1. Cool down (always runs, but less random on off-frames) ──
         for (unsigned i = 0; i < numLeds; i++) {
-            uint8_t cool = random8((((20 + params.speed / 3) * 16) / numLeds) + 2);
+            uint8_t cool = (it != _lastIt)
+                ? random8((((20 + params.speed / 3) * 16) / numLeds) + 2)
+                : random8(4);
             uint8_t minTemp = (i < ignition) ? (ignition - i) / 4 + 16 : 0;
             uint8_t temp = qsub8(_heat[i], cool);
             _heat[i] = (temp < minTemp) ? minTemp : temp;
         }
 
-        // ── Step 2. Heat drifts up ──────────────────────────────────────────
-        for (int k = numLeds - 1; k > 1; k--) {
-            _heat[k] = (_heat[k - 1] + (_heat[k - 2] << 1)) / 3;
-        }
+        // Steps 2 & 3: only on frame change (saves CPU)
+        if (it != _lastIt) {
+            // ── Step 2. Heat drifts up ──────────────────────────────────────
+            for (int k = numLeds - 1; k > 1; k--) {
+                _heat[k] = (_heat[k - 1] + (_heat[k - 2] << 1)) / 3;
+            }
 
-        // ── Step 3. Spark ignition ──────────────────────────────────────────
-        if (random8() <= params.intensity) {
-            uint8_t y = random8(ignition);
-            uint8_t boost = (17 + params.custom1) * (ignition - y / 2) / ignition;
-            _heat[y] = qadd8(_heat[y], random8(96 + 2 * boost, 207 + boost));
+            // ── Step 3. Spark ignition ──────────────────────────────────────
+            if (random8() <= params.intensity) {
+                uint8_t y = random8(ignition);
+                uint8_t boost = (17 + params.custom1) * (ignition - y / 2) / ignition;
+                _heat[y] = qadd8(_heat[y], random8(96 + 2 * boost, 207 + boost));
+            }
+
+            _lastIt = it;
         }
 
         // ── Step 4. Map heat to colors ──────────────────────────────────────

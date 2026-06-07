@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#0f0f1e">
+  <meta name="theme-color" content="#080c14">
+  <meta name="color-scheme" content="dark">
   <meta name="author" content="Alexminator">
-  <meta name="description" content="Smart Music Lamp">
+  <meta name="description" content="Smart Music Lamp — WiFi-controlled ESP32 lamp with RGB LEDs, Bluetooth audio, and environmental sensing">
   <title>Smart Music Lamp</title>
   <link rel="icon" href="SML.ico" type="image/x-icon">
 
@@ -103,12 +104,16 @@
           <div class="power-section">
             <h2 class="card-title">Power</h2>
             <div class="power-row">
-              <div class="power-card on" id="lampToggle">
-                <div class="power-card-icon"><span class="fas fa-power-off"></span></div>
+              <div class="power-control">
+                <div class="power-card on" id="lampToggle">
+                  <div class="power-card-icon"><span class="fas fa-power-off"></span></div>
+                </div>
                 <span class="power-card-label">Lamp</span>
               </div>
-              <div class="power-card on" id="neoToggle">
-                <div class="power-card-icon"><span class="fas fa-power-off"></span></div>
+              <div class="power-control">
+                <div class="power-card on" id="neoToggle">
+                  <div class="power-card-icon"><span class="fas fa-power-off"></span></div>
+                </div>
                 <span class="power-card-label">Neopixel</span>
               </div>
             </div>
