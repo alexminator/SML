@@ -28,8 +28,11 @@ const createBubble = () => {
   const offset = largestSize / 2 + 5;
 
   bubbleContainers.forEach((bubbleContainer) => {
+    const containerWidth = bubbleContainer.offsetWidth - offset;
+    if (containerWidth <= 0) return; // no space for bubbles
+
     const bArray = Array.from(
-      { length: bubbleContainer.offsetWidth - offset },
+      { length: containerWidth },
       (_, i) => i + 1
     );
 

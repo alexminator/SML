@@ -26,6 +26,7 @@
 html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   scroll-behavior: smooth;
   background: var(--bg-primary);
   transition: background var(--t-slow);
@@ -40,7 +41,6 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   transition: background var(--t-slow), color var(--t-slow);
 }
 
@@ -136,7 +136,7 @@ input:focus, select:focus {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+/* moved to @media webkit block at end of file */
 
 /* ===== STATUS BAR (top) ===== */
 #statusBar {
@@ -793,10 +793,6 @@ input:focus, select:focus {
   transition: transform var(--t-fast);
 }
 
-.brightness-label input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.15);
-}
-
 .brightness-label input[type="range"]::-moz-range-thumb {
   width: 20px;
   height: 20px;
@@ -865,11 +861,6 @@ input[type="range"]::-webkit-slider-thumb {
   transition: transform var(--t-fast), box-shadow var(--t-fast);
   position: relative;
   z-index: 2;
-}
-
-input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.15);
-  box-shadow: 0 0 16px color-mix(in srgb, var(--slider-fill) 50%, transparent);
 }
 
 input[type="range"]::-moz-range-thumb {
@@ -1795,10 +1786,6 @@ input[type="range"]::-moz-range-thumb {
   box-shadow: 0 0 8px color-mix(in srgb, var(--slider-fill) 30%, transparent);
   cursor: pointer;
   transition: transform var(--t-fast);
-}
-
-.peek-brightness input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.15);
 }
 
 .peek-brightness input[type="range"]::-moz-range-thumb {
@@ -2756,3 +2743,19 @@ textarea:focus-visible,
 .mb-sm { margin-bottom: var(--space-sm); }
 .mb-md { margin-bottom: var(--space-md); }
 .wrap { flex-wrap: wrap; }
+
+/* ── WebKit-only: hover effects for sliders & scrollbar ── */
+/* Firefox ignora todo el bloque porque no entiende la media query */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+  .brightness-label input[type="range"]::-webkit-slider-thumb:hover,
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+  }
+  input[type="range"]::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 16px color-mix(in srgb, var(--slider-fill) 50%, transparent);
+  }
+  .peek-brightness input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+  }
+}

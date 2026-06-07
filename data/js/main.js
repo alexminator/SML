@@ -6,7 +6,7 @@
    All values sent as raw JSON numbers, never pre-formatted strings.
 
    Protocol (ESP32 → Client):
-     {bars, battVoltage, level, charging, fullbatt,
+     {battVoltage, level, charging, fullbatt,
       temperature, humidity, lampstatus, neostatus, btstatus,
       neobrightness, ssid, ip, rssi,
       color: {r,g,b}, [effectName]: "on"/"off", params: {...}}
@@ -64,6 +64,10 @@ const SML = {
   // Volume (15 steps, 0-14, middle = 7)
   volumeLevel: 7,
   playing: false,
+
+  // WebSocket reconnect state
+  wsReconnectCount: 0,
+  wsRetryDelay: 1000,
 };
 
 // ============================================================================
@@ -533,7 +537,7 @@ function renderEffectParams(effId, container) {
   container.querySelectorAll('input[type="checkbox"]').forEach(input => {
     input.addEventListener('change', () => {
       const newVal = input.checked ? 1 : 0;
-      console.log(`[DEBUG] Checkbox ${input.dataset.key} → ${newVal} (input.checked=${input.checked})`);
+      console.debug(`[DEBUG] Checkbox ${input.dataset.key} → ${newVal} (input.checked=${input.checked})`);
       const msg = { action: 'setParams', effectId: effId };
       msg[input.dataset.key] = newVal;
       sendCmd(msg);
@@ -699,18 +703,23 @@ function connectWS() {
     return;
   }
 
+  // Init retry backoff if first connection attempt
+  if (SML.wsRetryDelay === undefined) SML.wsRetryDelay = 1000;
+
   // Expose globals for player.js
   websocket = SML.ws;
 
   SML.ws.onopen = () => {
     SML.connected = true;
+    SML.wsReconnectCount = 0;
+    SML.wsRetryDelay = 1000;          // Reset backoff on successful connect
     updateConnectionStatus(true);
     clearTimeout(SML.wsReconnectTimer);
     // Remove skeletons when connected
     document.querySelectorAll('.skeleton').forEach(el => el.classList.remove('skeleton'));
   };
 
-  SML.ws.onclose = () => {
+  SML.ws.onclose = (evt) => {
     SML.connected = false;
     updateConnectionStatus(false);
     // Re-add skeleton to data elements when disconnected
@@ -720,10 +729,17 @@ function connectWS() {
           el.classList.add('skeleton');
         }
       });
+    // Log close code for debugging
+    if (evt.code !== 1000 && evt.code !== 1001) {
+      console.debug(`[WS] closed (${evt.code}), reconnecting...`);
+    }
     scheduleReconnect();
   };
 
-  SML.ws.onerror = () => {};
+  SML.ws.onerror = (evt) => {
+    // onerror is always followed by onclose — log and let close trigger reconnect
+    console.warn('[WS] connection error', evt instanceof Event ? evt.type : evt);
+  };
 
   SML.ws.onmessage = (event) => {
     // Binary data for Peek (real-time LED stream from ESP32)
@@ -743,7 +759,14 @@ function connectWS() {
 
 function scheduleReconnect() {
   clearTimeout(SML.wsReconnectTimer);
-  SML.wsReconnectTimer = setTimeout(connectWS, 3000);
+
+  // Exponential backoff: 1s → 2s → 4s → 8s → 16s → 30s (cap)
+  const delay = SML.wsRetryDelay || 1000;
+  SML.wsReconnectCount = (SML.wsReconnectCount || 0) + 1;
+  SML.wsRetryDelay = Math.min(delay * 1.5, 30000);
+
+  console.debug(`[WS] reconnect #${SML.wsReconnectCount} in ${delay}ms`);
+  SML.wsReconnectTimer = setTimeout(connectWS, delay);
 }
 
 function sendCmd(obj) {
@@ -753,8 +776,8 @@ function sendCmd(obj) {
 }
 
 function handleMessage(data) {
-  // ── CONSOLE LOG — valores que manda el ESP32 ──
-  console.log('[SML ← ESP32]', JSON.stringify(data));
+  // ── CONSOLE DEBUG — valores que manda el ESP32 ──
+  console.debug('[SML ← ESP32]', JSON.stringify(data));
 
   // ── TEMPERATURE / HUMIDITY ──
   if (data.temperature !== undefined) {
@@ -1004,7 +1027,7 @@ function handleMessage(data) {
         if (input.type === 'checkbox') {
           const shouldCheck = val === true || val === 1 || val === '1';
           if (input.checked !== shouldCheck) {
-            console.log(`[DEBUG] Sync check1: server sent ${JSON.stringify(val)}, shouldCheck=${shouldCheck}, was=${input.checked} → setting to ${shouldCheck}`);
+            console.debug(`[DEBUG] Sync check1: server sent ${JSON.stringify(val)}, shouldCheck=${shouldCheck}, was=${input.checked} → setting to ${shouldCheck}`);
             input.checked = shouldCheck;
           }
         } else {

@@ -98,7 +98,7 @@ void saveEffectParams() {
         return;
     }
 
-    DynamicJsonDocument doc(4096);
+    JsonDocument doc;
     for (uint8_t i = 0; i < EFFECT_COUNT; i++) {
         Effect* fx = effectRegistry[i].instance;
         if (!fx) continue;
@@ -125,7 +125,7 @@ void loadEffectParams() {
     if (!LittleFS.exists("/params.json")) return;
     File f = LittleFS.open("/params.json", "r");
     if (!f) return;
-    DynamicJsonDocument doc(4096);
+    JsonDocument doc;
     DeserializationError err = deserializeJson(doc, f);
     if (err) {
         f.close();
@@ -133,7 +133,7 @@ void loadEffectParams() {
     }
     for (uint8_t i = 0; i < EFFECT_COUNT; i++) {
         const char* name = effectRegistry[i].jsonName;
-        if (!doc.containsKey(name)) continue;
+        if (doc[name].isNull()) continue;
         Effect* fx = effectRegistry[i].instance;
         if (!fx) continue;
         JsonObject e = doc[name];
@@ -142,11 +142,11 @@ void loadEffectParams() {
         fx->setCustom1(e["custom1"] | DEFAULT_C1);
         fx->setCustom2(e["custom2"] | DEFAULT_C2);
         fx->setCustom3(e["custom3"] | DEFAULT_C3);
-        // ⚠ Usar containsKey explícito — el operador `|` de ArduinoJson
-        // devuelve false si el JSON guardó 0/1 (int) en vez de bool nativo.
-        if (e.containsKey("check1")) fx->setCheck1(e["check1"].as<int>() != 0);
-        if (e.containsKey("check2")) fx->setCheck2(e["check2"].as<int>() != 0);
-        if (e.containsKey("check3")) fx->setCheck3(e["check3"].as<int>() != 0);
+        // ⚠ Usar isNull() en vez de containsKey (ArduinoJson 7) — el operador
+        // `|` devuelve false si el JSON guardó 0/1 (int) en vez de bool nativo.
+        if (!e["check1"].isNull()) fx->setCheck1(e["check1"].as<int>() != 0);
+        if (!e["check2"].isNull()) fx->setCheck2(e["check2"].as<int>() != 0);
+        if (!e["check3"].isNull()) fx->setCheck3(e["check3"].as<int>() != 0);
     }
     f.close();
 }

@@ -193,7 +193,7 @@ const char* processor(const String &var)
     {
     case COLOR:
     {
-        StaticJsonDocument<64> doc;
+        JsonDocument doc;
         doc["color"]["r"] = stripLed.R;
         doc["color"]["g"] = stripLed.G;
         doc["color"]["b"] = stripLed.B;
@@ -275,10 +275,10 @@ void initWebServer()
     server.on("/wifi-info", HTTP_GET, [](AsyncWebServerRequest *request)
     {
       AsyncResponseStream *response = request->beginResponseStream("application/json");
-      StaticJsonDocument<256> json;
+      JsonDocument json;
       json["status"] = "ok";
       json["ssid"] = WiFi.SSID();
-      json["ip"] = WiFi.localIP().toString();
+      json["ip"] = WiFi.localIP();
       json["rssi"] = WiFi.RSSI();
       serializeJson(json, *response);
       request->send(response);
@@ -358,7 +358,7 @@ void initWebServer()
 
     // Endpoint: metadata de todos los efectos (estilo WLED /json/fxda)
     server.on("/fxdata", HTTP_GET, [](AsyncWebServerRequest *request) {
-      DynamicJsonDocument fxJson(4096);
+      JsonDocument fxJson;
       JsonObject metas = fxJson.to<JsonObject>();
       for (uint8_t i = 0; i < EFFECT_COUNT; i++) {
         Effect* fx = effectRegistry[i].instance;
@@ -366,9 +366,9 @@ void initWebServer()
         const char* m = fx->getMeta();
         if (m) metas[String(i + 1)] = m;
       }
-      String body;
-      serializeJson(fxJson, body);
-      request->send(200, "application/json", body);
+      AsyncResponseStream *response = request->beginResponseStream("application/json");
+      serializeJson(fxJson, *response);
+      request->send(response);
     });
 
     server.serveStatic("/", LittleFS, "/").setDefaultFile("index.html").setTryGzipFirst(false);

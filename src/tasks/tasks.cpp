@@ -96,11 +96,16 @@ void TaskBatteryMonitor(void *pvParameters) {
 
 void TaskLEDControl(void *pvParameters) {
     while (true) {
-        if (stripLed.powerState) {
-            stripLed.update();
-            sendPeekData();  // Live preview via WebSocket binary frame
-        } else {
-            stripLed.clear();
+        // ⚠ dataMutex protege leds[], stripLed y wsLiveActive del race con
+        //   handleWebSocketMessage (que corre en el task del WebSocket).
+        if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+            if (stripLed.powerState) {
+                stripLed.update();
+                sendPeekData();  // Live preview via WebSocket binary frame
+            } else {
+                stripLed.clear();
+            }
+            xSemaphoreGive(dataMutex);
         }
         vTaskDelay(pdMS_TO_TICKS(20));
     }

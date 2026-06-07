@@ -117,5 +117,6 @@ void setup()
 
 void loop()
 {
-
+    // ⚠ loop() vacío sin yield → watchdog timeout (WDT) en ESP32
+    vTaskDelay(pdMS_TO_TICKS(10));
 }

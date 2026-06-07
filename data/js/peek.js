@@ -265,11 +265,11 @@ class PeekRenderer {
 function handlePeekBinary(data) {
   // data es ArrayBuffer (por binaryType='arraybuffer'), lo envolvemos en Uint8Array
   const bytes = data instanceof ArrayBuffer ? new Uint8Array(data) : data;
-  console.log(`[Peek] Binary frame: ${bytes.byteLength} bytes, ${bytes.length} pixels, sample=RGB(${bytes[4]},${bytes[5]},${bytes[6]})`, bytes);
+  console.debug(`[Peek] Binary frame: ${bytes.byteLength} bytes, ${bytes.length} pixels, sample=RGB(${bytes[4]},${bytes[5]},${bytes[6]})`, bytes);
   if (peek && peek.running) {
     peek.feedBinary(bytes);
   } else {
-    console.log(`[Peek] Binary dropped — not running`);
+    console.debug(`[Peek] Binary dropped — not running`);
   }
 }
 

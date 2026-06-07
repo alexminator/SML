@@ -19,25 +19,6 @@
 AsyncWebSocket ws("/ws");
 
 // ============================================================================
-// WiFi signal strength indicator (used by notifyClients)
-// ============================================================================
-
-const char* bars()
-{
-    int signal = WiFi.RSSI();
-    if (signal >= -63 && signal <= -1)
-        return "waveStrength-4";
-    else if (signal >= -73 && signal <= -64)
-        return "waveStrength-3";
-    else if (signal >= -83 && signal <= -74)
-        return "waveStrength-2";
-    else if (signal >= -93 && signal <= -84)
-        return "waveStrength-1";
-    else
-        return "no-signal";
-}
-
-// ============================================================================
 // sendPeekData — Broadcast current LED colors as binary frame (WLED-compatible)
 // ============================================================================
 // Binary format:
@@ -54,6 +35,8 @@ const char* bars()
 static bool wsLiveActive = false; // any client wants live preview
 
 void sendPeekData() {
+    // ⚠ MUST be called with dataMutex held  (by TaskLEDControl).
+    //   Lee leds[], wsLiveActive y llama ws.binaryAll() — todo bajo mutex.
     if (!wsLiveActive) return; // no client opted in
 
     // Rate limit to ~20fps (50ms)
@@ -106,10 +89,9 @@ void notifyClients(bool includeParams)
 {
     // Take mutex for reading shared data
     if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
-        DynamicJsonDocument json(6144);
+        JsonDocument json;
 
         // Usar valores numéricos directamente en JSON
-        json["bars"] = bars();
         json["battVoltage"] = batt.battVolts;
         json["level"] = batt.battLvl;
         json["charging"] = batt.chargeState;
@@ -123,7 +105,7 @@ void notifyClients(bool includeParams)
 
         // WiFi information
         json["ssid"] = WiFi.SSID();
-        json["ip"] = WiFi.localIP().toString();
+        json["ip"] = WiFi.localIP();
         json["rssi"] = WiFi.RSSI();
 
         // System info (for Config tab)
@@ -223,9 +205,8 @@ void notifySensorData()
         lastGen = stateGeneration;
 
         // Small document — only real-time sensor/status fields (~180 bytes)
-        DynamicJsonDocument json(1024);
+        JsonDocument json;
 
-        json["bars"] = bars();
         json["level"] = batt.battLvl;
         json["battVoltage"] = batt.battVolts;
         json["charging"] = batt.chargeState;
@@ -233,7 +214,7 @@ void notifySensorData()
         json["temperature"] = temp;
         json["humidity"] = hum;
         json["ssid"] = WiFi.SSID();
-        json["ip"] = WiFi.localIP().toString();
+        json["ip"] = WiFi.localIP();
         json["rssi"] = WiFi.RSSI();
 
         // System info (for Config tab)
@@ -267,7 +248,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
     {
-        DynamicJsonDocument json(2048);
+        JsonDocument json;
         DeserializationError err = deserializeJson(json, data);
         if (err)
         {
@@ -280,13 +261,19 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 
         // ▸ WLED-style peek live view opt-in (multi-client) — procesar ANTES
         //   del early return de action==nullptr, porque {"lv":true} no lleva action.
-        if (json.containsKey("lv")) {
-            wsLiveActive = json["lv"].as<bool>();
+        if (!json["lv"].isNull()) {
+            // ⚠ wsLiveActive es leído por sendPeekData() en TaskLEDControl
+            //   bajo dataMutex — escribir aquí también bajo mutex.
+            if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+                wsLiveActive = json["lv"].as<bool>();
+                xSemaphoreGive(dataMutex);
+            }
 #ifdef DEBUG_WEBSOCKET
             debugD("🔴 Peek live view: ");
             debuglnD(wsLiveActive ? "ENABLED" : "DISABLED");
 #endif
             // Si solo venía lv, responder con el estado completo + retornar
+            // notifyClients toma su propio dataMutex — no retenerlo aquí.
             stateGeneration++;
             notifyClients();
             return;
@@ -296,18 +283,53 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         const int effectId = json["effectId"] | -1;
 
         // ⚠ Solo asignar effectId si el campo existe. effectId 0 = Solid (color simple)
+        // ⚠ Proteger stripLed y leds[] con dataMutex (TaskLEDControl los lee/escribe).
         if (effectId >= 0) {
-            stripLed.effectId = effectId;
-            // Si el Neo está encendido aplicar el nuevo efecto
-            if (stripLed.powerState) stripLed.update();
+            if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+                stripLed.effectId = effectId;
+                if (stripLed.powerState) stripLed.update();
+                xSemaphoreGive(dataMutex);
+            }
         }
 
         // ⚠ action puede ser NULL si el mensaje solo trae effectId
         if (action == nullptr) {
             stateGeneration++;
-            notifyClients();
+            notifyClients();  // notifyClients toma su propio dataMutex
             return;
         }
+
+        // ── GPIO-ONLY ACTIONS (no shared state) ──────────────────────────────
+        //   Se ejecutan sin dataMutex (NO tocan stripLed/leds/bt_powerState/lampState)
+        if (strcmp(action, "volup") == 0) {
+            digitalWrite(VOLUMENUP_PIN, HIGH);
+            vTaskDelay(pdMS_TO_TICKS(long_delay));
+            digitalWrite(VOLUMENUP_PIN, LOW);
+        }
+        else if (strcmp(action, "voldown") == 0) {
+            digitalWrite(VOLUMENDOWN_PIN, HIGH);
+            vTaskDelay(pdMS_TO_TICKS(long_delay));
+            digitalWrite(VOLUMENDOWN_PIN, LOW);
+        }
+        else if (strcmp(action, "skipL") == 0) {
+            digitalWrite(VOLUMENDOWN_PIN, HIGH);
+            vTaskDelay(pdMS_TO_TICKS(short_delay));
+            digitalWrite(VOLUMENDOWN_PIN, LOW);
+        }
+        else if (strcmp(action, "skipR") == 0) {
+            digitalWrite(VOLUMENUP_PIN, HIGH);
+            vTaskDelay(pdMS_TO_TICKS(short_delay));
+            digitalWrite(VOLUMENUP_PIN, LOW);
+        }
+        else if (strcmp(action, "play-pause") == 0) {
+            digitalWrite(PLAY_PIN, HIGH);
+            vTaskDelay(pdMS_TO_TICKS(short_delay));
+            digitalWrite(PLAY_PIN, LOW);
+        }
+        // ── SHARED-STATE ACTIONS (todo bajo dataMutex) ───────────────────────
+        else
+        {
+            if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
 
         if (strcmp(action, "toggle") == 0)
         {
@@ -339,20 +361,18 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             stripLed.brightness = brightness;
         }
         else if (strcmp(action, "toggleBatt") == 0) {
-            // Toggle battery indicator effect (effectId 20)
-            if (stripLed.effectId == 20) {
-                stripLed.effectId = 0;   // Volver a color simple
+            if (stripLed.effectId == EFFECT_BATTERY) {
+                stripLed.effectId = EFFECT_SOLID;
             } else {
-                stripLed.effectId = 20;  // Mostrar indicador de batería
+                stripLed.effectId = EFFECT_BATTERY;
             }
             if (stripLed.powerState) stripLed.update();
         }
         else if (strcmp(action, "toggleTemp") == 0) {
-            // Toggle temperature indicator effect (effectId 19)
-            if (stripLed.effectId == 19) {
-                stripLed.effectId = 0;   // Volver a color simple
+            if (stripLed.effectId == EFFECT_TEMP) {
+                stripLed.effectId = EFFECT_SOLID;
             } else {
-                stripLed.effectId = 19;  // Mostrar indicador de temperatura
+                stripLed.effectId = EFFECT_TEMP;
             }
             if (stripLed.powerState) stripLed.update();
         }
@@ -362,13 +382,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             stripLed.R = color["r"].as<int>();
             stripLed.G = color["g"].as<int>();
             stripLed.B = color["b"].as<int>();
-
-            // Si el mensaje incluye brightness, aplicarlo también
-            // (evita race condition de dos mensajes separados)
-            if (json.containsKey("brightness")) {
+            if (!json["brightness"].isNull()) {
                 stripLed.brightness = json["brightness"].as<int>();
             }
-
 #ifdef DEBUG_LED
             debugD("RGB: ");
             debugD_NUM(stripLed.R, "%d");
@@ -390,52 +406,20 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             }
 #endif
         }
-        else if (strcmp(action, "volup") == 0)
-        {
-            digitalWrite(VOLUMENUP_PIN, HIGH);
-            vTaskDelay(pdMS_TO_TICKS(long_delay));
-            digitalWrite(VOLUMENUP_PIN, LOW);
-        }
-        else if (strcmp(action, "voldown") == 0)
-        {
-            digitalWrite(VOLUMENDOWN_PIN, HIGH);
-            vTaskDelay(pdMS_TO_TICKS(long_delay));
-            digitalWrite(VOLUMENDOWN_PIN, LOW);
-        }
-        else if (strcmp(action, "skipL") == 0)
-        {
-            digitalWrite(VOLUMENDOWN_PIN, HIGH);
-            vTaskDelay(pdMS_TO_TICKS(short_delay));
-            digitalWrite(VOLUMENDOWN_PIN, LOW);
-        }
-        else if (strcmp(action, "skipR") == 0)
-        {
-            digitalWrite(VOLUMENUP_PIN, HIGH);
-            vTaskDelay(pdMS_TO_TICKS(short_delay));
-            digitalWrite(VOLUMENUP_PIN, LOW);
-        }
-        else if (strcmp(action, "play-pause") == 0)
-        {
-            digitalWrite(PLAY_PIN, HIGH);
-            vTaskDelay(pdMS_TO_TICKS(short_delay));
-            digitalWrite(PLAY_PIN, LOW);
-        }
+        // ── setParams: fx setters bajo mutex, saveEffectParams sin mutex ──
         else if (strcmp(action, "setParams") == 0)
         {
             uint8_t id = json["effectId"].as<uint8_t>();
             Effect* fx = getEffect(id);
             if (fx) {
-                // Usar operador | para mantener valor actual si no se envió el campo
                 fx->setSpeed(json["speed"]     | fx->getSpeed());
                 fx->setIntensity(json["intensity"] | fx->getIntensity());
                 fx->setCustom1(json["custom1"] | fx->getCustom1());
                 fx->setCustom2(json["custom2"] | fx->getCustom2());
                 fx->setCustom3(json["custom3"] | fx->getCustom3());
-                // ⚠ `|` operator with bool devuelve `false` si el JSON trae
-                // integer (1/0) en vez de bool nativo. Usamos containsKey explícito.
-                if (json.containsKey("check1")) fx->setCheck1(json["check1"].as<int>() != 0);
-                if (json.containsKey("check2")) fx->setCheck2(json["check2"].as<int>() != 0);
-                if (json.containsKey("check3")) fx->setCheck3(json["check3"].as<int>() != 0);
+                if (!json["check1"].isNull()) fx->setCheck1(json["check1"].as<int>() != 0);
+                if (!json["check2"].isNull()) fx->setCheck2(json["check2"].as<int>() != 0);
+                if (!json["check3"].isNull()) fx->setCheck3(json["check3"].as<int>() != 0);
 #ifdef DEBUG_WEBSOCKET
                 debugD("setParams effectId=");
                 debugD_NUM(id, "%u");
@@ -445,9 +429,22 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
                 debugD_NUM(fx->getCheck1(), "%d");
                 debugD("\n");
 #endif
+                // ⚠ Liberar mutex ANTES de saveEffectParams (lo toma internamente)
+                xSemaphoreGive(dataMutex);
                 saveEffectParams();
+                // Volver a tomar (se libera al final del bloque else)
+                if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) != pdTRUE) {
+                    // Si falla, no podemos seguir — notificar y salir
+                    stateGeneration++;
+                    notifyClients();
+                    return;
+                }
             }
         }
+
+                xSemaphoreGive(dataMutex);
+            } // end if dataMutex acquired
+        } // end else (shared-state actions)
         stateGeneration++;
         notifyClients();
     }
