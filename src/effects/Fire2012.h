@@ -75,8 +75,11 @@ public:
 
         // ── Step 4. Map heat to colors ──────────────────────────────────────
         for (unsigned j = 0; j < numLeds; j++) {
-            uint8_t colorIndex = scale8(_heat[j], 240);
-            CRGB color = ColorFromPalette(_palette, colorIndex, stripLed.brightness, NOBLEND);
+            // WLED: min(heat[j], byte(240)) — cap, don't scale
+            uint8_t colorIndex = min(_heat[j], (uint8_t)240);
+            // WLED: pass 255 for brightness (applied globally via nscale8)
+            CRGB color = ColorFromPalette(_palette, colorIndex, 255, NOBLEND);
+            color.nscale8(stripLed.brightness);
 
             if (params.check1) {
                 leds[numLeds - 1 - j] = color;

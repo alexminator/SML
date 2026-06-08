@@ -3,15 +3,20 @@
 #include "../state/AppState.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
-// RainbowBeatEffect — WLED mode_rainbow_cycle adaptado para SML
+// RainbowBeatEffect — Arcoíris pulsante con beatsin16 + fill_rainbow
 // ──────────────────────────────────────────────────────────────────────────────
-// Arcoíris continuo que cicla a través de toda la tira.
-// Algoritmo WLED: cada LED toma un color del color_wheel (HSV rotado) según su
-// posición, con un offset temporal que hace que el arcoíris se mueva.
+// Usa dos ondas seno a diferentes frecuencias (beatsin16) para generar un
+// arcoíris que pulsa y se desplaza rítmicamente.
+//
+// Algoritmo:
+//   beatA = beatsin16(bpmA, 0, 255)
+//   beatB = beatsin16(bpmB, 0, 255)
+//   startHue = (beatA + beatB) / 2
+//   fill_rainbow(leds, N, startHue, delta)
 //
 // Parámetros:
-//   speed     → Rainbow rotation speed (sx=128) — higher = faster cycle
-//   intensity → Color spread (ix=128) — 0 = solid color, 255 = full rainbow
+//   speed     → BPM base (sx=100) — higher = beats más rápidos
+//   intensity → Delta hue (ix=128) — higher = más dispersión
 // ──────────────────────────────────────────────────────────────────────────────
 
 class RainbowBeatEffect : public Effect {
@@ -28,25 +33,30 @@ public:
     }
 
     void render() override {
-        // ── WLED mode_rainbow_cycle ─────────────────────────────────────────
-        // counter: moving phase from 0-255, speed-controlled
-        unsigned counter = (millis() * ((params.speed >> 2) + 2)) & 0xFFFF;
-        counter = counter >> 8;  // 0-255
+        // speed → BPM (10-70), dos frecuencias con ratio 3:2
+        uint8_t bpmA = 10 + (params.speed * 60 / 255);
+        uint8_t bpmB = bpmA * 2 / 3;
+        if (bpmB < 5) bpmB = 5;
 
-        // intensity: spread of colors
-        // 0 = solid (all same hue), 255 = full rainbow spectrum
-        uint8_t spread = 16 << (params.intensity / 29);  // 16-256+
+        uint16_t beatA = beatsin16(bpmA, 0, 255);
+        uint16_t beatB = beatsin16(bpmB, 0, 255);
 
+        // intensity → delta hue (2-32)
+        uint8_t delta = 2 + (params.intensity * 30 / 255);
+
+        uint8_t startHue = (beatA + beatB) / 2;
+
+        fill_rainbow(leds, numLeds, startHue, delta);
+
+        // Aplicar brillo global
         for (unsigned i = 0; i < numLeds; i++) {
-            // WLED: index = (i * spread / SEGLEN) + counter
-            uint8_t index = (i * spread / numLeds) + counter;
-            leds[i] = CHSV(index, 255, stripLed.brightness);
+            leds[i].nscale8(stripLed.brightness);
         }
 
         FastLED.show();
     }
 };
 
-// Metadata: speed (rotation), intensity (spread)
+// Metadata: speed (BPM), intensity (delta hue)
 const char RainbowBeatEffect::_meta[] =
-    "Rainbow@Speed,Spread,,,,,,,,;;;;sx=128,ix=128";
+    "RainbowBeat@BPM,Spread,,,,,,,,;;;;sx=100,ix=128";

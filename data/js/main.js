@@ -997,6 +997,16 @@ function handleMessage(data) {
     'meteorStatus': 27,
     'sparkleStatus': 28,
     'fire2012Status': 29,
+    'bpmStatus': 30,
+    'plasmaStatus': 31,
+    'fireworksStatus': 32,
+    'lightningStatus': 33,
+    'pride2015Status': 34,
+    'colorwavesStatus': 35,
+    'pacificaStatus': 36,
+    'twinkleFOXStatus': 37,
+    'auroraStatus': 38,
+    'popcornStatus': 39,
   };
 
   // Find which effect is "on"

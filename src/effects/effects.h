@@ -28,6 +28,16 @@
 #include "Sparkle.h"
 #include "TheaterChase.h"
 #include "Twinkle.h"
+#include "BPM.h"
+#include "Plasma.h"
+#include "Fireworks.h"
+#include "Lightning.h"
+#include "Pride2015.h"
+#include "Colorwaves.h"
+#include "Pacifica.h"
+#include "TwinkleFOX.h"
+#include "Aurora.h"
+#include "Popcorn.h"
 
 // ── Efectos indicadores (visualizan sensores) ───────────────────────────────
 #include "Battery.h"

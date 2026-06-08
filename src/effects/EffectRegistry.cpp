@@ -32,6 +32,16 @@
 #include "Meteor.h"
 #include "Sparkle.h"
 #include "Fire2012.h"
+#include "BPM.h"
+#include "Plasma.h"
+#include "Fireworks.h"
+#include "Lightning.h"
+#include "Pride2015.h"
+#include "Colorwaves.h"
+#include "Pacifica.h"
+#include "TwinkleFOX.h"
+#include "Aurora.h"
+#include "Popcorn.h"
 
 #include "Temp.h"
 #include "Battery.h"
@@ -81,6 +91,20 @@ const EffectEntry effectRegistry[] = {
     { "meteorStatus",           new MeteorEffect(leds, N_PIXELS) },
     { "sparkleStatus",          new SparkleEffect(leds, N_PIXELS) },
     { "fire2012Status",         new Fire2012Effect(leds, N_PIXELS) },
+
+    // ── Nuevos efectos WLED (30+) ─────────────────────────────────────────
+    { "bpmStatus",              new BPMEffect(leds, N_PIXELS) },
+    { "plasmaStatus",           new PlasmaEffect(leds, N_PIXELS) },
+    { "fireworksStatus",        new FireworksEffect(leds, N_PIXELS) },
+    { "lightningStatus",        new LightningEffect(leds, N_PIXELS) },
+    { "pride2015Status",        new Pride2015Effect(leds, N_PIXELS) },
+    { "colorwavesStatus",       new ColorwavesEffect(leds, N_PIXELS) },
+    { "pacificaStatus",         new PacificaEffect(leds, N_PIXELS) },
+
+    // ── Nuevos efectos WLED (37-39) ─────────────────────────────────────────
+    { "twinkleFOXStatus",       new TwinkleFOXEffect(leds, N_PIXELS) },
+    { "auroraStatus",           new AuroraEffect(leds, N_PIXELS) },
+    { "popcornStatus",          new PopcornEffect(leds, N_PIXELS) },
 };
 
 constexpr uint8_t EFFECT_COUNT =
