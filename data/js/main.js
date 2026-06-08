@@ -310,6 +310,7 @@ function initLampControls() {
       SML.g = color.rgb.g;
       SML.b = color.rgb.b;
       // NOTA: no tocamos SML.brightness aquí — el brillo es independiente
+      updateSolidIcon(SML.r, SML.g, SML.b);
     });
 
     colorPicker.on('input:end', () => {
@@ -376,6 +377,17 @@ function initLampControls() {
   initEffectCards();
 }
 
+// ── Solid icon: refleja el color del picker solo si está activo ─────
+function updateSolidIcon(r, g, b) {
+  const card = document.querySelector('.effect-card[data-effect-id="0"]');
+  const el = card?.querySelector('.effect-icon');
+  if (!el) return;
+  if (card.classList.contains('active')) {
+    el.style.setProperty('--solid-fill', `rgb(${r},${g},${b})`);
+  } else {
+    el.style.removeProperty('--solid-fill');
+  }
+}
 
 function initEffectCards() {
   const cards = $$('.effect-card');
@@ -407,6 +419,8 @@ function initEffectCards() {
       cards.forEach(c => c.classList.remove('active'));
       card.classList.add('active');
       activeCard = card;
+      // Solid icon: color del picker solo si está activo, gris si no
+      updateSolidIcon(SML.r, SML.g, SML.b);
 
       // Sincronizar botón de configuración en la tarjeta Peek
       updatePeekEffectInfo();
@@ -939,6 +953,7 @@ function handleMessage(data) {
       SML.r = data.color.r ?? SML.r;
       SML.g = data.color.g ?? SML.g;
       SML.b = data.color.b ?? SML.b;
+      updateSolidIcon(SML.r, SML.g, SML.b);
       if (SML.colorPicker && !SML._colorDragging) {
         SML._colorRemoteLock = true;
         SML.colorPicker.color.set({ r: SML.r, g: SML.g, b: SML.b });

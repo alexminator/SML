@@ -965,6 +965,44 @@ input[type="range"]::-moz-range-thumb {
   position: relative;
 }
 
+/* ── SVG-based effect icons (sin fondo circular, color via --effect-color) ── */
+.effect-card .effect-icon[viewBox] {
+  border-radius: 0;
+  background: none;
+  display: block;
+}
+
+/* Solid (data-effect-id="0"): color del picker */
+.effect-card[data-effect-id="0"].active .effect-icon {
+  --effect-color: var(--solid-fill, #888);
+}
+
+/* Fire (data-effect-id="1"): color activo */
+.effect-card[data-effect-id="1"].active .effect-icon {
+  --effect-color: #FF4500;
+}
+
+/* Moving Dot (data-effect-id="2"): color activo */
+.effect-card[data-effect-id="2"].active .effect-icon {
+  --effect-trail-color: #A8DCD1;
+  --effect-dot-color: #2B6A8C;
+  --effect-color: #2B6A8C;  /* glow del drop-shadow */
+}
+
+/* SVG icons: drop-shadow en vez de box-shadow (sigue la silueta, no el cuadrado) */
+.effect-card:hover .effect-icon[viewBox] {
+  box-shadow: none;
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--accent) 30%, transparent));
+}
+.effect-card.active .effect-icon[viewBox] {
+  box-shadow: none;
+  filter: drop-shadow(0 0 14px var(--effect-color));
+}
+.effect-card.active:hover .effect-icon[viewBox] {
+  box-shadow: none;
+  filter: drop-shadow(0 0 24px var(--effect-color));
+}
+
 .effect-card:hover .effect-icon {
   transform: scale(1.12);
   box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 20%, transparent);
