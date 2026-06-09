@@ -14,7 +14,6 @@
 #include "RainbowBeat.h"
 #include "RedWhiteBlue.h"
 #include "Ripple.h"
-#include "Twinkle.h"
 #include "Balls.h"
 #include "Juggle.h"
 #include "Sinelon.h"
@@ -31,7 +30,6 @@
 #include "Fade.h"
 #include "Meteor.h"
 #include "Sparkle.h"
-#include "Fire2012.h"
 #include "BPM.h"
 #include "Plasma.h"
 #include "Fireworks.h"
@@ -65,7 +63,6 @@ const EffectEntry effectRegistry[] = {
     { "rainbowbeatStatus",      new RainbowBeatEffect(leds, N_PIXELS) },
     { "rwbStatus",              new RedWhiteBlueEffect(leds, N_PIXELS) },
     { "rippleStatus",           new RippleEffect(leds, N_PIXELS) },
-    { "twinkleStatus",          new TwinkleEffect(leds, N_PIXELS) },
     { "ballsStatus",            new BallsEffect(leds, N_PIXELS) },
     { "juggleStatus",           new JuggleEffect(leds, N_PIXELS) },
     { "sinelonStatus",          new SinelonEffect(leds, N_PIXELS) },
@@ -81,7 +78,7 @@ const EffectEntry effectRegistry[] = {
     { "tempNEOStatus",          new TemperatureEffect(leds, N_PIXELS) },
     { "battNEOStatus",          new ChargeEffect(leds, N_PIXELS) },
 
-    // ── Nuevos efectos WLED (21-29) ────────────────────────────────────────
+    // ── Nuevos efectos WLED (20-27) ────────────────────────────────────────
     { "colorWipeStatus",        new ColorWipeEffect(leds, N_PIXELS) },
     { "theaterChaseStatus",     new TheaterChaseEffect(leds, N_PIXELS) },
     { "runningLightsStatus",    new RunningLightsEffect(leds, N_PIXELS) },
@@ -90,9 +87,7 @@ const EffectEntry effectRegistry[] = {
     { "fadeStatus",             new FadeEffect(leds, N_PIXELS) },
     { "meteorStatus",           new MeteorEffect(leds, N_PIXELS) },
     { "sparkleStatus",          new SparkleEffect(leds, N_PIXELS) },
-    { "fire2012Status",         new Fire2012Effect(leds, N_PIXELS) },
-
-    // ── Nuevos efectos WLED (30+) ─────────────────────────────────────────
+    // ── Nuevos efectos WLED (28-34) ────────────────────────────────────────
     { "bpmStatus",              new BPMEffect(leds, N_PIXELS) },
     { "plasmaStatus",           new PlasmaEffect(leds, N_PIXELS) },
     { "fireworksStatus",        new FireworksEffect(leds, N_PIXELS) },
@@ -101,7 +96,7 @@ const EffectEntry effectRegistry[] = {
     { "colorwavesStatus",       new ColorwavesEffect(leds, N_PIXELS) },
     { "pacificaStatus",         new PacificaEffect(leds, N_PIXELS) },
 
-    // ── Nuevos efectos WLED (37-39) ─────────────────────────────────────────
+    // ── Nuevos efectos WLED (35-37) ─────────────────────────────────────────
     { "twinkleFOXStatus",       new TwinkleFOXEffect(leds, N_PIXELS) },
     { "auroraStatus",           new AuroraEffect(leds, N_PIXELS) },
     { "popcornStatus",          new PopcornEffect(leds, N_PIXELS) },

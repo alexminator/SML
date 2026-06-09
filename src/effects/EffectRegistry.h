@@ -46,8 +46,8 @@ extern const uint8_t EFFECT_COUNT;
 // Efecto 0 = Solid (color sólido, no usa el registry)
 constexpr uint8_t EFFECT_SOLID     = 0;
 // Indicadores del sistema (mapean a índices fijos en effectRegistry[])
-constexpr uint8_t EFFECT_TEMP      = 19;   // tempNEOStatus  (index 18)
-constexpr uint8_t EFFECT_BATTERY   = 20;   // battNEOStatus  (index 19)
+constexpr uint8_t EFFECT_TEMP      = 18;   // tempNEOStatus
+constexpr uint8_t EFFECT_BATTERY   = 19;   // battNEOStatus
 
 // ============================================================================
 // HELPERS INLINE

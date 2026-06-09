@@ -990,7 +990,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* Color Wipe (data-effect-id="21"): goma rosa + banda azul + papel */
-.effect-card[data-effect-id="21"].active .effect-icon {
+.effect-card[data-effect-id="20"].active .effect-icon {
   --wipe-goma: #4488CC;
   --wipe-goma-band: #F08080;
   --wipe-line: #E0E0E0;
@@ -998,7 +998,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* Theater Chase (data-effect-id="22"): máscara 3 colores */
-.effect-card[data-effect-id="22"].active .effect-icon {
+.effect-card[data-effect-id="21"].active .effect-icon {
   --theater-mask: #E91E63;
   --theater-ring: #9C27B0;
   --theater-dot: #FFD93D;
@@ -1006,28 +1006,28 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* Dissolve (data-effect-id="24"): círculo semilleno */
-.effect-card[data-effect-id="24"].active .effect-icon {
+.effect-card[data-effect-id="23"].active .effect-icon {
   --dissolve-ring: #3D5AFE;
   --dissolve-fill: #7C4DFF;
   --effect-color: #3D5AFE;
 }
 
 /* Running Lights (data-effect-id="23"): barras de velocidad + luz */
-.effect-card[data-effect-id="23"].active .effect-icon {
+.effect-card[data-effect-id="22"].active .effect-icon {
   --run-bar: #FF6B35;
   --run-glow: #FFD93D;
   --effect-color: #FF6B35;
 }
 
 /* Dual Scan (data-effect-id="25"): color activo */
-.effect-card[data-effect-id="25"].active .effect-icon {
+.effect-card[data-effect-id="24"].active .effect-icon {
   --scan-dot: #FF6B6B;
   --scan-trail: #FFD93D;
   --effect-color: #FF6B6B;  /* glow del drop-shadow */
 }
 
 /* Juggle (data-effect-id="8"): patrón de malabares */
-.effect-card[data-effect-id="8"].active .effect-icon {
+.effect-card[data-effect-id="7"].active .effect-icon {
   --juggle-dot-1: #FF6B6B;
   --juggle-dot-2: #6BCB77;
   --juggle-dot-3: #4D96FF;
@@ -1037,7 +1037,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* Sinelon (data-effect-id="9"): barrido sinusoidal */
-.effect-card[data-effect-id="9"].active .effect-icon {
+.effect-card[data-effect-id="8"].active .effect-icon {
   --sinelon-color: #00BCD4;
   --effect-color: #00BCD4;
 }
@@ -1076,42 +1076,37 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* Comet (data-effect-id="10"): colores originales del SVG */
-.effect-card[data-effect-id="10"].active .effect-icon {
+.effect-card[data-effect-id="9"].active .effect-icon {
   --comet-body: #E9573F;
   --comet-head: #FFCE54;
   --effect-color: #E9573F;
 }
 
 /* Meteor (data-effect-id="27"): fuego */
-.effect-card[data-effect-id="27"].active .effect-icon {
+.effect-card[data-effect-id="26"].active .effect-icon {
   --meteor-color: #FF6D00;
   --effect-color: #FF6D00;
 }
 
 /* Breath (data-effect-id="11"): pulmones */
-.effect-card[data-effect-id="11"].active .effect-icon {
+.effect-card[data-effect-id="10"].active .effect-icon {
   --breath-vein: #E85D75;
   --breath-lung: #FF8FA3;
   --effect-color: #E85D75;
 }
 
 /* Color Sweep (data-effect-id="12"): flechas + círculos */
-.effect-card[data-effect-id="12"].active .effect-icon {
+.effect-card[data-effect-id="11"].active .effect-icon {
   --sweep-arrow: #2979FF;
   --sweep-dot-1: #FFD93D;
   --sweep-dot-2: #FF6B6B;
   --effect-color: #2979FF;
 }
 
-/* Twinkle (data-effect-id="6"": dos centellos de colores */
-.effect-card[data-effect-id="6"].active .effect-icon {
-  --twinkle-1: #FFD60A;
-  --twinkle-2: #FF6B9D;
-  --effect-color: #FFD60A;
-}
+
 
 /* Sparkle (data-effect-id="28"): tres destellos */
-.effect-card[data-effect-id="28"].active .effect-icon {
+.effect-card[data-effect-id="27"].active .effect-icon {
   --sparkle-1: #FFD60A;
   --sparkle-2: #FF6B9D;
   --sparkle-3: #00D4FF;
@@ -1119,7 +1114,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* Fade (data-effect-id="26"): degradado de púrpuras */
-.effect-card[data-effect-id="26"].active .effect-icon {
+.effect-card[data-effect-id="25"].active .effect-icon {
   --fade-1: #7C3AED;
   --fade-2: #6D28D9;
   --fade-3: #9333EA;
@@ -1129,10 +1124,65 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* Bouncing Balls (data-effect-id="7"): 3 arcos + pelota */
-.effect-card[data-effect-id="7"].active .effect-icon {
+.effect-card[data-effect-id="6"].active .effect-icon {
   --bounce-trail: #00BCD4;
   --bounce-ball: #FF6B35;
   --effect-color: #00BCD4;
+}
+
+/* Fireworks (data-effect-id="32"): estallido + chispas */
+.effect-card[data-effect-id="30"].active .effect-icon {
+  --fw-inner: #FFEE58;    /* amarillo brillante – núcleo caliente */
+  --fw-mid: #FFD700;      /* dorado – explosión media */
+  --fw-outer: #FF6F00;    /* naranja – anillo exterior */
+  --fw-spark-1: #FFD700;  /* chispas doradas */
+  --fw-spark-2: #E65100;  /* chispas naranja intenso */
+  --effect-color: #FFD700;
+}
+
+/* Lightning (data-effect-id="33"): rayo eléctrico */
+.effect-card[data-effect-id="31"].active .effect-icon {
+  --lt-body: #FFEA00;      /* amarillo eléctrico */
+  --effect-color: #FFEA00;
+}
+
+/* Popcorn (data-effect-id="39"): envase + palomitas */
+.effect-card[data-effect-id="37"].active .effect-icon {
+  --pc-body: #E53935;      /* rojo clásico - envase */
+  --pc-flap: #C62828;      /* rojo oscuro - solapas */
+  --pc-popcorn: #FFD700;   /* dorado - palomitas */
+  --effect-color: #FFD700;
+}
+
+/* Pacifica (data-effect-id="36"): olas */
+.effect-card[data-effect-id="34"].active .effect-icon {
+  --pc-wave-1: #4DD0E1;    /* cian - ola superior */
+  --pc-wave-2: #0288D1;    /* azul - ola inferior */
+  --effect-color: #4DD0E1;
+}
+
+/* Colorwaves (data-effect-id="35"): barras arcoíris */
+.effect-card[data-effect-id="33"].active .effect-icon {
+  --cw-1: #E53935;      /* rojo */
+  --cw-2: #FF8F00;      /* ámbar */
+  --cw-3: #43A047;      /* verde */
+  --cw-4: #1E88E5;      /* azul */
+  --cw-5: #8E24AA;      /* púrpura */
+  --effect-color: #43A047;
+}
+
+/* BPM (data-effect-id="30"): latido cardíaco */
+.effect-card[data-effect-id="28"].active .effect-icon {
+  --bpm-body: #E53935;    /* rojo - corazón */
+  --bpm-beat: #FF5252;    /* rojo claro - pulso */
+  --effect-color: #E53935;
+}
+
+/* TwinkleFOX (data-effect-id="37"): dos centellos */
+.effect-card[data-effect-id="35"].active .effect-icon {
+  --tf-1: #FFD60A;        /* amarillo - estrella 1 */
+  --tf-2: #FF6B9D;        /* rosa - estrella 2 */
+  --effect-color: #FFD60A;
 }
 
 /* SVG icons: drop-shadow en vez de box-shadow (sigue la silueta, no el cuadrado) */

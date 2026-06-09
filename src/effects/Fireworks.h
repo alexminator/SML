@@ -34,26 +34,26 @@ public:
     void render() override {
         if (numLeds <= 1) return;
 
+        // Save previous spark colors BEFORE fade+blur (so we can restore them after)
+        CRGB savedSparkA = (_sparkA < numLeds) ? leds[_sparkA] : CRGB(0, 0, 0);
+        CRGB savedSparkB = (_sparkB < numLeds) ? leds[_sparkB] : CRGB(0, 0, 0);
+
         // Fade out existing
         for (unsigned i = 0; i < numLeds; i++) {
             leds[i].nscale8(128);
         }
 
-        // Blur to spread sparks
+        // Blur to spread sparks (this dims the spark centers)
         blur1d(leds, numLeds, 16);
 
-        // If first frame, save spark colors after blur
-        if (_first) {
-            _first = false;
-        } else {
-            // Restore spark colors that were blurred
-            if (_sparkA < numLeds) {
-                // Spark A color was lost in blur, keep it dim
-            }
-            if (_sparkB < numLeds) {
-                // Spark B color was lost in blur, keep it dim
-            }
+        // Restore spark brightness at their original positions,
+        // so the blur creates a glow around them instead of dimming them.
+        // Skip on the very first frame (no valid sparks yet).
+        if (!_first) {
+            if (_sparkA < numLeds) leds[_sparkA] = savedSparkA;
+            if (_sparkB < numLeds) leds[_sparkB] = savedSparkB;
         }
+        _first = false;
 
         // Try to create new sparks
         for (int i = 0; i < max(1, (int)numLeds / 20); i++) {
