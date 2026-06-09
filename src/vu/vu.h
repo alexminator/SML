@@ -12,3 +12,7 @@
 #include "vu4.h"    // RippleVUEffect
 #include "vu5.h"    // ThreebarsVUEffect
 #include "vu6.h"    // OceanVUEffect
+#include "vu7.h"    // GravimeterVUEffect
+#include "vu8.h"    // NoisemeterVUEffect
+#include "vu9.h"    // DJLightVUEffect
+#include "vu10.h"   // PS1DGEQVUEffect

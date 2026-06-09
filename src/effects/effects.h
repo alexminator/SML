@@ -37,6 +37,16 @@
 #include "Aurora.h"
 #include "Popcorn.h"
 
+// ── Nuevos efectos WLED prioritarios ────────────────────────────────────────
+#include "LarsonScanner.h"
+#include "Heartbeat.h"
+#include "ICU.h"
+#include "Sunrise.h"
+#include "Drip.h"
+#include "Candle.h"
+#include "Chunchun.h"
+#include "HalloweenEyes.h"
+
 // ── Efectos indicadores (visualizan sensores) ───────────────────────────────
 #include "Battery.h"
 #include "Temp.h"

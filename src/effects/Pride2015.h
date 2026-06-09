@@ -66,4 +66,4 @@ public:
 };
 
 const char Pride2015Effect::_meta[] =
-    "Pride 2015@!,,,,,,,,;;;;sx=128";
+    "Pride 2015@Speed,,,,,,,,;;;;sx=128";

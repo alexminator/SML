@@ -97,4 +97,4 @@ public:
 };
 
 const char TwinkleFOXEffect::_meta[] =
-    "TwinkleFOX@!,Twinkle rate,,,,Cool;!,!;!;;;;sx=128,ix=128";
+    "TwinkleFOX@Speed,Twinkle rate,,,,Cool;;;;sx=128,ix=128";

@@ -68,4 +68,4 @@ public:
 };
 
 const char ColorwavesEffect::_meta[] =
-    "Colorwaves@!,Hue,,,,,,,,;;;;sx=128,ix=128";
+    "Colorwaves@Speed,Hue Range,,,,,,,,;;;;sx=128,ix=128";

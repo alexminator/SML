@@ -95,4 +95,4 @@ public:
 };
 
 const char PopcornEffect::_meta[] =
-    "Popcorn@!,!,,,,,Overlay;!,!,!;!;;;m12=1";
+    "Popcorn@Gravity,Count,,,,,Overlay;;;;sx=128,ix=128";

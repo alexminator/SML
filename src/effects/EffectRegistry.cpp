@@ -41,6 +41,16 @@
 #include "Aurora.h"
 #include "Popcorn.h"
 
+// ── Nuevos efectos prioritarios ─────────────────────────────────────────────
+#include "LarsonScanner.h"
+#include "Heartbeat.h"
+#include "ICU.h"
+#include "Sunrise.h"
+#include "Drip.h"
+#include "Candle.h"
+#include "Chunchun.h"
+#include "HalloweenEyes.h"
+
 #include "Temp.h"
 #include "Battery.h"
 #include "../vu/vu1.h"
@@ -49,6 +59,10 @@
 #include "../vu/vu4.h"
 #include "../vu/vu5.h"
 #include "../vu/vu6.h"
+#include "../vu/vu7.h"
+#include "../vu/vu8.h"
+#include "../vu/vu9.h"
+#include "../vu/vu10.h"
 
 // ============================================================================
 // EFFECT REGISTRY — definición única (ODR-safe)
@@ -100,6 +114,22 @@ const EffectEntry effectRegistry[] = {
     { "twinkleFOXStatus",       new TwinkleFOXEffect(leds, N_PIXELS) },
     { "auroraStatus",           new AuroraEffect(leds, N_PIXELS) },
     { "popcornStatus",          new PopcornEffect(leds, N_PIXELS) },
+
+    // ── Nuevos efectos prioritarios (38-45) ─────────────────────────────────
+    { "larsonScannerStatus",    new LarsonScannerEffect(leds, N_PIXELS) },
+    { "heartbeatStatus",        new HeartbeatEffect(leds, N_PIXELS) },
+    { "icuStatus",              new ICUEffect(leds, N_PIXELS) },
+    { "sunriseStatus",          new SunriseEffect(leds, N_PIXELS) },
+    { "dripStatus",             new DripEffect(leds, N_PIXELS) },
+    { "candleStatus",           new CandleEffect(leds, N_PIXELS) },
+    { "chunchunStatus",         new ChunchunEffect(leds, N_PIXELS) },
+    { "halloweenEyesStatus",    new HalloweenEyesEffect(leds, N_PIXELS) },
+
+    // ── Nuevos efectos VU (46-49) ───────────────────────────────────────────
+    { "gravimeterVUStatus",     new GravimeterVUEffect(leds, N_PIXELS) },
+    { "noisemeterVUStatus",     new NoisemeterVUEffect(leds, N_PIXELS) },
+    { "djlightVUStatus",        new DJLightVUEffect(leds, N_PIXELS) },
+    { "ps1dgeqVUStatus",        new PS1DGEQVUEffect(leds, N_PIXELS) },
 };
 
 constexpr uint8_t EFFECT_COUNT =

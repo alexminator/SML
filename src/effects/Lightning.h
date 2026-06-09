@@ -94,4 +94,4 @@ public:
 };
 
 const char LightningEffect::_meta[] =
-    "Lightning@!,!,,,,,Overlay;!,!;!;;;;sx=128";
+    "Lightning@Speed,Flashing,,,,,Overlay;;;;sx=128,ix=128";

@@ -156,4 +156,4 @@ public:
 };
 
 const char AuroraEffect::_meta[] =
-    "Aurora@!,!;1,2,3;!;;;sx=24";
+    "Aurora@Speed,Waves;;;;sx=24";
