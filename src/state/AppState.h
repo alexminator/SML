@@ -121,6 +121,8 @@ extern bool is_centered;
 // POWER MANAGEMENT STATE
 // ============================================================================
 
+extern uint8_t randomMode;  // 0=off, 1=randomFX, 2=randomVU
+
 extern PowerState currentPowerState;
 extern PowerState previousPowerState;
 extern unsigned long lastStateChange;

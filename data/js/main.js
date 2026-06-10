@@ -56,6 +56,12 @@ const SML = {
   deviceIP: '0.0.0.0',
   uptime: 0,
 
+  // Random mode
+  randomFXMode: false,
+  randomVUMode: false,
+  _randomFXTimer: null,
+  _randomVUTimer: null,
+
   // UI
   currentTab: 'tabLamp',
   isDesktop: window.innerWidth >= 768,
@@ -281,6 +287,10 @@ function initLampControls() {
       SML.powerOn = !SML.powerOn;
       togglePowerCard(neoToggle, SML.powerOn);
       updatePeekEffectInfo();
+      if (!SML.powerOn) {
+        if (SML.randomFXMode) { stopRandomFX(); sendCmd({ action: 'randomFX', state: false }); }
+        if (SML.randomVUMode) { stopRandomVU(); sendCmd({ action: 'randomVU', state: false }); }
+      }
     });
   }
 
@@ -461,33 +471,183 @@ function initEffectCards() {
         return;
       }
 
+      // wasActive check — moved here BEFORE early returns for Random cards
       const wasActive = card.classList.contains('active');
+
+      // ── Random FX (ID 99) ──
+      if (effId === 99) {
+        handleRandomFXClick(card, wasActive);
+        return;
+      }
+      // ── Random VU (ID 100) ──
+      if (effId === 100) {
+        handleRandomVUClick(card, wasActive);
+        return;
+      }
+
+      // ── Normal effect cards ──
+      // Si random estaba activo, detenerlo (backend + frontend)
+      if (SML.randomFXMode) {
+        stopRandomFX();
+        sendCmd({ action: 'randomFX', state: false, effectId: effId });
+      } else if (SML.randomVUMode) {
+        stopRandomVU();
+        sendCmd({ action: 'randomVU', state: false, effectId: effId });
+      } else {
+        // Enviar comando de efecto solo (sin stop random)
+        sendCmd({ effectId: effId });
+      }
 
       // Si cambia a otro efecto, cerrar config abierta
       if (activeCard && activeCard !== card) {
         closeEffectConfig();
       }
 
-      // Enviar comando de efecto siempre
-      SML.effectId = effId;
-      sendCmd({ effectId: effId });
-
       // Actualizar estado visual
+      SML.effectId = effId;
       cards.forEach(c => c.classList.remove('active'));
       card.classList.add('active');
       activeCard = card;
-      // Solid icon: color del picker solo si está activo, gris si no
       updateSolidIcon(SML.r, SML.g, SML.b);
-
-      // Sincronizar botón de configuración en la tarjeta Peek
       updatePeekEffectInfo();
 
-      // Segundo click en la misma card → mostrar config (siempre disponible por el selector de paletas)
+      // Segundo click en la misma card → mostrar config
       if (wasActive) {
         showEffectConfig(effId, card);
       }
     });
   });
+}
+
+// ============================================================================
+// RANDOM FX MODE — cycles through all non-VU effects
+// ============================================================================
+
+const RANDOM_FX_POOL = [
+  1,2,3,4,5,6,7,8,9,10,11,     // Fire → ColorSweep
+  20,21,22,23,24,25,26,27,      // ColorWipe → Sparkle
+  28,29,30,31,32,33,34,35,36,37,// BPM → Popcorn
+  38,39,40,41,42,43,44,45       // LarsonScanner → HallowEyes
+];
+
+const RANDOM_VU_POOL = [
+  12,13,14,15,16,17,            // RainbowVU → OceanVU
+  46,47,48,49                   // Gravimeter → PS1DGEQ
+];
+
+function getRandomDuration() {
+  const val = parseInt(localStorage.getItem('sml-random-duration') || '8');
+  return Math.max(3000, val * 1000);
+}
+
+function handleRandomFXClick(card, wasActive) {
+  const cards = $$('.effect-card');
+
+  if (wasActive) {
+    // Segundo click → mostrar config de duración
+    closeEffectConfig();
+    showEffectConfig(99, card);
+    return;
+  }
+
+  if (SML.randomFXMode) {
+    // Ya en random pero wasActive=false (remoto) → detener localmente
+    stopRandomFX();
+    sendCmd({ action: 'randomFX', state: false });
+    // Volver a Solid
+    SML.effectId = 0;
+    sendCmd({ effectId: 0 });
+    cards.forEach(c => c.classList.remove('active'));
+    updateSolidIcon(SML.r, SML.g, SML.b);
+    updatePeekEffectInfo();
+  } else {
+    // Detener VU random si estaba activo
+    if (SML.randomVUMode) {
+      stopRandomVU();
+      sendCmd({ action: 'randomVU', state: false });
+    }
+
+    // Iniciar random FX (avisa al backend)
+    sendCmd({ action: 'randomFX', state: true });
+    SML.randomFXMode = true;
+    cards.forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+    updatePeekEffectInfo();
+    cycleRandomFX();
+  }
+}
+
+function handleRandomVUClick(card, wasActive) {
+  const cards = $$('.effect-card');
+
+  if (wasActive) {
+    // Segundo click → mostrar config de duración
+    closeEffectConfig();
+    showEffectConfig(100, card);
+    return;
+  }
+
+  if (SML.randomVUMode) {
+    // Ya en random pero wasActive=false (remoto) → detener localmente
+    stopRandomVU();
+    sendCmd({ action: 'randomVU', state: false });
+    // Volver a Solid
+    SML.effectId = 0;
+    sendCmd({ effectId: 0 });
+    cards.forEach(c => c.classList.remove('active'));
+    updateSolidIcon(SML.r, SML.g, SML.b);
+    updatePeekEffectInfo();
+  } else {
+    // Detener FX random si estaba activo
+    if (SML.randomFXMode) {
+      stopRandomFX();
+      sendCmd({ action: 'randomFX', state: false });
+    }
+
+    // Iniciar random VU (avisa al backend)
+    sendCmd({ action: 'randomVU', state: true });
+    SML.randomVUMode = true;
+    cards.forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+    updatePeekEffectInfo();
+    cycleRandomVU();
+  }
+}
+
+function cycleRandomFX() {
+  if (!SML.randomFXMode) return;
+  const pool = RANDOM_FX_POOL;
+  const id = pool[Math.floor(Math.random() * pool.length)];
+  SML.effectId = id;
+  sendCmd({ effectId: id });
+  // No marcar ninguna card como activa excepto la Random FX
+  // (cada efecto se ve solo por el tiempo que dure)
+  SML._randomFXTimer = setTimeout(cycleRandomFX, getRandomDuration());
+}
+
+function cycleRandomVU() {
+  if (!SML.randomVUMode) return;
+  const pool = RANDOM_VU_POOL;
+  const id = pool[Math.floor(Math.random() * pool.length)];
+  SML.effectId = id;
+  sendCmd({ effectId: id });
+  SML._randomVUTimer = setTimeout(cycleRandomVU, getRandomDuration());
+}
+
+function stopRandomFX() {
+  SML.randomFXMode = false;
+  if (SML._randomFXTimer) {
+    clearTimeout(SML._randomFXTimer);
+    SML._randomFXTimer = null;
+  }
+}
+
+function stopRandomVU() {
+  SML.randomVUMode = false;
+  if (SML._randomVUTimer) {
+    clearTimeout(SML._randomVUTimer);
+    SML._randomVUTimer = null;
+  }
 }
 
 function closeEffectConfig() {
@@ -526,6 +686,12 @@ function updatePeekEffectInfo() {
 }
 
 function showEffectConfig(effId, cardEl) {
+  // Special: Random FX/VU — show duration config inline
+  if (effId === 99 || effId === 100) {
+    showRandomDurationConfig(effId, cardEl);
+    return;
+  }
+
   if (window.innerWidth < 768) {
     // Mobile: bottom sheet modal
     const sheet = document.getElementById('paramBottomSheet');
@@ -553,6 +719,49 @@ function showEffectConfig(effId, cardEl) {
       if (overlay) overlay.classList.add('open');
     }
   }
+}
+
+function showRandomDurationConfig(effId, cardEl) {
+  const label = effId === 99 ? 'Random FX' : 'Random VU';
+  const body = window.innerWidth < 768
+    ? document.getElementById('paramSheetBody')
+    : document.getElementById('effectOffcanvasBody');
+  const title = window.innerWidth < 768
+    ? document.getElementById('paramSheetTitle')
+    : document.getElementById('effectOffcanvasTitle');
+  const overlay = window.innerWidth < 768
+    ? document.getElementById('paramModalOverlay')
+    : document.getElementById('offcanvasOverlay');
+  const container = window.innerWidth < 768
+    ? document.getElementById('paramBottomSheet')
+    : document.getElementById('effectOffcanvas');
+
+  if (!body || !title || !container) return;
+  title.textContent = label;
+  const curVal = localStorage.getItem('sml-random-duration') || '8';
+  body.innerHTML = `
+    <div class="param-row">
+      <label>Duration (seconds)</label>
+      <input type="range" id="randomDurationInline" min="3" max="30" value="${curVal}" step="1">
+      <span class="param-value" id="randomDurationInlineVal">${curVal}s</span>
+    </div>
+    <div class="palette-section-title" style="margin-top:12px"><span class="fas fa-info-circle"></span> About</div>
+    <p style="font-size:0.8rem;color:var(--text-secondary);padding:8px;line-height:1.5">
+      Each effect plays for the set duration, then randomly switches to the next one.
+      Effects use their default parameters.
+    </p>
+  `;
+  const slider = body.querySelector('#randomDurationInline');
+  const valEl = body.querySelector('#randomDurationInlineVal');
+  if (slider && valEl) {
+    slider.addEventListener('input', () => {
+      valEl.textContent = slider.value + 's';
+      localStorage.setItem('sml-random-duration', slider.value);
+    });
+  }
+
+  container.classList.add('open');
+  if (overlay) overlay.classList.add('open');
 }
 
 function renderEffectParams(effId, container) {
@@ -1068,6 +1277,11 @@ function handleMessage(data) {
     const neo = document.getElementById('neoToggle');
     if (neo) togglePowerCard(neo, SML.powerOn);
     updatePeekEffectInfo();
+    // Si apagan el NeoPixel remotamente, detener random
+    if (!SML.powerOn) {
+      if (SML.randomFXMode) stopRandomFX();
+      if (SML.randomVUMode) stopRandomVU();
+    }
   }
 
   // ── BRIGHTNESS (FAB pill slider) ──
@@ -1101,106 +1315,132 @@ function handleMessage(data) {
     }
   }
 
-  // ── EFFECT ──
-  // Effect active state is determined by effectName fields in the JSON
-  // Each effect has a field like "firebutton": "on"/"off"
-  // Map effect names to IDs for active card highlighting
-  // Map effect JSON names (from EffectRegistry.cpp) to web effect IDs
-  const effectNameToId = {
-    'fireStatus': 1,
-    'movingdotStatus': 2,
-    'rainbowbeatStatus': 3,
-    'rwbStatus': 4,
-    'rippleStatus': 5,
-    'ballsStatus': 6,
-    'juggleStatus': 7,
-    'sinelonStatus': 8,
-    'cometStatus': 9,
-    'breathStatus': 10,
-    'colorSweepStatus': 11,
-    'rainbowVUStatus': 12,
-    'oldVUStatus': 13,
-    'rainbowHueVUStatus': 14,
-    'rippleVUStatus': 15,
-    'threebarsVUStatus': 16,
-    'oceanVUStatus': 17,
-    'tempNEOStatus': 18,
-    'battNEOStatus': 19,
-    'colorWipeStatus': 20,
-    'theaterChaseStatus': 21,
-    'runningLightsStatus': 22,
-    'dissolveStatus': 23,
-    'dualScanStatus': 24,
-    'fadeStatus': 25,
-    'meteorStatus': 26,
-    'sparkleStatus': 27,
-    'bpmStatus': 28,
-    'plasmaStatus': 29,
-    'fireworksStatus': 30,
-    'lightningStatus': 31,
-    'pride2015Status': 32,
-    'colorwavesStatus': 33,
-    'pacificaStatus': 34,
-    'twinkleFOXStatus': 35,
-    'auroraStatus': 36,
-    'popcornStatus': 37,
-    'larsonScannerStatus': 38,
-    'heartbeatStatus': 39,
-    'icuStatus': 40,
-    'sunriseStatus': 41,
-    'dripStatus': 42,
-    'candleStatus': 43,
-    'chunchunStatus': 44,
-    'halloweenEyesStatus': 45,
-    'gravimeterVUStatus': 46,
-    'noisemeterVUStatus': 47,
-    'djlightVUStatus': 48,
-    'ps1dgeqVUStatus': 49,
-  };
-
-  // Find which effect is "on"
-  let fxFound = false;
-  for (const [key, id] of Object.entries(effectNameToId)) {
-    if (data[key] === 'on') {
-      if (SML.effectId !== id) {
-        SML.effectId = id;
-        $$('.effect-card').forEach(c => {
-          c.classList.toggle('active', parseInt(c.dataset.effectId) === id);
-        });
-      }
-      fxFound = true;
-      break;
+  // ── RANDOM MODE (check FIRST — overrides individual effect cards on ALL clients) ──
+  //   El backend incluye randomMode en cada notifyClients. 0=off, 1=randomFX, 2=randomVU.
+  //   notifySensorData NO incluye randomMode — no altera las flags.
+  if (data.randomMode !== undefined) {
+    if (data.randomMode === 1) {
+      SML.randomFXMode = true;
+      SML.randomVUMode = false;
+      SML.effectId = 99;
+      $$('.effect-card').forEach(c =>
+        c.classList.toggle('active', parseInt(c.dataset.effectId) === 99)
+      );
+    } else if (data.randomMode === 2) {
+      SML.randomVUMode = true;
+      SML.randomFXMode = false;
+      SML.effectId = 100;
+      $$('.effect-card').forEach(c =>
+        c.classList.toggle('active', parseInt(c.dataset.effectId) === 100)
+      );
+    } else {
+      // randomMode === 0 — limpiar flags
+      SML.randomFXMode = false;
+      SML.randomVUMode = false;
     }
   }
-  // Also check for effect statuses NOT in the map (IDs 38+)
-  if (!fxFound) {
-    for (const key of Object.keys(data)) {
-      if (key.endsWith('Status') && data[key] === 'on') {
+
+  // ── EFFECT ──
+  // Find which effect is "on" — only if NOT in random mode (already handled above)
+  let fxFound = false;
+
+  // Regular effect lookup — skip if random mode is active
+  if (data.randomMode === undefined || data.randomMode === 0) {
+    // Map effect JSON names (from EffectRegistry.cpp) to web effect IDs
+    const effectNameToId = {
+      'fireStatus': 1,
+      'movingdotStatus': 2,
+      'rainbowbeatStatus': 3,
+      'rwbStatus': 4,
+      'rippleStatus': 5,
+      'ballsStatus': 6,
+      'juggleStatus': 7,
+      'sinelonStatus': 8,
+      'cometStatus': 9,
+      'breathStatus': 10,
+      'colorSweepStatus': 11,
+      'rainbowVUStatus': 12,
+      'oldVUStatus': 13,
+      'rainbowHueVUStatus': 14,
+      'rippleVUStatus': 15,
+      'threebarsVUStatus': 16,
+      'oceanVUStatus': 17,
+      'tempNEOStatus': 18,
+      'battNEOStatus': 19,
+      'colorWipeStatus': 20,
+      'theaterChaseStatus': 21,
+      'runningLightsStatus': 22,
+      'dissolveStatus': 23,
+      'dualScanStatus': 24,
+      'fadeStatus': 25,
+      'meteorStatus': 26,
+      'sparkleStatus': 27,
+      'bpmStatus': 28,
+      'plasmaStatus': 29,
+      'fireworksStatus': 30,
+      'lightningStatus': 31,
+      'pride2015Status': 32,
+      'colorwavesStatus': 33,
+      'pacificaStatus': 34,
+      'twinkleFOXStatus': 35,
+      'auroraStatus': 36,
+      'popcornStatus': 37,
+      'larsonScannerStatus': 38,
+      'heartbeatStatus': 39,
+      'icuStatus': 40,
+      'sunriseStatus': 41,
+      'dripStatus': 42,
+      'candleStatus': 43,
+      'chunchunStatus': 44,
+      'halloweenEyesStatus': 45,
+      'gravimeterVUStatus': 46,
+      'noisemeterVUStatus': 47,
+      'djlightVUStatus': 48,
+      'ps1dgeqVUStatus': 49,
+    };
+
+    for (const [key, id] of Object.entries(effectNameToId)) {
+      if (data[key] === 'on') {
+        if (SML.effectId !== id) {
+          SML.effectId = id;
+          $$('.effect-card').forEach(c => {
+            c.classList.toggle('active', parseInt(c.dataset.effectId) === id);
+          });
+        }
         fxFound = true;
         break;
       }
     }
-  }
-  // If NO effect is "on" but Neo IS on → Solid (not in EffectRegistry, never has a Status:"on")
-  // ⚠ Only trigger if this message actually contains effect/status data
-  //   (notifySensorData sends lightweight payloads WITHOUT Status fields)
-  if (!fxFound && SML.powerOn) {
-    const hasEffectData = Object.keys(data).some(k => k.endsWith('Status') || k === 'neostatus');
-    if (hasEffectData) {
-      SML.effectId = 0;
-      $$('.effect-card').forEach(c => {
-        c.classList.toggle('active', parseInt(c.dataset.effectId) === 0);
-      });
-      updateSolidIcon(SML.r, SML.g, SML.b);
+    // Also check for effect statuses NOT in the map (IDs 38+)
+    if (!fxFound) {
+      for (const key of Object.keys(data)) {
+        if (key.endsWith('Status') && data[key] === 'on') {
+          fxFound = true;
+          break;
+        }
+      }
     }
-  }
+    // If NO effect is "on" but Neo IS on → Solid (not in EffectRegistry, never has a Status:"on")
+    // ⚠ Only trigger if this message actually contains effect/status data
+    //   (notifySensorData sends lightweight payloads WITHOUT Status fields)
+    if (!fxFound && SML.powerOn) {
+      const hasEffectData = Object.keys(data).some(k => k.endsWith('Status') || k === 'neostatus');
+      if (hasEffectData) {
+        SML.effectId = 0;
+        $$('.effect-card').forEach(c => {
+          c.classList.toggle('active', parseInt(c.dataset.effectId) === 0);
+        });
+        updateSolidIcon(SML.r, SML.g, SML.b);
+      }
+    }
 
-  // Direct effectId from server
-  if (data.effectId !== undefined) {
-    SML.effectId = data.effectId;
-    $$('.effect-card').forEach(c => {
-      c.classList.toggle('active', parseInt(c.dataset.effectId) === data.effectId);
-    });
+    // Direct effectId from server
+    if (data.effectId !== undefined) {
+      SML.effectId = data.effectId;
+      $$('.effect-card').forEach(c => {
+        c.classList.toggle('active', parseInt(c.dataset.effectId) === data.effectId);
+      });
+    }
   }
 
   // ── PALETTE (top-level, enviado en cada broadcast) ──
@@ -1474,6 +1714,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (battToggle) {
     battToggle.addEventListener('click', () => {
       if (!SML.powerOn) { showToast('Turn on the NeoPixel strip first', 'warning'); return; }
+      if (SML.randomFXMode) stopRandomFX();
+      if (SML.randomVUMode) stopRandomVU();
       sendCmd({ action: 'toggleBatt' });
     });
   }
@@ -1483,6 +1725,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (tempToggle) {
     tempToggle.addEventListener('click', () => {
       if (!SML.powerOn) { showToast('Turn on the NeoPixel strip first', 'warning'); return; }
+      if (SML.randomFXMode) stopRandomFX();
+      if (SML.randomVUMode) stopRandomVU();
       sendCmd({ action: 'toggleTemp' });
     });
   }
@@ -1527,8 +1771,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-
-  // Resize
   window.addEventListener('resize', handleResize);
 
   // Load effect metadata from server (caches into effectMetaCache)

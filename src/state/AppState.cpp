@@ -72,6 +72,8 @@ bool is_centered = false;
 // POWER MANAGEMENT STATE
 // ============================================================================
 
+uint8_t randomMode = 0;
+
 PowerState currentPowerState = POWER_AC_MODE;
 PowerState previousPowerState = POWER_AC_MODE;
 unsigned long lastStateChange = 0;

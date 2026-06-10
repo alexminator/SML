@@ -123,6 +123,9 @@ void notifyClients(bool includeParams)
         for (uint8_t i = 0; i < EFFECT_COUNT; ++i)
             json[effectRegistry[i].jsonName] = (stripLed.effectId == i + 1 && stripLed.powerState) ? "on" : "off";
 
+        // Random mode flag (0=off, 1=randomFX, 2=randomVU)
+        json["randomMode"] = randomMode;
+
         // Params + meta solo en respuesta a acciones del usuario (evita que el
         // sync periódico sobreescriba sliders/checkboxes con valores viejos).
         if (includeParams) {
@@ -339,6 +342,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         {
             stripLed.powerState = !stripLed.powerState;
             stripLed.powerState ? stripLed.update() : stripLed.clear();
+            if (!stripLed.powerState) randomMode = 0;
         }
         else if (strcmp(action, "lamp") == 0)
         {
@@ -365,6 +369,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             stripLed.brightness = brightness;
         }
         else if (strcmp(action, "toggleBatt") == 0) {
+            randomMode = 0;  // Exit random mode
             if (stripLed.effectId == EFFECT_BATTERY) {
                 stripLed.effectId = EFFECT_SOLID;
             } else {
@@ -373,6 +378,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             if (stripLed.powerState) stripLed.update();
         }
         else if (strcmp(action, "toggleTemp") == 0) {
+            randomMode = 0;  // Exit random mode
             if (stripLed.effectId == EFFECT_TEMP) {
                 stripLed.effectId = EFFECT_SOLID;
             } else {
@@ -409,6 +415,14 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
                 debuglnD("Apagado del modulo BT");
             }
 #endif
+        }
+        else if (strcmp(action, "randomFX") == 0)
+        {
+            randomMode = json["state"].as<bool>() ? 1 : 0;
+        }
+        else if (strcmp(action, "randomVU") == 0)
+        {
+            randomMode = json["state"].as<bool>() ? 2 : 0;
         }
         // ── setParams: fx setters bajo mutex, saveEffectParams sin mutex ──
         else if (strcmp(action, "setParams") == 0)
