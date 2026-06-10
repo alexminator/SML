@@ -1526,12 +1526,18 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ===== MUSIC TAB ===== */
+#tabMusic .card {
+  overflow: visible;
+}
+#tabMusic .music-container {
+  overflow: visible;
+}
 .music-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-lg);
-  padding: var(--space-xl) 0;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0 0;
   max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -1539,94 +1545,37 @@ input[type="range"]::-moz-range-thumb {
 
 /* ============================================================
    PLAYER — CodePen-inspired music controls
-   Classes: .player .big .small.left .small.right
-            .star-tab .plaque .scrub-bg .scrub-arc
+   Classes: .player .plaque .small.bt-toggle
+            .button-controls .btn-overlay .play-btn
    ============================================================ */
 
 .player {
   position: relative;
   font-size: 1.25rem;
-  width: 10em;
-  height: 8em;
-  margin: var(--space-xl) auto var(--space-md);
+  width: 100%;
+  max-width: 360px;
+  min-height: 300px;
+  margin: 0 auto var(--space-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   -webkit-user-select: none;
   user-select: none;
 }
 
-.big svg {
-  display: block;
-  position: relative;
-  z-index: 1;
-  color: var(--text-secondary);
-  transition: color 80ms;
-}
-.small svg,
-.star-tab svg {
+.small svg {
   display: block;
   color: var(--text-secondary);
   transition: color 80ms;
 }
 
-.big:hover svg,
 .small:hover svg { color: var(--text-primary); }
 
-.big {
-  position: relative;
-  z-index: 9;
-  cursor: pointer;
-  height: 6em;
-  width: 6em;
-  margin: 0 auto;
-  border-radius: 100%;
-  background: radial-gradient(circle at 50% 5%,
-    var(--bg-elevated),
-    var(--bg-card));
-  box-shadow:
-    0 0.22em 0.3em -0.22em rgba(0,0,0,0.7),
-    inset 0 0.2em 0.4em -0.22em rgba(255,255,255,0.06);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 80ms;
-}
-
-.big::before {
-  position: absolute;
-  content: '';
-  width: 60%;
-  height: 60%;
-  margin: 20%;
-  border-radius: 100%;
-  background: radial-gradient(circle at 50% 92%,
-    var(--bg-elevated),
-    var(--bg-card));
-  transition: all 80ms;
-}
-
-.big:hover {
-  background: radial-gradient(circle at 50% 5%,
-    var(--bg-card-hover),
-    var(--bg-card));
-}
-
-.big:active {
-  box-shadow:
-    0 0.22em 0.3em -0.24em rgba(0,0,0,0.6),
-    inset 0 0.2em 0.4em -0.22em rgba(255,255,255,0.04);
-  top: 0.03em;
-}
-
-.big .play-svg  { display: block; }
-.big .pause-svg { display: none;  }
-
-.big.playing .play-svg  { display: none;  }
-.big.playing .pause-svg { display: block; }
-
 .small {
-  position: relative;
-  z-index: 9;
+  position: absolute;
+  z-index: 10;
   cursor: pointer;
-  top: -1em;
   width: 3em;
   height: 3em;
   border-radius: 100%;
@@ -1642,8 +1591,51 @@ input[type="range"]::-moz-range-thumb {
   transition: all 80ms;
 }
 
-.small.left  { float: left; }
-.small.right { float: right; }
+/* BT toggle (right lobe) — estilo iPod como el panel de control */
+.small.bt-toggle {
+  top: calc(50% + 85px);
+  left: calc(50% + 85px);
+  transform: none;
+  width: 3.8em;
+  height: 3.8em;
+  background: linear-gradient(180deg, #292929 0%, #1F1F1F 100%);
+  border: 3px solid #0D0D0D;
+  box-shadow:
+    0 0.22em 0.27em -0.18em rgba(0,0,0,0.45),
+    inset 0 0.08em 0.12em -0.04em rgba(255,255,255,0.12);
+}
+
+.small.bt-toggle svg {
+  width: 34px;
+  height: 34px;
+  color: var(--text-secondary);
+  filter: drop-shadow(0 -0.03em rgba(0,0,0,0.2)) drop-shadow(0 0.03em 0.03em rgba(255,255,255,0.55));
+  transition: all 80ms;
+}
+
+.small.bt-toggle:hover {
+  background: linear-gradient(180deg, #333333 0%, #252525 100%);
+}
+
+.small.bt-toggle:hover svg {
+  color: var(--text-primary);
+}
+
+.small.bt-toggle:active {
+  transform: scale(0.95);
+}
+
+/* BT toggle active — glow SOLO en el símbolo BT, no en el botón */
+.small.bt-toggle.on {
+  box-shadow:
+    0 0.22em 0.27em -0.18em rgba(0,0,0,0.45),
+    inset 0 0.08em 0.12em -0.04em rgba(255,255,255,0.12);
+}
+
+.small.bt-toggle.on svg {
+  color: rgba(0, 200, 255, 0.9);
+  filter: brightness(1.3) drop-shadow(0 0 6px rgba(0, 200, 255, 0.5));
+}
 
 .small:hover {
   background: radial-gradient(circle at 50% 5%,
@@ -1652,171 +1644,360 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .small:active {
-  top: -0.97em;
   box-shadow:
     0 0.18em 0.22em -0.16em rgba(0,0,0,0.43),
     inset 0 0.15em 0.25em -0.2em rgba(255,255,255,0.04);
   transform: scale(0.93);
 }
 
+/* Plaque: big circle + right lobe (unified — estilo power-card) */
 .plaque {
   position: absolute;
   z-index: 8;
-  top: -0.6em;
-  left: -3.6em;
-  width: 7.2em;
-  height: 7.2em;
-  margin-left: 50%;
-  border-radius: 100%;
-  background: color-mix(in srgb, var(--bg-secondary) 80%, transparent);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  box-shadow:
-    inset 0 0.1em 0.07em -0.03em rgba(255,255,255,0.04),
-    0 0.25em 0.25em -0.175em rgba(0,0,0,0.4);
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: conic-gradient(black, #444 10%, black 51%, #555 57%, #222 60%, #555 67%, black 75%);
+  border: 4px solid #000;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5), inset -3px -2px 15px rgba(0,0,0,0.85);
 }
 
-.plaque::before,
+/* Left lobe removed */
+.plaque::before {
+  display: none;
+}
+
+/* Right lobe — unificado (mismo estilo metálico que el plaque) */
 .plaque::after {
   position: absolute;
   content: '';
-  bottom: -1.7em;
-  width: 3.6em;
-  height: 3.6em;
-  border-radius: 100%;
-  background: color-mix(in srgb, var(--bg-secondary) 80%, transparent);
-  backdrop-filter: blur(4px);
+  bottom: -36px;
+  right: -36px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: conic-gradient(black, #444 10%, black 51%, #555 57%, #222 60%, #555 67%, black 75%);
+  border: 4px solid #000;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5), inset -3px -2px 15px rgba(0,0,0,0.85);
 }
 
-.plaque::before {
-  left: -1.7em;
-  box-shadow:
-    inset 0.1em 0.18em 0.02em -0.17em rgba(255,255,255,0.04),
-    0 0.25em 0.25em -0.15em rgba(0,0,0,0.5);
-}
+/* ============================================================
+   MUSIC CONTROLS PANEL — iPod-style circular controls
+   Classes: .button-controls .btn-overlay .play-btn .skip-left
+            .skip-right .vol-up .vol-down
+   ============================================================ */
 
-.plaque::after {
-  right: -1.7em;
-  box-shadow:
-    inset -0.1em 0.18em 0.02em -0.17em rgba(255,255,255,0.04),
-    0 0.25em 0.25em -0.15em rgba(0,0,0,0.5);
-}
-
-.star-tab {
-  position: absolute;
-  z-index: 6;
-  top: -2.4em;
-  left: -5.4em;
-  width: 10.8em;
-  height: 10.8em;
-  cursor: pointer;
-  margin-left: 50%;
-  border-radius: 100%;
-  clip-path: inset(8.1em 8.1em 11.07em 2.7em);
-  background:
-    radial-gradient(circle, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.55) 100%),
-    var(--bg-primary);
-  box-shadow: 0 0.2em 0.2em -0.15em rgba(0,0,0,0.5);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 0.45em;
-  transition: all 0.2s ease-in-out 0.05s;
-}
-
-.star-tab svg {
+.button-controls {
   position: relative;
-  color: var(--text-secondary);
-  transition: color 0.15s, filter 0.15s;
+  z-index: 9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 250px;
+  height: 250px;
+  background: linear-gradient(180deg, #292929 0%, #1F1F1F 100%);
+  border: 4px solid #0D0D0D;
+  border-radius: 50%;
+  perspective: 120em;
+  flex-shrink: 0;
 }
 
-.star-tab:hover {
-  top: -2.2em;
-  background:
-    radial-gradient(circle, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.4) 100%),
-    var(--bg-elevated);
+.btn-overlay {
+  position: relative;
+  width: 232px;
+  height: 232px;
+  border-radius: 50%;
+  background: linear-gradient(175deg, #1F1F1F 3.94%, #2D2D2D 44.59%, #3D3D3D 81.99%);
+  box-shadow: 0px 4px 7px 1px rgba(255, 255, 255, 0.11) inset;
+  transition: transform 0.1s ease;
 }
 
-.star-tab.on svg {
-  color: var(--accent);
-  filter: drop-shadow(0 0 4px var(--accent));
-}
-
-.star-tab:active { top: -2.5em; }
-
-.scrub-bg {
+.play-btn-shadow {
   position: absolute;
-  z-index: 5;
-  top: -1.2em;
-  left: -4.2em;
-  width: 8.4em;
-  height: 8.4em;
-  margin-left: 50%;
-  border-radius: 100%;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+  background: rgba(0, 0, 0, 0.70);
+  filter: blur(1.5px);
+}
+
+.play-btn {
   cursor: pointer;
-  touch-action: none;
-  clip-path: inset(-0.4em 8.8em 8.2em -0.4em);
-  background: var(--bg-tertiary);
-  box-shadow:
-    inset 0 0.18em 0.25em -0.15em rgba(0,0,0,0.5),
-    0 0.1em 0.03em 0 rgba(255,255,255,0.08);
-}
-
-.scrub-svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  overflow: visible;
-}
-
-.scrub-arc {
-  stroke-opacity: 0.65;
-  transition: stroke-dashoffset 0.25s ease;
-  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 20%, transparent));
-}
-.scrub-arc.no-transition {
-  transition: none;
-}
-
-.scrub-thumb {
-  transition: cx 0.25s ease, cy 0.25s ease;
-  fill: var(--bg-elevated);
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35));
-  cursor: grab;
-  stroke: color-mix(in srgb, var(--accent) 20%, transparent);
-  stroke-width: 2;
-}
-.scrub-thumb:hover {
-  fill: var(--bg-card-hover);
-  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.45));
-  stroke: color-mix(in srgb, var(--accent) 35%, transparent);
-}
-.scrub-thumb.no-transition {
-  transition: none;
-  cursor: grabbing;
-}
-
-.scrub-label {
   position: absolute;
-  top: 35%;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 0.6em;
-  font-weight: 700;
-  color: var(--accent);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.15s;
+  background: linear-gradient(180deg, #292929 0%, #1F1F1F 100%);
+  transition: transform 0.1s ease;
 }
-.scrub-bg.dragging .scrub-label { opacity: 1; }
 
-/* Music hint */
-.music-hint {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-top: var(--space-sm);
-  text-align: center;
-  line-height: 1.5;
+.play-btn:hover {
+  background: linear-gradient(180deg, #333333 0%, #252525 100%);
+}
+
+.play-btn:active {
+  transform: translate(-50%, -50%) scale(0.96);
+}
+
+/* Playing state — subtle glow ring when active */
+.play-btn.playing {
+  box-shadow:
+    0 0 16px 3px rgba(0, 200, 255, 0.30),
+    inset 0 0 8px rgba(0, 200, 255, 0.10);
+}
+
+.play-btn.playing .play-icon img {
+  filter: brightness(1.3) drop-shadow(0 0 4px rgba(0, 200, 255, 0.3));
+}
+
+.play-btn-overlay {
+  position: absolute;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(189deg, #1F1F1F 6.91%, #2D2D2D 50.27%, #393939 83.66%);
+  box-shadow: 0px 1px 2px 0px rgba(255, 255, 255, 0.12) inset;
+}
+
+.play-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.play-icon img {
+  width: 44px;
+  height: auto;
+  display: block;
+}
+
+.skip-left,
+.skip-right,
+.vol-up,
+.vol-down {
+  cursor: pointer;
+  position: absolute;
+  transition: filter 0.15s ease;
+}
+
+.skip-left:hover,
+.skip-right:hover,
+.vol-up:hover,
+.vol-down:hover {
+  filter: brightness(1.4);
+}
+
+.skip-left:active,
+.skip-right:active,
+.vol-up:active,
+.vol-down:active {
+  filter: brightness(0.8);
+}
+
+.skip-left {
+  top: 52%;
+  left: 12%;
+  transform: translate(-50%, -50%);
+}
+
+.skip-right {
+  top: 52%;
+  right: -2%;
+  transform: translate(-50%, -50%);
+}
+
+.vol-up {
+  top: 12%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.vol-down {
+  top: 87%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.skip-left img,
+.skip-right img {
+  width: 36px;
+  height: auto;
+}
+
+.vol-up img {
+  width: 28px;
+  height: auto;
+}
+
+.vol-down img {
+  width: 28px;
+  height: auto;
+}
+
+/* Mobile: bigger controls + plaque */
+@media (max-width: 767px) {
+  .player {
+    font-size: 1.6rem;
+    max-width: 340px;
+    min-height: 280px;
+    margin: 0 auto;
+  }
+  .plaque {
+    width: 230px;
+    height: 230px;
+  }
+  .plaque::after {
+    bottom: -30px;
+    right: -30px;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    background: conic-gradient(black, #444 10%, black 51%, #555 57%, #222 60%, #555 67%, black 75%);
+    border: 3px solid #000;
+    box-shadow: 0 0 12px rgba(0,0,0,0.5), inset -2px -2px 10px rgba(0,0,0,0.85);
+  }
+  .button-controls {
+    width: 210px;
+    height: 210px;
+  }
+  .btn-overlay {
+    width: 194px;
+    height: 194px;
+  }
+  .play-btn {
+    width: 82px;
+    height: 82px;
+  }
+  .play-btn-overlay {
+    width: 70px;
+    height: 70px;
+  }
+  .play-btn-shadow {
+    width: 90px;
+    height: 90px;
+  }
+  .play-icon img { width: 36px; }
+  .small {
+    width: 2.6em;
+    height: 2.6em;
+  }
+  .small.bt-toggle {
+    width: 2.4em;
+    height: 2.4em;
+    right: calc(50% - 129px);
+    bottom: calc(50% - 129px);
+    background: linear-gradient(180deg, #292929 0%, #1F1F1F 100%);
+    border: 2.5px solid #0D0D0D;
+    box-shadow:
+      0 0.22em 0.27em -0.18em rgba(0,0,0,0.45),
+      inset 0 0.08em 0.12em -0.04em rgba(255,255,255,0.12);
+  }
+  .small.bt-toggle svg {
+    width: 26px;
+    height: 26px;
+  }
+  .small.bt-toggle.on {
+    box-shadow:
+      0 0.22em 0.27em -0.18em rgba(0,0,0,0.45),
+      inset 0 0.08em 0.12em -0.04em rgba(255,255,255,0.12);
+  }
+  .small.bt-toggle.on svg {
+    color: rgba(0, 200, 255, 0.9);
+    filter: brightness(1.3) drop-shadow(0 0 5px rgba(0, 200, 255, 0.5));
+  }
+  .skip-left img,
+  .skip-right img { width: 24px; }
+  .vol-up img,
+  .vol-down img { width: 20px; }
+}
+
+/* Small mobile (<400px): tighter fit */
+@media (max-width: 399px) {
+  .player {
+    font-size: 1.75rem;
+    max-width: 260px;
+    min-height: 240px;
+    margin: 0 auto;
+  }
+  .plaque {
+    width: 200px;
+    height: 200px;
+  }
+  .plaque::after {
+    bottom: -26px;
+    right: -26px;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: conic-gradient(black, #444 10%, black 51%, #555 57%, #222 60%, #555 67%, black 75%);
+    border: 2px solid #000;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5), inset -2px -2px 8px rgba(0,0,0,0.85);
+  }
+  .button-controls {
+    width: 178px;
+    height: 178px;
+  }
+  .btn-overlay {
+    width: 164px;
+    height: 164px;
+  }
+  .play-btn {
+    width: 70px;
+    height: 70px;
+  }
+  .play-btn-overlay {
+    width: 60px;
+    height: 60px;
+  }
+  .play-btn-shadow {
+    width: 78px;
+    height: 78px;
+  }
+  .play-icon img { width: 30px; }
+  .small {
+    width: 2.2em;
+    height: 2.2em;
+  }
+  .small.bt-toggle {
+    width: 2em;
+    height: 2em;
+    right: calc(50% - 113px);
+    bottom: calc(50% - 113px);
+    background: linear-gradient(180deg, #292929 0%, #1F1F1F 100%);
+    border: 2px solid #0D0D0D;
+    box-shadow:
+      0 0.22em 0.27em -0.18em rgba(0,0,0,0.45),
+      inset 0 0.08em 0.12em -0.04em rgba(255,255,255,0.12);
+  }
+  .small.bt-toggle svg {
+    width: 22px;
+    height: 22px;
+  }
+  .small.bt-toggle.on {
+    box-shadow:
+      0 0.22em 0.27em -0.18em rgba(0,0,0,0.45),
+      inset 0 0.08em 0.12em -0.04em rgba(255,255,255,0.12);
+  }
+  .small.bt-toggle.on svg {
+    color: rgba(0, 200, 255, 0.9);
+    filter: brightness(1.3) drop-shadow(0 0 4px rgba(0, 200, 255, 0.5));
+  }
 }
 
 /* ===== WEATHER TAB ===== */
@@ -3084,7 +3265,14 @@ input[type="range"]::-moz-range-thumb {
   }
 
   .card {
-    padding: var(--space-lg);
+    padding: var(--space-md) var(--space-lg);
+  }
+  .card-title {
+    margin-bottom: 0;
+  }
+  .music-container {
+    padding: var(--space-xs) 0 0;
+    gap: 0;
   }
 }
 
@@ -3106,14 +3294,12 @@ input[type="range"]::-moz-range-thumb {
   }
 
   .music-container {
-    gap: var(--space-md);
-    padding: var(--space-md) 0;
+    gap: 0;
+    padding: 2px 0 0;
   }
   .player {
     font-size: 1.75rem;
   }
-  .scrub-bg { clip-path: inset(-0.4em 8.8em 8.2em -0.4em); }
-
   .nav-btn {
     font-size: 0.55rem;
   }
