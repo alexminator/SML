@@ -42,6 +42,7 @@ body {
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
   transition: background var(--t-slow), color var(--t-slow);
+  position: relative;
 }
 
 /* Smooth theme transitions on key surface elements */
@@ -77,14 +78,14 @@ body {
               color var(--t-slow) !important;
 }
 
-/* Subtle background texture */
+/* ── Ambient accent glow ── */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse at 20% 50%, color-mix(in srgb, var(--accent) 4%, transparent) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, color-mix(in srgb, var(--accent-secondary) 3%, transparent) 0%, transparent 50%);
+    radial-gradient(ellipse at 15% 50%, color-mix(in srgb, var(--accent) 5%, transparent) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 20%, color-mix(in srgb, var(--accent-secondary) 4%, transparent) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
 }
@@ -319,11 +320,12 @@ input:focus, select:focus {
   text-align: center;
   padding: var(--space-lg) var(--space-md) var(--space-md);
   background: linear-gradient(180deg,
-    color-mix(in srgb, var(--bg-primary) 95%, transparent) 0%,
+    color-mix(in srgb, var(--bg-primary) 92%, transparent) 0%,
+    color-mix(in srgb, var(--bg-primary) 70%, transparent) 50%,
     transparent 100%);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border-light);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
   overflow: visible;
 }
 
@@ -347,18 +349,8 @@ input:focus, select:focus {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: shimmerGlow 4s ease-in-out infinite;
   text-shadow: none;
   -webkit-box-reflect: below 2px linear-gradient(transparent 55%, rgba(0,0,0,0.15));
-}
-
-.glowing span:nth-child(2) { animation-delay: 0.1s; }
-.glowing span:nth-child(3) { animation-delay: 0.2s; }
-
-@keyframes shimmerGlow {
-  0%   { background-position: 0% 50%; filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 30%, transparent)); }
-  50%  { background-position: 100% 50%; filter: drop-shadow(0 0 20px color-mix(in srgb, var(--accent-secondary) 40%, transparent)); }
-  100% { background-position: 0% 50%; filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 30%, transparent)); }
 }
 
 #smlSubtitle {
@@ -384,9 +376,10 @@ input:focus, select:focus {
   z-index: 100;
   height: var(--nav-h);
   background: var(--nav-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border-top: var(--glass-border);
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.2);
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -585,37 +578,57 @@ input:focus, select:focus {
   }
 }
 
-/* ===== GLASS CARDS ===== */
+/* ===== GLASS CARDS (premium glassmorphism) ===== */
 .card {
+  position: relative;
   background: var(--glass-card-bg);
   border: var(--glass-card-border);
   border-radius: var(--radius-glass);
   padding: var(--space-xl);
   margin-bottom: var(--space-lg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: var(--shadow-sm);
-  transition: background var(--t-fast), box-shadow var(--t-fast), border-color var(--t-fast), transform var(--t-spring);
-  perspective: 800px;
-  will-change: transform;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.2),
+    0 8px 32px rgba(0,0,0,0.08),
+    inset 0 1px 0 color-mix(in srgb, white 4%, transparent);
+  transition: background var(--t-normal), box-shadow var(--t-normal), border-color var(--t-normal), transform var(--t-spring);
+  overflow: hidden;
+}
+
+/* ── Clean inner highlight edge (top edge shine) */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, white 8%, transparent), transparent);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 .card:hover {
-  background: color-mix(in srgb, var(--bg-card) 80%, transparent);
-  box-shadow: var(--shadow-lg), 0 4px 24px color-mix(in srgb, var(--accent) 6%, transparent);
+  background: color-mix(in srgb, var(--bg-card) 75%, transparent);
+  box-shadow:
+    0 4px 16px rgba(0,0,0,0.25),
+    0 12px 40px rgba(0,0,0,0.12),
+    0 0 40px color-mix(in srgb, var(--accent) 5%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
   border-color: color-mix(in srgb, var(--border) 60%, transparent);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .card-title {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   margin-bottom: var(--space-md);
   display: flex;
   align-items: center;
   gap: var(--space-sm);
   color: var(--text-primary);
-  letter-spacing: 0.3px;
+  letter-spacing: 0.4px;
 }
 
 .card-title .fas,
@@ -651,7 +664,7 @@ input:focus, select:focus {
   gap: var(--space-sm);
 }
 
-/* Physical push-button with 3D depth */
+/* Power button — metallic ring + inner circle (conic/linear gradient) */
 .power-card {
   display: flex;
   align-items: center;
@@ -659,67 +672,46 @@ input:focus, select:focus {
   width: 82px;
   height: 82px;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 28%,
-    color-mix(in srgb, var(--bg-elevated) 90%, white),
-    var(--bg-card));
-  border: 2px solid color-mix(in srgb, var(--border) 35%, transparent);
+  padding: 6px;
+  background: conic-gradient(black, #444 10%, black 51%, #555 57%, #222 60%, #555 67%, black 75%);
+  border: 4px solid #000;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: all 0.3s ease;
   user-select: none;
-  box-shadow:
-    0 7px 14px rgba(0,0,0,0.4),
-    0 3px 6px rgba(0,0,0,0.25),
-    inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
   -webkit-tap-highlight-color: transparent;
-  position: relative;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
 
-/* Pressed — button sinks in (physical 3D effect) */
 .power-card:active {
-  transform: translateY(4px);
-  box-shadow:
-    0 3px 6px rgba(0,0,0,0.4),
-    0 1px 2px rgba(0,0,0,0.2),
-    inset 0 4px 8px rgba(0,0,0,0.15);
+  transform: scale(0.96);
 }
 
-/* On state — accent glow border + inner radiance animation */
-.power-card.on {
-  border-color: var(--accent);
-  background: radial-gradient(circle at 50% 28%,
-    color-mix(in srgb, var(--accent) 14%, var(--bg-elevated)),
-    color-mix(in srgb, var(--accent) 6%, var(--bg-card)));
-  box-shadow:
-    0 0 22px color-mix(in srgb, var(--accent) 28%, transparent),
-    0 7px 14px rgba(0,0,0,0.4),
-    inset 0 0 18px color-mix(in srgb, var(--accent) 10%, transparent),
-    inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
-  animation: powerCardBreathe 3s ease-in-out infinite;
+/* Inner circle — metallic concave with accent border when ON */
+.power-card-icon {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-image: linear-gradient(210deg, #333 20%, #111);
+  border: 4px solid var(--text-muted);
+  box-shadow: inset -3px -2px 15px rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: var(--text-muted);
+  transition: all 0.3s ease;
 }
 
-@keyframes powerCardBreathe {
-  0%, 100% {
-    box-shadow:
-      0 0 22px color-mix(in srgb, var(--accent) 28%, transparent),
-      0 7px 14px rgba(0,0,0,0.4),
-      inset 0 0 18px color-mix(in srgb, var(--accent) 10%, transparent),
-      inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
-  }
-  50% {
-    box-shadow:
-      0 0 32px color-mix(in srgb, var(--accent) 35%, transparent),
-      0 7px 14px rgba(0,0,0,0.4),
-      inset 0 0 26px color-mix(in srgb, var(--accent) 14%, transparent),
-      inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
-  }
-}
-
+/* ON state — accent border + glow */
 .power-card.on .power-card-icon {
+  border-color: var(--accent);
   color: var(--accent);
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 40%, transparent));
+  box-shadow:
+    inset -3px -2px 15px rgba(0,0,0,0.85),
+    0 0 16px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
-/* Label sits below the button, separate from the clickable area */
+/* Label sits below the button */
 .power-card-label {
   font-size: 0.7rem;
   font-weight: 600;
@@ -733,12 +725,6 @@ input:focus, select:focus {
 .power-card.on + .power-card-label,
 .power-control:has(.power-card.on) .power-card-label {
   color: var(--accent);
-}
-
-.power-card-icon {
-  font-size: 1.7rem;
-  color: var(--text-muted);
-  transition: color var(--t-fast);
 }
 
 /* ===== COLOR PICKER ===== */
@@ -836,7 +822,7 @@ input[type="range"]::-moz-range-thumb {
   transform: scale(0.95);
 }
 
-/* ── Elegant glass hover — lift, glow, and shimmer shine ── */
+/* ── Clean hover — lift and accent glow ── */
 .effect-card:hover {
   transform: translateY(-5px);
   background: color-mix(in srgb, var(--bg-card) 80%, var(--bg-elevated) 20%);
@@ -847,46 +833,22 @@ input[type="range"]::-moz-range-thumb {
     0 0 40px color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
-/* ── Glass shimmer sweep across card on hover ── */
-.effect-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    105deg,
-    transparent 40%,
-    rgba(255, 255, 255, 0.03) 45%,
-    rgba(255, 255, 255, 0.07) 50%,
-    rgba(255, 255, 255, 0.03) 55%,
-    transparent 60%
-  );
-  background-size: 200% 100%;
-  background-position: 100% 0;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
-  border-radius: inherit;
-}
-
-.effect-card:hover::after {
-  opacity: 1;
-  background-position: -100% 0;
-  transition: opacity 0.15s ease, background-position 0.6s ease;
-}
-
 .effect-card.active {
   border-color: var(--accent);
-  box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 25%, transparent),
-              inset 0 0 20px color-mix(in srgb, var(--accent) 5%, transparent);
+  background: color-mix(in srgb, var(--bg-card) 80%, color-mix(in srgb, var(--accent) 5%, transparent));
+  box-shadow:
+    0 0 20px color-mix(in srgb, var(--accent) 25%, transparent),
+    inset 0 0 24px color-mix(in srgb, var(--accent) 6%, transparent);
 }
 
 .effect-card.active:hover {
+  transform: translateY(-5px);
   border-color: var(--accent);
   box-shadow:
     0 12px 36px rgba(0, 0, 0, 0.35),
-    0 0 24px color-mix(in srgb, var(--accent) 35%, transparent),
-    0 0 50px color-mix(in srgb, var(--accent) 15%, transparent),
-    inset 0 0 20px color-mix(in srgb, var(--accent) 8%, transparent);
+    0 0 28px color-mix(in srgb, var(--accent) 40%, transparent),
+    0 0 60px color-mix(in srgb, var(--accent) 15%, transparent),
+    inset 0 0 28px color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .effect-card .effect-icon {
@@ -1720,6 +1682,7 @@ input[type="range"]::-moz-range-thumb {
 .scrub-arc {
   stroke-opacity: 0.65;
   transition: stroke-dashoffset 0.25s ease;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 20%, transparent));
 }
 .scrub-arc.no-transition {
   transition: none;
@@ -1730,10 +1693,13 @@ input[type="range"]::-moz-range-thumb {
   fill: var(--bg-elevated);
   filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35));
   cursor: grab;
+  stroke: color-mix(in srgb, var(--accent) 20%, transparent);
+  stroke-width: 2;
 }
 .scrub-thumb:hover {
   fill: var(--bg-card-hover);
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.45));
+  stroke: color-mix(in srgb, var(--accent) 35%, transparent);
 }
 .scrub-thumb.no-transition {
   transition: none;
@@ -2081,14 +2047,29 @@ input[type="range"]::-moz-range-thumb {
   width: 100%;
   max-width: 400px;
   aspect-ratio: 1;
-  background: color-mix(in srgb, var(--bg-secondary) 80%, transparent);
+  background:
+    radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--accent) 2%, transparent) 0%, transparent 70%),
+    color-mix(in srgb, var(--bg-secondary) 80%, transparent);
   border-radius: var(--radius-lg);
-  border: var(--glass-card-border);
+  border: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow:
+    0 4px 16px rgba(0,0,0,0.15),
+    inset 0 1px 0 color-mix(in srgb, white 4%, transparent);
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+
+.peek-canvas-wrapper:hover {
+  border-color: color-mix(in srgb, var(--accent) 15%, var(--border));
+  box-shadow:
+    0 6px 24px rgba(0,0,0,0.2),
+    0 0 30px color-mix(in srgb, var(--accent) 4%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 5%, transparent);
 }
 
 #peekCanvas {
@@ -2120,7 +2101,11 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .config-card:hover {
-  border-color: color-mix(in srgb, var(--border) 60%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 12%, var(--border) 60%);
+  box-shadow:
+    0 4px 16px rgba(0,0,0,0.2),
+    0 0 24px color-mix(in srgb, var(--accent) 4%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 5%, transparent);
 }
 
 .config-card h3 {
@@ -2705,15 +2690,18 @@ input[type="range"]::-moz-range-thumb {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  background: var(--nav-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: var(--glass-border);
-  border-radius: var(--radius-sm);
-  padding: 10px var(--space-lg);
+  background: color-mix(in srgb, var(--bg-elevated) 85%, transparent);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+  border-radius: var(--radius-md);
+  padding: 12px var(--space-xl);
   font-size: 0.85rem;
-  box-shadow: var(--shadow-lg);
-  animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+  box-shadow:
+    0 4px 16px rgba(0,0,0,0.3),
+    0 12px 40px rgba(0,0,0,0.15),
+    inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
+  animation: toastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), toastOut 0.3s ease 2.7s forwards;
   pointer-events: auto;
   color: var(--text-primary);
   position: relative;
@@ -2726,6 +2714,7 @@ input[type="range"]::-moz-range-thumb {
   font-size: 1.1rem;
   flex-shrink: 0;
   line-height: 1;
+  filter: drop-shadow(0 0 4px currentColor);
 }
 
 .toast .toast-text {
@@ -2737,24 +2726,37 @@ input[type="range"]::-moz-range-thumb {
   position: absolute;
   bottom: 0;
   left: 0;
-  height: 2.5px;
-  background: color-mix(in srgb, var(--accent) 35%, transparent);
+  height: 3px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 20%, transparent), var(--accent));
   animation: toastProgress 2.7s linear forwards;
   border-radius: 0 1px 1px 0;
 }
 
-/* Toast types */
-.toast.success { border-left: 3px solid var(--accent-success); }
-.toast.success .toast-progress { background: var(--accent-success); }
+/* Toast types with subtle tinted background */
+.toast.success {
+  border-left: 3px solid var(--accent-success);
+  background: color-mix(in srgb, var(--accent-success) 6%, var(--bg-elevated)) !important;
+}
+.toast.success .toast-progress { background: linear-gradient(90deg, color-mix(in srgb, var(--accent-success) 20%, transparent), var(--accent-success)); }
 
-.toast.error { border-left: 3px solid var(--accent-danger); }
-.toast.error .toast-progress { background: var(--accent-danger); }
+.toast.error {
+  border-left: 3px solid var(--accent-danger);
+  background: color-mix(in srgb, var(--accent-danger) 6%, var(--bg-elevated)) !important;
+}
+.toast.error .toast-progress { background: linear-gradient(90deg, color-mix(in srgb, var(--accent-danger) 20%, transparent), var(--accent-danger)); }
 
-.toast.warning { border-left: 3px solid var(--accent-warning); }
-.toast.warning .toast-progress { background: var(--accent-warning); }
+.toast.warning {
+  border-left: 3px solid var(--accent-warning);
+  background: color-mix(in srgb, var(--accent-warning) 6%, var(--bg-elevated)) !important;
+}
+.toast.warning .toast-progress { background: linear-gradient(90deg, color-mix(in srgb, var(--accent-warning) 20%, transparent), var(--accent-warning)); }
 
-.toast.info { border-left: 3px solid var(--accent-secondary); }
-.toast.info .toast-progress { background: var(--accent-secondary); }
+.toast.info {
+  border-left: 3px solid var(--accent-secondary);
+  background: color-mix(in srgb, var(--accent-secondary) 6%, var(--bg-elevated)) !important;
+}
+.toast.info .toast-progress { background: linear-gradient(90deg, color-mix(in srgb, var(--accent-secondary) 20%, transparent), var(--accent-secondary)); }
+
 
 @keyframes toastIn {
   from { opacity: 0; transform: translateY(12px) scale(0.96); }
@@ -3153,12 +3155,12 @@ textarea:focus-visible,
 }
 
 #connectionIndicator[style*="var(--accent-success)"]::after {
-  animation: connPulse 2.5s ease-in-out infinite;
+  animation: connPulse 2s ease-in-out infinite;
 }
 
 @keyframes connPulse {
-  0%, 100% { transform: scale(1); opacity: 0.25; }
-  50% { transform: scale(2.2); opacity: 0; }
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(2.5); opacity: 0; }
 }
 
 /* ── Smooth transition skeleton removal ── */

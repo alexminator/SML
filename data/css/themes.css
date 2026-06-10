@@ -71,15 +71,15 @@
 }
 
 /* ===== THEME 1: SML Classic (default) ===== */
-/* Warm gold accent (#fbbf24) + Sky (#38bdf8) on deep navy */
+/* Warm gold accent (#fbbf24) + Sky (#38bdf8) on deep navy with richer saturation */
 :root[data-theme="sml-classic"] {
-  --bg-primary: #080c14;
-  --bg-secondary: #0e1624;
-  --bg-tertiary: #141f34;
-  --bg-card: #1a2740;
-  --bg-card-hover: #223150;
-  --bg-elevated: #1e2d48;
-  --bg-input: #0a1020;
+  --bg-primary: #060b14;
+  --bg-secondary: #0c1425;
+  --bg-tertiary: #121d35;
+  --bg-card: #182640;
+  --bg-card-hover: #1f2f50;
+  --bg-elevated: #1c2d48;
+  --bg-input: #080e1e;
 
   --text-primary: #edf2f7;
   --text-secondary: #a0aec0;
@@ -87,26 +87,34 @@
   --text-inverse: #080c14;
 
   --accent: #fbbf24;
-  --accent-hover: #fcd34d;
+  --accent-hover: #fde68a;
   --accent-secondary: #38bdf8;
   --accent-secondary-hover: #7dd3fc;
   --accent-success: #34d399;
   --accent-warning: #fb923c;
   --accent-danger: #f87171;
 
-  --nav-bg: rgba(8, 12, 20, 0.95);
+  /* Premium gradient stops for animated effects */
+  --accent-gradient-1: #fbbf24;
+  --accent-gradient-2: #f59e0b;
+  --accent-gradient-3: #f97316;
+  --accent-gradient-4: #38bdf8;
+  --accent-gradient-5: #818cf8;
+
+  --nav-bg: rgba(6, 10, 18, 0.97);
   --nav-active: #fbbf24;
-  --nav-inactive: #4a5a6e;
+  --nav-inactive: #3a4a5e;
   --nav-hover: #7a8a9e;
 
-  --status-bar-bg: rgba(6, 8, 14, 0.95);
+  --status-bar-bg: rgba(4, 6, 12, 0.97);
   --status-bar-text: #a0aec0;
 
   --border: #2a3a5a;
   --border-light: #1a2a3a;
+  --border-glow: color-mix(in srgb, var(--accent) 15%, transparent);
 
   --scrollbar-thumb: #2a3a5a;
-  --scrollbar-track: #080c14;
+  --scrollbar-track: #060b14;
 
   --toggle-bg: #2a3a5a;
   --toggle-active: #fbbf24;
@@ -120,20 +128,20 @@
 }
 
 /* ===== THEME 2: WLED Dark ===== */
-/* Blue accent (#60a5fa) + Emerald (#34d399) on GitHub-dark */
+/* Blue accent (#60a5fa) + Emerald (#34d399) on deeper charcoal */
 :root[data-theme="wled-dark"] {
-  --bg-primary: #0a0e14;
-  --bg-secondary: #10161e;
-  --bg-tertiary: #161c26;
-  --bg-card: #1c2332;
-  --bg-card-hover: #242c3e;
-  --bg-elevated: #202838;
-  --bg-input: #0c1018;
+  --bg-primary: #080c14;
+  --bg-secondary: #0e1420;
+  --bg-tertiary: #141c2a;
+  --bg-card: #1a2336;
+  --bg-card-hover: #212c42;
+  --bg-elevated: #1e2840;
+  --bg-input: #0a0e18;
 
   --text-primary: #e6edf3;
   --text-secondary: #8b949e;
-  --text-muted: #586070;
-  --text-inverse: #0a0e14;
+  --text-muted: #4a5268;
+  --text-inverse: #080c14;
 
   --accent: #60a5fa;
   --accent-hover: #93c5fd;
@@ -143,19 +151,26 @@
   --accent-warning: #fbbf24;
   --accent-danger: #f87171;
 
-  --nav-bg: rgba(10, 14, 20, 0.95);
+  --accent-gradient-1: #60a5fa;
+  --accent-gradient-2: #3b82f6;
+  --accent-gradient-3: #2563eb;
+  --accent-gradient-4: #34d399;
+  --accent-gradient-5: #2dd4bf;
+
+  --nav-bg: rgba(8, 12, 20, 0.97);
   --nav-active: #60a5fa;
-  --nav-inactive: #4a5260;
+  --nav-inactive: #3a4258;
   --nav-hover: #7a8290;
 
-  --status-bar-bg: rgba(6, 8, 12, 0.95);
+  --status-bar-bg: rgba(4, 6, 12, 0.97);
   --status-bar-text: #8b949e;
 
   --border: #2a3040;
   --border-light: #1a202e;
+  --border-glow: color-mix(in srgb, var(--accent) 15%, transparent);
 
   --scrollbar-thumb: #2a3040;
-  --scrollbar-track: #0a0e14;
+  --scrollbar-track: #080c14;
 
   --toggle-bg: #2a3040;
   --toggle-active: #60a5fa;
@@ -170,19 +185,19 @@
 
 /* ===== THEME 3: Midnight AMOLED ===== */
 /* Purple accent (#a78bfa) + Teal (#2dd4bf) on pure black */
-/* Saves battery on OLED screens */
+/* Saves battery on OLED screens — deeper, more saturated */
 :root[data-theme="midnight-amoled"] {
   --bg-primary: #000000;
-  --bg-secondary: #07070a;
-  --bg-tertiary: #0e0e14;
-  --bg-card: #12121e;
-  --bg-card-hover: #1a1a2a;
-  --bg-elevated: #1a1a2a;
+  --bg-secondary: #050508;
+  --bg-tertiary: #0a0a12;
+  --bg-card: #0f0f1e;
+  --bg-card-hover: #161628;
+  --bg-elevated: #14142a;
   --bg-input: #000000;
 
   --text-primary: #f5f5f5;
-  --text-secondary: #9ca3af;
-  --text-muted: #52525b;
+  --text-secondary: #a0a0b0;
+  --text-muted: #4a4a5a;
   --text-inverse: #000000;
 
   --accent: #a78bfa;
@@ -193,16 +208,23 @@
   --accent-warning: #fb923c;
   --accent-danger: #f87171;
 
-  --nav-bg: rgba(0, 0, 0, 0.95);
+  --accent-gradient-1: #a78bfa;
+  --accent-gradient-2: #8b5cf6;
+  --accent-gradient-3: #7c3aed;
+  --accent-gradient-4: #2dd4bf;
+  --accent-gradient-5: #818cf8;
+
+  --nav-bg: rgba(0, 0, 0, 0.97);
   --nav-active: #a78bfa;
-  --nav-inactive: #3f3f46;
+  --nav-inactive: #3a3a48;
   --nav-hover: #63636e;
 
-  --status-bar-bg: rgba(0, 0, 0, 0.95);
-  --status-bar-text: #9ca3af;
+  --status-bar-bg: rgba(0, 0, 0, 0.97);
+  --status-bar-text: #a0a0b0;
 
   --border: #1a1a2a;
   --border-light: #0e0e18;
+  --border-glow: color-mix(in srgb, var(--accent) 15%, transparent);
 
   --scrollbar-thumb: #1a1a2a;
   --scrollbar-track: #000000;
