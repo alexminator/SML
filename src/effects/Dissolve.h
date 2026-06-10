@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // DissolveEffect — WLED mode_dissolve (port completo)
@@ -74,10 +75,11 @@ public:
                         if (_pixels[i].color == secondaryColor) {
                             // Color: aleatorio o secuencial
                             if (params.check1) {
-                                _pixels[i].color = CHSV(random8(), 255, stripLed.brightness);
+                                uint8_t hue = random8();
+                                _pixels[i].color = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue, stripLed.brightness, LINEARBLEND);
                             } else {
                                 uint8_t hue = uint8_t(i * (256 / numLeds) + (millis() >> 10));
-                                _pixels[i].color = CHSV(hue, 200, stripLed.brightness);
+                                _pixels[i].color = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue, stripLed.brightness, LINEARBLEND);
                             }
                             break;
                         }

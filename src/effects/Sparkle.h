@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // SparkleEffect — WLED mode_sparkle (port completo)
@@ -36,7 +37,7 @@ public:
         // ── Background: si no overlay, pintar tenue ──────────────────────────
         if (!params.check2) {
             for (unsigned i = 0; i < numLeds; i++) {
-                leds[i] = CHSV(0, 0, stripLed.brightness >> 3); // muy tenue
+                leds[i] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), 0, stripLed.brightness >> 3, LINEARBLEND);
             }
         }
 
@@ -51,7 +52,7 @@ public:
         }
 
         // ── Sparkle ──────────────────────────────────────────────────────────
-        leds[_sparkleIndex] = CHSV(0, 0, stripLed.brightness); // blanco brillo
+        leds[_sparkleIndex] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), 0, stripLed.brightness, LINEARBLEND);
 
         FastLED.show();
     }

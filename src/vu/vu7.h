@@ -2,6 +2,7 @@
 #include "../effects/Effect.h"
 #include "../state/AppState.h"
 #include "VUEffect.h"
+#include "../effects/PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // GravimeterVU — Medidor de gravedad con el beat
@@ -65,10 +66,11 @@ public:
             // Draw ball with trail
             uint8_t pos = _ballPos[b];
             uint8_t hue = (b * 64) % 255;
-            leds[pos] = CHSV(hue, 255, 255);
+            CRGBPalette16 pal = PaletteManager::getPalette(_paletteIndex);
+            leds[pos] = ColorFromPalette(pal, hue, 255, LINEARBLEND);
 
-            if (pos > 0) leds[pos - 1] += CHSV(hue, 255, 128);
-            if (pos > 1) leds[pos - 2] += CHSV(hue, 255, 64);
+            if (pos > 0) leds[pos - 1] += ColorFromPalette(pal, hue, 128, LINEARBLEND);
+            if (pos > 1) leds[pos - 2] += ColorFromPalette(pal, hue, 64, LINEARBLEND);
         }
 
         dropPeak();

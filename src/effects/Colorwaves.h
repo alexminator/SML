@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // ColorwavesEffect — WLED mode_colorwaves (port)
@@ -60,7 +61,7 @@ public:
             uint8_t bri8 = ((uint32_t)bri16 * brightdepth) / 65536;
             bri8 += (255 - brightdepth);
 
-            leds[i] = CHSV(hue8, 255, scale8(bri8, stripLed.brightness));
+            leds[i] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue8, scale8(bri8, stripLed.brightness), LINEARBLEND);
         }
 
         FastLED.show();

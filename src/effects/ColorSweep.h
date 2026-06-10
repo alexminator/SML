@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // ColorSweepEffect — WLED color_sweep adaptado para SML
@@ -58,14 +59,14 @@ public:
                 unsigned distToTip = prog - i;
                 bright = scale8(bright, map(distToTip, 0, gradient, 255, 20));
             }
-            CRGB color = CHSV(hue + i * 6, 255, bright);
+            CRGB color = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue + i * 6, bright, LINEARBLEND);
             leds[i] = color;
             leds[numLeds - 1 - i] = color;
         }
 
         // Center LED (odd length)
         if (prog == halfLen && (numLeds & 1)) {
-            leds[halfLen] = CHSV(hue + halfLen * 6, 255, stripLed.brightness);
+            leds[halfLen] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue + halfLen * 6, stripLed.brightness, LINEARBLEND);
         }
 
         FastLED.show();

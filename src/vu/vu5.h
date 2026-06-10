@@ -2,6 +2,7 @@
 #include "../effects/Effect.h"
 #include "../state/AppState.h"
 #include "VUEffect.h"
+#include "../effects/PaletteManager.h"
 
 // VU: Hue cycling, three bars (shatter, mono)
 class ThreebarsVUEffect : public VUEffect {
@@ -16,7 +17,7 @@ public:
         static int last_intensity = 0;
         static int intensity_max = 0;
         static int origin_at_flip = 0;
-        static CHSV draw[DRAW_MAX];
+        static CRGB draw[DRAW_MAX];
         static bool growing = false;
         static bool fall_from_left = true;
 
@@ -59,9 +60,9 @@ public:
                 (min_lit < max_lit && min_lit < i && i < max_lit)
                 || (min_lit > max_lit && (i > min_lit || i < max_lit))
             ) {
-                draw[i] = CHSV(scroll_color, 255, 255);
+                draw[i] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), scroll_color, 255, LINEARBLEND);
             } else {
-                draw[i] = CHSV(scroll_color, 0, 0);
+                draw[i] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), scroll_color, 0, LINEARBLEND);
             }
         }
 

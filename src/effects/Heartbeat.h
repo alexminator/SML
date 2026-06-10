@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Heartbeat — Latido cardíaco pulsante
@@ -50,18 +51,13 @@ public:
         }
 
         brightness = constrain(brightness, 0, 255);
-        CRGB color = CHSV(0, 0, brightness);  // White-to-red pulse
+        CRGBPalette16 pal = PaletteManager::getPalette(_paletteIndex);
+        CRGB color = ColorFromPalette(pal, 0, brightness, LINEARBLEND);
         fill_solid(leds, numLeds, color);
-
-        // Red tint on pulse
-        if (brightness > 50) {
-            CRGB heartColor = CHSV(0, 255, brightness);
-            fill_solid(leds, numLeds, heartColor);
-        }
 
         FastLED.show();
     }
 };
 
 const char HeartbeatEffect::_meta[] =
-    "Heartbeat@BPM;;;;sx=128,ix=128";
+    "Heartbeat@BPM;;;;sx=128,ix=128,pa=19";

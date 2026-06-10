@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // DualScanEffect — WLED mode_dual_scan (port completo)
@@ -58,13 +59,13 @@ public:
             unsigned i2 = numLeds - 1 - j;
             // Color secundario (complementario)
             uint8_t hue2 = uint8_t((millis() >> 9) + 128);
-            leds[i2] = CHSV(hue2, 255, stripLed.brightness);
+            leds[i2] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue2, stripLed.brightness, LINEARBLEND);
         }
 
         // ── Primer punto ────────────────────────────────────────────────────
         for (int j = led_offset; j < led_offset + size && j < (int)numLeds; j++) {
             uint8_t hue = uint8_t(millis() >> 9);
-            leds[j] = CHSV(hue, 255, stripLed.brightness);
+            leds[j] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue, stripLed.brightness, LINEARBLEND);
         }
 
         FastLED.show();

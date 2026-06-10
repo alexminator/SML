@@ -2,6 +2,7 @@
 #include "../effects/Effect.h"
 #include "../state/AppState.h"
 #include "VUEffect.h"
+#include "../effects/PaletteManager.h"
 
 // VU: Ripple (mono) with or without background
 class RippleVUEffect : public VUEffect {
@@ -39,7 +40,7 @@ private:
 
         if (show_background) {
             for (int i = 0; i < N_PIXELS; i++) {
-                leds[i] = CHSV(bgcol, 255, sampleavg * 2);
+                leds[i] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), bgcol, sampleavg * 2, LINEARBLEND);
             }
         } else {
             fadeToBlackBy(leds, N_PIXELS, 64);
@@ -54,7 +55,7 @@ private:
                 break;
 
             case 0:
-                leds[center] = CHSV(rippleHue, 255, 255);
+                leds[center] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), rippleHue, 255, LINEARBLEND);
                 rippleStep++;
                 break;
 
@@ -62,8 +63,8 @@ private:
                 break;
 
             default:
-                leds[(center + rippleStep + N_PIXELS) % N_PIXELS] += CHSV(rippleHue, 255, 255 / rippleStep * 2);
-                leds[(center - rippleStep + N_PIXELS) % N_PIXELS] += CHSV(rippleHue, 255, 255 / rippleStep * 2);
+                leds[(center + rippleStep + N_PIXELS) % N_PIXELS] += ColorFromPalette(PaletteManager::getPalette(_paletteIndex), rippleHue, 255 / rippleStep * 2, LINEARBLEND);
+                leds[(center - rippleStep + N_PIXELS) % N_PIXELS] += ColorFromPalette(PaletteManager::getPalette(_paletteIndex), rippleHue, 255 / rippleStep * 2, LINEARBLEND);
                 rippleStep++;
                 break;
         }

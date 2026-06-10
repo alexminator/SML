@@ -5,6 +5,7 @@
 #include "state/AppState.h"
 #include "data.h"
 #include "effects/EffectRegistry.h"
+#include "effects/PaletteManager.h"
 
 #include "config/debug_config.h"
 
@@ -368,6 +369,32 @@ void initWebServer()
       }
       AsyncResponseStream *response = request->beginResponseStream("application/json");
       serializeJson(fxJson, *response);
+      request->send(response);
+    });
+
+    // Endpoint: lista de paletas con nombres y colores representativos
+    server.on("/palettes", HTTP_GET, [](AsyncWebServerRequest *request) {
+      JsonDocument pDoc;
+      uint8_t cnt = PaletteManager::count();
+      // Nombres
+      JsonArray names = pDoc["names"].to<JsonArray>();
+      for (uint8_t i = 0; i < cnt; i++) {
+        names.add(PaletteManager::getName(i));
+      }
+      // Swatches (6 colores representativos por paleta)
+      CRGB swatch[6];
+      JsonArray allSwatches = pDoc["swatches"].to<JsonArray>();
+      for (uint8_t i = 0; i < cnt; i++) {
+        PaletteManager::getSwatch(i, swatch, 6);
+        JsonArray sw = allSwatches.add().to<JsonArray>();
+        for (uint8_t j = 0; j < 6; j++) {
+          sw.add(swatch[j].r);
+          sw.add(swatch[j].g);
+          sw.add(swatch[j].b);
+        }
+      }
+      AsyncResponseStream *response = request->beginResponseStream("application/json");
+      serializeJson(pDoc, *response);
       request->send(response);
     });
 

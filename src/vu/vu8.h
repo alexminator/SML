@@ -4,10 +4,11 @@
 #include "VUEffect.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
-// NoisemeterVU — Medidor de ruido estilizado
+// NoisemeterVU — Medidor de ruido estilizado (colores fijos)
 // ──────────────────────────────────────────────────────────────────────────────
-// VU meter clásico con colores dinámicos: verde (bajo), amarillo (medio),
+// VU meter clásico con colores fijos: verde (bajo), amarillo (medio),
 // rojo (alto). Con pico (peak) flotante.
+// ⚠ Colores SEMÁNTICOS — no usa paletas (fijo)
 // Params:
 //   speed     → tasa de decaimiento del pico
 //   intensity → sensibilidad
@@ -29,17 +30,17 @@ public:
 
         fill_solid(leds, numLeds, CRGB::Black);
 
-        // Draw bars with color gradient: green → yellow → red
+        // Draw bars with FIXED color gradient: green → yellow → red
         uint8_t greenZone  = numLeds * 2 / 3;
         uint8_t yellowZone = numLeds * 5 / 6;
 
         for (uint16_t i = 0; i <= height; i++) {
             if (i < greenZone) {
-                leds[i] = CHSV(96, 255, 255);    // Green
+                leds[i] = CHSV(96, 255, 255);    // green (fijo)
             } else if (i < yellowZone) {
-                leds[i] = CHSV(32, 255, 255);    // Yellow
+                leds[i] = CHSV(32, 255, 255);    // yellow (fijo)
             } else {
-                leds[i] = CHSV(0, 255, 255);     // Red
+                leds[i] = CHSV(0, 255, 255);     // red (fijo)
             }
         }
 

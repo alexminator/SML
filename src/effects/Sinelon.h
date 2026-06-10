@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // SinelonEffect — WLED Sinelon adapted for SML
@@ -32,7 +33,7 @@ public:
         fadeToBlackBy(leds, numLeds, fade);
 
         unsigned pos = beatsin16(params.speed, 0, numLeds - 1);
-        leds[pos] = CHSV(_hue, 255, stripLed.brightness);
+        leds[pos] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), _hue, stripLed.brightness, LINEARBLEND);
 
         // Advance hue slowly for color cycling
         EVERY_N_MILLISECONDS(20) {

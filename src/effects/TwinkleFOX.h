@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // TwinkleFOXEffect — WLED mode_twinklefox (port)
@@ -79,7 +80,7 @@ public:
 
             if (bright > 0) {
                 uint8_t bri = scale8(bright, stripLed.brightness);
-                leds[i] = CHSV(hue, 200, bri);
+                leds[i] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue, bri, LINEARBLEND);
 
                 // Simulate incandescent cooling toward red as they dim
                 if (params.check1 && fastcycle8 >= 128) {

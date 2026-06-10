@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // RunningLightsEffect — WLED mode_running_lights (port completo)
@@ -46,7 +47,7 @@ public:
             CRGB colorBase = CRGB::Black;
             // Color palette = hue que evoluciona
             uint8_t hue = uint8_t((millis() >> 9) + i * 8);
-            CRGB colorPal = CHSV(hue, 200, stripLed.brightness);
+            CRGB colorPal = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue, stripLed.brightness, LINEARBLEND);
 
             // Blend según seno
             leds[i] = blend(colorBase, colorPal, s);

@@ -161,6 +161,7 @@ void saveEffectParams() {
         e["check1"]    = fx->getCheck1();
         e["check2"]    = fx->getCheck2();
         e["check3"]    = fx->getCheck3();
+        e["palette"]   = fx->getPaletteIndex();
     }
     File f = LittleFS.open("/params.json", "w");
     if (f) {
@@ -196,6 +197,7 @@ void loadEffectParams() {
         if (!e["check1"].isNull()) fx->setCheck1(e["check1"].as<int>() != 0);
         if (!e["check2"].isNull()) fx->setCheck2(e["check2"].as<int>() != 0);
         if (!e["check3"].isNull()) fx->setCheck3(e["check3"].as<int>() != 0);
+        if (!e["palette"].isNull()) fx->setPaletteIndex(e["palette"].as<uint8_t>());
     }
     f.close();
 }

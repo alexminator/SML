@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // PacificaEffect — WLED mode_pacifica (port)
@@ -14,7 +15,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 // Forward declare helper
-static CRGB pacifica_one_layer(uint16_t i, uint8_t cistart, uint16_t wavescale, uint8_t bri, uint16_t ioff, uint8_t intensity);
+static CRGB pacifica_one_layer(uint16_t i, uint8_t cistart, uint16_t wavescale, uint8_t bri, uint16_t ioff, uint8_t intensity, const CRGBPalette16& pal);
 
 class PacificaEffect : public Effect {
 private:
@@ -54,17 +55,19 @@ public:
         uint8_t basethreshold = beatsin8(9, 55, 65);
         uint8_t wave = beat8(7);
 
+        const CRGBPalette16& pal = PaletteManager::getPalette(_paletteIndex);
+
         for (unsigned i = 0; i < numLeds; i++) {
             CRGB c = CRGB(2, 6, 10);
 
             c += pacifica_one_layer(i, _sCIStart1 >> 8, beatsin16(3, 11 * 256, 14 * 256),
-                                    beatsin8(10, 70, 130), 0 - beat16(301), params.intensity);
+                                    beatsin8(10, 70, 130), 0 - beat16(301), params.intensity, pal);
             c += pacifica_one_layer(i, _sCIStart2 >> 8, beatsin16(4, 6 * 256, 9 * 256),
-                                    beatsin8(17, 40, 80), beat16(401), params.intensity);
+                                    beatsin8(17, 40, 80), beat16(401), params.intensity, pal);
             c += pacifica_one_layer(i, _sCIStart3 >> 8, 6 * 256,
-                                    beatsin8(9, 10, 38), 0 - beat16(503), params.intensity);
+                                    beatsin8(9, 10, 38), 0 - beat16(503), params.intensity, pal);
             c += pacifica_one_layer(i, _sCIStart4 >> 8, 5 * 256,
-                                    beatsin8(8, 10, 28), beat16(601), params.intensity);
+                                    beatsin8(8, 10, 28), beat16(601), params.intensity, pal);
 
             // White highlights donde las capas coinciden
             unsigned threshold = scale8(sin8(wave), 20) + basethreshold;
@@ -92,7 +95,8 @@ public:
 
 // ── Helper ───────────────────────────────────────────────────────────────────
 static CRGB pacifica_one_layer(uint16_t i, uint8_t cistart, uint16_t wavescale,
-                                uint8_t bri, uint16_t ioff, uint8_t intensity) {
+                                uint8_t bri, uint16_t ioff, uint8_t intensity,
+                                const CRGBPalette16& pal) {
     unsigned ci = cistart;
     unsigned waveangle = ioff;
     unsigned wavescale_half = (wavescale >> 1) + 20;
@@ -104,10 +108,9 @@ static CRGB pacifica_one_layer(uint16_t i, uint8_t cistart, uint16_t wavescale,
     unsigned sindex16 = sin16(ci) + 32768;
     unsigned sindex8 = scale16(sindex16, 240);
 
-    // Mapear a tonos azul/verde/cian
-    uint8_t hue = 110 + (sindex8 >> 2);  // ~110-170: cyan/azul
-    uint8_t sat = 180 + (sindex8 >> 4);  // 180-255
-    return CHSV(hue, sat, bri);
+    // Mapear a palette: usar sindex8 como hue index en la paleta
+    uint8_t hue = 110 + (sindex8 >> 2);  // ~110-170
+    return ColorFromPalette(pal, hue, bri, LINEARBLEND);
 }
 
 const char PacificaEffect::_meta[] =

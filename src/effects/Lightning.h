@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // LightningEffect — WLED mode_lightning (port)
@@ -54,7 +55,7 @@ public:
             // Leader flash (dim)
             uint8_t bri = 52;
             for (unsigned i = _ledStart; i < _ledStart + _ledLen && i < numLeds; i++) {
-                leds[i] = CHSV(32, 0, scale8(bri, stripLed.brightness)); // white-ish
+                leds[i] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), 32, scale8(bri, stripLed.brightness), LINEARBLEND);
             }
             _delay = 200;
             _lastFlash = millis();
@@ -68,7 +69,7 @@ public:
                     uint8_t bri = 255 / random8(1, 3);
                     for (unsigned i = _ledStart; i < _ledStart + _ledLen && i < numLeds; i++) {
                         uint8_t hue = (i * 255 / numLeds) + (millis() >> 4);
-                        leds[i] = CHSV(hue, 200, scale8(bri, stripLed.brightness));
+                        leds[i] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue, scale8(bri, stripLed.brightness), LINEARBLEND);
                     }
                     _delay = 50 + random8(100);
                 } else {

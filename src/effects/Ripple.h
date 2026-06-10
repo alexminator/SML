@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // RippleEffect — WLED mode_ripple + ripple_base (port completo)
@@ -46,7 +47,7 @@ private:
                 // ── Propagación ─────────────────────────────────────────────
                 unsigned decay = (params.speed >> 4) + 1;   // frames between steps
                 uint16_t origin = _ripples[i].pos;
-                CRGB col = CHSV(_ripples[i].color, 255, 255);
+                CRGB col = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), _ripples[i].color, 255, LINEARBLEND);
 
                 // propagation = ((state/decay - 1) * (speed + 1)) / 256
                 // propI = integer pixel offset, propF = fractional (for sub-pixel smoothing)

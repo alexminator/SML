@@ -40,9 +40,10 @@ struct EffectParams {
  */
 class Effect {
 protected:
-    EffectParams params;  // Effect parameters
-    CRGB* leds;           // Pointer to LED array
-    uint16_t numLeds;     // Number of LEDs
+    EffectParams params;      // Effect parameters
+    uint8_t _paletteIndex;    // Palette index (0 = Rainbow default)
+    CRGB* leds;               // Pointer to LED array
+    uint16_t numLeds;         // Number of LEDs
 
 public:
     /**
@@ -62,6 +63,8 @@ public:
         params.check1 = false;
         params.check2 = false;
         params.check3 = false;
+
+        _paletteIndex = 0;  // Default: Rainbow
     }
 
     /**
@@ -108,6 +111,7 @@ public:
         params.check1    = false;
         params.check2    = false;
         params.check3    = false;
+        _paletteIndex    = 0;
 
         if (!metaStr) return;
 
@@ -130,6 +134,7 @@ public:
             else if (strncmp(defs, "m1=", 3) == 0) { params.check1    = atoi(defs + 3) != 0; }
             else if (strncmp(defs, "m2=", 3) == 0) { params.check2    = atoi(defs + 3) != 0; }
             else if (strncmp(defs, "m3=", 3) == 0) { params.check3    = atoi(defs + 3) != 0; }
+            else if (strncmp(defs, "pa=", 3) == 0) { _paletteIndex = (uint8_t)atoi(defs + 3); }
 
             // Advance past the value (until next comma or whitespace)
             while (*defs && *defs != ',' && *defs != ' ') defs++;
@@ -266,5 +271,23 @@ public:
      */
     bool getCheck3() const {
         return params.check3;
+    }
+
+    // ========== Palette Support ==========
+
+    /**
+     * Get current palette index
+     * @return Palette index (0 = Rainbow default)
+     */
+    uint8_t getPaletteIndex() const {
+        return _paletteIndex;
+    }
+
+    /**
+     * Set palette index
+     * @param index Palette index (0 to PALETTE_COUNT-1)
+     */
+    void setPaletteIndex(uint8_t index) {
+        _paletteIndex = index;
     }
 };

@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Candle — Llama de vela realista
@@ -44,14 +45,14 @@ public:
             }
         }
 
-        // Map heat to warm palette: black → red → orange → yellow → white
+        // Map heat to palette colors
         for (uint16_t i = 0; i < numLeds; i++) {
             uint8_t heat = _heat[i];
             uint8_t colorindex = scale8(heat, 240);
 
             CRGB color = ColorFromPalette(
-                HeatColors_p,
-                colorindex
+                PaletteManager::getPalette(_paletteIndex),
+                colorindex, 255
             );
             leds[i] = color;
         }
@@ -61,4 +62,4 @@ public:
 };
 
 const char CandleEffect::_meta[] =
-    "Candle@Flicker,,,,Multi;;;;sx=96,ix=224,c1=0,m1=0";
+    "Candle@Flicker,,,,Multi;;;;sx=96,ix=224,c1=0,m1=0,pa=23";

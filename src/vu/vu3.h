@@ -2,6 +2,7 @@
 #include "../effects/Effect.h"
 #include "../state/AppState.h"
 #include "VUEffect.h"
+#include "../effects/PaletteManager.h"
 
 // VU: Rainbow from bottom or middle with hue cycling
 class RainbowHueVUEffect : public VUEffect {
@@ -28,25 +29,26 @@ public:
                     vuleds[N_PIXELS_HALF - i - 1] = CRGB::Black;
                     vuleds[N_PIXELS_HALF + i] = CRGB::Black;
                 } else {
-                    vuleds[N_PIXELS_HALF - i - 1] = CHSV(hueOffset + (10 * i), 255, 255);
-                    vuleds[N_PIXELS_HALF + i] = CHSV(hueOffset + (10 * i), 255, 255);
+                    uint8_t hueIdx = hueOffset + (10 * i);
+                    vuleds[N_PIXELS_HALF - i - 1] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hueIdx, 255, LINEARBLEND);
+                    vuleds[N_PIXELS_HALF + i] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hueIdx, 255, LINEARBLEND);
                 }
             }
 
             if (_peak > 0 && _peak <= N_PIXELS_HALF - 1) {
-                vuleds[N_PIXELS_HALF - _peak - 1] = CHSV(hueOffset, 255, 255);
-                vuleds[N_PIXELS_HALF + _peak] = CHSV(hueOffset, 255, 255);
+                vuleds[N_PIXELS_HALF - _peak - 1] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hueOffset, 255, LINEARBLEND);
+                vuleds[N_PIXELS_HALF + _peak] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hueOffset, 255, LINEARBLEND);
             }
         } else {
             for (uint8_t i = 0; i < N_PIXELS; i++) {
                 if (i >= height) {
                     vuleds[i] = CRGB::Black;
                 } else {
-                    vuleds[i] = CHSV(hueOffset + (10 * i), 255, 255);
+                    vuleds[i] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hueOffset + (10 * i), 255, LINEARBLEND);
                 }
             }
             if (_peak > 0 && _peak <= N_PIXELS - 1)
-                vuleds[_peak] = CHSV(hueOffset, 255, 255);
+                vuleds[_peak] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hueOffset, 255, LINEARBLEND);
         }
 
         dropPeak();

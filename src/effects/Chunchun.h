@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Chunchun — Pájaros de fuego (WLED Chunchun)
@@ -36,7 +37,7 @@ public:
             bird = constrain(bird, 0U, numLeds - 1);
 
             leds[bird] += ColorFromPalette(
-                RainbowColors_p,
+                PaletteManager::getPalette(_paletteIndex),
                 (i * 255) / numBirds,
                 255,
                 LINEARBLEND

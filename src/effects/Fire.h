@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // FireEffect — WLED Fire 2012 algorithm adapted for SML
@@ -78,8 +79,8 @@ public:
         for (unsigned j = 0; j < numLeds; j++) {
             byte colorindex = scale8(_heat[j], 240);
             CRGB color = ColorFromPalette(
-                CRGBPalette16(CRGB::Black, CRGB::Red, CRGB::Yellow, CRGB::White),
-                colorindex
+                PaletteManager::getPalette(_paletteIndex),
+                colorindex, 255
             );
             unsigned p = reverse ? (numLeds - 1 - j) : j;
             leds[p] = color;
@@ -92,4 +93,4 @@ public:
 // Metadata: "Name@labels;...;...;...;defaults"
 // Labels: speed, intensity, custom1, custom2, custom3, (reserved), check1, check2, check3
 const char FireEffect::_meta[] =
-    "Fire@Cooling,Sparking,,,Boost,,Reverse,,;;;;sx=64,ix=160,c3=16,m1=0";
+    "Fire@Cooling,Sparking,,,Boost,,Reverse,,;;;;sx=64,ix=160,c3=16,m1=0,pa=18";

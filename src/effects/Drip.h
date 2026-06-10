@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Drip — Goteo hipnótico
@@ -70,7 +71,7 @@ public:
                 }
             }
             if (_trail[i] > 0) {
-                leds[i] = CHSV(160, 200, _trail[i]);  // Blue-ish water
+                leds[i] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), 160, _trail[i], LINEARBLEND);
             } else {
                 leds[i] = CRGB::Black;
             }
@@ -79,8 +80,9 @@ public:
         // Draw splash
         if (_splash > 0) {
             uint8_t splashIntensity = (_splash < 5) ? map(_splash, 1, 5, 255, 100) : map(_splash, 5, 10, 100, 0);
-            leds[0] = CHSV(160, 200, splashIntensity);
-            if (numLeds > 1) leds[1] = CHSV(160, 200, splashIntensity / 2);
+            CRGBPalette16 pal = PaletteManager::getPalette(_paletteIndex);
+            leds[0] = ColorFromPalette(pal, 160, splashIntensity, LINEARBLEND);
+            if (numLeds > 1) leds[1] = ColorFromPalette(pal, 160, splashIntensity / 2, LINEARBLEND);
         }
 
         FastLED.show();
@@ -88,4 +90,4 @@ public:
 };
 
 const char DripEffect::_meta[] =
-    "Drip@Speed,Size;;;;sx=128,ix=128";
+    "Drip@Speed,Size;;;;sx=128,ix=128,pa=22";

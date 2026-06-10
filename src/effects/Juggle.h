@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // JuggleEffect — WLED Juggle adapted for SML
@@ -43,7 +44,7 @@ public:
         byte dothue = 0;
         for (int i = 0; i < numDots; i++) {
             unsigned pos = beatsin16(bpm, 0, numLeds - 1, 0, i * phaseStep);
-            leds[pos] = CHSV(dothue, 220, stripLed.brightness);
+            leds[pos] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), dothue, stripLed.brightness, LINEARBLEND);
             dothue += 32;
         }
 

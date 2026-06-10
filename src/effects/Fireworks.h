@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // FireworksEffect — WLED mode_fireworks (port)
@@ -60,7 +61,7 @@ public:
             if (random8(129 - (params.intensity >> 1)) == 0) {
                 uint16_t index = random16(numLeds);
                 uint8_t hue = random8();
-                leds[index] = CHSV(hue, 255, stripLed.brightness);
+                leds[index] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue, stripLed.brightness, LINEARBLEND);
                 _sparkB = _sparkA;
                 _sparkA = index;
             }

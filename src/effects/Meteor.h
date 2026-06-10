@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // MeteorEffect — WLED mode_meteor (port completo)
@@ -57,11 +58,11 @@ public:
                         _trail[i] = constrain(change, 0, maxBright);
                     }
                     uint8_t hue = uint8_t((i * 240 / numLeds) + (millis() >> 10));
-                    leds[i] = CHSV(hue, 255, scale8(stripLed.brightness, _trail[i]));
+                    leds[i] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue, scale8(stripLed.brightness, _trail[i]), LINEARBLEND);
                 } else {
                     // Classic trail: scale random
                     _trail[i] = scale8(_trail[i], 128 + random8(127));
-                    leds[i] = CHSV(64, 100, scale8(stripLed.brightness, _trail[i]));
+                    leds[i] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), 64, scale8(stripLed.brightness, _trail[i]), LINEARBLEND);
                 }
             }
         }
@@ -71,9 +72,9 @@ public:
             int pos = (meteorstart + j) % numLeds;
             if (params.check3) {
                 uint8_t hue = uint8_t((pos * 240 / numLeds) + (millis() >> 10));
-                leds[pos] = CHSV(hue, 255, stripLed.brightness);
+                leds[pos] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue, stripLed.brightness, LINEARBLEND);
             } else {
-                leds[pos] = CHSV(64, 200, stripLed.brightness);
+                leds[pos] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), 64, stripLed.brightness, LINEARBLEND);
             }
             _trail[pos] = maxBright; // Reset trail at meteor head
         }

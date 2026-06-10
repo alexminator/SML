@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 #include <math.h>   // for sqrtf
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -85,7 +86,7 @@ public:
                 unsigned ledIndex = (unsigned)_kernels[i].pos;
                 if (ledIndex < numLeds) {
                     uint8_t hue = _kernels[i].colIndex;
-                    leds[ledIndex] = CHSV(hue, 255, stripLed.brightness);
+                    leds[ledIndex] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue, stripLed.brightness, LINEARBLEND);
                 }
             }
         }

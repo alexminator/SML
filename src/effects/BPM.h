@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // BPMEffect — WLED mode_bpm (port)
@@ -34,7 +35,7 @@ public:
             uint8_t hue = stp + (i * 2);
             int16_t bri = (int16_t)beat - (int16_t)stp + (int16_t)(i * 10);
             bri = constrain(bri, 0, 255);
-            leds[i] = CHSV(hue, 255, scale8((uint8_t)bri, stripLed.brightness));
+            leds[i] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue, scale8((uint8_t)bri, stripLed.brightness), LINEARBLEND);
         }
 
         FastLED.show();

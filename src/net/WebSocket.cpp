@@ -137,6 +137,7 @@ void notifyClients(bool includeParams)
                 p["check1"]    = currentFx->getCheck1();
                 p["check2"]    = currentFx->getCheck2();
                 p["check3"]    = currentFx->getCheck3();
+                p["palette"]   = currentFx->getPaletteIndex();
 #ifdef DEBUG_WEBSOCKET
                 debugD("notifyClients effectId=");
                 debugD_NUM(stripLed.effectId, "%u");
@@ -144,6 +145,9 @@ void notifyClients(bool includeParams)
                 debugD_NUM(currentFx->getCheck1(), "%d");
                 debugD("\n");
 #endif
+
+                // Paleta del efecto activo (siempre incluida)
+                json["palette"] = currentFx->getPaletteIndex();
 
                 // Metadata del efecto activo
                 const char* meta = currentFx->getMeta();
@@ -420,6 +424,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
                 if (!json["check1"].isNull()) fx->setCheck1(json["check1"].as<int>() != 0);
                 if (!json["check2"].isNull()) fx->setCheck2(json["check2"].as<int>() != 0);
                 if (!json["check3"].isNull()) fx->setCheck3(json["check3"].as<int>() != 0);
+                if (!json["palette"].isNull()) fx->setPaletteIndex(json["palette"].as<uint8_t>());
 #ifdef DEBUG_WEBSOCKET
                 debugD("setParams effectId=");
                 debugD_NUM(id, "%u");

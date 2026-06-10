@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // MovingDotEffect — Múltiples dots con beatsin16 (WLED-style)
@@ -43,8 +44,9 @@ public:
 
         uint8_t hue = beatsin8(45, 0, 255);
 
-        leds[(pos1 + pos2) / 2] = CHSV(hue, 255, stripLed.brightness);
-        leds[(pos3 + pos4) / 2] = CHSV(hue + 128, 255, stripLed.brightness);
+        CRGBPalette16 pal = PaletteManager::getPalette(_paletteIndex);
+        leds[(pos1 + pos2) / 2] = ColorFromPalette(pal, hue, stripLed.brightness, LINEARBLEND);
+        leds[(pos3 + pos4) / 2] = ColorFromPalette(pal, hue + 128, stripLed.brightness, LINEARBLEND);
 
         FastLED.show();
     }

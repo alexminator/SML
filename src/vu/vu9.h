@@ -2,6 +2,7 @@
 #include "../effects/Effect.h"
 #include "../state/AppState.h"
 #include "VUEffect.h"
+#include "../effects/PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // DJLightVU — Luz DJ audio-reactiva
@@ -47,14 +48,15 @@ public:
         bright = constrain(bright, 0, 255);
 
         // Draw spread from center
-        CRGB color = CHSV(_hue, 200, bright);
+        CRGBPalette16 pal = PaletteManager::getPalette(_paletteIndex);
+        CRGB color = ColorFromPalette(pal, _hue, bright, LINEARBLEND);
         for (uint8_t i = 0; i <= spread; i++) {
             if (mid + i < numLeds) leds[mid + i] = color;
             if (mid >= i) leds[mid - i] = color;
         }
 
         // Center is brightest
-        if (mid < numLeds) leds[mid] = CHSV(_hue, 255, bright);
+        if (mid < numLeds) leds[mid] = ColorFromPalette(pal, _hue, bright, LINEARBLEND);
 
         dropPeak();
         averageReadings();

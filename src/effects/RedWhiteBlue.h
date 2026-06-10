@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // RedWhiteBlueEffect — Tres dots bouncing con beatsin16
@@ -39,10 +40,11 @@ public:
         uint16_t pos2 = beatsin16(bpm, 0, numLeds - 1, 0, 21845);  // 120° offset
         uint16_t pos3 = beatsin16(bpm, 0, numLeds - 1, 0, 43690);  // 240° offset
 
-        // Blue, Red, White
-        leds[pos1] = CHSV(160, 255, stripLed.brightness);  // Blue
-        leds[pos2] = CHSV(0,   255, stripLed.brightness);  // Red
-        leds[pos3] = CHSV(0,   0,   stripLed.brightness);  // White
+        // Colores desde paleta
+        CRGBPalette16 pal = PaletteManager::getPalette(_paletteIndex);
+        leds[pos1] = ColorFromPalette(pal, 170, stripLed.brightness, LINEARBLEND);
+        leds[pos2] = ColorFromPalette(pal, 0,   stripLed.brightness, LINEARBLEND);
+        leds[pos3] = ColorFromPalette(pal, 85,  stripLed.brightness, LINEARBLEND);
 
         FastLED.show();
     }
@@ -50,4 +52,4 @@ public:
 
 // Metadata: speed (BPM), intensity (trail)
 const char RedWhiteBlueEffect::_meta[] =
-    "RWB@Speed,Trail,,,,,,,,;;;;sx=128,ix=128";
+    "RWB@Speed,Trail,,,,,,,,;;;;sx=128,ix=128,pa=21";

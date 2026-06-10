@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // TheaterChaseEffect — WLED mode_theater_chase (port completo)
@@ -44,7 +45,7 @@ public:
             // Color primario (brillante) o secundario (oscuro/negro)
             if ((i % width) == _aux0) {
                 // Luz encendida — color con hue progresivo
-                leds[i] = CHSV((i * 16) + uint8_t(millis() >> 8), 255, stripLed.brightness);
+                leds[i] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), (i * 16) + uint8_t(millis() >> 8), stripLed.brightness, LINEARBLEND);
             } else {
                 // Apagado
                 leds[i] = CRGB::Black;

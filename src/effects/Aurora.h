@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // AuroraEffect — WLED mode_aurora (port)
@@ -132,7 +133,7 @@ public:
             _waves[i].update(numLeds, params.speed);
             if (!_waves[i].stillAlive()) {
                 uint8_t hue = random8();
-                _waves[i].init(numLeds, CHSV(hue, 200, 255));
+                _waves[i].init(numLeds, ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue, 255, LINEARBLEND));
             }
             _waves[i].updateCachedValues();
         }

@@ -425,11 +425,9 @@ function initEffectCards() {
       // Sincronizar botón de configuración en la tarjeta Peek
       updatePeekEffectInfo();
 
-      // Segundo click en la misma card → mostrar config (si tiene parámetros)
+      // Segundo click en la misma card → mostrar config (siempre disponible por el selector de paletas)
       if (wasActive) {
-        const meta = effectMetaCache[effId];
-        const hasParams = meta && meta.params && meta.params.length > 0;
-        if (hasParams) showEffectConfig(effId, card);
+        showEffectConfig(effId, card);
       }
     });
   });
@@ -502,13 +500,16 @@ function showEffectConfig(effId, cardEl) {
 
 function renderEffectParams(effId, container) {
   const config = effectMetaCache[effId];
+  const paletteData = window._paletteData || { names: [], swatches: [] };
+  const live = liveEffectParams[effId] || {};
+  const currentPalette = live.palette !== undefined ? live.palette : 0;
+
+  // Sin parámetros sliders, solo mostrar el selector de paletas
   if (!config || !config.params || config.params.length === 0) {
-    container.innerHTML = '';
+    container.innerHTML = renderPaletteSection(effId, paletteData, currentPalette);
+    attachPaletteHandlers(effId, container);
     return;
   }
-
-  // Usar valores activos del ESP32 si existen, sino los defaults del metadata
-  const live = liveEffectParams[effId] || {};
 
   container.innerHTML = config.params.map(p => {
     const liveVal = live[p.key] !== undefined ? live[p.key] : p.default;
@@ -529,7 +530,7 @@ function renderEffectParams(effId, container) {
                data-key="${p.key}">
         <span class="param-value">${liveVal}</span>
       </div>`;
-  }).join('') + `
+  }).join('') + renderPaletteSection(effId, paletteData, currentPalette) + `
     <div class="param-reset-row">
       <button class="btn-reset-params" data-effect-id="${effId}">↺ Reset to Defaults</button>
     </div>`;
@@ -581,9 +582,99 @@ function renderEffectParams(effId, container) {
             }
           }
         });
+        // Include default palette in the same message
+        if (cfg.defaultPalette !== undefined) {
+          msg.palette = cfg.defaultPalette;
+        }
         sendCmd(msg);
+
+        // Update palette visual selection
+        if (cfg.defaultPalette !== undefined) {
+          container.querySelectorAll('.palette-swatch').forEach(s => {
+            const idx = parseInt(s.dataset.paletteIndex);
+            s.classList.toggle('selected', idx === cfg.defaultPalette);
+            s.querySelector('.palette-check-mark').textContent = idx === cfg.defaultPalette ? '✓' : '';
+          });
+        }
       }
     });
+  }
+
+  // Palette click handlers
+  attachPaletteHandlers(effId, container);
+}
+
+// ── Palette section HTML ──────────────────────────────────────────────────────
+function renderPaletteSection(effId, paletteData, currentPalette) {
+  if (!paletteData.names || paletteData.names.length === 0) {
+    return '<div class="palette-section"><p class="text-muted" style="font-size:0.75rem;padding:8px 0">Loading palettes...</p></div>';
+  }
+
+  // Get this effect's default palette index from meta cache
+  const cfg = effectMetaCache[effId];
+  const effectDefPal = cfg ? cfg.defaultPalette : 0;
+
+  // Build display order: effect's own default first, then regular palettes (0-17)
+  // Skip other effects' default palettes (indices 18-26 that don't match this effect)
+  const displayIndices = [];
+  if (effectDefPal > 17) {
+    displayIndices.push(effectDefPal);  // this effect's default first
+  }
+  for (let i = 0; i <= 17; i++) {
+    displayIndices.push(i);             // regular palettes
+  }
+  // (indices 18-26 not matching current effect are skipped)
+
+  let html = '<div class="palette-section">';
+  html += '<div class="palette-section-title"><span class="fas fa-palette"></span> Color Palette</div>';
+  html += '<div class="palette-grid">';
+
+  displayIndices.forEach(i => {
+    if (i >= paletteData.names.length) return;
+    const selected = i === currentPalette ? ' selected' : '';
+    const swatchColors = paletteData.swatches[i] || [];
+
+    html += `<div class="palette-swatch${selected}" data-palette-index="${i}">`;
+    html += '<div class="palette-swatch-bar">';
+    for (let j = 0; j < 6 && j * 3 < swatchColors.length; j++) {
+      const r = swatchColors[j * 3];
+      const g = swatchColors[j * 3 + 1];
+      const b = swatchColors[j * 3 + 2];
+      html += `<span class="palette-color" style="background:rgb(${r},${g},${b})"></span>`;
+    }
+    html += '</div>';
+    html += `<span class="palette-name">${paletteData.names[i]}</span>`;
+    html += `<div class="palette-check-mark">${selected ? '✓' : ''}</div>`;
+    html += '</div>';
+  });
+
+  html += '</div></div>';
+  return html;
+}
+
+function attachPaletteHandlers(effId, container) {
+  container.querySelectorAll('.palette-swatch').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = parseInt(el.dataset.paletteIndex);
+      const msg = { action: 'setParams', effectId: effId };
+      msg.palette = idx;
+      sendCmd(msg);
+      // Update visual selection
+      container.querySelectorAll('.palette-swatch').forEach(s => s.classList.remove('selected'));
+      el.classList.add('selected');
+      el.querySelector('.palette-check-mark').textContent = '✓';
+    });
+  });
+}
+
+// ── Fetch palette data ────────────────────────────────────────────────────────
+async function fetchPalettes() {
+  try {
+    const resp = await fetch('/palettes');
+    const data = await resp.json();
+    window._paletteData = data;
+  } catch (e) {
+    // Silencioso — reintenta en el próximo render
   }
 }
 
@@ -674,7 +765,7 @@ function parseEffectMeta(metaStr) {
     });
   });
 
-  return { name, params };
+  return { name, params, defaultPalette: defaults.pa ? parseInt(defaults.pa) : 0 };
 }
 
 // ============================================================================
@@ -1028,6 +1119,25 @@ function handleMessage(data) {
     });
   }
 
+  // ── PALETTE (top-level, enviado en cada broadcast) ──
+  if (data.palette !== undefined) {
+    const effId = data.effectId !== undefined ? data.effectId : SML.effectId;
+    if (!liveEffectParams[effId]) liveEffectParams[effId] = {};
+    liveEffectParams[effId].palette = parseInt(data.palette);
+    // Update palette selector UI if open
+    const containers = [
+      document.getElementById('effectOffcanvasBody'),
+      document.getElementById('paramSheetBody')
+    ].filter(Boolean);
+    containers.forEach(container => {
+      container.querySelectorAll('.palette-swatch').forEach(s => {
+        const isSelected = parseInt(s.dataset.paletteIndex) === parseInt(data.palette);
+        s.classList.toggle('selected', isSelected);
+        s.querySelector('.palette-check-mark').textContent = isSelected ? '✓' : '';
+      });
+    });
+  }
+
   // Sincronizar botón de configuración en Peek
   updatePeekEffectInfo();
 
@@ -1062,6 +1172,15 @@ function handleMessage(data) {
           }
         }
       });
+      // Update palette selection
+      if (data.params.palette !== undefined) {
+        const palIdx = parseInt(data.params.palette);
+        container.querySelectorAll('.palette-swatch').forEach(s => {
+          const isSelected = parseInt(s.dataset.paletteIndex) === palIdx;
+          s.classList.toggle('selected', isSelected);
+          s.querySelector('.palette-check-mark').textContent = isSelected ? '✓' : '';
+        });
+      }
     });
   }
 
@@ -1330,6 +1449,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Load effect metadata from server (caches into effectMetaCache)
   fetchFxdata();
+
+  // Load palette data for selector
+  fetchPalettes();
 
   // Connect WebSocket
   connectWS();

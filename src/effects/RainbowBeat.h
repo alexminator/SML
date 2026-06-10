@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // RainbowBeatEffect — Arcoíris pulsante con beatsin16 + fill_rainbow
@@ -46,11 +47,10 @@ public:
 
         uint8_t startHue = (beatA + beatB) / 2;
 
-        fill_rainbow(leds, numLeds, startHue, delta);
-
-        // Aplicar brillo global
+        // Reemplazar fill_rainbow con palette seleccionable
+        const CRGBPalette16& pal = PaletteManager::getPalette(_paletteIndex);
         for (unsigned i = 0; i < numLeds; i++) {
-            leds[i].nscale8(stripLed.brightness);
+            leds[i] = ColorFromPalette(pal, startHue + i * delta, stripLed.brightness, LINEARBLEND);
         }
 
         FastLED.show();

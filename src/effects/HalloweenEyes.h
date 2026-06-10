@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // HalloweenEyes — Ojos espeluznantes
@@ -66,11 +67,12 @@ public:
             int16_t leftEye  = center + _eyePos - 1;
             int16_t rightEye = center + _eyePos + 1;
 
+            CRGB eyeColor = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), 0, 255, LINEARBLEND);
             if (leftEye >= 0 && leftEye < numLeds && !_blinking) {
-                leds[leftEye] = CRGB::White;  // Eye white
+                leds[leftEye] = eyeColor;  // Eye color from palette
             }
             if (rightEye >= 0 && rightEye < numLeds && !_blinking) {
-                leds[rightEye] = CRGB::White; // Eye white
+                leds[rightEye] = eyeColor; // Eye color from palette
             }
 
             // Pupil (black dot in center of eye pair)
@@ -85,4 +87,4 @@ public:
 };
 
 const char HalloweenEyesEffect::_meta[] =
-    "Hallow Eyes@Speed,Eye Pairs;;;;sx=128,ix=128";
+    "Hallow Eyes@Speed,Eye Pairs;;;;sx=128,ix=128,pa=25";

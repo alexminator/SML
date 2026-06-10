@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 #include <math.h>
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -110,10 +111,10 @@ public:
             if (params.check1) {
                 // Random colors
                 uint8_t hue = i * (256 / MAX_BALLS);
-                color = CHSV(hue, 255, stripLed.brightness);
+                color = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue, stripLed.brightness, LINEARBLEND);
             } else {
                 // Sequential colors: each ball gets a hue offset
-                color = CHSV(uint8_t(i * 40), 255, stripLed.brightness);
+                color = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), uint8_t(i * 40), stripLed.brightness, LINEARBLEND);
             }
 
             // ── Position on strip ──────────────────────────────────────────

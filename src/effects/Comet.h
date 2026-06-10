@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // CometEffect — WLED-style bouncing comet for SML
@@ -65,7 +66,7 @@ public:
                 uint8_t bright = map(i, 0, cometSize - 1,
                                      stripLed.brightness,
                                      (uint8_t)(stripLed.brightness / 4));
-                leds[p] = CHSV(_hue, 255, bright);
+                leds[p] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), _hue, bright, LINEARBLEND);
             }
         }
 

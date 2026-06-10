@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // ColorWipeEffect — WLED mode_color_wipe (port completo)
@@ -59,7 +60,7 @@ public:
 
             // col0 = color base (cálido o del hue actual)
             uint8_t hue = (i * 32) + hueBase;
-            col0 = CHSV(hue, 200, stripLed.brightness);
+            col0 = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue, stripLed.brightness, LINEARBLEND);
 
             // col1 = color secundario (oscuro / negro)
             col1 = CRGB::Black;

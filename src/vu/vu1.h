@@ -2,22 +2,27 @@
 #include "../effects/Effect.h"
 #include "../state/AppState.h"
 #include "VUEffect.h"
+#include "../effects/PaletteManager.h"
 
-// VU: Rainbow from bottom or middle, green through purple
+// VU: Palette gradient from bottom or middle
 class RainbowVUEffect : public VUEffect {
 public:
     RainbowVUEffect(CRGB* l, uint16_t n) : VUEffect(l, n) {}
     void render() override {
-        CRGB* vuleds;
         uint8_t i = 0;
         uint16_t height = auxReading();
+        CRGBPalette16 pal = PaletteManager::getPalette(_paletteIndex);
 
-        vuleds = leds;
+        fill_solid(leds, N_PIXELS, CRGB::Black);
 
-        fill_solid(vuleds, N_PIXELS, CRGB::Black);
         if (is_centered) {
-            fill_gradient(vuleds, N_PIXELS_HALF,  CHSV(96, 255, 255), N_PIXELS - 1, CHSV(224, 255, 255), SHORTEST_HUES);
-            fill_gradient(vuleds, N_PIXELS_HALF-1, CHSV(96, 255, 255), 0, CHSV(224, 255, 255), LONGEST_HUES);
+            // Palette gradient from center outward
+            for (i = 0; i <= N_PIXELS_HALF && N_PIXELS_HALF + i < N_PIXELS; i++) {
+                uint8_t paletteIdx = map(i, 0, N_PIXELS_HALF, 0, 255);
+                CRGB c = ColorFromPalette(pal, paletteIdx, 255, LINEARBLEND);
+                leds[N_PIXELS_HALF + i] = c;
+                if (N_PIXELS_HALF >= i) leds[N_PIXELS_HALF - i] = c;
+            }
 
             for (i = 0; i < N_PIXELS; i++) {
                 uint8_t numBlack = (N_PIXELS - constrain(height, 0, N_PIXELS-1)) / 2;
@@ -28,11 +33,16 @@ public:
                 _peak = height / 2;
 
             if (_peak > 0 && _peak <= N_PIXELS_HALF - 1) {
-                vuleds[N_PIXELS_HALF + _peak] = CHSV(rainbowHue2(_peak, N_PIXELS_HALF), 255, 255);
-                vuleds[N_PIXELS_HALF - 1 - _peak] = CHSV(rainbowHue2(_peak, N_PIXELS_HALF), 255, 255);
+                uint8_t peakHue = map(_peak, 0, N_PIXELS_HALF, 0, 255);
+                leds[N_PIXELS_HALF + _peak] = ColorFromPalette(pal, peakHue, 255, LINEARBLEND);
+                leds[N_PIXELS_HALF - 1 - _peak] = ColorFromPalette(pal, peakHue, 255, LINEARBLEND);
             }
         } else {
-            fill_gradient(leds, 0, CHSV(96, 255, 255), N_PIXELS - 1, CHSV(224, 255, 255), SHORTEST_HUES);
+            // Palette gradient from bottom to top
+            for (i = 0; i < N_PIXELS; i++) {
+                uint8_t paletteIdx = map(i, 0, N_PIXELS - 1, 0, 255);
+                leds[i] = ColorFromPalette(pal, paletteIdx, 255, LINEARBLEND);
+            }
 
             for (i = 0; i < N_PIXELS; i++) {
                 if (i >= height) leds[i] = CRGB::Black;
@@ -42,17 +52,11 @@ public:
                 _peak = height;
 
             if (_peak > 0 && _peak <= N_PIXELS - 1)
-                leds[_peak] = CHSV(rainbowHue2(_peak, N_PIXELS), 255, 255);
+                leds[_peak] = ColorFromPalette(pal, map(_peak, 0, N_PIXELS, 0, 255), 255, LINEARBLEND);
         }
 
         dropPeak();
         averageReadings();
         FastLED.show();
-    }
-
-private:
-    uint8_t rainbowHue2(uint8_t pixel, uint8_t num_pixels) {
-        uint8_t hue = 96 - pixel * (145 / num_pixels);
-        return hue;
     }
 };

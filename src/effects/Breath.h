@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // BreathEffect — WLED mode_breath adaptado para SML
@@ -46,7 +47,7 @@ public:
         uint8_t hue = (millis() >> 11) * 5;  // cambia ~cada 2s
 
         for (unsigned i = 0; i < numLeds; i++) {
-            CRGB color = CHSV(hue, 255, stripLed.brightness);
+            CRGB color = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue, stripLed.brightness, LINEARBLEND);
             leds[i] = color.scale8(lum);     // color_blend(BLACK, color, lum)
         }
 

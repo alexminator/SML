@@ -1,6 +1,7 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
+#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // FadeEffect — WLED mode_fade (port completo)
@@ -43,7 +44,7 @@ public:
             CRGB color1 = CRGB::Black;
             // Color palette = basado en hue + posición
             uint8_t hue = hueTarget + (i * 256 / numLeds);
-            CRGB color2 = CHSV(hue, 255, stripLed.brightness);
+            CRGB color2 = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue, stripLed.brightness, LINEARBLEND);
             // Blend según lum
             leds[i] = blend(color1, color2, lum);
         }

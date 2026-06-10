@@ -2,6 +2,7 @@
 #include "../effects/Effect.h"
 #include "../state/AppState.h"
 #include "VUEffect.h"
+#include "../effects/PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // PS1DGEQVU — Ecualizador gráfico 1D con partículas
@@ -71,7 +72,7 @@ public:
             for (uint16_t x = 0; x < bandWidth && (startX + x) < numLeds; x++) {
                 uint16_t ledIdx = startX + x;
                 if (x < barHeight) {
-                    leds[ledIdx] = CHSV(hue, 255, 255);
+                    leds[ledIdx] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue, 255, LINEARBLEND);
                 } else {
                     leds[ledIdx] = CRGB::Black;
                 }
@@ -81,7 +82,7 @@ public:
             if (barHeight > 0 && barHeight < numLeds) {
                 uint16_t peakIdx = startX;
                 if (peakIdx < numLeds) {
-                    leds[peakIdx] = CHSV(hue, 100, 255);  // white-ish peak
+                    leds[peakIdx] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue, 255, LINEARBLEND);
                 }
             }
         }
