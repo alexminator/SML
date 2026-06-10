@@ -1085,14 +1085,94 @@ input[type="range"]::-moz-range-thumb {
   --effect-color: #FFD60A;
 }
 
-/* Random FX (data-effect-id="99"): vibrante dorado */
-.effect-card[data-effect-id="99"].active .effect-icon {
-  --effect-color: #FFD93D;
+/* Hallow Eyes (data-effect-id="45"): verde espectral */
+.effect-card[data-effect-id="45"].active .effect-icon {
+  --halloween-body: #76FF03;
+  --effect-color: #76FF03;
 }
 
-/* Random VU (data-effect-id="100"): magenta neón */
+/* Sunrise (data-effect-id="41"): dorado amanecer */
+.effect-card[data-effect-id="41"].active .effect-icon {
+  --sunrise-body: #FF9100;
+  --effect-color: #FF9100;
+}
+
+/* Plasma (data-effect-id="29"): púrpura neón */
+.effect-card[data-effect-id="29"].active .effect-icon {
+  --plasma-body: #D500F9;
+  --effect-color: #D500F9;
+}
+
+/* Heartbeat (data-effect-id="39"): rojo corazón */
+.effect-card[data-effect-id="39"].active .effect-icon {
+  --heartbeat-body: #E53935;
+  --effect-color: #E53935;
+}
+
+/* Candle (data-effect-id="43"): llama ámbar + cuerpo blanco */
+.effect-card[data-effect-id="43"].active .effect-icon {
+  --candle-flame: #FF6D00;
+  --candle-body: #F5F0E1;
+  --effect-color: #FF6D00;
+}
+
+/* ICU (data-effect-id="40"): verde monitor cardíaco */
+.effect-card[data-effect-id="40"].active .effect-icon {
+  --icu-body: #00E676;
+  --effect-color: #00E676;
+}
+
+/* Scanner (data-effect-id="38"): cian láser */
+.effect-card[data-effect-id="38"].active .effect-icon {
+  --scanner-body: #00BCD4;
+  --effect-color: #00BCD4;
+}
+
+/* Drip (data-effect-id="42"): agua azul intenso + gota azul claro */
+.effect-card[data-effect-id="42"].active .effect-icon {
+  --drip-body: #0288D1;
+  --drip-drop: #80D8FF;
+  --effect-color: #0288D1;
+}
+
+/* Aurora (data-effect-id="36"): aurora boreal multicolor */
+.effect-card[data-effect-id="36"].active .effect-icon {
+  --aurora-green: #00E676;
+  --aurora-cyan: #00BCD4;
+  --aurora-teal: #26C6DA;
+  --aurora-purple: #7C4DFF;
+  --aurora-pink: #FF4081;
+  --aurora-blue: #448AFF;
+  --effect-color: #00E676;
+}
+
+/* Chunchun (data-effect-id="44"): naranja pollito */
+.effect-card[data-effect-id="44"].active .effect-icon {
+  --chunchun-body: #FF6D00;
+  --effect-color: #FF6D00;
+}
+
+/* Pride 2015 (data-effect-id="32"): bandera arcoíris */
+.effect-card[data-effect-id="32"].active .effect-icon {
+  --pride-red: #E53935;
+  --pride-orange: #FB8D00;
+  --pride-yellow: #FFE000;
+  --pride-green: #43A047;
+  --pride-blue: #1565C0;
+  --pride-purple: #7A1FA6;
+  --effect-color: #FFE000;
+}
+
+/* Random FX (data-effect-id="99"): marfil como dado real */
+.effect-card[data-effect-id="99"].active .effect-icon {
+  --random-body: #F5F0E1;
+  --effect-color: #F5F0E1;
+}
+
+/* Random VU (data-effect-id="100"): marfil como dado real */
 .effect-card[data-effect-id="100"].active .effect-icon {
-  --effect-color: #E040FB;
+  --random-body: #F5F0E1;
+  --effect-color: #F5F0E1;
 }
 
 /* SVG icons: drop-shadow en vez de box-shadow (sigue la silueta, no el cuadrado) */
