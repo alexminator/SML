@@ -74,6 +74,7 @@ public:
             }
         }
 
+        FastLED.setBrightness(stripLed.brightness);
         FastLED.show();
         averageReadings();
 

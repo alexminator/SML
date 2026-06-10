@@ -323,55 +323,112 @@ function initLampControls() {
     SML.colorPicker = colorPicker;
   }
 
-  // ── Brightness slider standalone ──────────────────────────────────────
-  const brightSlider = document.getElementById('brightnessSlider');
-  const brightVal = document.getElementById('brightnessValue');
-  if (brightSlider && brightVal) {
-    brightSlider.addEventListener('input', () => {
-      const v = parseInt(brightSlider.value);
-      SML.brightness = v;
-      brightVal.textContent = v;
-      // Update gradient fill on slider track
-      const pct = (v / brightSlider.max) * 100;
-      brightSlider.style.setProperty('--slider-pct', pct + '%');
-      // Sync peek brightness slider
-      const peekBright = document.getElementById('peekBrightness');
-      const peekBrightVal = document.getElementById('peekBrightnessVal');
-      if (peekBright) peekBright.value = v;
-      if (peekBrightVal) peekBrightVal.textContent = v;
-    });
-    brightSlider.addEventListener('change', () => {
-      SML._lastBrightnessSent = Date.now();
-      sendCmd({ action: 'slider', brightness: SML.brightness });
-    });
-    SML._brightnessSlider = brightSlider;
-    // Init gradient fill position
-    const initPct = (parseInt(brightSlider.value) / brightSlider.max) * 100;
-    brightSlider.style.setProperty('--slider-pct', initPct + '%');
+  // ── Global brightness FAB + pill slider (battery-fill style) ──────────
+  const fabBtn = document.getElementById('fabBtn');
+  const fabSlider = document.getElementById('fabSlider');
+  const fabSliderFill = document.getElementById('fabSliderFill');
+  const fabSliderContainer = document.getElementById('fabSliderContainer');
+  const fabValueEl = document.getElementById('fabValue');
+  let _fabHideTimer = null;
+  let _fabDragging = false;
+  const BRIGHT_MAX = 255;
+
+  function updateFabSliderFill(v) {
+    if (!fabSliderFill) return;
+    const pct = Math.round((v / BRIGHT_MAX) * 100);
+    fabSliderFill.style.height = pct + '%';
+    if (fabValueEl) fabValueEl.textContent = v;
   }
 
-  // ── Peek brightness slider (synced with main brightness) ──
-  const peekBright = document.getElementById('peekBrightness');
-  const peekBrightVal = document.getElementById('peekBrightnessVal');
-  if (peekBright && peekBrightVal) {
-    peekBright.addEventListener('input', () => {
-      const v = parseInt(peekBright.value);
-      peekBrightVal.textContent = v;
-      SML.brightness = v;
-      // Sync main slider
-      if (SML._brightnessSlider) {
-        SML._brightnessSlider.value = v;
-        const pct = (v / SML._brightnessSlider.max) * 100;
-        SML._brightnessSlider.style.setProperty('--slider-pct', pct + '%');
+  function valueFromClientY(clientY) {
+    const rect = fabSlider.getBoundingClientRect();
+    // 0 at bottom, 255 at top
+    const y = rect.bottom - clientY;
+    const normalized = Math.max(0, Math.min(1, y / rect.height));
+    return Math.round(normalized * BRIGHT_MAX);
+  }
+
+  function onFabSliderPointerDown(e) {
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const v = valueFromClientY(clientY);
+    SML.brightness = v;
+    updateFabSliderFill(v);
+    _fabDragging = true;
+    if (_fabHideTimer) clearTimeout(_fabHideTimer);
+    e.preventDefault();
+  }
+
+  function onFabSliderPointerMove(e) {
+    if (!_fabDragging) return;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const v = valueFromClientY(clientY);
+    SML.brightness = v;
+    updateFabSliderFill(v);
+    e.preventDefault();
+  }
+
+  function onFabSliderPointerUp(e) {
+    if (!_fabDragging) return;
+    _fabDragging = false;
+    SML._lastBrightnessSent = Date.now();
+    sendCmd({ action: 'slider', brightness: SML.brightness });
+    if (_fabHideTimer) clearTimeout(_fabHideTimer);
+    _fabHideTimer = setTimeout(() => {
+      hideFabSlider();
+    }, 3000);
+  }
+
+  function showFabSlider() {
+    fabSliderContainer.classList.add('active');
+    document.getElementById('brightnessFab').classList.add('slider-open');
+    if (_fabHideTimer) clearTimeout(_fabHideTimer);
+    _fabHideTimer = setTimeout(() => {
+      hideFabSlider();
+    }, 5000);
+  }
+
+  function hideFabSlider() {
+    fabSliderContainer.classList.remove('active');
+    document.getElementById('brightnessFab').classList.remove('slider-open');
+    if (_fabHideTimer) { clearTimeout(_fabHideTimer); _fabHideTimer = null; }
+  }
+
+  // Toggle FAB on click
+  if (fabBtn && fabSliderContainer) {
+    fabBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (fabSliderContainer.classList.contains('active')) {
+        hideFabSlider();
+      } else {
+        showFabSlider();
       }
-      const bv = document.getElementById('brightnessValue');
-      if (bv) bv.textContent = v;
-    });
-    peekBright.addEventListener('change', () => {
-      SML._lastBrightnessSent = Date.now();
-      sendCmd({ action: 'slider', brightness: SML.brightness });
     });
   }
+
+  // Custom slider pointer events
+  if (fabSlider) {
+    fabSlider.addEventListener('mousedown', onFabSliderPointerDown);
+    fabSlider.addEventListener('touchstart', onFabSliderPointerDown, { passive: false });
+    document.addEventListener('mousemove', onFabSliderPointerMove);
+    document.addEventListener('touchmove', onFabSliderPointerMove, { passive: false });
+    document.addEventListener('mouseup', onFabSliderPointerUp);
+    document.addEventListener('touchend', onFabSliderPointerUp);
+    document.addEventListener('touchcancel', onFabSliderPointerUp);
+  }
+
+  // Init fill from current brightness value
+  SML._initFabBrightness = function (v) {
+    updateFabSliderFill(v);
+  };
+  SML._initFabBrightness(SML.brightness);
+
+  // Click outside FAB to close
+  document.addEventListener('click', (e) => {
+    const fab = document.getElementById('brightnessFab');
+    if (fab && !fab.contains(e.target) && fabSliderContainer?.classList.contains('active')) {
+      hideFabSlider();
+    }
+  });
 
   // Effect cards
   initEffectCards();
@@ -1013,25 +1070,16 @@ function handleMessage(data) {
     updatePeekEffectInfo();
   }
 
-  // ── BRIGHTNESS (slider standalone) ──
+  // ── BRIGHTNESS (FAB pill slider) ──
   if (data.neobrightness !== undefined) {
     // Ignorar broadcasts stale si el usuario acaba de cambiar brillo
     if (SML._lastBrightnessSent && Date.now() - SML._lastBrightnessSent < 400) {
       // skip — nuestro propio eco o broadcast anterior
     } else {
       SML.brightness = data.neobrightness;
-      if (SML._brightnessSlider) {
-        SML._brightnessSlider.value = data.neobrightness;
-        const pct = (data.neobrightness / SML._brightnessSlider.max) * 100;
-        SML._brightnessSlider.style.setProperty('--slider-pct', pct + '%');
-        const val = document.getElementById('brightnessValue');
-        if (val) val.textContent = data.neobrightness;
+      if (typeof SML._initFabBrightness === 'function') {
+        SML._initFabBrightness(data.neobrightness);
       }
-      // Sync peek brightness slider
-      const peekBright = document.getElementById('peekBrightness');
-      const peekBrightVal = document.getElementById('peekBrightnessVal');
-      if (peekBright) peekBright.value = data.neobrightness;
-      if (peekBrightVal) peekBrightVal.textContent = data.neobrightness;
     }
   }
 

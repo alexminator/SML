@@ -123,13 +123,6 @@
           <div class="color-picker-container">
             <div id="colorPicker"></div>
           </div>
-          <div class="brightness-slider-container">
-            <label class="brightness-label">
-              <span class="fas fa-sun"></span>
-              <input type="range" id="brightnessSlider" min="0" max="255" value="130">
-              <span id="brightnessValue">130</span>
-            </label>
-          </div>
         </div>
 
         <!-- Visual Effects (IDs 0-37) -->
@@ -672,11 +665,6 @@
               </div>
               <canvas id="peekCanvas" width="320" height="320"></canvas>
             </div>
-            <div class="peek-brightness">
-              <span class="fas fa-sun" style="font-size:0.75rem;opacity:0.5"></span>
-              <input type="range" id="peekBrightness" min="0" max="255" value="130">
-              <span class="peek-brightness-val" id="peekBrightnessVal">130</span>
-            </div>
             <p class="text-muted peek-hint">
               <span class="fas fa-info-circle"></span>
               <strong>Full (1:1)</strong> sends every LED — crispest preview, most bandwidth.
@@ -928,6 +916,25 @@
     <!-- ============================================================
          TOAST CONTAINER
          ============================================================ -->
+    <!-- ============================================================
+         BRIGHTNESS FAB + PILL SLIDER (global overlay)
+         ============================================================ -->
+    <div class="brightness-fab" id="brightnessFab">
+      <button class="fab-btn" id="fabBtn" aria-label="Brightness">
+        <span class="fab-icon fas fa-sun" id="fabIcon"></span>
+        <span class="fab-value" id="fabValue">130</span>
+      </button>
+      <div class="fab-slider-container" id="fabSliderContainer">
+        <div class="fab-slider-wrapper">
+          <div class="fab-slider" id="fabSlider">
+            <div class="fab-slider-track">
+              <div class="fab-slider-fill" id="fabSliderFill"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="toast-container" id="toastContainer"></div>
   </div>
 </body>
