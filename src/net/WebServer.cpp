@@ -398,7 +398,7 @@ void initWebServer()
       request->send(response);
     });
 
-    server.serveStatic("/", LittleFS, "/").setDefaultFile("index.html").setTryGzipFirst(false);
+    server.serveStatic("/", LittleFS, "/").setDefaultFile("index.html").setTryGzipFirst(false).setCacheControl("no-cache");
     server.onNotFound([](AsyncWebServerRequest *request)
                     { request->send(400, "text/plain", "Not found"); });
     ElegantOTA.begin(&server); // Start ElegantOTA

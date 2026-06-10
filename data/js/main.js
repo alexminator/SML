@@ -1144,9 +1144,22 @@ function handleMessage(data) {
     'twinkleFOXStatus': 35,
     'auroraStatus': 36,
     'popcornStatus': 37,
+    'larsonScannerStatus': 38,
+    'heartbeatStatus': 39,
+    'icuStatus': 40,
+    'sunriseStatus': 41,
+    'dripStatus': 42,
+    'candleStatus': 43,
+    'chunchunStatus': 44,
+    'halloweenEyesStatus': 45,
+    'gravimeterVUStatus': 46,
+    'noisemeterVUStatus': 47,
+    'djlightVUStatus': 48,
+    'ps1dgeqVUStatus': 49,
   };
 
   // Find which effect is "on"
+  let fxFound = false;
   for (const [key, id] of Object.entries(effectNameToId)) {
     if (data[key] === 'on') {
       if (SML.effectId !== id) {
@@ -1155,7 +1168,30 @@ function handleMessage(data) {
           c.classList.toggle('active', parseInt(c.dataset.effectId) === id);
         });
       }
+      fxFound = true;
       break;
+    }
+  }
+  // Also check for effect statuses NOT in the map (IDs 38+)
+  if (!fxFound) {
+    for (const key of Object.keys(data)) {
+      if (key.endsWith('Status') && data[key] === 'on') {
+        fxFound = true;
+        break;
+      }
+    }
+  }
+  // If NO effect is "on" but Neo IS on → Solid (not in EffectRegistry, never has a Status:"on")
+  // ⚠ Only trigger if this message actually contains effect/status data
+  //   (notifySensorData sends lightweight payloads WITHOUT Status fields)
+  if (!fxFound && SML.powerOn) {
+    const hasEffectData = Object.keys(data).some(k => k.endsWith('Status') || k === 'neostatus');
+    if (hasEffectData) {
+      SML.effectId = 0;
+      $$('.effect-card').forEach(c => {
+        c.classList.toggle('active', parseInt(c.dataset.effectId) === 0);
+      });
+      updateSolidIcon(SML.r, SML.g, SML.b);
     }
   }
 

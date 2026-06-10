@@ -27,7 +27,7 @@
 // ============================================================================
 #define CONV_FACTOR     1.702
 #define READS           30
-#define MAXV            4.00
+#define MAXV            4.01
 #define MINV            3.20
 #define BATT_THRESHOLD  30
 #define MAX_READS       10
