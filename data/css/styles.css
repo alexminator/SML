@@ -1085,6 +1085,16 @@ input[type="range"]::-moz-range-thumb {
   --effect-color: #FFD60A;
 }
 
+/* Random FX (data-effect-id="99"): vibrante dorado */
+.effect-card[data-effect-id="99"].active .effect-icon {
+  --effect-color: #FFD93D;
+}
+
+/* Random VU (data-effect-id="100"): magenta neón */
+.effect-card[data-effect-id="100"].active .effect-icon {
+  --effect-color: #E040FB;
+}
+
 /* SVG icons: drop-shadow en vez de box-shadow (sigue la silueta, no el cuadrado) */
 .effect-card:hover .effect-icon[viewBox] {
   box-shadow: none;
