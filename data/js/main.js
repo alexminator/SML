@@ -938,8 +938,7 @@ function renderPaletteSection(effId, paletteData, currentPalette) {
       html += `<span class="palette-color" style="background:rgb(${r},${g},${b})"></span>`;
     }
     html += '</div>';
-    const isDefault = (i === effectDefPal && effectDefPal > 17);
-    html += `<span class="palette-name">${paletteData.names[i]}${isDefault ? '<span class="palette-default-label">(Default)</span>' : ''}</span>`;
+    html += `<span class="palette-name">${paletteData.names[i]}</span>`;
     html += `<div class="palette-check-mark">${selected ? '✓' : ''}</div>`;
     html += '</div>';
   });
