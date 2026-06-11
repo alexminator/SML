@@ -1900,8 +1900,9 @@ input[type="range"]::-moz-range-thumb {
   .small.bt-toggle {
     width: 2.4em;
     height: 2.4em;
-    right: calc(50% - 129px);
-    bottom: calc(50% - 129px);
+    top: calc(50% + 67px);
+    left: calc(50% + 67px);
+    transform: none;
     background: linear-gradient(180deg, #292929 0%, #1F1F1F 100%);
     border: 2.5px solid #0D0D0D;
     box-shadow:
@@ -1977,8 +1978,9 @@ input[type="range"]::-moz-range-thumb {
   .small.bt-toggle {
     width: 2em;
     height: 2em;
-    right: calc(50% - 113px);
-    bottom: calc(50% - 113px);
+    top: calc(50% + 57px);
+    left: calc(50% + 57px);
+    transform: none;
     background: linear-gradient(180deg, #292929 0%, #1F1F1F 100%);
     border: 2px solid #0D0D0D;
     box-shadow:
