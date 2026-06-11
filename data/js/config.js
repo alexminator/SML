@@ -143,7 +143,7 @@ function _formatActionEntry(e) {
     case 5: // lamp
       return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-lightbulb" style="color:${e.v1 ? 'var(--accent-warning)' : 'var(--text-secondary)'}"></span> Lamp ${e.v1 ? 'ON' : 'OFF'}`;
     case 6: // bt
-      return `<span class="ws-action-time">${timeStr}</span> <span class="fab fa-bluetooth-b" style="color:${e.v1 ? '#0072ff' : 'var(--text-secondary)'}"></span> BT ${e.v1 ? 'ON' : 'OFF'}`;
+      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-bluetooth" style="color:${e.v1 ? '#0072ff' : 'var(--text-secondary)'}"></span> BT ${e.v1 ? 'ON' : 'OFF'}`;
     case 7: // random
       return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-shuffle" style="color:var(--accent)"></span> Random ${e.v1 === 1 ? 'FX' : 'VU'} ${e.v1 ? 'ON' : 'OFF'}`;
     default:

@@ -510,6 +510,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
                 stripLed.effectId = EFFECT_BATTERY;
             }
             if (stripLed.powerState) stripLed.update();
+            _wsLogAction(clientId, 6, stripLed.effectId == EFFECT_BATTERY ? 1 : 0, 0, 0);
         }
         else if (strcmp(action, "toggleTemp") == 0) {
             randomMode = 0;  // Exit random mode
@@ -519,6 +520,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
                 stripLed.effectId = EFFECT_TEMP;
             }
             if (stripLed.powerState) stripLed.update();
+            _wsLogAction(clientId, 6, stripLed.effectId == EFFECT_TEMP ? 1 : 0, 0, 0);
         }
         else if (strcmp(action, "picker") == 0)
         {
