@@ -44,6 +44,7 @@ const effectIdToName = {
   41: 'Sunrise', 42: 'Drip', 43: 'Candle', 44: 'Chunchun',
   45: 'Halloween Eyes',
   46: 'Gravimeter VU', 47: 'Noisemeter VU', 48: 'DJ Light VU', 49: 'PS1 DGEQ VU',
+  50: 'Palette Blend VU',
 };
 
 // ============================================================================
@@ -562,7 +563,8 @@ const RANDOM_FX_POOL = [
 
 const RANDOM_VU_POOL = [
   12,13,14,15,16,17,            // RainbowVU → OceanVU
-  46,47,48,49                   // Gravimeter → PS1DGEQ
+  46,47,48,49,                  // Gravimeter → PS1DGEQ
+  50,                           // Palette Blend
 ];
 
 function getRandomDuration() {
@@ -1426,6 +1428,7 @@ function handleMessage(data) {
       'noisemeterVUStatus': 47,
       'djlightVUStatus': 48,
       'ps1dgeqVUStatus': 49,
+      'paletteBlendVUStatus': 50,
     };
 
     for (const [key, id] of Object.entries(effectNameToId)) {
