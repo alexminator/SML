@@ -4,55 +4,75 @@
 #include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Heartbeat — Latido cardíaco pulsante
+// Heartbeat — Latido cardíaco con decaimiento exponencial (WLED port)
 // ──────────────────────────────────────────────────────────────────────────────
-// Simula el pulso cardiaco: dos latidos rápidos (lub-dub) seguidos de pausa.
+// Algoritmo WLED original (mode_heartbeat):
+//   - BPM = 40 + (speed >> 3)         → 40-71 BPM
+//   - msPerBeat = 60000 / bpm
+//   - secondBeat (dub) a 1/3 del ciclo
+//   - Brillo acumulado _bri se decae cada frame:
+//       _bri = _bri * 2042 / (2048 + intensity)
+//   - El latido resetea _bri a UINT16_MAX (brillo máximo)
+//   - Color = blend(palette, secondary, 255 - (_bri >> 8))
+//
 // Params:
-//   speed     → frecuencia cardíaca (BPM)
-//   intensity → brillo máximo del latido
+//   speed     → BPM base         (40 + speed/8)
+//   intensity → Tasa de decaimiento (mayor = decae más rápido)
 // ──────────────────────────────────────────────────────────────────────────────
 
 class HeartbeatEffect : public Effect {
 private:
-    uint8_t _phase = 0;
+    uint16_t _bri = 0;         // Brightness accumulator (0-65535, WLED aux1)
+    uint32_t _lastBeat = 0;    // Timestamp of last beat
+    bool     _secondBeat = false; // Whether dub already fired this cycle
 
 public:
     static const char _meta[];
 
     HeartbeatEffect(CRGB* l, uint16_t n) : Effect(l, n) {
         setToDefaults(_meta);
+        _lastBeat = millis();
     }
 
     const char* getMeta() const override { return _meta; }
 
     void render() override {
-        uint8_t bpm = map(params.speed, 0, 255, 40, 140);  // 40-140 BPM
-        uint8_t peak = 255;  // Brillo fijo (el global stripLed.brightness controla el brillo)
+        // ── WLED BPM formula: 40 + (speed >> 3) → 40-71 BPM ──────────────────
+        unsigned bpm = 40 + (params.speed >> 3);
+        uint32_t msPerBeat = 60000UL / bpm;
+        uint32_t secondBeat = msPerBeat / 3;   // WLED: second beat at 33%
+        if (secondBeat < 1) secondBeat = 1;
 
-        // Two-part heartbeat: lub (strong) + dub (weaker)
-        uint16_t period = (60000 / bpm);           // ms per beat
-        uint16_t lubMs   = period * 0 / 8;         // lub at 0%
-        uint16_t dubMs   = period * 2 / 8;         // dub at 25%
-        uint16_t cycleMs = period;                  // cycle length
+        uint32_t now = millis();
+        uint32_t beatTimer = now - _lastBeat;
 
-        uint16_t now = millis() % cycleMs;
-
-        uint8_t brightness = 0;
-        if (now < period / 8) {
-            // Lub - quick strong pulse
-            float t = (float)now / (float)(period / 8);
-            brightness = t < 0.5f ? (t * 2.0f) : (2.0f - t * 2.0f);
-            brightness = (uint8_t)(brightness * peak * 1.2f);
-        } else if (now >= period * 2 / 8 && now < period * 3 / 8) {
-            // Dub - quick weaker pulse
-            float t = (float)(now - period * 2 / 8) / (float)(period / 8);
-            brightness = t < 0.5f ? (t * 2.0f) : (2.0f - t * 2.0f);
-            brightness = (uint8_t)(brightness * peak * 0.8f);
+        // ── Beat timing — reset brightness BEFORE this frame's decay ──────────
+        if (beatTimer > msPerBeat) {
+            // Main beat (lub) — restore full brightness
+            _bri = UINT16_MAX;
+            _secondBeat = false;
+            _lastBeat = now;
+        } else if (beatTimer > secondBeat && !_secondBeat) {
+            // Second beat (dub) — restore full brightness
+            _bri = UINT16_MAX;
+            _secondBeat = true;
         }
 
-        brightness = constrain(brightness, 0, 255);
+        // ── Exponential brightness decay (WLED formula) ──────────────────────
+        //   bri_lower = bri_lower * 2042 / (2048 + intensity)
+        //   Higher intensity → faster decay → shorter pulse
+        uint32_t decayed = (uint32_t)_bri * 2042UL / (2048UL + params.intensity);
+        _bri = (uint16_t)decayed;
+
+        // ── Render: blend palette color toward secondary (dim/black) ──────────
+        //   blendAmt = 255 - (_bri >> 8):
+        //     _bri=65535 (just beat) → blendAmt=0     → 100% palette
+        //     _bri=0     (decayed)   → blendAmt=255   → 100% secondary
+        uint8_t blendAmt = 255 - (_bri >> 8);
         CRGBPalette16 pal = PaletteManager::getPalette(_paletteIndex);
-        CRGB color = ColorFromPalette(pal, 0, brightness, LINEARBLEND);
+        CRGB palColor = ColorFromPalette(pal, 0, stripLed.brightness, LINEARBLEND);
+        CRGB secColor = CRGB::Black;  // same as WLED SEGCOLOR(1) = black default
+        CRGB color = blend(palColor, secColor, blendAmt);
         fill_solid(leds, numLeds, color);
 
         FastLED.show();
@@ -60,4 +80,4 @@ public:
 };
 
 const char HeartbeatEffect::_meta[] =
-    "Heartbeat@BPM;;;;sx=128,ix=128,pa=19";
+    "Heartbeat@BPM,Decay;;;;sx=128,ix=128,pa=19";

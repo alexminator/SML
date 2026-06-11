@@ -78,9 +78,9 @@ public:
                 }
             }
 
-            // Peak particle
+            // Peak particle at top of bar
             if (barHeight > 0 && barHeight < numLeds) {
-                uint16_t peakIdx = startX;
+                uint16_t peakIdx = startX + barHeight - 1;
                 if (peakIdx < numLeds) {
                     leds[peakIdx] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue, 255, LINEARBLEND);
                 }

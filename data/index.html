@@ -45,6 +45,10 @@
         </div>
       </div>
       <div class="status-right">
+        <div class="ws-indicator" id="wsIndicator" title="WebSocket Clients">
+          <span class="fas fa-eye" id="wsEyeIcon"></span>
+          <span class="ws-count" id="wsCount">0</span>
+        </div>
         <div class="batt-indicator">
           <span class="batt-percent">--</span>
           <div class="batt-icon">
@@ -841,6 +845,19 @@
                 <div class="info-label">IP Address</div>
                 <div class="info-value" id="sysIP">--</div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- WebSocket Clients -->
+        <div class="config-section">
+          <div class="config-card">
+            <h3><span class="fas fa-eye"></span> WebSocket Clients</h3>
+            <p class="config-desc">
+              Connected devices monitoring the lamp in real time
+            </p>
+            <div id="wsClientList" class="ws-client-list">
+              <div class="ws-client-empty">No clients connected</div>
             </div>
           </div>
         </div>

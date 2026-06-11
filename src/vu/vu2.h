@@ -15,7 +15,7 @@ public:
         vuleds = leds;
 
         if (height > _peak)
-            _peak = height;
+            _peak = constrain(height, 0, numLeds - 1);
 
         if (is_centered) {
             for (uint8_t i = 0; i < N_PIXELS_HALF; i++) {

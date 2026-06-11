@@ -1,7 +1,7 @@
 // ──────────────────────────────────────────────────────────────────────────────
 // vu.h — Include único de todos los efectos VU meter
 // ──────────────────────────────────────────────────────────────────────────────
-// Todos heredan VUEffect (a excepción de OceanVU que hereda Effect directamente).
+// Todos heredan VUEffect.
 // ──────────────────────────────────────────────────────────────────────────────
 #pragma once
 

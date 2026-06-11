@@ -41,9 +41,10 @@ public:
                 origin = origin_at_flip - ((intensity_max - intensity) / 2);
             }
             if (origin < 0) {
-                origin = DRAW_MAX - abs(origin);
-            } else if (origin > DRAW_MAX - 1) {
-                origin = origin - DRAW_MAX - 1;
+                origin = DRAW_MAX - ((-origin) % DRAW_MAX);
+                if (origin >= DRAW_MAX) origin = 0;
+            } else if (origin >= DRAW_MAX) {
+                origin = origin % DRAW_MAX;
             }
         }
 

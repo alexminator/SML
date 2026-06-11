@@ -1715,6 +1715,28 @@ input[type="range"]::-moz-range-thumb {
   transition: transform 0.1s ease;
 }
 
+/* ── Press animations iPod (añadidas vía JS pointerdown/up) ──────── */
+.btn-overlay.left {
+  transform: rotateY(-6deg) skew(1deg, -1deg);
+  box-shadow: 0px 4px 7px 1px rgba(255, 255, 255, 0.11) inset, 16px 4px 14px 0px rgba(0, 0, 0, 0.05) inset;
+  filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
+}
+.btn-overlay.right {
+  transform: rotateY(6deg) skew(-1deg, 1deg);
+  box-shadow: 0px 4px 7px 1px rgba(255, 255, 255, 0.11) inset, -16px 4px 14px 0px rgba(0, 0, 0, 0.05) inset;
+  filter: drop-shadow(0px 4px -4px rgba(0, 0, 0, 0.25));
+}
+.btn-overlay.up {
+  transform: rotateX(8deg);
+  box-shadow: 0px 4px 7px 1px rgba(255, 255, 255, 0.09) inset, 0px -4px 14px 0px rgba(0, 0, 0, 0.05) inset;
+  filter: drop-shadow(0px 4px -4px rgba(0, 0, 0, 0.25));
+}
+.btn-overlay.down {
+  transform: rotateX(-8deg);
+  box-shadow: 0px 4px 7px 1px rgba(255, 255, 255, 0.1) inset, 0px -14px 14px 0px rgba(0, 0, 0, 0.05) inset;
+  filter: drop-shadow(0px 4px -4px rgba(0, 0, 0, 0.25));
+}
+
 .play-btn-shadow {
   position: absolute;
   width: 110px;
@@ -1748,15 +1770,9 @@ input[type="range"]::-moz-range-thumb {
   transform: translate(-50%, -50%) scale(0.96);
 }
 
-/* Playing state — subtle glow ring when active */
-.play-btn.playing {
-  box-shadow:
-    0 0 16px 3px rgba(0, 200, 255, 0.30),
-    inset 0 0 8px rgba(0, 200, 255, 0.10);
-}
-
-.play-btn.playing .play-icon img {
-  filter: brightness(1.3) drop-shadow(0 0 4px rgba(0, 200, 255, 0.3));
+/* Press animation — escala al pulsar (añadido vía JS pointerdown) */
+.play-btn.pressed {
+  transform: translate(-50%, -50%) scale(0.94);
 }
 
 .play-btn-overlay {
@@ -2948,7 +2964,7 @@ input[type="range"]::-moz-range-thumb {
 /* ===== TOAST SYSTEM ===== */
 .toast-container {
   position: fixed;
-  bottom: calc(var(--nav-h) + var(--space-lg));
+  top: calc(var(--header-h, 48px) + var(--space-sm));
   left: 50%;
   transform: translateX(-50%);
   z-index: 300;
@@ -2974,7 +2990,7 @@ input[type="range"]::-moz-range-thumb {
     0 4px 16px rgba(0,0,0,0.3),
     0 12px 40px rgba(0,0,0,0.15),
     inset 0 1px 0 color-mix(in srgb, white 6%, transparent);
-  animation: toastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), toastOut 0.3s ease 2.7s forwards;
+  animation: toastInDown 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), toastOutUp 0.3s ease 2.7s forwards;
   pointer-events: auto;
   color: var(--text-primary);
   position: relative;
@@ -3031,19 +3047,169 @@ input[type="range"]::-moz-range-thumb {
 .toast.info .toast-progress { background: linear-gradient(90deg, color-mix(in srgb, var(--accent-secondary) 20%, transparent), var(--accent-secondary)); }
 
 
-@keyframes toastIn {
-  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+@keyframes toastInDown {
+  from { opacity: 0; transform: translateY(-20px) scale(0.96); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-@keyframes toastOut {
+@keyframes toastOutUp {
   from { opacity: 1; transform: translateY(0) scale(1); }
-  to { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  to { opacity: 0; transform: translateY(-12px) scale(0.96); }
 }
 
 @keyframes toastProgress {
   from { width: 100%; }
   to { width: 0%; }
+}
+
+/* ===== WEBSOCKET CLIENT INDICATOR (status bar) ===== */
+.ws-indicator {
+  display: none;  /* shown by JS when slaves > 0 */
+  align-items: center;
+  gap: 4px;
+  margin-right: var(--space-md);
+  cursor: default;
+  user-select: none;
+}
+
+.ws-indicator .fa-eye {
+  font-size: 0.85rem;
+  color: var(--accent-success);
+  transition: color 0.3s ease;
+}
+
+.ws-indicator .fa-eye.ws-warn {
+  color: var(--accent-warning);
+}
+
+.ws-indicator .fa-eye.ws-danger {
+  color: var(--accent-danger);
+  animation: wsPulse 1.2s ease-in-out infinite;
+}
+
+.ws-indicator .ws-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 12px;
+  text-align: center;
+}
+
+@keyframes wsPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.7; transform: scale(1.1); }
+}
+
+/* ===== WEBSOCKET CLIENT LIST (Config tab) ===== */
+.ws-client-wrapper {
+  margin-bottom: var(--space-sm);
+}
+
+.ws-client-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.ws-client-empty {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-style: italic;
+  padding: var(--space-md) 0;
+  text-align: center;
+}
+
+.ws-client-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: color-mix(in srgb, var(--bg-card) 50%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+
+.ws-client-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ws-client-badge.master {
+  background: color-mix(in srgb, var(--accent-warning) 20%, transparent);
+  color: var(--accent-warning);
+  border: 1px solid color-mix(in srgb, var(--accent-warning) 40%, transparent);
+}
+
+.ws-client-badge.slave {
+  background: color-mix(in srgb, var(--accent-secondary) 15%, transparent);
+  color: var(--accent-secondary);
+  border: 1px solid color-mix(in srgb, var(--accent-secondary) 30%, transparent);
+}
+
+.ws-client-ip {
+  flex: 1;
+  color: var(--text-primary);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.8rem;
+}
+
+.ws-client-id {
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+}
+
+/* WS client action log */
+.ws-client-actions {
+  padding: var(--space-xs) var(--space-md) var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ws-client-action {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ws-client-action .fas,
+.ws-client-action .fab {
+  width: 14px;
+  text-align: center;
+  font-size: 0.7rem;
+}
+
+.ws-client-action strong {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.ws-action-time {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.65rem;
+  color: var(--text-tertiary);
+  min-width: 52px;
+}
+
+.ws-color-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  flex-shrink: 0;
 }
 
 /* ===== BRIGHTNESS FAB + PILL SLIDER ===== */

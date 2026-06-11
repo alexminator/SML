@@ -19,7 +19,7 @@ public:
         vuleds = leds;
 
         if (height > _peak)
-            _peak = height;
+            _peak = constrain(height, 0, numLeds - 1);
 
         EVERY_N_MILLISECONDS(SPEED) { hueOffset++; }
 

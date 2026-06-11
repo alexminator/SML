@@ -16,12 +16,11 @@ public:
         fill_solid(leds, N_PIXELS, CRGB::Black);
 
         if (is_centered) {
-            // Palette gradient from center outward
-            for (i = 0; i <= N_PIXELS_HALF && N_PIXELS_HALF + i < N_PIXELS; i++) {
-                uint8_t paletteIdx = map(i, 0, N_PIXELS_HALF, 0, 255);
-                CRGB c = ColorFromPalette(pal, paletteIdx, 255, LINEARBLEND);
-                leds[N_PIXELS_HALF + i] = c;
-                if (N_PIXELS_HALF >= i) leds[N_PIXELS_HALF - i] = c;
+            // Palette gradient from center outward — covers ALL LEDs (0..N_PIXELS-1)
+            for (i = 0; i < N_PIXELS; i++) {
+                uint8_t dist = (i <= N_PIXELS_HALF) ? (N_PIXELS_HALF - i) : (i - N_PIXELS_HALF);
+                uint8_t paletteIdx = map(dist, 0, N_PIXELS_HALF, 0, 255);
+                leds[i] = ColorFromPalette(pal, paletteIdx, 255, LINEARBLEND);
             }
 
             for (i = 0; i < N_PIXELS; i++) {

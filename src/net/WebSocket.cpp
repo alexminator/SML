@@ -18,6 +18,113 @@
 
 AsyncWebSocket ws("/ws");
 
+// ── WebSocket client tracking ─────────────────────────────────────────────────
+//   Mantiene un array de clientes conectados para mostrarlos en la UI.
+//   El primer cliente en conectarse es el "master".
+// ──────────────────────────────────────────────────────────────────────────────
+#define WS_MAX_CLIENTS 8
+
+static uint32_t   _wsClientIds[WS_MAX_CLIENTS];
+static IPAddress  _wsClientIps[WS_MAX_CLIENTS];
+static uint8_t    _wsClientCount = 0;
+static uint32_t   _wsMasterId = 0;
+
+static void _wsAddClient(uint32_t id, IPAddress ip) {
+    if (_wsClientCount >= WS_MAX_CLIENTS) return;
+    if (_wsClientCount == 0) _wsMasterId = id;  // first = master
+    _wsClientIds[_wsClientCount] = id;
+    _wsClientIps[_wsClientCount] = ip;
+    _wsClientCount++;
+}
+
+static void _wsRemoveClient(uint32_t id) {
+    for (uint8_t i = 0; i < _wsClientCount; i++) {
+        if (_wsClientIds[i] == id) {
+            for (uint8_t j = i; j < _wsClientCount - 1; j++) {
+                _wsClientIds[j] = _wsClientIds[j + 1];
+                _wsClientIps[j] = _wsClientIps[j + 1];
+            }
+            _wsClientCount--;
+            if (id == _wsMasterId && _wsClientCount > 0) {
+                _wsMasterId = _wsClientIds[0];  // next client becomes master
+            }
+            break;
+        }
+    }
+}
+
+// ── WebSocket action log (circular buffer) ──────────────────────────────────────
+//   Últimas N acciones de clientes, enviadas con la lista de clientes.
+//   Tipos (ty): 0=effect 1=color 2=brightness 3=params 4=power 5=lamp 6=bt 7=random
+// ────────────────────────────────────────────────────────────────────────────────
+#define WS_LOG_SIZE 16
+
+struct WsLogEntry {
+    uint32_t timestamp;      // millis() / 1000 ≈ uptime seconds
+    uint32_t clientId;
+    uint8_t  type;
+    int16_t  val1;
+    int16_t  val2;
+    int16_t  val3;
+};
+
+static WsLogEntry _wsActionLog[WS_LOG_SIZE];
+static uint8_t _wsLogHead = 0;
+static uint8_t _wsLogCount = 0;
+
+static void _wsLogAction(uint32_t clientId, uint8_t type, int16_t v1, int16_t v2, int16_t v3) {
+    WsLogEntry* e = &_wsActionLog[_wsLogHead];
+    e->timestamp = millis() / 1000;
+    e->clientId = clientId;
+    e->type = type;
+    e->val1 = v1;
+    e->val2 = v2;
+    e->val3 = v3;
+    _wsLogHead = (_wsLogHead + 1) % WS_LOG_SIZE;
+    if (_wsLogCount < WS_LOG_SIZE) _wsLogCount++;
+}
+
+// ============================================================================
+// notifyWSClientList — Broadcast full client list (on connect/disconnect)
+// ============================================================================
+
+void notifyWSClientList() {
+    if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+        JsonDocument json;
+        json["wsSlaves"] = (_wsClientCount > 0) ? _wsClientCount - 1 : 0;
+        json["wsMax"] = WS_MAX_CLIENTS;
+        JsonArray arr = json["wsClientList"].to<JsonArray>();
+        for (uint8_t i = 0; i < _wsClientCount; i++) {
+            JsonObject c = arr.add<JsonObject>();
+            c["id"] = _wsClientIds[i];
+            c["ip"] = _wsClientIps[i];
+            c["master"] = (_wsClientIds[i] == _wsMasterId);
+        }
+
+        // Action log (oldest first)
+        JsonArray logArr = json["wsActionLog"].to<JsonArray>();
+        uint8_t idx = (_wsLogHead + WS_LOG_SIZE - _wsLogCount) % WS_LOG_SIZE;
+        for (uint8_t i = 0; i < _wsLogCount; i++) {
+            WsLogEntry* e = &_wsActionLog[idx];
+            JsonObject le = logArr.add<JsonObject>();
+            le["t"]  = e->timestamp;
+            le["c"]  = e->clientId;
+            le["ty"] = e->type;
+            le["v1"] = e->val1;
+            le["v2"] = e->val2;
+            le["v3"] = e->val3;
+            idx = (idx + 1) % WS_LOG_SIZE;
+        }
+
+        static char buffer[1536];
+        size_t len = serializeJson(json, buffer, sizeof(buffer));
+        if (len > 0 && len < sizeof(buffer)) {
+            ws.textAll(buffer, len);
+        }
+        xSemaphoreGive(dataMutex);
+    }
+}
+
 // ============================================================================
 // sendPeekData — Broadcast current LED colors as binary frame (WLED-compatible)
 // ============================================================================
@@ -112,6 +219,10 @@ void notifyClients(bool includeParams)
         json["uptime"] = millis() / 1000;
         json["heap"] = ESP.getFreeHeap() / 1024;
         json["ver"] = SML_VERSION;
+
+        // WebSocket client count (slaves only — master doesn't count)
+        json["wsSlaves"] = (_wsClientCount > 0) ? _wsClientCount - 1 : 0;
+        json["wsMax"] = WS_MAX_CLIENTS;
 
         // Añade el color actual (modern API)
         JsonObject color = json["color"].to<JsonObject>();
@@ -250,7 +361,7 @@ void notifySensorData()
 // Handle incoming WebSocket messages
 // ============================================================================
 
-void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
+void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clientId, IPAddress clientIp)
 {
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
@@ -297,6 +408,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
                 if (stripLed.powerState) stripLed.update();
                 xSemaphoreGive(dataMutex);
             }
+            _wsLogAction(clientId, 0, effectId, 0, 0);
         }
 
         // ⚠ action puede ser NULL si el mensaje solo trae effectId
@@ -343,6 +455,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             stripLed.powerState = !stripLed.powerState;
             stripLed.powerState ? stripLed.update() : stripLed.clear();
             if (!stripLed.powerState) randomMode = 0;
+            _wsLogAction(clientId, 4, stripLed.powerState ? 1 : 0, 0, 0);
         }
         else if (strcmp(action, "lamp") == 0)
         {
@@ -351,6 +464,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
 #ifdef DEBUG_LED
             debuglnD(lampState ? "Lampara ON" : "Lampara OFF");
 #endif
+            _wsLogAction(clientId, 5, lampState ? 1 : 0, 0, 0);
         }
         else if (strcmp(action, "animation") == 0 || strcmp(action, "vu") == 0 || strcmp(action, "indicator") == 0)
         {
@@ -367,6 +481,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             debuglnD_NUM(brightness, "%d");
 #endif
             stripLed.brightness = brightness;
+            _wsLogAction(clientId, 2, brightness, 0, 0);
         }
         else if (strcmp(action, "toggleBatt") == 0) {
             randomMode = 0;  // Exit random mode
@@ -403,6 +518,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
             debugD(", ");
             debuglnD_NUM(stripLed.B, "%d");
 #endif
+            _wsLogAction(clientId, 1, stripLed.R, stripLed.G, stripLed.B);
         }
         else if (strcmp(action, "music") == 0)
         {
@@ -415,14 +531,17 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
                 debuglnD("Apagado del modulo BT");
             }
 #endif
+            _wsLogAction(clientId, 6, bt_powerState ? 1 : 0, 0, 0);
         }
         else if (strcmp(action, "randomFX") == 0)
         {
             randomMode = json["state"].as<bool>() ? 1 : 0;
+            _wsLogAction(clientId, 7, 1, 0, 0);
         }
         else if (strcmp(action, "randomVU") == 0)
         {
             randomMode = json["state"].as<bool>() ? 2 : 0;
+            _wsLogAction(clientId, 7, 2, 0, 0);
         }
         // ── setParams: fx setters bajo mutex, saveEffectParams sin mutex ──
         else if (strcmp(action, "setParams") == 0)
@@ -439,6 +558,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
                 if (!json["check2"].isNull()) fx->setCheck2(json["check2"].as<int>() != 0);
                 if (!json["check3"].isNull()) fx->setCheck3(json["check3"].as<int>() != 0);
                 if (!json["palette"].isNull()) fx->setPaletteIndex(json["palette"].as<uint8_t>());
+                _wsLogAction(clientId, 3, id, json["speed"] | fx->getSpeed(), json["intensity"] | fx->getIntensity());
 #ifdef DEBUG_WEBSOCKET
                 debugD("setParams effectId=");
                 debugD_NUM(id, "%u");
@@ -478,6 +598,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
     switch (type)
     {
     case WS_EVT_CONNECT:
+    {
 #ifdef DEBUG_WEBSOCKET
         debugD("WebSocket client #");
         debugD_NUM(client->id(), "%u");
@@ -490,6 +611,9 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
         debuglnD("✅ WebSocket client connected");
 #endif
 
+        // Track client
+        _wsAddClient(client->id(), client->remoteIP());
+
         // If in battery sleep or connecting, wake up immediately
         if (currentPowerState == POWER_BATTERY_SLEEP ||
             currentPowerState == POWER_BATTERY_CONNECTING) {
@@ -499,33 +623,42 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
             transitionToState(POWER_BATTERY_ACTIVE);
         }
 
-        // Metadata disponible via HTTP GET /fxdata (cargado por la UI al iniciar)
-
-        // Enviar estado completo al conectar
+        // Enviar estado completo + client list al conectar
         stateGeneration++;
         notifyClients(true);
+        notifyWSClientList();
         break;
+    }
     case WS_EVT_DISCONNECT:
+    {
 #ifdef DEBUG_WEBSOCKET
         debugD("WebSocket client #");
         debugD_NUM(client->id(), "%u");
         debugD(" disconnected\n");
 #endif
-        webSocketClientConnected = false;
+        // Remove from tracking BEFORE setting webSocketClientConnected
+        _wsRemoveClient(client->id());
+
+        webSocketClientConnected = (_wsClientCount > 0);
 #ifdef DEBUG_POWER_MANAGEMENT
         debuglnD("❌ WebSocket client disconnected");
 #endif
 
+        // Notify remaining clients about the updated list
+        notifyWSClientList();
+
         // If in battery active mode, go back to connecting (wait 30s)
-        if (currentPowerState == POWER_BATTERY_ACTIVE) {
+        if (currentPowerState == POWER_BATTERY_ACTIVE &&
+            _wsClientCount == 0) {
 #ifdef DEBUG_POWER_MANAGEMENT
-            debuglnD("💤 Client disconnected - waiting 30s for reconnect");
+            debuglnD("💤 No clients left - waiting 30s for reconnect");
 #endif
             transitionToState(POWER_BATTERY_CONNECTING);
         }
         break;
+    }
     case WS_EVT_DATA:
-        handleWebSocketMessage(arg, data, len);
+        handleWebSocketMessage(arg, data, len, client->id(), client->remoteIP());
         break;
     case WS_EVT_PONG:
 #ifdef DEBUG_WEBSOCKET

@@ -14,9 +14,6 @@
 // ──────────────────────────────────────────────────────────────────────────────
 
 class SunriseEffect : public Effect {
-private:
-    uint8_t _progress = 0;  // 0-255 = sunrise progress
-
 public:
     static const char _meta[];
 
@@ -27,14 +24,22 @@ public:
     const char* getMeta() const override { return _meta; }
 
     void render() override {
-        uint8_t speed = map(params.speed, 0, 255, 1, 20);
-        _progress = qadd8(_progress, speed);
+        // ── Continuous sunrise/sunset cycle via triangle wave ─────────────────
+        //   counter = millis() * ((speed >> 2) + 2)
+        //   triwave8(counter >> 8) → 0-254-0 continuous oscillation
+        //   At speed=64:  period ≈ 3.6s
+        //   At speed=255: period ≈ 1.0s
+        unsigned counter = millis() * ((params.speed >> 2) + 2);
+        uint8_t progress = triwave8(counter >> 8);  // 0-254 triangle wave
 
-        // Use palette for color, _progress for palette position and brightness fade-in
+        // Palette index & brightness both driven by progress:
+        //   progress=0   → first palette color, dim    (warm sunrise start)
+        //   progress=254 → last palette color,  bright (bright daylight)
+        // Then fades back down for sunset.
         CRGB color = ColorFromPalette(
             PaletteManager::getPalette(_paletteIndex),
-            _progress,
-            _progress,
+            progress,
+            progress,
             LINEARBLEND
         );
         fill_solid(leds, numLeds, color);

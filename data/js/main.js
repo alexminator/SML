@@ -27,6 +27,25 @@ let websocket = null;
 let json = { action: '' };   // Reused for sending commands (player.js pattern)
 const batt = { level: 0, charging: false, fullbatt: false };
 
+// Effect ID → human-readable name (used by config.js for action log)
+const effectIdToName = {
+  0: 'Solid',
+  1: 'Fire', 2: 'Moving Dot', 3: 'Rainbow Beat', 4: 'RWB', 5: 'Ripple',
+  6: 'Balls', 7: 'Juggle', 8: 'Sinelon', 9: 'Comet', 10: 'Breath',
+  11: 'Color Sweep', 12: 'Rainbow VU', 13: 'Oldskool VU', 14: 'Rainbow Hue VU',
+  15: 'Ripple VU', 16: 'Three Bars VU', 17: 'Ocean VU',
+  18: 'Temperature', 19: 'Battery',
+  20: 'Color Wipe', 21: 'Theater Chase', 22: 'Running Lights',
+  23: 'Dissolve', 24: 'Dual Scan', 25: 'Fade', 26: 'Meteor',
+  27: 'Sparkle', 28: 'BPM', 29: 'Plasma', 30: 'Fireworks',
+  31: 'Lightning', 32: 'Pride 2015', 33: 'Color Waves', 34: 'Pacifica',
+  35: 'TwinkleFOX', 36: 'Aurora', 37: 'Popcorn',
+  38: 'Larson Scanner', 39: 'Heartbeat', 40: 'ICU',
+  41: 'Sunrise', 42: 'Drip', 43: 'Candle', 44: 'Chunchun',
+  45: 'Halloween Eyes',
+  46: 'Gravimeter VU', 47: 'Noisemeter VU', 48: 'DJ Light VU', 49: 'PS1 DGEQ VU',
+};
+
 // ============================================================================
 // APP STATE
 // ============================================================================
@@ -1551,6 +1570,18 @@ function handleMessage(data) {
     SML.deviceIP = data.ip;
   }
 
+  // ── WEBSOCKET CLIENT COUNT (status bar eye icon, slaves only) ──
+  if (data.wsSlaves !== undefined && data.wsMax !== undefined) {
+    updateWSClientCount(data.wsSlaves, data.wsMax);
+  }
+
+  // ── WEBSOCKET CLIENT LIST + ACTION LOG (Config tab) ──
+  if (data.wsClientList !== undefined && Array.isArray(data.wsClientList)) {
+    if (typeof updateWSClientList === 'function') {
+      updateWSClientList(data.wsClientList, data.wsActionLog);
+    }
+  }
+
   // ── CONFIG TAB (delegado a config.js) ──
   if (typeof updateSystemInfo === 'function') {
     updateSystemInfo(data);
@@ -1585,6 +1616,33 @@ function updateConnectionStatus(connected) {
   }
 }
 
+function updateWSClientCount(slaves, max) {
+  const indicator = document.getElementById('wsIndicator');
+  const icon = document.getElementById('wsEyeIcon');
+  const countEl = document.getElementById('wsCount');
+  if (!indicator || !icon) return;
+
+  if (slaves === 0) {
+    // Only master or nobody — hide the eye icon entirely
+    indicator.style.display = 'none';
+    return;
+  }
+
+  // Show with slave count
+  indicator.style.display = 'flex';
+  if (countEl) countEl.textContent = slaves;
+
+  // Color by load: green (few) → yellow (moderate) → red pulsing (near limit)
+  // max = 8 total clients, so slaves max = 7
+  icon.classList.remove('ws-warn', 'ws-danger');
+  if (slaves >= max - 1) {
+    icon.classList.add('ws-danger');    // 7 slaves = all slots full
+  } else if (slaves >= max - 3) {
+    icon.classList.add('ws-warn');      // 5-6 slaves = approaching limit
+  }
+  // else green (1-4 slaves, plenty of room)
+}
+
 // ============================================================================
 // PLAYER CONTROLS (bridge for player.js)
 // ============================================================================
@@ -1596,17 +1654,31 @@ function initPlayerBridge() {
 // sendWebSocketCommand is already declared in player.js — bridge not needed here.
 
 // ============================================================================
-// TOAST
+// TOAST — FIFO queue, one at a time
 // ============================================================================
 
+const _toastQueue = [];
+let _toastActive = false;
+
 function showToast(message, type) {
+  type = type || 'info';
+  _toastQueue.push({ message, type });
+  _processToastQueue();
+}
+
+function _processToastQueue() {
+  if (_toastActive || _toastQueue.length === 0) return;
+  _toastActive = true;
+
+  const { message, type } = _toastQueue.shift();
   const container = document.getElementById('toastContainer');
-  if (!container) return;
+  if (!container) {
+    _toastActive = false;
+    return;
+  }
+
   const toast = document.createElement('div');
   toast.className = 'toast';
-
-  // Type (success, error, warning, info — defaults to info)
-  type = type || 'info';
   toast.classList.add(type);
 
   // Icon map
@@ -1624,7 +1696,13 @@ function showToast(message, type) {
   `;
 
   container.appendChild(toast);
-  setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
+
+  // Show next after this one finishes (animation duration + visible time)
+  setTimeout(() => {
+    if (toast.parentNode) toast.remove();
+    _toastActive = false;
+    _processToastQueue();
+  }, 3000);
 }
 
 // ============================================================================
