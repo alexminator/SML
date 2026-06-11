@@ -30,6 +30,14 @@ void TaskWebSocket(void *pvParameters) {
         ws.cleanupClients();
         notifySensorData();    // Solo sensores — ~180 bytes vs ~940
 
+        // Periodic broadcast of client list + action log (cada ~15s)
+        // notifyWSClientList() tiene dirty-check interno, solo envía si hubo cambios
+        static uint8_t wsListCycle = 0;
+        if (++wsListCycle >= 5) {
+            wsListCycle = 0;
+            notifyWSClientList();
+        }
+
         // Monitor stack every 10 cycles
         static uint8_t cycleCount = 0;
         if (++cycleCount >= WEBSOCKET_STACK_CHECK_CYCLES) {

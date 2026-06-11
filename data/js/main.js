@@ -173,6 +173,9 @@ function switchTab(tabId) {
   });
   SML.currentTab = tabId;
 
+  // Dispatch custom event for config.js polling
+  document.dispatchEvent(new CustomEvent('tabSwitch', { detail: { tab: tabId } }));
+
   // Stop peek render when leaving peek tab
   if (tabId !== 'tabPeek' && typeof peek !== 'undefined' && peek) {
     peek.stop();

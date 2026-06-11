@@ -156,3 +156,36 @@ function _fmtUptime(sec) {
   const s = String(sec % 60).padStart(2, '0');
   return `${h}:${m}:${s}`;
 }
+
+// ============================================================================
+// POLLING — Config tab auto-refresh
+// ============================================================================
+// Polls the server every 10s for client list + action log when config tab
+// is active. Falls back gracefully if sendCmd/switchTab are not available.
+// ============================================================================
+
+(function() {
+  const POLL_INTERVAL = 10000; // 10 seconds
+
+  // Store the current tab for cross-module checking
+  let currentTab = '';
+
+  // Listen for tab switches
+  document.addEventListener('tabSwitch', (e) => {
+    currentTab = e.detail?.tab || '';
+  });
+
+  // Also hook into window.SML if available
+  function isConfigTabActive() {
+    if (typeof SML !== 'undefined' && SML.currentTab) {
+      return SML.currentTab === 'tabConfig';
+    }
+    return currentTab === 'tabConfig';
+  }
+
+  setInterval(() => {
+    if (!isConfigTabActive()) return;
+    if (typeof sendCmd !== 'function') return;
+    sendCmd({ action: 'refreshClientList' });
+  }, POLL_INTERVAL);
+})();

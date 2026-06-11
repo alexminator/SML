@@ -28,6 +28,7 @@ static uint32_t   _wsClientIds[WS_MAX_CLIENTS];
 static IPAddress  _wsClientIps[WS_MAX_CLIENTS];
 static uint8_t    _wsClientCount = 0;
 static uint32_t   _wsMasterId = 0;
+static uint8_t    _wsChangesGeneration = 0;  // ++ on any change (log, connect, disconnect)
 
 static void _wsAddClient(uint32_t id, IPAddress ip) {
     if (_wsClientCount >= WS_MAX_CLIENTS) return;
@@ -35,6 +36,7 @@ static void _wsAddClient(uint32_t id, IPAddress ip) {
     _wsClientIds[_wsClientCount] = id;
     _wsClientIps[_wsClientCount] = ip;
     _wsClientCount++;
+    _wsChangesGeneration++;
 }
 
 static void _wsRemoveClient(uint32_t id) {
@@ -48,6 +50,7 @@ static void _wsRemoveClient(uint32_t id) {
             if (id == _wsMasterId && _wsClientCount > 0) {
                 _wsMasterId = _wsClientIds[0];  // next client becomes master
             }
+            _wsChangesGeneration++;
             break;
         }
     }
@@ -82,6 +85,7 @@ static void _wsLogAction(uint32_t clientId, uint8_t type, int16_t v1, int16_t v2
     e->val3 = v3;
     _wsLogHead = (_wsLogHead + 1) % WS_LOG_SIZE;
     if (_wsLogCount < WS_LOG_SIZE) _wsLogCount++;
+    _wsChangesGeneration++;  // Signal that log data has changed
 }
 
 // ============================================================================
@@ -89,13 +93,20 @@ static void _wsLogAction(uint32_t clientId, uint8_t type, int16_t v1, int16_t v2
 // ============================================================================
 
 void notifyWSClientList() {
+    // Dirty check: skip if nothing changed since last broadcast
+    static uint8_t lastSentGen = 0xFF;
+    if (_wsChangesGeneration == lastSentGen) return;
+
     if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
-        JsonDocument json;
+        // Mark as sent ONLY after successful mutex acquisition,
+        // so it retries if the mutex was temporarily busy
+        lastSentGen = _wsChangesGeneration;
+        StaticJsonDocument<1536> json;
         json["wsSlaves"] = (_wsClientCount > 0) ? _wsClientCount - 1 : 0;
         json["wsMax"] = WS_MAX_CLIENTS;
         JsonArray arr = json["wsClientList"].to<JsonArray>();
         for (uint8_t i = 0; i < _wsClientCount; i++) {
-            JsonObject c = arr.add<JsonObject>();
+            JsonObject c = arr.add().to<JsonObject>();
             c["id"] = _wsClientIds[i];
             c["ip"] = _wsClientIps[i];
             c["master"] = (_wsClientIds[i] == _wsMasterId);
@@ -106,7 +117,7 @@ void notifyWSClientList() {
         uint8_t idx = (_wsLogHead + WS_LOG_SIZE - _wsLogCount) % WS_LOG_SIZE;
         for (uint8_t i = 0; i < _wsLogCount; i++) {
             WsLogEntry* e = &_wsActionLog[idx];
-            JsonObject le = logArr.add<JsonObject>();
+            JsonObject le = logArr.add().to<JsonObject>();
             le["t"]  = e->timestamp;
             le["c"]  = e->clientId;
             le["ty"] = e->type;
@@ -196,7 +207,7 @@ void notifyClients(bool includeParams)
 {
     // Take mutex for reading shared data
     if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
-        JsonDocument json;
+        StaticJsonDocument<2048> json;
 
         // Usar valores numéricos directamente en JSON
         json["battVoltage"] = batt.battVolts;
@@ -323,7 +334,7 @@ void notifySensorData()
         lastGen = stateGeneration;
 
         // Small document — only real-time sensor/status fields (~180 bytes)
-        JsonDocument json;
+        StaticJsonDocument<512> json;
 
         json["level"] = batt.battLvl;
         json["battVoltage"] = batt.battVolts;
@@ -366,7 +377,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
     {
-        JsonDocument json;
+        StaticJsonDocument<512> json;
         DeserializationError err = deserializeJson(json, data);
         if (err)
         {
@@ -415,6 +426,14 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
         if (action == nullptr) {
             stateGeneration++;
             notifyClients();  // notifyClients toma su propio dataMutex
+            notifyWSClientList();  // Broadcast updated action log
+            return;
+        }
+
+        // ── REFRESH CLIENT LIST (force broadcast of current list + action log) ──
+        if (strcmp(action, "refreshClientList") == 0) {
+            _wsChangesGeneration++;  // Force notifyWSClientList past dirty-check
+            notifyWSClientList();
             return;
         }
 
@@ -576,6 +595,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
                     // Si falla, no podemos seguir — notificar y salir
                     stateGeneration++;
                     notifyClients();
+                    notifyWSClientList();
                     return;
                 }
             }
@@ -586,6 +606,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
         } // end else (shared-state actions)
         stateGeneration++;
         notifyClients();
+        notifyWSClientList();  // Broadcast updated action log
     }
 }
 

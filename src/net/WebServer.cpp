@@ -194,7 +194,7 @@ const char* processor(const String &var)
     {
     case COLOR:
     {
-        JsonDocument doc;
+        StaticJsonDocument<128> doc;
         doc["color"]["r"] = stripLed.R;
         doc["color"]["g"] = stripLed.G;
         doc["color"]["b"] = stripLed.B;
@@ -276,7 +276,7 @@ void initWebServer()
     server.on("/wifi-info", HTTP_GET, [](AsyncWebServerRequest *request)
     {
       AsyncResponseStream *response = request->beginResponseStream("application/json");
-      JsonDocument json;
+      StaticJsonDocument<256> json;
       json["status"] = "ok";
       json["ssid"] = WiFi.SSID();
       json["ip"] = WiFi.localIP();
@@ -359,7 +359,7 @@ void initWebServer()
 
     // Endpoint: metadata de todos los efectos (estilo WLED /json/fxda)
     server.on("/fxdata", HTTP_GET, [](AsyncWebServerRequest *request) {
-      JsonDocument fxJson;
+      StaticJsonDocument<8192> fxJson;
       JsonObject metas = fxJson.to<JsonObject>();
       for (uint8_t i = 0; i < EFFECT_COUNT; i++) {
         Effect* fx = effectRegistry[i].instance;
@@ -374,7 +374,7 @@ void initWebServer()
 
     // Endpoint: lista de paletas con nombres y colores representativos
     server.on("/palettes", HTTP_GET, [](AsyncWebServerRequest *request) {
-      JsonDocument pDoc;
+      StaticJsonDocument<4096> pDoc;
       uint8_t cnt = PaletteManager::count();
       // Nombres
       JsonArray names = pDoc["names"].to<JsonArray>();
