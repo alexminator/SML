@@ -24,6 +24,8 @@ function updateSystemInfo(data) {
       str += m + 'm';
       setDataValue(el, str);
     }
+    // Sync browser time for action log timestamps
+    syncWsTime(data.uptime);
   }
 
   // ── FREE HEAP ──
@@ -126,35 +128,57 @@ function updateWSClientList(clients, actionLog) {
  * @returns {string} HTML string
  */
 function _formatActionEntry(e) {
-  const uptime = _fmtUptime(e.t);
+  const timeStr = _formatWsTime(e.t);
   switch (e.ty) {
     case 0: // effect change
-      return `<span class="ws-action-time">${uptime}</span> <span class="fas fa-star" style="color:var(--accent)"></span> Effect → <strong>${effectIdToName[e.v1] || 'ID ' + e.v1}</strong>`;
+      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-star" style="color:var(--accent)"></span> Effect → <strong>${effectIdToName[e.v1] || 'ID ' + e.v1}</strong>`;
     case 1: // color
-      return `<span class="ws-action-time">${uptime}</span> <span class="fas fa-palette" style="color:var(--accent)"></span> Color <span class="ws-color-swatch" style="background:rgb(${e.v1},${e.v2},${e.v3})"></span> RGB(${e.v1}, ${e.v2}, ${e.v3})`;
+      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-palette" style="color:var(--accent)"></span> Color <span class="ws-color-swatch" style="background:rgb(${e.v1},${e.v2},${e.v3})"></span> RGB(${e.v1}, ${e.v2}, ${e.v3})`;
     case 2: // brightness
-      return `<span class="ws-action-time">${uptime}</span> <span class="fas fa-sun" style="color:var(--accent-warning)"></span> Brightness → ${e.v1}`;
+      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-sun" style="color:var(--accent-warning)"></span> Brightness → ${e.v1}`;
     case 3: // params
-      return `<span class="ws-action-time">${uptime}</span> <span class="fas fa-sliders-h" style="color:var(--accent-secondary)"></span> Params (speed=${e.v2}, intensity=${e.v3})`;
+      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-sliders-h" style="color:var(--accent-secondary)"></span> Params (speed=${e.v2}, intensity=${e.v3})`;
     case 4: // power toggle
-      return `<span class="ws-action-time">${uptime}</span> <span class="fas fa-power-off" style="color:${e.v1 ? 'var(--accent-success)' : 'var(--accent-danger)'}"></span> ${e.v1 ? 'ON' : 'OFF'}`;
+      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-power-off" style="color:${e.v1 ? 'var(--accent-success)' : 'var(--accent-danger)'}"></span> ${e.v1 ? 'ON' : 'OFF'}`;
     case 5: // lamp
-      return `<span class="ws-action-time">${uptime}</span> <span class="fas fa-lightbulb" style="color:${e.v1 ? 'var(--accent-warning)' : 'var(--text-secondary)'}"></span> Lamp ${e.v1 ? 'ON' : 'OFF'}`;
+      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-lightbulb" style="color:${e.v1 ? 'var(--accent-warning)' : 'var(--text-secondary)'}"></span> Lamp ${e.v1 ? 'ON' : 'OFF'}`;
     case 6: // bt
-      return `<span class="ws-action-time">${uptime}</span> <span class="fab fa-bluetooth-b" style="color:${e.v1 ? '#0072ff' : 'var(--text-secondary)'}"></span> BT ${e.v1 ? 'ON' : 'OFF'}`;
+      return `<span class="ws-action-time">${timeStr}</span> <span class="fab fa-bluetooth-b" style="color:${e.v1 ? '#0072ff' : 'var(--text-secondary)'}"></span> BT ${e.v1 ? 'ON' : 'OFF'}`;
     case 7: // random
-      return `<span class="ws-action-time">${uptime}</span> <span class="fas fa-shuffle" style="color:var(--accent)"></span> Random ${e.v1 === 1 ? 'FX' : 'VU'} ${e.v1 ? 'ON' : 'OFF'}`;
+      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-shuffle" style="color:var(--accent)"></span> Random ${e.v1 === 1 ? 'FX' : 'VU'} ${e.v1 ? 'ON' : 'OFF'}`;
     default:
-      return `<span class="ws-action-time">${uptime}</span> Action #${e.ty}`;
+      return `<span class="ws-action-time">${timeStr}</span> Action #${e.ty}`;
   }
 }
 
-/** Format uptime seconds → "HH:MM:SS" */
+/** Format uptime seconds → "HH:MM:SS" (fallback) */
 function _fmtUptime(sec) {
   const h = String(Math.floor(sec / 3600)).padStart(2, '0');
   const m = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
   const s = String(sec % 60).padStart(2, '0');
   return `${h}:${m}:${s}`;
+}
+
+// ============================================================================
+// TIME SYNC — Convierte uptime del ESP32 a hora local del navegador
+// ============================================================================
+let _wsTimeRef = null;  // { browserMs, espUptime }
+
+/** Llamar cuando se recibe data.uptime desde el ESP32 */
+function syncWsTime(espUptime) {
+  _wsTimeRef = { browserMs: Date.now(), espUptime };
+}
+
+/** Formatea un timestamp del ESP32 como hora local del navegador */
+function _formatWsTime(espUptime) {
+  if (!_wsTimeRef) return _fmtUptime(espUptime);
+  const msAgo = (_wsTimeRef.espUptime - espUptime) * 1000;
+  const t = new Date(_wsTimeRef.browserMs - msAgo);
+  const now = new Date();
+  // Misma fecha → solo hora; distinta fecha → fecha completa
+  return t.toDateString() === now.toDateString()
+    ? t.toLocaleTimeString()
+    : t.toLocaleString();
 }
 
 // ============================================================================

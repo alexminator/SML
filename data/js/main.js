@@ -910,16 +910,15 @@ function renderPaletteSection(effId, paletteData, currentPalette) {
   const cfg = effectMetaCache[effId];
   const effectDefPal = cfg ? cfg.defaultPalette : 0;
 
-  // Build display order: effect's own default first, then regular palettes (0-17)
-  // Skip other effects' default palettes (indices 18-26 that don't match this effect)
+  // Build display order: effect's own default first (if special > 17),
+  // then regular palettes (0-17). No mostrar defaults de otros efectos.
   const displayIndices = [];
   if (effectDefPal > 17) {
-    displayIndices.push(effectDefPal);  // this effect's default first
+    displayIndices.push(effectDefPal);
   }
   for (let i = 0; i <= 17; i++) {
-    displayIndices.push(i);             // regular palettes
+    displayIndices.push(i);
   }
-  // (indices 18-26 not matching current effect are skipped)
 
   let html = '<div class="palette-section">';
   html += '<div class="palette-section-title"><span class="fas fa-palette"></span> Color Palette</div>';
@@ -939,7 +938,8 @@ function renderPaletteSection(effId, paletteData, currentPalette) {
       html += `<span class="palette-color" style="background:rgb(${r},${g},${b})"></span>`;
     }
     html += '</div>';
-    html += `<span class="palette-name">${paletteData.names[i]}</span>`;
+    const isDefault = (i === effectDefPal && effectDefPal > 17);
+    html += `<span class="palette-name">${paletteData.names[i]}${isDefault ? '<span class="palette-default-label">(Default)</span>' : ''}</span>`;
     html += `<div class="palette-check-mark">${selected ? '✓' : ''}</div>`;
     html += '</div>';
   });
