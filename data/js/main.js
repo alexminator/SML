@@ -508,6 +508,14 @@ function initEffectCards() {
       }
 
       // ── Normal effect cards ──
+      // Si el efecto ya está activo y no estamos en random mode,
+      // solo abrir configuración sin enviar comando redundante al ESP32
+      if (wasActive && !SML.randomFXMode && !SML.randomVUMode) {
+        closeEffectConfig();
+        showEffectConfig(effId, card);
+        return;
+      }
+
       // Si random estaba activo, detenerlo (backend + frontend)
       if (SML.randomFXMode) {
         stopRandomFX();
