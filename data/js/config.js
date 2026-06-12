@@ -105,7 +105,7 @@ function updateWSClientList(clients, actionLog) {
     wrapper.appendChild(item);
 
     // ── Action log for this client ──
-    const log = (container._actionLog || []).filter(e => e.c === c.id).slice(-4);
+    const log = (container._actionLog || []).filter(e => e.c === c.id).slice(-10);
     if (log.length > 0) {
       const logContainer = document.createElement('div');
       logContainer.className = 'ws-client-actions';
@@ -146,6 +146,10 @@ function _formatActionEntry(e) {
       return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-bluetooth" style="color:${e.v1 ? '#0072ff' : 'var(--text-secondary)'}"></span> BT ${e.v1 ? 'ON' : 'OFF'}`;
     case 7: // random
       return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-shuffle" style="color:var(--accent)"></span> Random ${e.v1 === 1 ? 'FX' : 'VU'} ${e.v1 ? 'ON' : 'OFF'}`;
+    case 8: // batería (visualización de carga)
+    return `<span class="ws-action-time">${timeStr}</span><span class="fas fa-battery-full" style="color:${e.v1 ? '#5cb85c' : 'var(--text-secondary)'}"></span> Battery ${e.v1 ? 'ON' : 'OFF'}`;
+    case 9: // temperatura (visualización de sensor)
+    return `<span class="ws-action-time">${timeStr}</span><span class="fas fa-thermometer-half" style="color:${e.v1 ? '#ff7f0e' : 'var(--text-secondary)'}"></span> Temp ${e.v1 ? 'ON' : 'OFF'}`;  
     default:
       return `<span class="ws-action-time">${timeStr}</span> Action #${e.ty}`;
   }
