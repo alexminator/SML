@@ -1231,19 +1231,27 @@ function handleMessage(data) {
 
   // ── BATTERY HISTORY (from ESP32 LittleFS — standalone message) ──
   if (data.battHistory && Array.isArray(data.battHistory)) {
+    console.log('[BATT] RAW data received:', JSON.stringify(data.battHistory));
+    var mappedCount = 0;
     SML.battHistory = data.battHistory.map(function(e) {
+      var t = _battLogTimeToBrowser(e.t);
+      console.log('[BATT] Entry ' + mappedCount + ': t=' + e.t + ' browserTime=' + new Date(t).toISOString() + ' v=' + e.v + ' l=' + e.l);
+      mappedCount++;
       return {
-        time: _battLogTimeToBrowser(e.t),
+        time: t,
         voltage: e.v,
         level: e.l !== undefined ? e.l : 0
       };
     });
     SML._battHistoryInitialized = true;
-    console.debug('[BATT] Loaded ' + data.battHistory.length + ' entries from ESP32 history');
+    console.log('[BATT] SML.battHistory length = ' + SML.battHistory.length);
     // Re-render chart if modal is open (auto-refresh)
     var chartEl = document.getElementById('battChartOffcanvas');
     if (chartEl && chartEl.classList.contains('open')) {
+      console.log('[BATT] Chart is open, re-rendering');
       renderBatteryChart();
+    } else {
+      console.log('[BATT] Chart is NOT open, skipping render');
     }
     return;  // battHistory is always its own message — no other fields to process
   }
@@ -2025,10 +2033,15 @@ document.addEventListener('DOMContentLoaded', () => {
 // ============================================================================
 
 function renderBatteryChart() {
+  console.log('[BATT] renderBatteryChart called');
   const canvas = document.getElementById('battChartCanvas');
-  if (!canvas) return;
+  if (!canvas) {
+    console.log('[BATT] Canvas not found!');
+    return;
+  }
   const data = SML.battHistory;
   const count = data.length;
+  console.log('[BATT] renderBatteryChart: data.length=' + count + ', first entry:', count > 0 ? JSON.stringify(data[0]) : 'none');
   const ctx = canvas.getContext('2d');
 
   // Stats

@@ -145,7 +145,16 @@ void Battery::logBatteryReading() {
     if (!logLoaded) {
         loadBatteryLog();
         logLoaded = true;
-        lastLoggedVoltage = filteredVolts;  // Prime the delta tracker
+        // If loadBatteryLog found no entries, prime tracker to current reading
+        if (battLogCount == 0) {
+            lastLoggedVoltage = filteredVolts;
+        }
+        Serial.print("[BATT] log loaded, count=");
+        Serial.print(battLogCount);
+        Serial.print(", lastV=");
+        Serial.print(lastLoggedVoltage, 3);
+        Serial.print(", lastT=");
+        Serial.println(lastLogUptime);
     }
 
     uint32_t now = millis() / 1000;
@@ -166,6 +175,13 @@ void Battery::logBatteryReading() {
     battLog[battLogHead].uptime = now;
     battLog[battLogHead].voltage = (float)filteredVolts;
     battLog[battLogHead].level = (uint8_t)constrain(battLvl, 0, 100);
+
+    Serial.print("[BATT] WRITE entry #");
+    Serial.print(battLogCount);
+    Serial.print(" V=");
+    Serial.print(filteredVolts, 3);
+    Serial.print(" t=");
+    Serial.println(now);
 
     // Advance head (circular)
     battLogHead = (battLogHead + 1) % BATT_LOG_SIZE;
@@ -280,6 +296,11 @@ void Battery::loadBatteryLog() {
             battLogCount = 0;
             battLogHead = 0;
             loaded = 0;
+        } else {
+            // Prime delta tracker to the newest entry so we don't re-log old data
+            int newestIdx = (battLogHead + BATT_LOG_SIZE - 1) % BATT_LOG_SIZE;
+            lastLoggedVoltage = battLog[newestIdx].voltage;
+            lastLogUptime = battLog[newestIdx].uptime;
         }
     }
 

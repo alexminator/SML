@@ -420,9 +420,11 @@ void notifySensorData()
 // ============================================================================
 
 static void sendBatteryHistory() {
-    if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(200)) != pdTRUE) return;
+    if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(200)) != pdTRUE) {
+        return;
+    }
 
-    // Ensure log is loaded (BatteryMonitor task may not have run yet on early connect)
+    // Ensure log is loaded
     batt.loadBatteryLog();
 
     if (batt.battLogCount == 0) {
@@ -430,34 +432,33 @@ static void sendBatteryHistory() {
         return;
     }
 
-    // Allocate buffer to linearize the circular log, then build JSON
-    int count = batt.battLogCount;
-    BattLogEntry* buf = (BattLogEntry*)malloc(count * sizeof(BattLogEntry));
-    if (!buf) {
-        xSemaphoreGive(dataMutex);
-        return;
-    }
-    batt.getBatteryLog(buf, &count);
-
+    // Build { "battHistory": [{"t":...,"v":...,"l":...}, ...] }
+    // Use the same buffer+mutex pattern as notifyClients (proven to work)
+    int count = min(batt.battLogCount, BATT_LOG_SIZE);
     size_t cap = JSON_ARRAY_SIZE(count) + count * JSON_OBJECT_SIZE(3) + 64;
     DynamicJsonDocument doc(cap);
     JsonArray arr = doc["battHistory"].to<JsonArray>();
+    int idx = (batt.battLogHead + BATT_LOG_SIZE - count) % BATT_LOG_SIZE;
     for (int i = 0; i < count; i++) {
         JsonObject e = arr.add().to<JsonObject>();
-        e["t"] = buf[i].uptime;
-        e["v"] = buf[i].voltage;
-        e["l"] = buf[i].level;
+        e["t"] = batt.battLog[idx].uptime;
+        e["v"] = batt.battLog[idx].voltage;
+        e["l"] = batt.battLog[idx].level;
+        idx = (idx + 1) % BATT_LOG_SIZE;
     }
-    free(buf);
+
     xSemaphoreGive(dataMutex);
 
-    // Serialize to a char buffer and send (no mutex needed for ws.textAll)
-    size_t jsonLen = measureJson(doc) + 1;
-    char* outBuf = (char*)malloc(jsonLen);
-    if (!outBuf) return;
-    serializeJson(doc, outBuf, jsonLen);
+    // Serialize to static buffer and send via textAll (same as notifyClients)
+    static char outBuf[2048];
+    size_t jsonLen = serializeJson(doc, outBuf, sizeof(outBuf));
+    if (jsonLen >= sizeof(outBuf)) return;
+
+    Serial.print("[BATT] sendBatteryHistory — sending ");
+    Serial.print(count);
+    Serial.print(" entries, jsonLen=");
+    Serial.println(jsonLen);
     ws.textAll(outBuf, jsonLen);
-    free(outBuf);
 }
 
 // ============================================================================
@@ -532,6 +533,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
 
         // ── REQUEST BATTERY HISTORY (for chart) ─────────────────────────
         if (strcmp(action, "requestBattHistory") == 0) {
+            Serial.println("[BATT] requestBattHistory received from client");
             sendBatteryHistory();
             return;
         }
@@ -800,7 +802,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
         stateGeneration++;
         notifyClients(true);
         notifyWSClientList();
-        // Send battery history (separate message — too large for notifyClients)
+        // Send battery history (separate message — now uses static buffer, proven to work)
         sendBatteryHistory();
         break;
     }

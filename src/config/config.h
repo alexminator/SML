@@ -97,7 +97,7 @@ constexpr int           BATTERY_CRITICAL_LEVEL = 15;
 constexpr int BATT_LOG_SIZE          = 200;    // Max entries in circular buffer
 constexpr int BATT_LOG_SAVE_INTERVAL = 5;      // Save to LittleFS every N writes
 constexpr float BATT_LOG_DELTA       = 0.10f;  // Min voltage change to log (Volts) — 100mV filtra ruido ADC
-constexpr int BATT_LOG_TIMEOUT       = 300;    // Force entry every 300s (5 min) even if V stable
+constexpr int BATT_LOG_TIMEOUT       = 60;     // Force entry every 60s even if V stable
 
 // ============================================================================
 // VERSION STRING (mostrado en Config tab)
