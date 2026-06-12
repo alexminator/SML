@@ -263,7 +263,7 @@ void readSensor() {
 
 void initTasks() {
     xTaskCreatePinnedToCore(TaskWebSocket,       "WebSocketTask",      4096, NULL, 1, &TaskWebSocketHandle,      0);
-    xTaskCreatePinnedToCore(TaskBatteryMonitor,  "BatteryMonitorTask", 2048, NULL, 1, &TaskBatteryMonitorHandle, 1);
+    xTaskCreatePinnedToCore(TaskBatteryMonitor,  "BatteryMonitorTask", 4096, NULL, 1, &TaskBatteryMonitorHandle, 1);
     xTaskCreatePinnedToCore(TaskLEDControl,      "LEDControlTask",     2048, NULL, 1, &TaskLEDControlHandle,     0);
     xTaskCreatePinnedToCore(TaskWiFiMonitor,     "WiFiMonitorTask",    2048, NULL, 1, &TaskWiFiMonitorHandle,    1);
     xTaskCreatePinnedToCore(TaskSensor,          "SensorTask",         2048, NULL, 1, &TaskSensorHandle,         0);

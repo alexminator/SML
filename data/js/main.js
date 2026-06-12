@@ -82,6 +82,10 @@ const SML = {
   _randomFXTimer: null,
   _randomVUTimer: null,
 
+  // Battery history (for chart) — populated from ESP32 LittleFS log on open
+  battHistory: [],
+  _battHistoryInitialized: false,
+
   // UI
   currentTab: 'tabLamp',
   isDesktop: window.innerWidth >= 768,
@@ -465,6 +469,27 @@ function initLampControls() {
 
   // Effect cards
   initEffectCards();
+
+  // Effect search/filter
+  const searchInput = document.getElementById('effectSearch');
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.toLowerCase().trim();
+      $$('.effect-card').forEach(card => {
+        const name = card.querySelector('.effect-name');
+        if (!name) return;
+        const match = !q || name.textContent.toLowerCase().includes(q);
+        card.classList.toggle('hidden-by-search', !match);
+      });
+    });
+    // Clear search when navigating away from Lamp tab
+    document.addEventListener('tabSwitch', (e) => {
+      if (e.detail?.tab !== 'tabLamp' && searchInput.value) {
+        searchInput.value = '';
+        searchInput.dispatchEvent(new Event('input'));
+      }
+    });
+  }
 }
 
 // ── Solid icon: refleja el color del picker solo si está activo ─────
@@ -1204,6 +1229,25 @@ function handleMessage(data) {
     setDataValue(document.getElementById('weatherHumVal'), Math.round(data.humidity));
   }
 
+  // ── BATTERY HISTORY (from ESP32 LittleFS — standalone message) ──
+  if (data.battHistory && Array.isArray(data.battHistory)) {
+    SML.battHistory = data.battHistory.map(function(e) {
+      return {
+        time: _battLogTimeToBrowser(e.t),
+        voltage: e.v,
+        level: e.l !== undefined ? e.l : 0
+      };
+    });
+    SML._battHistoryInitialized = true;
+    console.debug('[BATT] Loaded ' + data.battHistory.length + ' entries from ESP32 history');
+    // Re-render chart if modal is open (auto-refresh)
+    var chartEl = document.getElementById('battChartOffcanvas');
+    if (chartEl && chartEl.classList.contains('open')) {
+      renderBatteryChart();
+    }
+    return;  // battHistory is always its own message — no other fields to process
+  }
+
   // ── BATTERY ──
   if (data.level !== undefined) {
     SML.battery = data.level;
@@ -1232,9 +1276,16 @@ function handleMessage(data) {
     batt.fullbatt = data.fullbatt;
   }
 
-  // Update battery.js visualization
+  // Update battery.js liquid visualization (use displayLevel for consistency with status bar)
   if (data.level !== undefined || data.charging !== undefined || data.fullbatt !== undefined) {
-    if (typeof initBattery === 'function') initBattery(batt);
+    if (typeof initBattery === 'function') {
+      const syncBatt = {
+        level: SML.battDisplayLevel ?? batt.level,
+        charging: batt.charging,
+        fullbatt: batt.fullbatt
+      };
+      initBattery(syncBatt);
+    }
   }
 
   // ── Battery detail stats ──
@@ -1851,14 +1902,42 @@ document.addEventListener('DOMContentLoaded', () => {
     showEffectConfig(effId, activeCard);
   });
 
-  // Theme options
+  // Theme options — click to commit, hover to preview
   $$('.theme-option').forEach(opt => {
     opt.addEventListener('click', () => setTheme(opt.dataset.theme));
+    opt.addEventListener('mouseenter', () => {
+      document.documentElement.setAttribute('data-theme', opt.dataset.theme);
+    });
+    opt.addEventListener('mouseleave', () => {
+      document.documentElement.setAttribute('data-theme', SML.theme);
+    });
   });
 
   // Config save buttons
   const wifiBtn = document.getElementById('wifiSaveBtn');
   if (wifiBtn) wifiBtn.addEventListener('click', saveWiFiConfig);
+
+  // Reboot / Factory Reset
+  const rebootBtn = document.getElementById('rebootBtn');
+  if (rebootBtn) {
+    rebootBtn.addEventListener('click', () => {
+      if (confirm('⚠️ Reboot the ESP32? The connection will be lost for a few seconds.')) {
+        showToast('Rebooting...', 'info');
+        sendCmd({ action: 'reboot' });
+      }
+    });
+  }
+  const factoryResetBtn = document.getElementById('factoryResetBtn');
+  if (factoryResetBtn) {
+    factoryResetBtn.addEventListener('click', () => {
+      if (confirm('⚠️⚠️ FACTORY RESET — This will:\n\n• Clear WiFi credentials\n• Reset all effect parameters to defaults\n• Restart the device\n\nYou will need to re-connect to WiFi after this.\n\nAre you sure?')) {
+        if (confirm('⚠️ Last chance — Really factory reset?')) {
+          showToast('Factory resetting...', 'error');
+          sendCmd({ action: 'factoryReset' });
+        }
+      }
+    });
+  }
 
   // Enter key on WiFi pass
   const wifiPass = document.getElementById('wifiPass');
@@ -1866,6 +1945,58 @@ document.addEventListener('DOMContentLoaded', () => {
     wifiPass.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') saveWiFiConfig();
     });
+  }
+
+  // Battery chart button
+  const battChartBtn = document.getElementById('batteryChartBtn');
+  const battChartOverlay = document.getElementById('battChartOverlay');
+  const battChartOffcanvas = document.getElementById('battChartOffcanvas');
+  const battChartClose = document.getElementById('battChartClose');
+
+  let _battChartRefreshTimer = null;
+
+  function openBatteryChart() {
+    if (!battChartOffcanvas || !battChartOverlay) return;
+    // Request fresh history from ESP32 (sendCmd is no-op if WS not connected)
+    if (typeof sendCmd === 'function') {
+      sendCmd({ action: 'requestBattHistory' });
+    }
+    battChartOverlay.classList.add('open');
+    battChartOffcanvas.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    renderBatteryChart();
+    // Auto-refresh every 10s while chart is open
+    if (_battChartRefreshTimer) clearInterval(_battChartRefreshTimer);
+    _battChartRefreshTimer = setInterval(function() {
+      if (typeof sendCmd === 'function') {
+        sendCmd({ action: 'requestBattHistory' });
+      }
+    }, 10000);
+  }
+
+  function closeBatteryChart() {
+    if (!battChartOffcanvas || !battChartOverlay) return;
+    battChartOverlay.classList.remove('open');
+    battChartOffcanvas.classList.remove('open');
+    document.body.style.overflow = '';
+    if (_battChartRefreshTimer) {
+      clearInterval(_battChartRefreshTimer);
+      _battChartRefreshTimer = null;
+    }
+  }
+
+  if (battChartBtn) battChartBtn.addEventListener('click', openBatteryChart);
+  if (battChartOverlay) battChartOverlay.addEventListener('click', closeBatteryChart);
+  if (battChartClose) battChartClose.addEventListener('click', closeBatteryChart);
+
+  // Re-render chart when offcanvas opens (in case new data arrived)
+  if (battChartOffcanvas) {
+    const observer = new MutationObserver(() => {
+      if (battChartOffcanvas.classList.contains('open')) {
+        renderBatteryChart();
+      }
+    });
+    observer.observe(battChartOffcanvas, { attributes: true, attributeFilter: ['class'] });
   }
 
   window.addEventListener('resize', handleResize);
@@ -1888,3 +2019,165 @@ document.addEventListener('DOMContentLoaded', () => {
   // Notify preserved modules are ready
   if (typeof initBatteryAnimation === 'function') initBatteryAnimation();
 });
+
+// ============================================================================
+// BATTERY HISTORY CHART
+// ============================================================================
+
+function renderBatteryChart() {
+  const canvas = document.getElementById('battChartCanvas');
+  if (!canvas) return;
+  const data = SML.battHistory;
+  const count = data.length;
+  const ctx = canvas.getContext('2d');
+
+  // Stats
+  let avgV = 0;
+  if (count > 0) {
+    const voltages = data.map(d => d.voltage);
+    const minV = Math.min(...voltages);
+    const maxV = Math.max(...voltages);
+    avgV = voltages.reduce((a, b) => a + b, 0) / voltages.length;
+    setDataValue(document.getElementById('battChartMin'), minV.toFixed(3) + 'V');
+    setDataValue(document.getElementById('battChartMax'), maxV.toFixed(3) + 'V');
+    setDataValue(document.getElementById('battChartAvg'), avgV.toFixed(3) + 'V');
+    setDataValue(document.getElementById('battChartCount'), count);
+  }
+
+  // Size canvas to container
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const w = rect.width;
+  const h = rect.height;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  ctx.scale(dpr, dpr);
+
+  // Clear
+  ctx.clearRect(0, 0, w, h);
+
+  // Need at least 2 points to draw
+  if (count < 2) {
+    ctx.fillStyle = '#666';
+    ctx.font = `${Math.max(12, w / 25)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`Collecting data... (${count} readings so far)`, w / 2, h / 2);
+    return;
+  }
+
+  const pad = { top: 12, bottom: 20, left: 10, right: 12 };
+  const chartW = w - pad.left - pad.right;
+  const chartH = h - pad.top - pad.bottom;
+
+  // Voltage range with padding
+  const voltages = data.map(d => d.voltage);
+  const rawMin = Math.min(...voltages);
+  const rawMax = Math.max(...voltages);
+  const range = Math.max(rawMax - rawMin, 0.1);
+  const vMin = Math.max(2.5, rawMin - range * 0.1);
+  const vMax = Math.min(4.5, rawMax + range * 0.1);
+  const vRange = vMax - vMin;
+
+  const mapX = (i) => pad.left + (i / (count - 1)) * chartW;
+  const mapY = (v) => pad.top + (1 - (v - vMin) / vRange) * chartH;
+
+  // Grid lines (horizontal)
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 5]);
+  for (let v = Math.ceil(vMin * 2) / 2; v <= vMax; v += 0.5) {
+    const y = mapY(v);
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(w - pad.right, y);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(v.toFixed(1) + 'V', w - pad.right + 4, y);
+  }
+  ctx.setLineDash([]);
+
+  // Voltage area fill gradient
+  const grad = ctx.createLinearGradient(0, pad.top, 0, h - pad.bottom);
+  grad.addColorStop(0, 'rgba(56, 189, 248, 0.25)');   // cyan
+  grad.addColorStop(1, 'rgba(56, 189, 248, 0.02)');
+  ctx.beginPath();
+  ctx.moveTo(mapX(0), mapY(voltages[0]));
+  for (let i = 1; i < count; i++) ctx.lineTo(mapX(i), mapY(voltages[i]));
+  ctx.lineTo(mapX(count - 1), h - pad.bottom);
+  ctx.lineTo(mapX(0), h - pad.bottom);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Average voltage line (red dashed)
+  const avgY = mapY(avgV);
+  ctx.beginPath();
+  ctx.setLineDash([6, 4]);
+  ctx.moveTo(pad.left, avgY);
+  ctx.lineTo(w - pad.right, avgY);
+  ctx.strokeStyle = 'rgba(239, 68, 68, 0.7)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // Average label
+  ctx.fillStyle = '#ef4444';
+  ctx.font = 'bold 10px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText('Avg ' + avgV.toFixed(3) + 'V', pad.left + 4, avgY - 2);
+
+  // Voltage line
+  ctx.beginPath();
+  ctx.moveTo(mapX(0), mapY(voltages[0]));
+  for (let i = 1; i < count; i++) ctx.lineTo(mapX(i), mapY(voltages[i]));
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Level dots (overlay as small colored circles)
+  const levels = data.map(d => d.level);
+  ctx.beginPath();
+  for (let i = 0; i < count; i++) {
+    const x = mapX(i);
+    const y = mapY(voltages[i]);
+    const lvl = levels[i];
+    const hue = lvl <= 20 ? 0 : lvl <= 40 ? 30 : lvl <= 60 ? 90 : 120;
+    ctx.fillStyle = `hsla(${hue}, 80%, 55%, 0.6)`;
+    ctx.beginPath();
+    ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Latest value label
+  const lastV = voltages[count - 1];
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText(lastV.toFixed(3) + 'V', mapX(count - 1) - 6, mapY(lastV) - 4);
+
+  // Time labels (start, middle, end)
+  const timeLabels = [
+    { i: 0, align: 'left' },
+    { i: Math.floor(count / 2), align: 'center' },
+    { i: count - 1, align: 'right' }
+  ];
+  ctx.font = '9px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  timeLabels.forEach(({ i, align }) => {
+    if (i >= count) return;
+    const d = new Date(data[i].time);
+    const t = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    ctx.textAlign = align;
+    ctx.textBaseline = 'top';
+    ctx.fillText(t, mapX(i), h - pad.bottom + 4);
+  });
+}

@@ -202,6 +202,21 @@ function _formatWsTime(espUptime) {
 }
 
 /**
+ * Convert ESP32 uptime (seconds) to browser Date timestamp (ms).
+ * Uses the same sync point as _formatWsTime for consistent time axes.
+ * @param {number} espUptime — uptime in seconds from ESP32
+ * @returns {number} browser Date.now() equivalent
+ */
+function _battLogTimeToBrowser(espUptime) {
+  if (!_wsTimeRef) {
+    // Fallback: treat as relative time from now
+    return Date.now() - espUptime * 1000;
+  }
+  const msAgo = (_wsTimeRef.espUptime - espUptime) * 1000;
+  return _wsTimeRef.browserMs - msAgo;
+}
+
+/**
  * Debug helper — llama desde la consola del navegador (F12 → Console):
  *   dumpActionLog()         → tabla con todas las entradas recibidas
  *   dumpActionLog('raw')    → JSON completo para copiar/pegar

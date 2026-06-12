@@ -7,6 +7,8 @@
 
 #include <Arduino.h>
 #include <FastLED.h>
+#include <LittleFS.h>
+#include <ArduinoJson.h>
 #include "AppState.h"
 #include "../effects/EffectRegistry.h"
 #include "config/debug_config.h"
@@ -92,6 +94,14 @@ void Battery::battMonitor() {
     int fullyCharge = digitalRead(FULL_CHARGE_PIN);
     fullBatt = fullyCharge == LOW;
     battVolts = batteryStats.getBatteryVolts();
+
+    // Exponential Moving Average filter (α=0.3) — suaviza ruido ADC para logging
+    if (filteredVolts == 0.0) {
+        filteredVolts = battVolts;
+    } else {
+        filteredVolts = 0.3 * battVolts + 0.7 * filteredVolts;
+    }
+
     battLvl = batteryStats.getBatteryChargeLevel(true);
 
 #ifdef DEBUG_BATTERY
@@ -117,6 +127,177 @@ void Battery::battMonitor() {
     debugD_NUM(battLvl, "%d");
     debuglnD("%");
 #endif
+
+    // Log reading to LittleFS-backed circular buffer (smart delta-based storage)
+    logBatteryReading();
+}
+
+// ============================================================================
+// BATTERY LOGGING — Smart delta-based storage to LittleFS
+// ============================================================================
+// Only saves when voltage changes by >= BATT_LOG_DELTA (0.01V). Circular buffer
+// of BATT_LOG_SIZE (200) entries persists to LittleFS every BATT_LOG_SAVE_INTERVAL
+// writes. Loaded on first call to make boot fast; file I/O happens lazily.
+// ============================================================================
+
+void Battery::logBatteryReading() {
+    // Lazy load on first call (avoids LittleFS delay during boot setup)
+    if (!logLoaded) {
+        loadBatteryLog();
+        logLoaded = true;
+        lastLoggedVoltage = filteredVolts;  // Prime the delta tracker
+    }
+
+    uint32_t now = millis() / 1000;
+
+    // Smart delta: only log when voltage changed >= BATT_LOG_DELTA, or if first entry,
+    // or if 30 minutes have passed since last entry (time reference for stable periods)
+    double vDiff = filteredVolts - lastLoggedVoltage;
+    if (vDiff < 0) vDiff = -vDiff;
+    bool voltageChanged = (vDiff >= BATT_LOG_DELTA);
+    bool isFirstEntry = (battLogCount == 0);
+    bool timeElapsed = (battLogCount > 0) && (now - lastLogUptime >= BATT_LOG_TIMEOUT);
+
+    if (!voltageChanged && !isFirstEntry && !timeElapsed) {
+        return;  // Skip — no meaningful change
+    }
+
+    // Write entry to circular buffer
+    battLog[battLogHead].uptime = now;
+    battLog[battLogHead].voltage = (float)filteredVolts;
+    battLog[battLogHead].level = (uint8_t)constrain(battLvl, 0, 100);
+
+    // Advance head (circular)
+    battLogHead = (battLogHead + 1) % BATT_LOG_SIZE;
+    if (battLogCount < BATT_LOG_SIZE) battLogCount++;
+
+    // Update delta tracker
+    lastLoggedVoltage = filteredVolts;
+    lastLogUptime = now;
+
+    // Save to LittleFS: force on first write, then every N writes
+    writesSinceSave++;
+    if (writesSinceSave >= BATT_LOG_SAVE_INTERVAL || battLogCount == 1) {
+        writesSinceSave = 0;
+        saveBatteryLog();
+    }
+}
+
+void Battery::saveBatteryLog() {
+    if (battLogCount == 0) return;
+
+    // Build JSON document: {"battLog":[{"t":12345,"v":3.85,"l":65},...]}
+    // Capacity: JSON_ARRAY_SIZE(N) + N*JSON_OBJECT_SIZE(3) + overhead
+    size_t cap = JSON_ARRAY_SIZE(battLogCount)
+               + battLogCount * JSON_OBJECT_SIZE(3)
+               + 64;
+    DynamicJsonDocument doc(cap);
+
+    JsonArray arr = doc["battLog"].to<JsonArray>();
+    int idx = (battLogHead + BATT_LOG_SIZE - battLogCount) % BATT_LOG_SIZE;
+    for (int i = 0; i < battLogCount; i++) {
+        JsonObject e = arr.add().to<JsonObject>();
+        e["t"] = battLog[idx].uptime;
+        e["v"] = battLog[idx].voltage;
+        e["l"] = battLog[idx].level;
+        idx = (idx + 1) % BATT_LOG_SIZE;
+    }
+
+    File f = LittleFS.open("/battlog.json", "w");
+    if (f) {
+        serializeJson(doc, f);
+        f.close();
+#ifdef DEBUG_BATTERY
+        debugD("💾 Battery log saved: ");
+        debugD_NUM(battLogCount, "%d");
+        debuglnD(" entries");
+#endif
+    } else {
+#ifdef DEBUG_BATTERY
+        debuglnW("⚠ Failed to open /battlog.json for writing");
+#endif
+    }
+}
+
+void Battery::loadBatteryLog() {
+    if (logLoaded) return;
+    logLoaded = true;
+    if (!LittleFS.exists("/battlog.json")) {
+#ifdef DEBUG_BATTERY
+        debuglnD("📂 No battery log file found — starting fresh");
+#endif
+        return;
+    }
+
+    File f = LittleFS.open("/battlog.json", "r");
+    if (!f) return;
+
+    // Estimate capacity: file size + 20% margin
+    size_t fileSize = f.size();
+    DynamicJsonDocument doc(fileSize + 256);
+    DeserializationError err = deserializeJson(doc, f);
+    f.close();
+
+    if (err) {
+#ifdef DEBUG_BATTERY
+        debugD("⚠ Battery log parse error: ");
+        debuglnD(err.c_str());
+#endif
+        return;
+    }
+
+    JsonArray arr = doc["battLog"].as<JsonArray>();
+    if (arr.isNull()) return;
+
+    uint32_t now = millis() / 1000;
+    int loaded = 0;
+    for (JsonObject e : arr) {
+        uint32_t t = e["t"] | 0;
+        float v = e["v"] | 0.0f;
+        uint8_t l = e["l"] | 0;
+        if (v < 2.0f || v > 5.0f) continue;  // Sanity check
+
+        battLog[battLogHead].uptime = t;
+        battLog[battLogHead].voltage = v;
+        battLog[battLogHead].level = l;
+        battLogHead = (battLogHead + 1) % BATT_LOG_SIZE;
+        if (battLogCount < BATT_LOG_SIZE) battLogCount++;
+        loaded++;
+    }
+
+    // Reboot detection: if the newest entry's uptime is >300s ahead of current uptime,
+    // the log is from a previous boot — discard to avoid incorrect wall-clock conversion.
+    if (battLogCount > 0) {
+        int newestIdx = (battLogHead + BATT_LOG_SIZE - 1) % BATT_LOG_SIZE;
+        if (battLog[newestIdx].uptime > now + 300) {
+#ifdef DEBUG_BATTERY
+            debugD("🔄 Reboot detected (newest entry uptime=");
+            debugD_NUM(battLog[newestIdx].uptime, "%u");
+            debugD(", current uptime=");
+            debugD_NUM(now, "%u");
+            debuglnD(") — discarding old log");
+#endif
+            battLogCount = 0;
+            battLogHead = 0;
+            loaded = 0;
+        }
+    }
+
+#ifdef DEBUG_BATTERY
+    debugD("📂 Battery log loaded: ");
+    debugD_NUM(loaded, "%d");
+    debuglnD(" entries");
+#endif
+}
+
+void Battery::getBatteryLog(BattLogEntry* outBuf, int* outCount) {
+    int idx = (battLogHead + BATT_LOG_SIZE - battLogCount) % BATT_LOG_SIZE;
+    int count = battLogCount;
+    for (int i = 0; i < count; i++) {
+        outBuf[i] = battLog[idx];
+        idx = (idx + 1) % BATT_LOG_SIZE;
+    }
+    *outCount = count;
 }
 
 // ============================================================================

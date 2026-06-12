@@ -5,10 +5,13 @@
 #include "state/AppState.h"
 #include "effects/EffectRegistry.h"
 #include "net/WebServer.h"
+#include "net/data.h"
 
 #include "config/debug_config.h"
 
 #include <WiFi.h>
+#include <Preferences.h>
+#include <LittleFS.h>
 
 #include "power/PowerMgr.h"
 
@@ -155,19 +158,20 @@ void notifyWSClientList() {
             char* logBuf = (char*)malloc(jsonLen);
             if (logBuf) {
                 size_t written = serializeJson(logJson, logBuf, jsonLen);
-                // Solo hay truncamiento si serializar no pudo escribir todos los chars
-                bool wasTruncated = (written == jsonLen - 1 && measureJson(logJson) + 1 > jsonLen);
 #ifdef DEBUG_WEBSOCKET
-                debugD("📋 Log JSON: ");
-                debugD_NUM(_wsLogCount, "%u");
-                debugD(" entries, capacity=");
-                debugD_NUM(capacity, "%u");
-                debugD(", jsonLen=");
-                debugD_NUM(jsonLen, "%u");
-                debugD(", written=");
-                debugD_NUM(written, "%u");
-                if (wasTruncated) debugD(" ⚠ TRUNCATED!");
-                debugD("\n");
+                Serial.print("📋 Log JSON: ");
+                Serial.print(_wsLogCount);
+                Serial.print(" entries, capacity=");
+                Serial.print(capacity);
+                Serial.print(", jsonLen=");
+                Serial.print(jsonLen);
+                Serial.print(", written=");
+                Serial.print(written);
+                Serial.print(", measure=");
+                Serial.print(measureJson(logJson));
+                if (written < jsonLen - 1) Serial.print(" ⚠ NEAR_TRUNCATED!");
+                if (written == 0)           Serial.print(" ⚠ WRITE_FAILED!");
+                Serial.println();
 #endif
                 ws.textAll(logBuf, written);
                 free(logBuf);
@@ -412,6 +416,51 @@ void notifySensorData()
 }
 
 // ============================================================================
+// sendBatteryHistory — Broadcast current battery log to all clients
+// ============================================================================
+
+static void sendBatteryHistory() {
+    if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(200)) != pdTRUE) return;
+
+    // Ensure log is loaded (BatteryMonitor task may not have run yet on early connect)
+    batt.loadBatteryLog();
+
+    if (batt.battLogCount == 0) {
+        xSemaphoreGive(dataMutex);
+        return;
+    }
+
+    // Allocate buffer to linearize the circular log, then build JSON
+    int count = batt.battLogCount;
+    BattLogEntry* buf = (BattLogEntry*)malloc(count * sizeof(BattLogEntry));
+    if (!buf) {
+        xSemaphoreGive(dataMutex);
+        return;
+    }
+    batt.getBatteryLog(buf, &count);
+
+    size_t cap = JSON_ARRAY_SIZE(count) + count * JSON_OBJECT_SIZE(3) + 64;
+    DynamicJsonDocument doc(cap);
+    JsonArray arr = doc["battHistory"].to<JsonArray>();
+    for (int i = 0; i < count; i++) {
+        JsonObject e = arr.add().to<JsonObject>();
+        e["t"] = buf[i].uptime;
+        e["v"] = buf[i].voltage;
+        e["l"] = buf[i].level;
+    }
+    free(buf);
+    xSemaphoreGive(dataMutex);
+
+    // Serialize to a char buffer and send (no mutex needed for ws.textAll)
+    size_t jsonLen = measureJson(doc) + 1;
+    char* outBuf = (char*)malloc(jsonLen);
+    if (!outBuf) return;
+    serializeJson(doc, outBuf, jsonLen);
+    ws.textAll(outBuf, jsonLen);
+    free(outBuf);
+}
+
+// ============================================================================
 // Handle incoming WebSocket messages
 // ============================================================================
 
@@ -479,6 +528,53 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             _lastSentLogGen = 0xFE;   // Force re-send action log
             notifyWSClientList();
             return;
+        }
+
+        // ── REQUEST BATTERY HISTORY (for chart) ─────────────────────────
+        if (strcmp(action, "requestBattHistory") == 0) {
+            sendBatteryHistory();
+            return;
+        }
+
+        // ── REBOOT / FACTORY RESET (terminal actions — no mutex needed) ──────
+        if (strcmp(action, "reboot") == 0) {
+#ifdef DEBUG_WEBSOCKET
+            debuglnD("🔄 Rebooting ESP32...");
+#endif
+            // Small delay to allow the response to be sent before restart
+            vTaskDelay(pdMS_TO_TICKS(100));
+            ESP.restart();
+            return; // never reached
+        }
+        if (strcmp(action, "factoryReset") == 0) {
+#ifdef DEBUG_WEBSOCKET
+            debuglnD("🗑 Factory reset — clearing all settings...");
+#endif
+            // Only clear WiFi credentials if compiled defaults exist as fallback.
+            // Otherwise the device would lose WiFi access with no way to recover.
+            if (strlen(WIFI_SSID) > 0) {
+                Preferences prefs;
+                prefs.begin("wifi", false);
+                prefs.clear();
+                prefs.end();
+#ifdef DEBUG_WEBSOCKET
+                debuglnD("   ✓ WiFi credentials cleared (fallback to compiled defaults)");
+#endif
+            } else {
+#ifdef DEBUG_WEBSOCKET
+                debuglnW("   ⚠ No compiled WiFi defaults — keeping saved credentials");
+#endif
+            }
+            // Delete effect params file (safe — will be recreated on next change)
+            if (LittleFS.exists("/params.json")) {
+                LittleFS.remove("/params.json");
+#ifdef DEBUG_WEBSOCKET
+                debuglnD("   ✓ Effect params cleared");
+#endif
+            }
+            vTaskDelay(pdMS_TO_TICKS(100));
+            ESP.restart();
+            return; // never reached
         }
 
         // ── GPIO-ONLY ACTIONS (no shared state) ──────────────────────────────
@@ -704,6 +800,8 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
         stateGeneration++;
         notifyClients(true);
         notifyWSClientList();
+        // Send battery history (separate message — too large for notifyClients)
+        sendBatteryHistory();
         break;
     }
     case WS_EVT_DISCONNECT:

@@ -25,18 +25,47 @@ struct Led {
 };
 
 // ============================================================================
+// STRUCT: BATTERY LOG ENTRY (for LittleFS persistence)
+// ============================================================================
+
+struct BattLogEntry {
+    uint32_t uptime;    // millis() / 1000 at reading time
+    float voltage;      // battery voltage
+    uint8_t level;      // battery level percent (0-100)
+};
+
+// ============================================================================
 // STRUCT: BATTERY
 // ============================================================================
 
 struct Battery {
     double battVolts;
+    double filteredVolts;  // EMA-smoothed voltage for logging (filters ADC noise)
     int battLvl;
     bool fullBatt;
     bool chargeState;
 
-    Battery() : battVolts(0), battLvl(0), fullBatt(false), chargeState(false) {}
+    // Battery history log (circular buffer, LittleFS-backed)
+    BattLogEntry battLog[BATT_LOG_SIZE];
+    int battLogCount;         // total entries logged so far (capped at BATT_LOG_SIZE)
+    int battLogHead;          // next write position (circular)
+    double lastLoggedVoltage; // last voltage written to log (for delta detection)
+    uint32_t lastLogUptime;   // uptime of last write (for time-based fallback)
+    int writesSinceSave;      // counter, triggers LittleFS write every BATT_LOG_SAVE_INTERVAL
+    bool logLoaded;           // true after loadBatteryLog() has been called
+
+    Battery()
+      : battVolts(0), filteredVolts(0), battLvl(0), fullBatt(false), chargeState(false),
+        battLogCount(0), battLogHead(0),
+        lastLoggedVoltage(0.0), lastLogUptime(0), writesSinceSave(0),
+        logLoaded(false)
+    {}
 
     void battMonitor();
+    void logBatteryReading();
+    void saveBatteryLog();
+    void loadBatteryLog();
+    void getBatteryLog(BattLogEntry* outBuf, int* outCount);
 };
 
 // ============================================================================

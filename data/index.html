@@ -132,6 +132,10 @@
         <!-- Visual Effects (IDs 0-37) -->
         <div class="card">
           <h2 class="card-title"><span class="fas fa-star"></span> Effects</h2>
+          <div class="effect-search">
+            <span class="fas fa-search effect-search-icon"></span>
+            <input type="text" class="effect-search-input" id="effectSearch" placeholder="Search effects..." autocomplete="off">
+          </div>
           <div class="effects-grid" id="effectsGrid">
             <button class="effect-card" data-effect-id="0">
               <svg class="effect-icon" viewBox="0 0 24 24" width="44" height="44">
@@ -738,7 +742,10 @@
       <!-- ===== TAB: BATTERY ===== -->
       <section id="tabBattery" class="tab-content">
         <div class="card">
-          <div class="battery-container">
+          <div class="battery-container" style="position:relative">
+            <button class="battery-chart-btn" id="batteryChartBtn" title="Battery history">
+              <span class="fas fa-chart-line"></span>
+            </button>
             <!-- Battery pill (clickable — toggle batt effect) -->
             <div class="battery-visual" id="batteryToggle">
               <section class="battery">
@@ -866,6 +873,25 @@
           </div>
         </div>
 
+        <!-- Device Management -->
+        <div class="config-section">
+          <div class="config-card">
+            <h3><span class="fas fa-microchip"></span> Device Management</h3>
+            <p class="config-desc">
+              Reboot the ESP32 or restore factory defaults. A factory reset clears all
+              settings (WiFi credentials, effect parameters) and restarts the device.
+            </p>
+            <div style="display:flex;gap:var(--space-sm);flex-wrap:wrap">
+              <button class="config-btn secondary" id="rebootBtn">
+                <span class="fas fa-rotate"></span> Reboot
+              </button>
+              <button class="config-btn secondary" id="factoryResetBtn" style="background:color-mix(in srgb, var(--accent-danger) 15%, transparent);border-color:color-mix(in srgb, var(--accent-danger) 30%, transparent)">
+                <span class="fas fa-trash-can"></span> Factory Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- WebSocket Clients -->
         <div class="config-section">
           <div class="config-card">
@@ -873,7 +899,7 @@
             <p class="config-desc">
               Connected devices monitoring the lamp in real time
             </p>
-            <div id="wsClientList" class="ws-client-list">
+            <div id="wsClientList" class="ws-client-list" aria-live="polite">
               <div class="ws-client-empty">No clients connected</div>
             </div>
           </div>
@@ -941,6 +967,40 @@
     </div>
 
     <!-- ============================================================
+         BATTERY CHART OFFCANVAS
+         ============================================================ -->
+    <div class="offcanvas-overlay" id="battChartOverlay"></div>
+    <aside class="offcanvas" id="battChartOffcanvas">
+      <div class="offcanvas-header">
+        <h2><span class="fas fa-chart-line"></span> Battery History</h2>
+        <button class="offcanvas-close" id="battChartClose">&times;</button>
+      </div>
+      <div class="offcanvas-body" id="battChartBody">
+        <div class="batt-chart-canvas-wrapper">
+          <canvas id="battChartCanvas"></canvas>
+        </div>
+        <div class="batt-chart-stats">
+          <div class="batt-chart-stat">
+            <span class="batt-chart-stat-label">Min</span>
+            <span class="batt-chart-stat-value" id="battChartMin">--</span>
+          </div>
+          <div class="batt-chart-stat">
+            <span class="batt-chart-stat-label">Max</span>
+            <span class="batt-chart-stat-value" id="battChartMax">--</span>
+          </div>
+          <div class="batt-chart-stat">
+            <span class="batt-chart-stat-label">Avg</span>
+            <span class="batt-chart-stat-value" id="battChartAvg">--</span>
+          </div>
+          <div class="batt-chart-stat">
+            <span class="batt-chart-stat-label">Readings</span>
+            <span class="batt-chart-stat-value" id="battChartCount">0</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ============================================================
          TOAST CONTAINER
          ============================================================ -->
     <!-- ============================================================
@@ -962,7 +1022,7 @@
       </div>
     </div>
 
-    <div class="toast-container" id="toastContainer"></div>
+    <div class="toast-container" id="toastContainer" role="alert" aria-live="polite"></div>
   </div>
 </body>
 </html>
