@@ -1588,10 +1588,16 @@ function handleMessage(data) {
     updateWSClientCount(data.wsSlaves, data.wsMax);
   }
 
-  // ── WEBSOCKET CLIENT LIST + ACTION LOG (Config tab) ──
+  // ── WEBSOCKET CLIENT LIST (Config tab) ──
   if (data.wsClientList !== undefined && Array.isArray(data.wsClientList)) {
     if (typeof updateWSClientList === 'function') {
       updateWSClientList(data.wsClientList, data.wsActionLog);
+    }
+  }
+  // ── WEBSOCKET ACTION LOG (mensaje independiente, sin client list) ──
+  else if (data.wsActionLog !== undefined && Array.isArray(data.wsActionLog)) {
+    if (typeof updateWSClientList === 'function') {
+      updateWSClientList(null, data.wsActionLog);
     }
   }
 

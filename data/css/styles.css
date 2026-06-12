@@ -2064,28 +2064,38 @@ input[type="range"]::-moz-range-thumb {
 
 .weather-stats {
   display: flex;
-  gap: var(--space-xl);
+  gap: var(--space-md);
   justify-content: center;
+  width: 100%;
 }
 
 .weather-stat {
+  flex: 1;
   text-align: center;
+  padding: var(--space-lg) var(--space-sm);
+  background: var(--glass-card-bg);
+  border-radius: var(--radius-md);
+  border: var(--glass-card-border);
+  backdrop-filter: blur(4px);
+  min-width: 0;
+  transition: background var(--t-normal), border-color var(--t-normal);
 }
 
 .weather-stat .stat-value {
-  font-size: 1.6rem;
-  font-weight: 600;
+  font-size: 1.5rem;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--text-primary);
+  line-height: 1.2;
 }
 
 .weather-stat .stat-label {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 1.2px;
   font-weight: 500;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 /* Date/time widget */
@@ -3428,8 +3438,59 @@ input[type="range"]::-moz-range-thumb {
     max-width: 100%;
   }
 
+  /* ── Weather: stack vertically on mobile ── */
   .weather-main {
-    gap: var(--space-lg);
+    flex-direction: column;
+    gap: var(--space-xl);
+    align-items: center;
+  }
+
+  .weather-info {
+    width: 100%;
+    gap: var(--space-md);
+  }
+
+  .weather-stats {
+    max-width: 320px;
+  }
+
+  .weather-stat .stat-value {
+    font-size: 1.3rem;
+  }
+
+  /* Date/time widget: full width */
+  .widget-datetime {
+    width: 100%;
+    max-width: 320px;
+    min-width: unset;
+    padding: var(--space-md);
+  }
+  .widget-date {
+    font-size: 0.8rem;
+    gap: 4px;
+  }
+  .widget-clock {
+    font-size: 1.2rem;
+  }
+  .widget-seconds {
+    display: none;
+  }
+
+  /* Smaller termometer */
+  #termometer {
+    --termometer-h: 180px;
+    --termometer-w: 20px;
+    height: var(--termometer-h);
+    width: var(--termometer-w);
+    margin-bottom: 40px;
+  }
+  #termometer:after {
+    width: 40px;
+    height: 40px;
+    bottom: -33px;
+  }
+  #temperature {
+    background-size: 100% var(--termometer-h, 180px);
   }
 
   .card {
@@ -3446,6 +3507,32 @@ input[type="range"]::-moz-range-thumb {
 
 /* Small mobile (<400px): Compact sizing */
 @media (max-width: 399px) {
+  .weather-stat {
+    padding: var(--space-md) var(--space-xs);
+  }
+  .weather-stat .stat-value {
+    font-size: 1.1rem;
+  }
+  .weather-stat .stat-label {
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+  }
+  #termometer {
+    --termometer-h: 140px;
+    --termometer-w: 18px;
+    height: var(--termometer-h);
+    width: var(--termometer-w);
+    margin-bottom: 32px;
+  }
+  #termometer:after {
+    width: 32px;
+    height: 32px;
+    bottom: -26px;
+  }
+  .widget-datetime {
+    padding: var(--space-sm) var(--space-md);
+  }
+
   .glowing span {
     font-size: 3.8rem;
     letter-spacing: 0.05em;

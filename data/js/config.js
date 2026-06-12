@@ -72,8 +72,13 @@ function updateWSClientList(clients, actionLog) {
   const container = document.getElementById('wsClientList');
   if (!container) return;
 
+  // Keep client list reference for re-renders when only log arrives
+  if (clients) container._clients = clients;
   // Keep log reference for re-renders when only log arrives
   if (actionLog) container._actionLog = actionLog;
+
+  // Use stored clients if none provided (standalone actionLog message)
+  clients = container._clients || [];
 
   // Clear previous content
   container.innerHTML = '';
@@ -143,13 +148,24 @@ function _formatActionEntry(e) {
     case 5: // lamp
       return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-lightbulb" style="color:${e.v1 ? 'var(--accent-warning)' : 'var(--text-secondary)'}"></span> Lamp ${e.v1 ? 'ON' : 'OFF'}`;
     case 6: // bt
-      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-bluetooth" style="color:${e.v1 ? '#0072ff' : 'var(--text-secondary)'}"></span> BT ${e.v1 ? 'ON' : 'OFF'}`;
+      const btSvg = '<svg viewBox="0 0 24 24" width="14" height="14" style="vertical-align:middle;display:inline-block"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" fill="currentColor"/></svg>';
+      return `<span class="ws-action-time">${timeStr}</span> ${btSvg} BT ${e.v1 ? 'ON' : 'OFF'}`;
     case 7: // random
       return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-shuffle" style="color:var(--accent)"></span> Random ${e.v1 === 1 ? 'FX' : 'VU'} ${e.v1 ? 'ON' : 'OFF'}`;
     case 8: // batería (visualización de carga)
     return `<span class="ws-action-time">${timeStr}</span><span class="fas fa-battery-full" style="color:${e.v1 ? '#5cb85c' : 'var(--text-secondary)'}"></span> Battery ${e.v1 ? 'ON' : 'OFF'}`;
     case 9: // temperatura (visualización de sensor)
-    return `<span class="ws-action-time">${timeStr}</span><span class="fas fa-thermometer-half" style="color:${e.v1 ? '#ff7f0e' : 'var(--text-secondary)'}"></span> Temp ${e.v1 ? 'ON' : 'OFF'}`;  
+    return `<span class="ws-action-time">${timeStr}</span><span class="fas fa-thermometer-half" style="color:${e.v1 ? '#ff7f0e' : 'var(--text-secondary)'}"></span> Temp ${e.v1 ? 'ON' : 'OFF'}`;
+    case 10: // volume up
+      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-volume-up" style="color:var(--accent)"></span> Volumen +`;
+    case 11: // volume down
+      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-volume-down" style="color:var(--accent)"></span> Volumen −`;
+    case 12: // skip left (previous track)
+      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-step-backward" style="color:var(--accent)"></span> Previous track`;
+    case 13: // skip right (next track)
+      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-step-forward" style="color:var(--accent)"></span> Next track`;
+    case 14: // play/pause
+      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-play" style="color:var(--accent)"></span> Play / Pause`;
     default:
       return `<span class="ws-action-time">${timeStr}</span> Action #${e.ty}`;
   }
@@ -184,6 +200,28 @@ function _formatWsTime(espUptime) {
     ? t.toLocaleTimeString()
     : t.toLocaleString();
 }
+
+/**
+ * Debug helper — llama desde la consola del navegador (F12 → Console):
+ *   dumpActionLog()         → tabla con todas las entradas recibidas
+ *   dumpActionLog('raw')    → JSON completo para copiar/pegar
+ */
+window.dumpActionLog = function(mode) {
+  const container = document.getElementById('wsClientList');
+  if (!container || !container._actionLog) {
+    console.log('📭 No hay action log en el navegador. Abre la pestaña Config y espera datos.');
+    return;
+  }
+  const log = container._actionLog;
+  if (mode === 'raw') {
+    console.log(JSON.stringify(log, null, 2));
+  } else {
+    console.table(log.map(e => ({
+      t: e.t, c: e.c, ty: e.ty, v1: e.v1, v2: e.v2, v3: e.v3
+    })));
+  }
+  console.log(`📊 Total entries in buffer: ${log.length}`);
+};
 
 // ============================================================================
 // POLLING — Config tab auto-refresh

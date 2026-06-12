@@ -29,6 +29,7 @@ static IPAddress  _wsClientIps[WS_MAX_CLIENTS];
 static uint8_t    _wsClientCount = 0;
 static uint32_t   _wsMasterId = 0;
 static uint8_t    _wsChangesGeneration = 0;  // ++ on any change (log, connect, disconnect)
+static uint8_t    _wsClChangesGeneration = 0; // ++ only on client connect/disconnect
 
 static void _wsAddClient(uint32_t id, IPAddress ip) {
     if (_wsClientCount >= WS_MAX_CLIENTS) return;
@@ -37,6 +38,7 @@ static void _wsAddClient(uint32_t id, IPAddress ip) {
     _wsClientIps[_wsClientCount] = ip;
     _wsClientCount++;
     _wsChangesGeneration++;
+    _wsClChangesGeneration++;
 }
 
 static void _wsRemoveClient(uint32_t id) {
@@ -51,6 +53,7 @@ static void _wsRemoveClient(uint32_t id) {
                 _wsMasterId = _wsClientIds[0];  // next client becomes master
             }
             _wsChangesGeneration++;
+            _wsClChangesGeneration++;
             break;
         }
     }
@@ -59,11 +62,12 @@ static void _wsRemoveClient(uint32_t id) {
 // ── WebSocket action log (circular buffer) ──────────────────────────────────────
 //   Últimas N acciones de clientes, enviadas con la lista de clientes.
 //   Tipos (ty): 0=effect 1=color 2=brightness 3=params 4=power 5=lamp 6=bt 7=random
+//               8=battery 9=temp 10=volup 11=voldown 12=skipL 13=skipR 14=play-pause
 // ────────────────────────────────────────────────────────────────────────────────
-#define WS_LOG_SIZE 16
+#define WS_LOG_SIZE 64
 
 struct WsLogEntry {
-    uint32_t timestamp;      // millis() / 1000 ≈ uptime seconds
+    uint32_t timestamp;      // uptime seconds   (millis() / 1000)
     uint32_t clientId;
     uint8_t  type;
     int16_t  val1;
@@ -75,6 +79,11 @@ static WsLogEntry _wsActionLog[WS_LOG_SIZE];
 static uint8_t _wsLogHead = 0;
 static uint8_t _wsLogCount = 0;
 
+// Dirty-flags separados para client-list y action-log.
+// Solo se limpian DESPUÉS de que ws.textAll() haya enviado con éxito.
+static uint8_t _lastSentClGen = 0xFE;   // forzará envío en la primera llamada
+static uint8_t _lastSentLogGen = 0xFE;
+
 static void _wsLogAction(uint32_t clientId, uint8_t type, int16_t v1, int16_t v2, int16_t v3) {
     WsLogEntry* e = &_wsActionLog[_wsLogHead];
     e->timestamp = millis() / 1000;
@@ -85,7 +94,8 @@ static void _wsLogAction(uint32_t clientId, uint8_t type, int16_t v1, int16_t v2
     e->val3 = v3;
     _wsLogHead = (_wsLogHead + 1) % WS_LOG_SIZE;
     if (_wsLogCount < WS_LOG_SIZE) _wsLogCount++;
-    _wsChangesGeneration++;  // Signal that log data has changed
+    _wsChangesGeneration++;          // signal que el log cambió
+    _lastSentLogGen = 0xFE;         // marca dirty para que se re‑envíe
 }
 
 // ============================================================================
@@ -93,45 +103,78 @@ static void _wsLogAction(uint32_t clientId, uint8_t type, int16_t v1, int16_t v2
 // ============================================================================
 
 void notifyWSClientList() {
-    // Dirty check: skip if nothing changed since last broadcast
-    static uint8_t lastSentGen = 0xFF;
-    if (_wsChangesGeneration == lastSentGen) return;
-
     if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
-        // Mark as sent ONLY after successful mutex acquisition,
-        // so it retries if the mutex was temporarily busy
-        lastSentGen = _wsChangesGeneration;
-        StaticJsonDocument<1536> json;
-        json["wsSlaves"] = (_wsClientCount > 0) ? _wsClientCount - 1 : 0;
-        json["wsMax"] = WS_MAX_CLIENTS;
-        JsonArray arr = json["wsClientList"].to<JsonArray>();
-        for (uint8_t i = 0; i < _wsClientCount; i++) {
-            JsonObject c = arr.add().to<JsonObject>();
-            c["id"] = _wsClientIds[i];
-            c["ip"] = _wsClientIps[i];
-            c["master"] = (_wsClientIds[i] == _wsMasterId);
+        // ── MENSAJE 1: Client list ──────────────────────────────────────────────
+        //   Se envía solo si _wsClChangesGeneration cambió (nuevo cliente / desconexión)
+        if (_wsClChangesGeneration != _lastSentClGen) {
+            StaticJsonDocument<512> clJson;
+            clJson["wsSlaves"] = (_wsClientCount > 0) ? _wsClientCount - 1 : 0;
+            clJson["wsMax"] = WS_MAX_CLIENTS;
+            JsonArray arr = clJson["wsClientList"].to<JsonArray>();
+            for (uint8_t i = 0; i < _wsClientCount; i++) {
+                JsonObject c = arr.add().to<JsonObject>();
+                c["id"] = _wsClientIds[i];
+                c["ip"] = _wsClientIps[i];
+                c["master"] = (_wsClientIds[i] == _wsMasterId);
+            }
+
+            static char clBuf[512];
+            size_t clLen = serializeJson(clJson, clBuf, sizeof(clBuf));
+            if (clLen > 0 && clLen < sizeof(clBuf)) {
+                ws.textAll(clBuf, clLen);
+                _lastSentClGen = _wsClChangesGeneration;  // solo se limpia si se envió OK
+            }
         }
 
-        // Action log (oldest first)
-        JsonArray logArr = json["wsActionLog"].to<JsonArray>();
-        uint8_t idx = (_wsLogHead + WS_LOG_SIZE - _wsLogCount) % WS_LOG_SIZE;
-        for (uint8_t i = 0; i < _wsLogCount; i++) {
-            WsLogEntry* e = &_wsActionLog[idx];
-            JsonObject le = logArr.add().to<JsonObject>();
-            le["t"]  = e->timestamp;
-            le["c"]  = e->clientId;
-            le["ty"] = e->type;
-            le["v1"] = e->val1;
-            le["v2"] = e->val2;
-            le["v3"] = e->val3;
-            idx = (idx + 1) % WS_LOG_SIZE;
+        // ── MENSAJE 2: Action log (solo si hay cambios) ─────────────────────────
+        if (_lastSentLogGen == 0xFE) {   // dirty flag → hay cambios sin enviar
+            // Capacidad calculada con las macros oficiales de ArduinoJson.
+            //   JSON_ARRAY_SIZE(N)  → slots del array
+            //   JSON_OBJECT_SIZE(6) → slots para cada entrada (6 campos)
+            //   +64                 → margen para claves y wrapper
+            size_t capacity = JSON_ARRAY_SIZE(_wsLogCount)
+                           + _wsLogCount * JSON_OBJECT_SIZE(6)
+                           + 64;
+            DynamicJsonDocument logJson(capacity);
+            JsonArray logArr = logJson["wsActionLog"].to<JsonArray>();
+            uint8_t idx = (_wsLogHead + WS_LOG_SIZE - _wsLogCount) % WS_LOG_SIZE;
+            for (uint8_t i = 0; i < _wsLogCount; i++) {
+                WsLogEntry* e = &_wsActionLog[idx];
+                JsonObject le = logArr.add().to<JsonObject>();
+                le["t"]  = e->timestamp;
+                le["c"]  = e->clientId;
+                le["ty"] = e->type;
+                le["v1"] = e->val1;
+                le["v2"] = e->val2;
+                le["v3"] = e->val3;
+                idx = (idx + 1) % WS_LOG_SIZE;
+            }
+
+            // Buffer exacto para serializar: medimos primero, asignamos después.
+            size_t jsonLen = measureJson(logJson) + 1;  // +1 para null byte
+            char* logBuf = (char*)malloc(jsonLen);
+            if (logBuf) {
+                size_t written = serializeJson(logJson, logBuf, jsonLen);
+                // Solo hay truncamiento si serializar no pudo escribir todos los chars
+                bool wasTruncated = (written == jsonLen - 1 && measureJson(logJson) + 1 > jsonLen);
+#ifdef DEBUG_WEBSOCKET
+                debugD("📋 Log JSON: ");
+                debugD_NUM(_wsLogCount, "%u");
+                debugD(" entries, capacity=");
+                debugD_NUM(capacity, "%u");
+                debugD(", jsonLen=");
+                debugD_NUM(jsonLen, "%u");
+                debugD(", written=");
+                debugD_NUM(written, "%u");
+                if (wasTruncated) debugD(" ⚠ TRUNCATED!");
+                debugD("\n");
+#endif
+                ws.textAll(logBuf, written);
+                free(logBuf);
+                _lastSentLogGen = 0;    // se limpió — se envió OK
+            }
         }
 
-        static char buffer[1536];
-        size_t len = serializeJson(json, buffer, sizeof(buffer));
-        if (len > 0 && len < sizeof(buffer)) {
-            ws.textAll(buffer, len);
-        }
         xSemaphoreGive(dataMutex);
     }
 }
@@ -432,7 +475,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
 
         // ── REFRESH CLIENT LIST (force broadcast of current list + action log) ──
         if (strcmp(action, "refreshClientList") == 0) {
-            _wsChangesGeneration++;  // Force notifyWSClientList past dirty-check
+            _lastSentClGen = 0xFE;   // Force re-send client list
+            _lastSentLogGen = 0xFE;   // Force re-send action log
             notifyWSClientList();
             return;
         }
@@ -443,26 +487,31 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             digitalWrite(VOLUMENUP_PIN, HIGH);
             vTaskDelay(pdMS_TO_TICKS(long_delay));
             digitalWrite(VOLUMENUP_PIN, LOW);
+            _wsLogAction(clientId, 10, 0, 0, 0);
         }
         else if (strcmp(action, "voldown") == 0) {
             digitalWrite(VOLUMENDOWN_PIN, HIGH);
             vTaskDelay(pdMS_TO_TICKS(long_delay));
             digitalWrite(VOLUMENDOWN_PIN, LOW);
+            _wsLogAction(clientId, 11, 0, 0, 0);
         }
         else if (strcmp(action, "skipL") == 0) {
             digitalWrite(VOLUMENDOWN_PIN, HIGH);
             vTaskDelay(pdMS_TO_TICKS(short_delay));
             digitalWrite(VOLUMENDOWN_PIN, LOW);
+            _wsLogAction(clientId, 12, 0, 0, 0);
         }
         else if (strcmp(action, "skipR") == 0) {
             digitalWrite(VOLUMENUP_PIN, HIGH);
             vTaskDelay(pdMS_TO_TICKS(short_delay));
             digitalWrite(VOLUMENUP_PIN, LOW);
+            _wsLogAction(clientId, 13, 0, 0, 0);
         }
         else if (strcmp(action, "play-pause") == 0) {
             digitalWrite(PLAY_PIN, HIGH);
             vTaskDelay(pdMS_TO_TICKS(short_delay));
             digitalWrite(PLAY_PIN, LOW);
+            _wsLogAction(clientId, 14, 0, 0, 0);
         }
         // ── SHARED-STATE ACTIONS (todo bajo dataMutex) ───────────────────────
         else
@@ -648,7 +697,10 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
             transitionToState(POWER_BATTERY_ACTIVE);
         }
 
-        // Enviar estado completo + client list al conectar
+        // Forzar envío completo (client list + log) incluso si dirty-flags
+        // estaban limpios — el nuevo cliente necesita todo el historial.
+        _lastSentClGen = 0xFE;
+        _lastSentLogGen = 0xFE;
         stateGeneration++;
         notifyClients(true);
         notifyWSClientList();
