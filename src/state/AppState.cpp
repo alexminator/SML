@@ -76,6 +76,14 @@ bool is_centered = false;
 
 uint8_t randomMode = 0;
 
+// Random FX config
+String randomFXMode = "all";
+int randomFXDuration = 8;
+std::vector<int> randomFXPool;
+std::vector<int> randomFXCategories;
+unsigned long lastRandomSwitch = 0;
+int randomPlaylistIndex = 0;
+
 PowerState currentPowerState = POWER_AC_MODE;
 PowerState previousPowerState = POWER_AC_MODE;
 unsigned long lastStateChange = 0;

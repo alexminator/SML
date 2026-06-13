@@ -6,9 +6,11 @@
 // ──────────────────────────────────────────────────────────────────────────────
 #pragma once
 
+#include <Arduino.h>
 #include <FastLED.h>
 #include <DHT_U.h>
 #include <Battery18650Stats.h>
+#include <vector>
 #include "config/pins.h"
 #include "config/config.h"
 
@@ -151,6 +153,14 @@ extern bool is_centered;
 // ============================================================================
 
 extern uint8_t randomMode;  // 0=off, 1=randomFX, 2=randomVU
+
+// ── Random FX config (shared across all clients) ──
+extern String randomFXMode;                // "all", "category", "playlist"
+extern int randomFXDuration;               // seconds between cycles
+extern std::vector<int> randomFXPool;      // flat effect ID pool for cycling
+extern std::vector<int> randomFXCategories; // category indices (0-4), only for category mode
+extern unsigned long lastRandomSwitch;     // millis() of last switch during cycling
+extern int randomPlaylistIndex;            // current index in playlist mode
 
 extern PowerState currentPowerState;
 extern PowerState previousPowerState;

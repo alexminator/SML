@@ -30,6 +30,36 @@ void TaskWebSocket(void *pvParameters) {
         ws.cleanupClients();
         notifySensorData();    // Solo sensores — ~180 bytes vs ~940
 
+        // ── Random FX cycling (ESP32-side timer) ──
+        // ⚠ Accede a randomFXPool (std::vector) y randomFXMode bajo dataMutex
+        //   para evitar race conditions con handleWebSocketMessage.
+        if (randomMode == 1) {
+            bool didSwitch = false;
+            if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+                if (!randomFXPool.empty()) {
+                    unsigned long now = millis();
+                    if (now - lastRandomSwitch >= (unsigned long)randomFXDuration * 1000) {
+                        int nextId;
+                        if (randomFXMode == "playlist") {
+                            nextId = randomFXPool[randomPlaylistIndex];
+                            randomPlaylistIndex = (randomPlaylistIndex + 1) % randomFXPool.size();
+                        } else {
+                            nextId = randomFXPool[random(0, randomFXPool.size())];
+                        }
+                        stripLed.effectId = nextId;
+                        if (stripLed.powerState) stripLed.update();
+                        lastRandomSwitch = now;
+                        didSwitch = true;
+                    }
+                }
+                xSemaphoreGive(dataMutex);
+            }
+            if (didSwitch) {
+                stateGeneration++;
+                notifyClients(false);  // Broadcast new effectId to all clients
+            }
+        }
+
         // Periodic broadcast of client list + action log (cada ~15s)
         // notifyWSClientList() tiene dirty-check interno, solo envía si hubo cambios
         static uint8_t wsListCycle = 0;

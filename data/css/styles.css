@@ -798,51 +798,271 @@ input[type="range"]::-moz-range-thumb {
   border: none;
 }
 
-/* ===== EFFECT SEARCH ===== */
-.effect-search {
-  position: relative;
-  margin-bottom: var(--space-md);
+/* Card overflow override — scroll rows must not be clipped */
+.card:has(.effects-scroll-container) {
+  overflow: visible;
 }
 
-.effect-search-icon {
+/* ===== EFFECT SCROLL CATEGORIES ===== */
+.effects-scroll-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.effect-category {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  padding: 0 2px;
+}
+
+.category-header h3 {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.scroll-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 4px 0 10px;
+  -webkit-overflow-scrolling: touch;
+  /* Thin scrollbar visible on desktop */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.scroll-row::-webkit-scrollbar {
+  height: 5px;
+}
+
+.scroll-row::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-row::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+/* Cards inside scroll rows — uniform fixed size, no grid wrap */
+.scroll-row .effect-card {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  width: 110px;
+  min-height: 100px;
+}
+
+/* ── Favorite star ── */
+.fav-star {
   position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 4px;
+  right: 4px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
   color: var(--text-muted);
-  font-size: 0.8rem;
-  pointer-events: none;
-  z-index: 1;
+  opacity: 0.3;
+  font-size: 0.75rem;
+  transition: opacity 0.2s, transform 0.2s, color 0.2s;
+  border: none;
+  background: none;
+  padding: 0;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.effect-search-input {
-  width: 100%;
-  padding: 10px 14px 10px 36px;
-  background: var(--glass-card-bg);
-  border: var(--glass-card-border);
-  border-radius: var(--radius-md);
+.fav-star:hover {
+  opacity: 0.7;
+  transform: scale(1.2);
+}
+
+.fav-star.active {
+  opacity: 1;
+  color: var(--accent);
+}
+
+/* ── Random FX config: mode pills, category checkboxes, playlist ── */
+.mode-pills {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.mode-pill {
+  flex: 1;
+  padding: 7px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mode-pill.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.random-section {
+  margin-bottom: 12px;
+}
+
+.category-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  font-size: 0.82rem;
   color: var(--text-primary);
-  font-size: 0.85rem;
-  backdrop-filter: blur(8px);
-  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s;
 }
 
-.effect-search-input:focus {
+.category-checkbox:hover {
+  background: var(--bg-secondary);
+}
+
+.category-checkbox input {
+  accent-color: var(--accent);
+}
+
+#clearPlaylistBtn {
+  width: 100%;
+  padding: 8px 14px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-card) 50%, transparent);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--t-fast);
+}
+
+#clearPlaylistBtn:hover {
+  border-color: color-mix(in srgb, var(--accent-danger) 50%, var(--border));
+  color: var(--accent-danger);
+  background: color-mix(in srgb, var(--accent-danger) 8%, transparent);
+}
+
+#clearPlaylistBtn:active {
+  transform: scale(0.97);
+}
+
+
+/* ── Playlist picker (inline effect pills inside config panel) ── */
+.playlist-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 4px 2px;
+  scrollbar-width: thin;
+}
+
+.playlist-pick-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-card) 50%, transparent);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--t-fast);
+  white-space: nowrap;
+}
+
+.playlist-pick-btn:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.playlist-pick-btn:active {
+  transform: scale(0.95);
+}
+
+.playlist-pick-btn.picked {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
-  outline: none;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
-.effect-search-input::placeholder {
+.playlist-pick-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.playlist-pick-btn:not(.picked) .playlist-pick-num {
+  background: color-mix(in srgb, var(--border) 40%, transparent);
   color: var(--text-muted);
-  font-style: italic;
 }
 
-.effect-card.hidden-by-search {
-  display: none;
+.playlist-pick-btn.picked .playlist-pick-num {
+  background: var(--accent);
+  color: #fff;
 }
 
-/* ===== EFFECT CARDS ===== */
+/* ── Random OK / Play button ── */
+.random-ok-btn {
+  display: block;
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, var(--accent-secondary)));
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.random-ok-btn:hover {
+  box-shadow: 0 6px 24px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.random-ok-btn:active {
+  transform: scale(0.96);
+}
+
 .effects-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -885,6 +1105,38 @@ input[type="range"]::-moz-range-thumb {
   box-shadow:
     0 0 20px color-mix(in srgb, var(--accent) 25%, transparent),
     inset 0 0 24px color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+/* ── Pulse animation for active card in scroll rows (playlist/category) ── */
+.scroll-row .effect-card.active {
+  animation: fxPulse 1.2s ease-in-out infinite;
+  z-index: 2;
+}
+
+@keyframes fxPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 10px color-mix(in srgb, var(--accent) 25%, transparent),
+      0 0 25px color-mix(in srgb, var(--accent) 10%, transparent),
+      inset 0 0 20px color-mix(in srgb, var(--accent) 5%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 20px color-mix(in srgb, var(--accent) 60%, transparent),
+      0 0 50px color-mix(in srgb, var(--accent) 30%, transparent),
+      0 0 80px color-mix(in srgb, var(--accent) 12%, transparent),
+      inset 0 0 30px color-mix(in srgb, var(--accent) 15%, transparent);
+    border-color: var(--accent);
+  }
+}
+
+/* Override hover so the pulse animation keeps running on active scroll-row cards */
+.scroll-row .effect-card.active:hover {
+  animation: fxPulse 1.2s ease-in-out infinite;
+  transform: translateY(-5px);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--bg-card) 80%, color-mix(in srgb, var(--accent) 5%, transparent));
 }
 
 .effect-card.active:hover {
@@ -3519,6 +3771,10 @@ input[type="range"]::-moz-range-thumb {
   .effect-params-panel {
     display: none !important;
   }
+
+  .scroll-row .effect-card {
+    width: 130px;
+  }
 }
 
 /* Desktop (≥1024px): Expanded sidebar + wider grids */
@@ -3537,6 +3793,10 @@ input[type="range"]::-moz-range-thumb {
 
   .effects-grid {
     grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  }
+
+  .scroll-row .effect-card {
+    width: 140px;
   }
 
   .info-grid {

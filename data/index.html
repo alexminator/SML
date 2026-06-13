@@ -132,166 +132,38 @@
         <!-- Visual Effects (IDs 0-37) -->
         <div class="card">
           <h2 class="card-title"><span class="fas fa-star"></span> Effects</h2>
-          <div class="effect-search">
-            <span class="fas fa-search effect-search-icon"></span>
-            <input type="text" class="effect-search-input" id="effectSearch" placeholder="Search effects..." autocomplete="off">
-          </div>
-          <div class="effects-grid" id="effectsGrid">
-            <button class="effect-card" data-effect-id="0">
-              <svg class="effect-icon" viewBox="0 0 24 24" width="44" height="44">
+                  <div class="effects-scroll-container">
+<div class="effect-category" id="catFavorites" style="display:none">
+  <div class="category-header">
+    <h3>Favorites</h3>
+  </div>
+  <div class="scroll-row" id="favScrollRow">
+  </div>
+</div>
+
+<div class="effect-category" id="catPlaylist" style="display:none">
+  <div class="category-header">
+    <h3>Playlist</h3>
+  </div>
+  <div class="scroll-row" id="playlistScrollRow">
+  </div>
+</div>
+
+<div class="effect-category" id="catFundamentals">
+  <div class="category-header">
+    <h3>Fundamentals</h3>
+  </div>
+  <div class="scroll-row">
+<button class="effect-card" data-effect-id="0">
+                            <span class="fav-star" data-effect-id="0" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 24 24" width="44" height="44">
                 <circle cx="12" cy="12" r="10" fill="var(--solid-fill, #888)"/>
               </svg>
               <span class="effect-name">Solid</span>
             </button>
-            <button class="effect-card" data-effect-id="1">
-              <svg class="effect-icon" viewBox="0 0 24 24" width="44" height="44">
-                <path d="M5.926 20.574a7.26 7.26 0 0 0 3.039 1.511c.107.035.179-.105.107-.175-2.395-2.285-1.079-4.758-.107-5.873.693-.796 1.68-2.107 1.608-3.865 0-.176.18-.317.322-.211 1.359.703 2.288 2.25 2.538 3.515.394-.386.537-.984.537-1.511 0-.176.214-.317.393-.176 1.287 1.16 3.503 5.097-.072 8.19-.071.071 0 .212.072.177a8.761 8.761 0 0 0 3.003-1.442c5.827-4.5 2.037-12.48-.43-15.116-.321-.317-.893-.106-.893.351-.036.95-.322 2.004-1.072 2.707-.572-2.39-2.478-5.105-5.195-6.441-.357-.176-.786.105-.75.492.07 3.27-2.063 5.352-3.922 8.059-1.645 2.425-2.717 6.89.822 9.808z" fill="var(--effect-color, #888)"/>
-              </svg>
-              <span class="effect-name">Fire</span>
-            </button>
-            <button class="effect-card" data-effect-id="2">
-              <svg class="effect-icon" viewBox="0 0 640 400" width="44" height="44">
-                <circle cx="480" cy="222" r="150" fill="var(--effect-dot-color, #888)"/>
-                <path fill="var(--effect-trail-color, #888)" d="M150.463,109.521h150.512c3.955,0,7.16-3.206,7.16-7.161c0-3.955-3.205-7.161-7.16-7.161H150.463c-3.955,0-7.161,3.206-7.161,7.161C143.302,106.315,146.508,109.521,150.463,109.521z"/>
-                <path fill="var(--effect-trail-color, #888)" d="M15.853,179.537h150.511c3.955,0,7.161-3.206,7.161-7.161s-3.206-7.16-7.161-7.16H15.853c-3.955,0-7.161,3.205-7.161,7.16S11.898,179.537,15.853,179.537z"/>
-                <path fill="var(--effect-trail-color, #888)" d="M56.258,253.214c0,3.955,3.206,7.162,7.161,7.162H213.93c3.955,0,7.161-3.207,7.161-7.162s-3.206-7.16-7.161-7.16H63.419C59.464,246.054,56.258,249.259,56.258,253.214z"/>
-                <path fill="var(--effect-trail-color, #888)" d="M142.396,336.44H7.161C3.206,336.44,0,339.645,0,343.6s3.206,7.161,7.161,7.161h135.235c3.955,0,7.161-3.206,7.161-7.161S146.351,336.44,142.396,336.44z"/>
-              </svg>
-              <span class="effect-name">Moving Dot</span>
-            </button>
-            <button class="effect-card" data-effect-id="3">
-              <svg class="effect-icon" viewBox="1.5 5.5 21 13" width="65" height="40">
-                <g fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M3 17V15C3 10.0294 7.02944 6 12 6C16.9706 6 21 10.0294 21 15V17"/>
-                  <path d="M6 17V15C6 11.6863 8.68629 9 12 9C15.3137 9 18 11.6863 18 15V17"/>
-                  <path d="M9 17V15C9 13.3431 10.3431 12 12 12C13.6569 12 15 13.3431 15 15V17"/>
-                </g>
-              </svg>
-              <span class="effect-name">Rainbow Beat</span>
-            </button>
-            <button class="effect-card" data-effect-id="4">
-              <svg class="effect-icon" viewBox="0 0 24 24" width="44" height="44">
-                <circle cx="12" cy="6" r="5.5" fill="var(--rwb-red, #888)"/>
-                <circle cx="6" cy="18" r="5.5" fill="var(--rwb-white, #888)"/>
-                <circle cx="18" cy="18" r="5.5" fill="var(--rwb-blue, #888)"/>
-              </svg>
-              <span class="effect-name">Red White Blue</span>
-            </button>
-            <button class="effect-card" data-effect-id="5">
-              <svg class="effect-icon" viewBox="0 0 48 48" width="44" height="44">
-                <path d="M4 36C4 36 9 33 14 33C21.2976 33 26.7024 39 34 39C39 39 44 36 44 36" stroke="var(--ripple-1, #888)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                <path d="M4 24C4 24 9 21 14 21C21.2976 21 26.7024 27 34 27C39 27 44 24 44 24" stroke="var(--ripple-2, #888)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                <path d="M4 12C4 12 9 9 14 9C21.2976 9 26.7024 15 34 15C39 15 44 12 44 12" stroke="var(--ripple-3, #888)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-              </svg>
-              <span class="effect-name">Ripple</span>
-            </button>
-            <button class="effect-card" data-effect-id="6">
-              <svg class="effect-icon" viewBox="1 -14 46 38" width="44" height="44">
-                <g fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M 3,17 C 3,13.34 4.34,12 6,12 C 7.66,12 9,13.34 9,17"
-                        stroke="var(--bounce-trail, #888)"/>
-                  <path d="M 9,17 C 9,11.69 11.69,9 15,9 C 18.31,9 21,11.69 21,17"
-                        stroke="var(--bounce-trail, #888)"/>
-                  <path d="M 21,17 C 21,5 24,-2 27,-2"
-                        stroke="var(--bounce-trail, #888)"/>
-                </g>
-                <circle cx="38" cy="-6" r="7"
-                        fill="var(--bounce-ball, #888)"/>
-              </svg>
-              <span class="effect-name">Bouncing Balls</span>
-            </button>
-            <button class="effect-card" data-effect-id="7">
-              <svg class="effect-icon" viewBox="0 0 297 297" width="44" height="44">
-                <path fill="var(--juggle-dot-1, #888)" d="M148.5,0c-24.795,0-44.969,20.173-44.969,44.969c0,24.795,20.174,44.968,44.969,44.968s44.968-20.173,44.968-44.968C193.468,20.173,173.295,0,148.5,0z"/>
-                <path fill="var(--juggle-dot-2, #888)" d="M148.5,207.064c-24.795,0-44.969,20.173-44.969,44.968c0,24.796,20.174,44.969,44.969,44.969s44.968-20.173,44.968-44.969C193.468,227.236,173.295,207.064,148.5,207.064z"/>
-                <path fill="var(--juggle-dot-3, #888)" d="M89.936,148.5c0-24.795-20.173-44.969-44.968-44.969C20.173,103.531,0,123.705,0,148.5s20.173,44.969,44.969,44.969C69.764,193.469,89.936,173.295,89.936,148.5z"/>
-                <path fill="var(--juggle-dot-4, #888)" d="M252.031,103.531c-24.795,0-44.968,20.174-44.968,44.969s20.173,44.969,44.968,44.969c24.796,0,44.969-20.174,44.969-44.969S276.827,103.531,252.031,103.531z"/>
-                <path fill="var(--juggle-line, #888)" d="M243.089,212.119c3.227-4.789,1.961-11.289-2.829-14.516c-4.789-3.229-11.289-1.963-14.517,2.829c-6.766,10.041-15.281,18.558-25.31,25.315c-4.79,3.228-6.057,9.727-2.829,14.517c2.02,2.997,5.32,4.615,8.682,4.615c2.011,0,4.042-0.578,5.835-1.786C224.393,234.824,234.811,224.403,243.089,212.119z"/>
-                <path fill="var(--juggle-line, #888)" d="M96.566,225.748c-10.028-6.758-18.544-15.274-25.31-25.315c-3.229-4.792-9.73-6.058-14.517-2.829c-4.79,3.227-6.056,9.727-2.829,14.516c8.277,12.284,18.696,22.705,30.968,30.975c1.793,1.208,3.824,1.786,5.835,1.786c3.361,0,6.663-1.618,8.682-4.615C102.623,235.475,101.356,228.976,96.566,225.748z"/>
-                <path fill="var(--juggle-line, #888)" d="M84.879,53.906c-12.271,8.27-22.69,18.69-30.968,30.974c-3.226,4.79-1.961,11.289,2.829,14.517c1.792,1.208,3.824,1.786,5.835,1.786c3.36,0,6.662-1.617,8.682-4.615c6.766-10.041,15.281-18.559,25.31-25.315c4.79-3.228,6.057-9.727,2.829-14.517C96.166,51.944,89.666,50.678,84.879,53.906z"/>
-                <path fill="var(--juggle-line, #888)" d="M200.434,71.252c10.028,6.757,18.544,15.274,25.31,25.315c2.021,2.998,5.321,4.615,8.682,4.615c2.011,0,4.042-0.578,5.835-1.786c4.79-3.228,6.056-9.727,2.829-14.517c-8.277-12.283-18.696-22.704-30.968-30.974c-4.788-3.229-11.289-1.962-14.517,2.829C194.377,61.525,195.644,68.024,200.434,71.252z"/>
-                <path fill="var(--juggle-line, #888)" d="M266.5,215.249c-4.789-3.229-11.29-1.962-14.517,2.829c-9.061,13.448-20.469,24.859-33.904,33.913c-4.789,3.228-6.056,9.728-2.828,14.517c2.019,2.996,5.32,4.614,8.682,4.614c2.011,0,4.043-0.579,5.836-1.786c15.677-10.566,28.988-23.879,39.56-39.571C272.556,224.976,271.29,218.476,266.5,215.249z"/>
-                <path fill="var(--juggle-line, #888)" d="M78.921,251.991c-13.436-9.054-24.843-20.465-33.904-33.913c-3.228-4.789-9.727-6.058-14.517-2.829c-4.79,3.227-6.056,9.727-2.829,14.516c10.572,15.692,23.884,29.005,39.56,39.571c1.794,1.208,3.825,1.786,5.836,1.786c3.361,0,6.662-1.618,8.682-4.614C84.977,261.719,83.71,255.219,78.921,251.991z"/>
-                <path fill="var(--juggle-line, #888)" d="M30.5,81.75c1.792,1.208,3.823,1.786,5.835,1.786c3.36,0,6.661-1.617,8.682-4.615c9.063-13.45,20.47-24.859,33.903-33.912c4.79-3.227,6.057-9.727,2.829-14.516c-3.23-4.791-9.73-6.058-14.517-2.829C51.557,38.227,38.245,51.54,27.671,67.234C24.444,72.023,25.71,78.523,30.5,81.75z"/>
-                <path fill="var(--juggle-line, #888)" d="M218.08,45.009c13.434,9.053,24.84,20.462,33.903,33.912c2.02,2.998,5.321,4.615,8.682,4.615c2.012,0,4.043-0.578,5.835-1.786c4.79-3.227,6.056-9.727,2.829-14.516c-10.574-15.694-23.886-29.008-39.562-39.57c-4.788-3.229-11.287-1.962-14.516,2.829C212.023,35.282,213.29,41.782,218.08,45.009z"/>
-              </svg>
-              <span class="effect-name">Juggle</span>
-            </button>
-            <button class="effect-card" data-effect-id="8">
-              <svg class="effect-icon" viewBox="40 100 320 200" width="44" height="44">
-                <path d="M57 193.48C61.6479 150.493 84.5896 129 125.825 129C187.678 129 195.16 272 269.08 272C330.771 272 343 201.978 343 193.48" stroke="var(--sinelon-color, #888)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-opacity="0.9"/>
-              </svg>
-              <span class="effect-name">Sinelon</span>
-            </button>
-            <button class="effect-card" data-effect-id="9">
-              <svg class="effect-icon" viewBox="0 0 512 512" width="44" height="44">
-                <path fill="var(--comet-body, #888)" d="M405.952,201.859C400.28,182.859,511.999,0,511.999,0S247.687,156.359,234.64,150c-21.25-10.359,5.188-58.875,5.188-58.875l-188,158.484l0,0c-2.766,2.375-5.469,4.875-8.094,7.5c-58.312,58.312-58.312,152.844,0,211.156s152.844,58.312,211.156,0c6.328-6.328,16.938-20.188,16.938-20.188l176.171-234.749C447.999,213.328,411.171,219.359,405.952,201.859z"/>
-                <circle cx="149.219" cy="362.56" r="106.66" fill="var(--comet-head, #888)"/>
-              </svg>
-              <span class="effect-name">Comet</span>
-            </button>
-            <button class="effect-card" data-effect-id="10">
-              <svg class="effect-icon" viewBox="0 0 32 32" width="44" height="44">
-                <path fill="var(--breath-vein, #888)" d="M22.6,15.2l-4.1-3.5c-1-0.8-1.5-2-1.5-3.2V2c0-0.6-0.4-1-1-1s-1,0.4-1,1v6.6c0,1.2-0.5,2.4-1.5,3.2l-4.1,3.5c-0.4,0.4-0.5,1-0.1,1.4C9.4,16.9,9.7,17,10,17c0.2,0,0.5-0.1,0.6-0.2l4.1-3.5c0.5-0.4,0.9-0.9,1.2-1.4c0.3,0.5,0.7,1,1.2,1.4l4.1,3.5c0.2,0.2,0.4,0.2,0.6,0.2c0.3,0,0.6-0.1,0.8-0.4C23.1,16.2,23.1,15.6,22.6,15.2z"/>
-                <path fill="var(--breath-lung, #888)" d="M15,18C15,18,15,17.9,15,18l-0.2-2.1l-2.9,2.4c-1.2,1-3.2,0.8-4.2-0.4c-0.5-0.6-0.8-1.4-0.7-2.2c0.1-0.8,0.5-1.5,1.1-2l4.1-3.5c0.5-0.4,0.8-1,0.8-1.7v-3C12.5,5.2,12,5,11.3,5C7.2,5,2,13.9,2,23.4c0,3.8,0.5,5.6,1.7,6.3C4,29.9,4.3,30,4.6,30c0.8,0,1.7-0.5,2.4-0.9c0.7-0.4,1.4-0.8,1.9-0.8c3.9,0,6-1.3,6-8.3c0-0.9,0-1,0-1.3C15,18.6,15,18.4,15,18z"/>
-                <path fill="var(--breath-lung, #888)" d="M20.8,5C20,5,19.5,5.2,19,5.6v3c0,0.6,0.3,1.2,0.8,1.7l4.1,3.5c0.6,0.5,1,1.2,1.1,2c0.1,0.8-0.2,1.6-0.7,2.2C23.7,18.6,22.9,19,22,19c-0.7,0-1.4-0.2-1.9-0.7l-2.9-2.4L17,18c0,0.5,0,0.6,0,0.8c0,0.2,0,0.3,0,1.3c0,6.9,2.1,8.3,6,8.3c0.5,0,1.3,0.4,1.9,0.8c0.8,0.4,1.6,0.9,2.4,0.9c0.3,0,0.7-0.1,1-0.3c1.2-0.7,1.7-2.5,1.7-6.3C30,13.9,24.8,5,20.8,5z"/>
-              </svg>
-              <span class="effect-name">Breath</span>
-            </button>
-            <button class="effect-card" data-effect-id="11">
-              <svg class="effect-icon" viewBox="0 0 378 378" width="44" height="44">
-                <path d="M271.445,165.396L378.06,95.994L271.445,26.593V66.658H156.082v58.673h115.363V165.396z" fill="var(--sweep-arrow, #888)"/>
-                <path d="M65.575,30.419C29.417,30.419,0,59.836,0,95.994s29.417,65.575,65.575,65.575s65.575-29.417,65.575-65.575S101.733,30.419,65.575,30.419z" fill="var(--sweep-dot-1, #888)"/>
-                <path d="M271.445,252.729H156.082v58.673h115.363v40.064L378.06,282.065L271.445,212.664V252.729z" fill="var(--sweep-arrow, #888)"/>
-                <path d="M65.575,216.49C29.417,216.49,0,245.907,0,282.065s29.417,65.575,65.575,65.575s65.575-29.417,65.575-65.575S101.733,216.49,65.575,216.49z" fill="var(--sweep-dot-2, #888)"/>
-              </svg>
-              <span class="effect-name">Color Sweep</span>
-            </button>
-            <!-- ── WLED Ports (IDs 20-27) ── -->
-            <button class="effect-card" data-effect-id="20">
-              <svg class="effect-icon" viewBox="0 0 512 512" width="44" height="44">
-                <path d="M495.276,133.96L377.032,15.715c-19.605-19.608-51.34-19.609-70.946,0L40.37,281.428c-19.557,19.56-19.557,51.386,0.001,70.946l61.153,61.153c9.475,9.476,22.074,14.693,35.473,14.693h114.188c13.4,0,25.998-5.219,35.473-14.693l25.678-25.678v-0.001l182.941-182.942C514.837,185.347,514.837,153.52,495.276,133.96z" fill="var(--wipe-goma, #888)"/>
-                <path d="M263.009,389.878c-3.158,3.158-7.358,4.897-11.824,4.897H136.997c-4.467,0-8.666-1.739-11.824-4.897l-61.152-61.152c-6.521-6.521-6.521-17.129-0.001-23.65l70.948-70.948l141.895,141.895L263.009,389.878z" fill="var(--wipe-goma-band, #888)"/>
-                <path d="M471.629,181.258l-32.113,32.113L297.622,71.475l32.113-32.113c6.522-6.521,17.129-6.519,23.65,0l118.244,118.245C478.148,164.128,478.148,174.737,471.629,181.258z" fill="var(--wipe-goma-band, #888)"/>
-                <path d="M495.278,477.546H16.722C7.487,477.546,0,485.034,0,494.269s7.487,16.722,16.722,16.722h478.555c9.235,0,16.722-7.487,16.722-16.722S504.513,477.546,495.278,477.546z" fill="var(--wipe-line, #888)"/>
-              </svg>
-              <span class="effect-name">Color Wipe</span>
-            </button>
-            <button class="effect-card" data-effect-id="21">
-              <svg class="effect-icon" viewBox="0 0 24 24" width="44" height="44">
-                <path d="M2 12h2a7.986 7.986 0 0 1 2.337-5.663 7.91 7.91 0 0 1 2.542-1.71 8.12 8.12 0 0 1 6.13-.041A2.488 2.488 0 0 0 17.5 7C18.886 7 20 5.886 20 4.5S18.886 2 17.5 2c-.689 0-1.312.276-1.763.725-2.431-.973-5.223-.958-7.635.059a9.928 9.928 0 0 0-3.18 2.139 9.92 9.92 0 0 0-2.14 3.179A10.005 10.005 0 0 0 2 12zm17.373 3.122c-.401.952-.977 1.808-1.71 2.541s-1.589 1.309-2.542 1.71a8.12 8.12 0 0 1-6.13.041A2.488 2.488 0 0 0 6.5 17C5.114 17 4 18.114 4 19.5S5.114 22 6.5 22c.689 0 1.312-.276 1.763-.725A9.965 9.965 0 0 0 12 22a9.983 9.983 0 0 0 9.217-6.102A9.992 9.992 0 0 0 22 12h-2a7.993 7.993 0 0 1-.627 3.122z" fill="var(--theater-mask, #888)"/>
-                <path d="M12 7.462c-2.502 0-4.538 2.036-4.538 4.538S9.498 16.538 12 16.538s4.538-2.036 4.538-4.538S14.502 7.462 12 7.462z" fill="var(--theater-ring, #888)"/>
-                <circle cx="12" cy="12" r="2.538" fill="var(--theater-dot, #888)"/>
-              </svg>
-              <span class="effect-name">Theater Chase</span>
-            </button>
-            <button class="effect-card" data-effect-id="22">
-              <svg class="effect-icon" viewBox="0 0 512 512" width="44" height="44">
-                <rect x="186.853" y="106.165" transform="matrix(0.7071 -0.7071 0.7071 0.7071 -72.8134 198.5436)" width="32.807" height="162.001" fill="var(--run-bar, #888)"/>
-                <rect x="98.626" y="91.74" transform="matrix(0.7071 -0.7071 0.7071 0.7071 -118.523 144.3872)" width="32.807" height="247.048" fill="var(--run-bar, #888)"/>
-                <rect x="214.945" y="-24.58" transform="matrix(0.7071 -0.7071 0.7071 0.7071 -2.2033 192.568)" width="32.807" height="247.048" fill="var(--run-bar, #888)"/>
-                <path d="M452.436,365.884l18.551-83.6l-83.6,18.551l-73.776-43.476l-8.191,85.24l-64.147,56.729l78.537,34.132l34.132,78.537l56.729-64.147l85.24-8.191L452.436,365.884z M394.663,416.432l-31.167,35.241l-18.75-43.146l-43.146-18.75l35.241-31.167l4.5-46.828l40.531,23.886l45.927-10.191l-10.191,45.927l23.886,40.531L394.663,416.432z" fill="var(--run-glow, #888)"/>
-              </svg>
-              <span class="effect-name">Running Lights</span>
-            </button>
-            <button class="effect-card" data-effect-id="23">
-              <svg class="effect-icon" viewBox="0 0 24 24" width="44" height="44">
-                <path d="M12 22c5.514 0 10-4.486 10-10S17.514 2 12 2 2 6.486 2 12s4.486 10 10 10zm0-18c4.411 0 8 3.589 8 8s-3.589 8-8 8-8-3.589-8-8 3.589-8 8-8z" fill="var(--dissolve-ring, #888)"/>
-                <path d="M19 12a7 7 0 0 0-7-7v14a7 7 0 0 0 7-7z" fill="var(--dissolve-fill, #888)"/>
-              </svg>
-              <span class="effect-name">Dissolve</span>
-            </button>
-            <button class="effect-card" data-effect-id="24">
-              <svg class="effect-icon" viewBox="0 0 428 403" width="44" height="42">
-                <path fill="var(--scan-dot, #888)" stroke="var(--scan-dot, #888)" stroke-width="1" fill-rule="evenodd" d="M334.025,1.011c50.717,0,91.832,40.886,91.832,91.322s-41.115,91.323-91.832,91.323-91.833-40.887-91.833-91.323S283.307,1.011,334.025,1.011Z"/>
-                <path fill="var(--scan-dot, #888)" stroke="var(--scan-dot, #888)" stroke-width="1" fill-rule="evenodd" d="M94.025,217.011c50.717,0,91.832,40.887,91.832,91.322s-41.115,91.323-91.832,91.323S2.192,358.769,2.192,308.333,43.307,217.011,94.025,217.011Z"/>
-                <path fill="var(--scan-trail, #888)" stroke="var(--scan-trail, #888)" stroke-width="1" fill-rule="evenodd" d="M425,170l2,1c-0.962,32.641-24.887,61.317-40,82-41.121,56.274-142.658,141.388-230,148v-1l3-4c34.82-16.479,55.15-83.1,35-130-12.187-28.369-30.308-34.075-48-54,39.631,3.259,87.651,18,137,10,22.066-3.579,55.475-19,74-16v5c-18.7,38.549-68.633,40.163-108,59-10.449,41.06,47.078,14.132,63,6C357.755,253.14,401.084,213.634,425,170Z"/>
-                <path fill="var(--scan-trail, #888)" stroke="var(--scan-trail, #888)" stroke-width="1" fill-rule="evenodd" d="M5,235l-2-1c0.962-32.641,24.887-61.317,40-82C84.121,95.726,185.658,10.612,273,4V5l-3,4c-34.82,16.48-55.15,83.1-35,130,12.187,28.369,30.308,34.075,48,54-39.631-3.259-87.651-18-137-10-22.066,3.579-55.475,19-74,16v-5c18.7-38.549,68.633-40.163,108-59,10.449-41.06-47.078-14.132-63-6C72.245,151.86,28.916,191.366,5,235Z"/>
-              </svg>
-              <span class="effect-name">Dual Scan</span>
-            </button>
-            <button class="effect-card" data-effect-id="25">
-              <svg class="effect-icon" viewBox="0 0 32 32" width="44" height="44">
+<button class="effect-card" data-effect-id="25">
+                            <span class="fav-star" data-effect-id="25" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 32 32" width="44" height="44">
                 <path fill="var(--fade-1, #888)" d="M8.24,25.14,7,26.67a13.79,13.79,0,0,0,4.18,2.44l.69-1.87A12,12,0,0,1,8.24,25.14Z"/>
                 <path fill="var(--fade-2, #888)" d="M4.19,18l-2,.41A14.09,14.09,0,0,0,3.86,23L5.59,22A12.44,12.44,0,0,1,4.19,18Z"/>
                 <path fill="var(--fade-3, #888)" d="M11.82,4.76l-.69-1.87A13.79,13.79,0,0,0,7,5.33L8.24,6.86A12,12,0,0,1,11.82,4.76Z"/>
@@ -300,38 +172,145 @@
               </svg>
               <span class="effect-name">Fade</span>
             </button>
-            <button class="effect-card" data-effect-id="26">
-              <svg class="effect-icon" viewBox="0 0 24 24" width="44" height="44" role="img">
+<button class="effect-card" data-effect-id="11">
+                            <span class="fav-star" data-effect-id="11" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 378 378" width="44" height="44">
+                <path d="M271.445,165.396L378.06,95.994L271.445,26.593V66.658H156.082v58.673h115.363V165.396z" fill="var(--sweep-arrow, #888)"/>
+                <path d="M65.575,30.419C29.417,30.419,0,59.836,0,95.994s29.417,65.575,65.575,65.575s65.575-29.417,65.575-65.575S101.733,30.419,65.575,30.419z" fill="var(--sweep-dot-1, #888)"/>
+                <path d="M271.445,252.729H156.082v58.673h115.363v40.064L378.06,282.065L271.445,212.664V252.729z" fill="var(--sweep-arrow, #888)"/>
+                <path d="M65.575,216.49C29.417,216.49,0,245.907,0,282.065s29.417,65.575,65.575,65.575s65.575-29.417,65.575-65.575S101.733,216.49,65.575,216.49z" fill="var(--sweep-dot-2, #888)"/>
+              </svg>
+              <span class="effect-name">Color Sweep</span>
+            </button>
+<button class="effect-card" data-effect-id="20">
+                            <span class="fav-star" data-effect-id="20" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 512 512" width="44" height="44">
+                <path d="M495.276,133.96L377.032,15.715c-19.605-19.608-51.34-19.609-70.946,0L40.37,281.428c-19.557,19.56-19.557,51.386,0.001,70.946l61.153,61.153c9.475,9.476,22.074,14.693,35.473,14.693h114.188c13.4,0,25.998-5.219,35.473-14.693l25.678-25.678v-0.001l182.941-182.942C514.837,185.347,514.837,153.52,495.276,133.96z" fill="var(--wipe-goma, #888)"/>
+                <path d="M263.009,389.878c-3.158,3.158-7.358,4.897-11.824,4.897H136.997c-4.467,0-8.666-1.739-11.824-4.897l-61.152-61.152c-6.521-6.521-6.521-17.129-0.001-23.65l70.948-70.948l141.895,141.895L263.009,389.878z" fill="var(--wipe-goma-band, #888)"/>
+                <path d="M471.629,181.258l-32.113,32.113L297.622,71.475l32.113-32.113c6.522-6.521,17.129-6.519,23.65,0l118.244,118.245C478.148,164.128,478.148,174.737,471.629,181.258z" fill="var(--wipe-goma-band, #888)"/>
+                <path d="M495.278,477.546H16.722C7.487,477.546,0,485.034,0,494.269s7.487,16.722,16.722,16.722h478.555c9.235,0,16.722-7.487,16.722-16.722S504.513,477.546,495.278,477.546z" fill="var(--wipe-line, #888)"/>
+              </svg>
+              <span class="effect-name">Color Wipe</span>
+            </button>
+<button class="effect-card" data-effect-id="23">
+                            <span class="fav-star" data-effect-id="23" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 24 24" width="44" height="44">
+                <path d="M12 22c5.514 0 10-4.486 10-10S17.514 2 12 2 2 6.486 2 12s4.486 10 10 10zm0-18c4.411 0 8 3.589 8 8s-3.589 8-8 8-8-3.589-8-8 3.589-8 8-8z" fill="var(--dissolve-ring, #888)"/>
+                <path d="M19 12a7 7 0 0 0-7-7v14a7 7 0 0 0 7-7z" fill="var(--dissolve-fill, #888)"/>
+              </svg>
+              <span class="effect-name">Dissolve</span>
+            </button>
+<button class="effect-card" data-effect-id="33">
+                            <span class="fav-star" data-effect-id="33" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 48 48" width="44" height="44" fill="none">
+                <path d="M6 11V37" stroke="var(--cw-1, #888)" stroke-width="4" stroke-linecap="round"/>
+                <path d="M15 18V30" stroke="var(--cw-2, #888)" stroke-width="4" stroke-linecap="round"/>
+                <path d="M24 11V37" stroke="var(--cw-3, #888)" stroke-width="4" stroke-linecap="round"/>
+                <path d="M33 4V44" stroke="var(--cw-4, #888)" stroke-width="4" stroke-linecap="round"/>
+                <path d="M42 15V33" stroke="var(--cw-5, #888)" stroke-width="4" stroke-linecap="round"/>
+              </svg>
+              <span class="effect-name">Colorwaves</span>
+            </button>
+<button class="effect-card" data-effect-id="34">
+                            <span class="fav-star" data-effect-id="34" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 24 24" width="44" height="44" fill="none">
+                <path d="M3 10C5.48276 10 7.34483 7 7.34483 7C7.34483 7 9.2069 10 11.6897 10C14.1724 10 16.6552 7 16.6552 7C16.6552 7 19.1379 10 21 10" stroke="var(--pc-wave-1, #888)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M3 17C5.48276 17 7.34483 14 7.34483 14C7.34483 14 9.2069 17 11.6897 17C14.1724 17 16.6552 14 16.6552 14C16.6552 14 19.1379 17 21 17" stroke="var(--pc-wave-2, #888)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="effect-name">Pacifica</span>
+            </button>
+  </div>
+</div>
+
+<div class="effect-category" id="catMoving">
+  <div class="category-header">
+    <h3>Moving</h3>
+  </div>
+  <div class="scroll-row">
+<button class="effect-card" data-effect-id="2">
+                            <span class="fav-star" data-effect-id="2" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 640 400" width="44" height="44">
+                <circle cx="480" cy="222" r="150" fill="var(--effect-dot-color, #888)"/>
+                <path fill="var(--effect-trail-color, #888)" d="M150.463,109.521h150.512c3.955,0,7.16-3.206,7.16-7.161c0-3.955-3.205-7.161-7.16-7.161H150.463c-3.955,0-7.161,3.206-7.161,7.161C143.302,106.315,146.508,109.521,150.463,109.521z"/>
+                <path fill="var(--effect-trail-color, #888)" d="M15.853,179.537h150.511c3.955,0,7.161-3.206,7.161-7.161s-3.206-7.16-7.161-7.16H15.853c-3.955,0-7.161,3.205-7.161,7.16S11.898,179.537,15.853,179.537z"/>
+                <path fill="var(--effect-trail-color, #888)" d="M56.258,253.214c0,3.955,3.206,7.162,7.161,7.162H213.93c3.955,0,7.161-3.207,7.161-7.162s-3.206-7.16-7.161-7.16H63.419C59.464,246.054,56.258,249.259,56.258,253.214z"/>
+                <path fill="var(--effect-trail-color, #888)" d="M142.396,336.44H7.161C3.206,336.44,0,339.645,0,343.6s3.206,7.161,7.161,7.161h135.235c3.955,0,7.161-3.206,7.161-7.161S146.351,336.44,142.396,336.44z"/>
+              </svg>
+              <span class="effect-name">Moving Dot</span>
+            </button>
+<button class="effect-card" data-effect-id="3">
+                            <span class="fav-star" data-effect-id="3" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="1.5 5.5 21 13" width="65" height="40">
+                <g fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 17V15C3 10.0294 7.02944 6 12 6C16.9706 6 21 10.0294 21 15V17"/>
+                  <path d="M6 17V15C6 11.6863 8.68629 9 12 9C15.3137 9 18 11.6863 18 15V17"/>
+                  <path d="M9 17V15C9 13.3431 10.3431 12 12 12C13.6569 12 15 13.3431 15 15V17"/>
+                </g>
+              </svg>
+              <span class="effect-name">Rainbow Beat</span>
+            </button>
+<button class="effect-card" data-effect-id="22">
+                            <span class="fav-star" data-effect-id="22" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 512 512" width="44" height="44">
+                <rect x="186.853" y="106.165" transform="matrix(0.7071 -0.7071 0.7071 0.7071 -72.8134 198.5436)" width="32.807" height="162.001" fill="var(--run-bar, #888)"/>
+                <rect x="98.626" y="91.74" transform="matrix(0.7071 -0.7071 0.7071 0.7071 -118.523 144.3872)" width="32.807" height="247.048" fill="var(--run-bar, #888)"/>
+                <rect x="214.945" y="-24.58" transform="matrix(0.7071 -0.7071 0.7071 0.7071 -2.2033 192.568)" width="32.807" height="247.048" fill="var(--run-bar, #888)"/>
+                <path d="M452.436,365.884l18.551-83.6l-83.6,18.551l-73.776-43.476l-8.191,85.24l-64.147,56.729l78.537,34.132l34.132,78.537l56.729-64.147l85.24-8.191L452.436,365.884z M394.663,416.432l-31.167,35.241l-18.75-43.146l-43.146-18.75l35.241-31.167l4.5-46.828l40.531,23.886l45.927-10.191l-10.191,45.927l23.886,40.531L394.663,416.432z" fill="var(--run-glow, #888)"/>
+              </svg>
+              <span class="effect-name">Running Lights</span>
+            </button>
+<button class="effect-card" data-effect-id="24">
+                            <span class="fav-star" data-effect-id="24" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 428 403" width="44" height="42">
+                <path fill="var(--scan-dot, #888)" stroke="var(--scan-dot, #888)" stroke-width="1" fill-rule="evenodd" d="M334.025,1.011c50.717,0,91.832,40.886,91.832,91.322s-41.115,91.323-91.832,91.323-91.833-40.887-91.833-91.323S283.307,1.011,334.025,1.011Z"/>
+                <path fill="var(--scan-dot, #888)" stroke="var(--scan-dot, #888)" stroke-width="1" fill-rule="evenodd" d="M94.025,217.011c50.717,0,91.832,40.887,91.832,91.322s-41.115,91.323-91.832,91.323S2.192,358.769,2.192,308.333,43.307,217.011,94.025,217.011Z"/>
+                <path fill="var(--scan-trail, #888)" stroke="var(--scan-trail, #888)" stroke-width="1" fill-rule="evenodd" d="M425,170l2,1c-0.962,32.641-24.887,61.317-40,82-41.121,56.274-142.658,141.388-230,148v-1l3-4c34.82-16.479,55.15-83.1,35-130-12.187-28.369-30.308-34.075-48-54,39.631,3.259,87.651,18,137,10,22.066-3.579,55.475-19,74-16v5c-18.7,38.549-68.633,40.163-108,59-10.449,41.06,47.078,14.132,63,6C357.755,253.14,401.084,213.634,425,170Z"/>
+                <path fill="var(--scan-trail, #888)" stroke="var(--scan-trail, #888)" stroke-width="1" fill-rule="evenodd" d="M5,235l-2-1c0.962-32.641,24.887-61.317,40-82C84.121,95.726,185.658,10.612,273,4V5l-3,4c-34.82,16.48-55.15,83.1-35,130,12.187,28.369,30.308,34.075,48,54-39.631-3.259-87.651-18-137-10-22.066,3.579-55.475,19-74,16v-5c18.7-38.549,68.633-40.163,108-59,10.449-41.06-47.078-14.132-63-6C72.245,151.86,28.916,191.366,5,235Z"/>
+              </svg>
+              <span class="effect-name">Dual Scan</span>
+            </button>
+<button class="effect-card" data-effect-id="26">
+                            <span class="fav-star" data-effect-id="26" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 24 24" width="44" height="44" role="img">
                 <path fill="var(--meteor-color, #888)" d="M0 .234l21.912 20.537s.412.575-.124 1.151c-.535.576-1.236.083-1.236.083L0 .234zm6.508 2.058l17.01 15.638s.413.576-.123 1.152c-.534.576-1.235.083-1.235.083L6.508 2.292zM1.936 6.696l17.01 15.638s.412.576-.123 1.152-1.235.082-1.235.082L1.936 6.696zm10.073-2.635l11.886 10.927s.287.401-.087.805-.863.058-.863.058L12.009 4.061zm-8.567 7.737l11.886 10.926s.285.4-.088.803c-.375.403-.863.059-.863.059L3.442 11.798zm14.187-5.185l5.426 4.955s.142.188-.044.377c-.185.188-.428.027-.428.027l-4.954-5.358v-.001zM6.178 17.231l5.425 4.956s.144.188-.042.377-.427.026-.427.026l-4.956-5.359z"/>
               </svg>
               <span class="effect-name">Meteor</span>
             </button>
-            <button class="effect-card" data-effect-id="27">
-              <svg class="effect-icon" viewBox="10 -20 480 510" width="44" height="44">
+<button class="effect-card" data-effect-id="9">
+                            <span class="fav-star" data-effect-id="9" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 512 512" width="44" height="44">
+                <path fill="var(--comet-body, #888)" d="M405.952,201.859C400.28,182.859,511.999,0,511.999,0S247.687,156.359,234.64,150c-21.25-10.359,5.188-58.875,5.188-58.875l-188,158.484l0,0c-2.766,2.375-5.469,4.875-8.094,7.5c-58.312,58.312-58.312,152.844,0,211.156s152.844,58.312,211.156,0c6.328-6.328,16.938-20.188,16.938-20.188l176.171-234.749C447.999,213.328,411.171,219.359,405.952,201.859z"/>
+                <circle cx="149.219" cy="362.56" r="106.66" fill="var(--comet-head, #888)"/>
+              </svg>
+              <span class="effect-name">Comet</span>
+            </button>
+  </div>
+</div>
+
+<div class="effect-category" id="catDynamics">
+  <div class="category-header">
+    <h3>Dynamics</h3>
+  </div>
+  <div class="scroll-row">
+<button class="effect-card" data-effect-id="1">
+                            <span class="fav-star" data-effect-id="1" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 24 24" width="44" height="44">
+                <path d="M5.926 20.574a7.26 7.26 0 0 0 3.039 1.511c.107.035.179-.105.107-.175-2.395-2.285-1.079-4.758-.107-5.873.693-.796 1.68-2.107 1.608-3.865 0-.176.18-.317.322-.211 1.359.703 2.288 2.25 2.538 3.515.394-.386.537-.984.537-1.511 0-.176.214-.317.393-.176 1.287 1.16 3.503 5.097-.072 8.19-.071.071 0 .212.072.177a8.761 8.761 0 0 0 3.003-1.442c5.827-4.5 2.037-12.48-.43-15.116-.321-.317-.893-.106-.893.351-.036.95-.322 2.004-1.072 2.707-.572-2.39-2.478-5.105-5.195-6.441-.357-.176-.786.105-.75.492.07 3.27-2.063 5.352-3.922 8.059-1.645 2.425-2.717 6.89.822 9.808z" fill="var(--effect-color, #888)"/>
+              </svg>
+              <span class="effect-name">Fire</span>
+            </button>
+<button class="effect-card" data-effect-id="27">
+                            <span class="fav-star" data-effect-id="27" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="10 -20 480 510" width="44" height="44">
                 <path fill="var(--sparkle-1, #888)" d="M247.355,106.9C222.705,82.241,205.833,39.18,197.46,0c-8.386,39.188-25.24,82.258-49.899,106.917c-24.65,24.642-67.724,41.514-106.896,49.904c39.188,8.373,82.254,25.235,106.904,49.895c24.65,24.65,41.522,67.72,49.908,106.9c8.373-39.188,25.24-82.258,49.886-106.917c24.65-24.65,67.724-41.514,106.896-49.904C315.08,148.422,272.014,131.551,247.355,106.9z"/>
                 <path fill="var(--sparkle-2, #888)" d="M407.471,304.339c-14.714-14.721-24.81-40.46-29.812-63.864c-5.011,23.404-15.073,49.142-29.803,63.872c-14.73,14.714-40.464,24.801-63.864,29.812c23.408,5.01,49.134,15.081,63.864,29.811c14.73,14.722,24.81,40.46,29.82,63.864c5.001-23.413,15.081-49.142,29.802-63.872c14.722-14.722,40.46-24.802,63.856-29.82C447.939,329.14,422.201,319.061,407.471,304.339z"/>
                 <path fill="var(--sparkle-3, #888)" d="M146.352,354.702c-4.207,19.648-12.655,41.263-25.019,53.626c-12.362,12.354-33.968,20.82-53.613,25.027c19.645,4.216,41.251,12.656,53.613,25.027c12.364,12.362,20.829,33.96,25.036,53.618c4.203-19.658,12.655-41.255,25.023-53.626c12.354-12.362,33.964-20.82,53.605-25.035c-19.64-4.2-41.251-12.656-53.613-25.019C159.024,395.966,150.555,374.351,146.352,354.702z"/>
               </svg>
               <span class="effect-name">Sparkle</span>
             </button>
-            <!-- ── WLED Effects (IDs 28-37) ── -->
-            <button class="effect-card" data-effect-id="28">
-              <svg class="effect-icon" viewBox="0 0 32 32" width="44" height="44">
-                <path d="M16,21c0.3,0,0.6-0.1,0.8-0.4l13-17c0.3-0.4,0.3-1.1-0.2-1.4c-0.4-0.3-1.1-0.3-1.4,0.2l-5.7,7.5l-1-4.8c-0.4-1.8-2-3.1-3.8-3.1h-3.4c-1.8,0-3.4,1.2-3.8,3L5.8,25.5c-0.3,1.1,0,2.2,0.7,3.1C7.2,29.5,8.2,30,9.3,30h13.3c1.1,0,2.2-0.5,2.9-1.4c0.7-0.9,0.9-2,0.7-3.1l-2.5-9.7c-0.1-0.5-0.7-0.9-1.2-0.7c-0.5,0.1-0.9,0.7-0.7,1.2l1.5,5.8H8.6l3.8-16.5c0.2-0.9,1-1.5,1.8-1.5h3.4c0.9,0,1.7,0.6,1.8,1.5l1.4,6.5l-5.6,7.4c-0.3,0.4-0.3,1.1,0.2,1.4C15.6,20.9,15.8,21,16,21z" fill="var(--bpm-body, #888)"/>
-                <path d="M15,8h2c0.6,0,1-0.4,1-1s-0.4-1-1-1h-2c-0.6,0-1,0.4-1,1S14.4,8,15,8z" fill="var(--bpm-beat, #888)"/>
-                <path d="M15,11h2c0.6,0,1-0.4,1-1s-0.4-1-1-1h-2c-0.6,0-1,0.4-1,1S14.4,11,15,11z" fill="var(--bpm-beat, #888)"/>
-                <path d="M15,14h2c0.6,0,1-0.4,1-1s-0.4-1-1-1h-2c-0.6,0-1,0.4-1,1S14.4,14,15,14z" fill="var(--bpm-beat, #888)"/>
-              </svg>
-              <span class="effect-name">BPM</span>
-            </button>
-            <button class="effect-card" data-effect-id="29">
-              <svg class="effect-icon" viewBox="0 0 512 512" width="44" height="44">
-                <path fill="var(--plasma-body, #888)" d="M24.03 14c-21.58 46.38.5 85.717 40.876 98.594 37.1 11.84 60.145 33.247 49.53 82.75-7.982 37.263 7.447 72.355 50.064 80.937 23.717 4.78 50.425 32.762 55 76.376-2.76 71.81 50.795 134.308 123.28 141.656 75.402 7.644 142.733-47.288 150.376-122.687 3.822-37.7-8.017-73.352-30.22-100.563-.008-.01-.02-.02-.03-.03-26.01-45.997-144.995-100.207-187.25-96.094-43.27 4.212-72.128-8.77-83.844-45.032C176.252 81.72 145.9 76.166 107.563 83c-34.144 6.09-69.725-22.114-83.53-69zm104.907 81.906c30.423-.038 55.034 29.16 49.563 61.28-13.876-19.435-33.808-41.88-75.938-53.78 8.897-5.175 17.857-7.49 26.376-7.5zm17.25 57.875c2.112-.166 4.53.692 7.594 3.157 4.09 3.288 8.36 9.51 10.75 17.625 2.394 8.117 2.367 16.305.72 22.313-1.647 6.008-4.567 9.222-7.188 10.25-2.62 1.028-5.537.63-9.625-2.656-4.087-3.29-8.357-9.51-10.75-17.626-2.392-8.117-2.366-16.305-.718-22.313 1.646-6.007 4.565-9.252 7.186-10.28.655-.257 1.328-.413 2.03-.47zm116.75 41.626c32.99-.243 66.205 13.118 73.22 43.53 2.483 9.94 5.295 18.77 8.343 26.533.537 5.562 1.883 11.263 4.03 16.874 4.208 10.99 10.827 19.884 19.064 25.5 8.236 5.615 19.05 7.832 28.47 3.25 9.417-4.583 14.638-14.054 16.56-24.125 1.4-7.336 1.18-15.307-.655-23.345 85.45 65.1 69.966 143.12 19.624 184.72-52.91 43.717-137.897 49.615-175.375-40.5 1.1.956 2.394 1.658 3.81 2.155 6.656 3.853 14.364 6.063 22.564 6.063 24.892 0 45.28-20.358 45.28-45.25 0-22.926-17.29-42-39.468-44.875-26.686-18.043-52.14-29.055-47.687-59.813 5.098 5.817 11.21 10.258 17.843 13 9.664 3.996 20.89 4.263 30.312-1.156 9.42-5.42 14.826-15.268 16.188-25.626 1.36-10.358-.985-21.562-6.907-31.78-5.922-10.22-14.492-17.818-24.156-21.814-3.195-1.32-6.553-2.216-9.97-2.656-.37-.223-.715-.468-1.092-.688zM130.25 214.03c11.856 21.624 105.586 9.302 92.344 100.19-22.438-80.46-92.42-36.018-92.344-100.19zm129.063.376c2.316-.033 4.845.502 7.562 1.625 5.434 2.248 11.147 7.042 15.125 13.907 3.978 6.866 5.292 14.178 4.53 19.97-.76 5.79-3.25 9.735-6.967 11.874-3.72 2.14-8.41 2.31-13.844.064-5.435-2.247-11.148-7.04-15.126-13.906-3.978-6.866-5.293-14.21-4.53-20 .76-5.792 3.25-9.705 6.967-11.844 1.86-1.07 3.966-1.654 6.282-1.688zm113.375 27.563c1.912-.07 4.124.653 6.968 2.593 4.334 2.955 9.13 8.847 12.156 16.75 3.026 7.902 3.638 16.036 2.47 22.156-1.17 6.118-3.844 9.58-6.376 10.81-2.53 1.233-5.447 1.08-9.78-1.874-4.335-2.955-9.132-8.816-12.157-16.72-3.027-7.9-3.638-16.067-2.47-22.186 1.168-6.12 3.843-9.58 6.375-10.813.633-.307 1.303-.545 2-.656.26-.04.54-.05.813-.06zm-90.094 102.25c14.79 0 26.594 11.8 26.594 26.592 0 14.792-11.803 26.563-26.594 26.563-14.79 0-26.594-11.77-26.594-26.563 0-14.79 11.803-26.593 26.594-26.593z"/>
-              </svg>
-              <span class="effect-name">Plasma</span>
-            </button>
-            <button class="effect-card" data-effect-id="30">
-              <svg class="effect-icon" viewBox="0 0 64 64" width="44" height="44">
+<button class="effect-card" data-effect-id="30">
+                            <span class="fav-star" data-effect-id="30" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 64 64" width="44" height="44">
                 <!-- Inner core: bright yellow -->
                 <g fill="var(--fw-inner, #888)">
                   <path d="M32 30.774s-1.712-10.722-1.712-11.469s.768-1.354 1.712-1.354s1.712.606 1.712 1.354S32 30.774 32 30.774z"/>
@@ -376,49 +355,16 @@
               </svg>
               <span class="effect-name">Fireworks</span>
             </button>
-            <button class="effect-card" data-effect-id="31">
-              <svg class="effect-icon" viewBox="0 0 64 64" width="44" height="44">
+<button class="effect-card" data-effect-id="31">
+                            <span class="fav-star" data-effect-id="31" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 64 64" width="44" height="44">
                 <polygon points="48.302,24.151 35.935,24.151 44.929,0 20.196,0 15.698,35.019 25.816,35.019 21.320,64" fill="var(--lt-body, #888)"/>
               </svg>
               <span class="effect-name">Lightning</span>
             </button>
-            <button class="effect-card" data-effect-id="32">
-              <svg class="effect-icon" viewBox="0 0 128 128" width="44" height="44">
-                <path fill="var(--pride-red, #888)" d="M124 35.2c-1.85 1.12-3.66 2.06-5.43 2.85-1.78.8-3.52 1.45-5.24 1.98s-3.4.95-5.06 1.26c-1.66.32-3.29.54-4.89.68s-3.19.2-4.75.2-3.1-.06-4.62-.18-3.02-.28-4.5-.48c-1.48-.21-2.95-.45-4.4-.73s-2.89-.58-4.32-.91-2.85-.68-4.25-1.05c-1.41-.37-2.81-.76-4.21-1.15s-2.79-.81-4.17-1.22-2.77-.83-4.16-1.25-2.77-.84-4.16-1.25-2.78-.82-4.17-1.22-2.8-.78-4.21-1.15-2.83-.72-4.25-1.05-2.87-.64-4.32-.91c-1.45-.28-2.92-.52-4.4-.73s-2.98-.37-4.5-.48-3.06-.18-4.62-.18-3.14.06-4.75.2-3.24.36-4.89.68c-1.66.32-3.34.73-5.06 1.26s-3.46 1.18-5.24 1.98-3.59 1.74-5.43 2.85v-5.01V20.81c1.85-1.12 3.66-2.06 5.43-2.85s3.52-1.45 5.24-1.98 3.4-.95 5.06-1.26c1.66-.32 3.29-.54 4.89-.68 1.61-.14 3.19-.2 4.75-.2s3.1.06 4.62.18c1.52.11 3.02.28 4.5.48s2.95.45 4.4.73 2.89.58 4.32.91 2.85.68 4.25 1.05c1.41.37 2.81.76 4.21 1.15s2.79.81 4.17 1.22 2.77.83 4.16 1.25c1.38.42 2.77.84 4.16 1.25s2.78.82 4.17 1.22 2.8.78 4.21 1.15 2.83.72 4.25 1.05c1.43.33 2.87.64 4.32.91 1.45.28 2.92.52 4.4.73s2.98.37 4.5.48 3.06.18 4.62.18 3.14-.06 4.75-.2 3.24-.36 4.89-.68c1.66-.32 3.34-.73 5.06-1.26s3.46-1.18 5.24-1.98 3.59-1.74 5.43-2.85V35.2z"/>
-                <path fill="var(--pride-orange, #888)" d="M124 49.6c-1.85 1.12-3.66 2.06-5.43 2.85-1.78.8-3.52 1.45-5.24 1.98s-3.4.95-5.06 1.26c-1.66.32-3.29.54-4.89.68s-3.19.2-4.75.2-3.1-.06-4.62-.18-3.02-.28-4.5-.48c-1.48-.21-2.95-.45-4.4-.73s-2.89-.58-4.32-.91-2.85-.68-4.25-1.05c-1.41-.37-2.81-.76-4.21-1.15s-2.79-.81-4.17-1.22-2.77-.83-4.16-1.25-2.77-.84-4.16-1.25-2.78-.82-4.17-1.22-2.8-.78-4.21-1.15-2.83-.72-4.25-1.05-2.87-.64-4.32-.91c-1.45-.28-2.92-.52-4.4-.73s-2.98-.37-4.5-.48-3.06-.18-4.62-.18-3.14.06-4.75.2-3.24.36-4.89.68c-1.66.32-3.34.73-5.06 1.26s-3.46 1.18-5.24 1.98-3.59 1.74-5.43 2.85v-5.01v-4.37v-5.01c1.85-1.12 3.66-2.06 5.43-2.85 1.78-.8 3.52-1.45 5.24-1.98s3.4-.95 5.06-1.26c1.66-.32 3.29-.54 4.89-.68 1.61-.14 3.19-.2 4.75-.2s3.1.06 4.62.18c1.52.11 3.02.28 4.5.48s2.95.45 4.4.73 2.89.58 4.32.91 2.85.68 4.25 1.05c1.41.37 2.81.76 4.21 1.15 1.4.4 2.79.81 4.17 1.22 1.39.41 2.77.83 4.16 1.25 1.38.42 2.77.84 4.16 1.25s2.78.82 4.17 1.22 2.8.78 4.21 1.15 2.83.72 4.25 1.05c1.43.33 2.87.64 4.32.91 1.45.28 2.92.52 4.4.73s2.98.37 4.5.48 3.06.18 4.62.18 3.14-.06 4.75-.2 3.24-.36 4.89-.68c1.66-.32 3.34-.73 5.06-1.26s3.46-1.18 5.24-1.98 3.59-1.74 5.43-2.85V49.6z"/>
-                <path fill="var(--pride-yellow, #888)" d="M124 64c-1.85 1.12-3.66 2.06-5.43 2.85-1.78.8-3.52 1.45-5.24 1.98s-3.4.95-5.06 1.26c-1.66.32-3.29.54-4.89.68s-3.19.2-4.75.2-3.1-.06-4.62-.18-3.02-.28-4.5-.48c-1.48-.21-2.95-.45-4.4-.73s-2.89-.58-4.32-.91-2.85-.68-4.25-1.05c-1.41-.37-2.81-.76-4.21-1.15s-2.79-.81-4.17-1.22-2.78-.83-4.16-1.25-2.77-.84-4.16-1.25-2.78-.82-4.17-1.22-2.8-.78-4.21-1.15-2.83-.72-4.25-1.05-2.87-.64-4.32-.91c-1.45-.28-2.92-.52-4.4-.73s-2.98-.37-4.5-.48-3.06-.18-4.62-.18-3.14.06-4.75.2-3.24.36-4.89.68c-1.66.32-3.34.73-5.06 1.26s-3.46 1.18-5.24 1.98c-1.77.8-3.58 1.74-5.43 2.85v-5.01V49.61c1.85-1.12 3.66-2.06 5.43-2.85s3.52-1.45 5.24-1.98 3.4-.95 5.06-1.26c1.66-.32 3.29-.54 4.89-.68 1.61-.14 3.19-.2 4.75-.2s3.1.06 4.62.18c1.52.11 3.02.28 4.5.48 1.48.21 2.95.45 4.4.73s2.89.58 4.32.91 2.85.68 4.25 1.05c1.41.37 2.81.76 4.21 1.15 1.4.4 2.79.81 4.17 1.22 1.39.41 2.77.83 4.16 1.25s2.77.84 4.16 1.25 2.78.82 4.17 1.22 2.8.78 4.21 1.15 2.83.72 4.25 1.05c1.43.33 2.87.64 4.32.91 1.45.28 2.92.52 4.4.73s2.98.37 4.5.48 3.06.18 4.62.18 3.14-.06 4.75-.2 3.24-.36 4.89-.68c1.66-.32 3.34-.73 5.06-1.26s3.46-1.18 5.24-1.98 3.59-1.74 5.43-2.85V64z"/>
-                <path fill="var(--pride-green, #888)" d="M124 78.4c-1.85 1.12-3.66 2.06-5.43 2.85-1.78.8-3.52 1.45-5.24 1.98s-3.4.95-5.06 1.26-3.29.54-4.89.68c-1.61.14-3.19.2-4.75.2s-3.1-.06-4.62-.18c-1.52-.11-3.02-.28-4.5-.48-1.48-.21-2.95-.45-4.4-.73s-2.89-.58-4.32-.91-2.85-.68-4.25-1.05c-1.41-.37-2.81-.76-4.21-1.15s-2.79-.81-4.17-1.22c-1.39-.41-2.77-.83-4.16-1.25-1.38-.42-2.77-.84-4.16-1.25s-2.78-.82-4.17-1.22c-1.4-.4-2.8-.78-4.21-1.15s-2.83-.72-4.25-1.05-2.87-.64-4.32-.91c-1.45-.28-2.92-.52-4.4-.73s-2.98-.37-4.5-.48-3.06-.18-4.62-.18-3.14.06-4.75.2-3.24.36-4.89.68c-1.66.32-3.34.73-5.06 1.26s-3.46 1.18-5.24 1.98c-1.77.8-3.58 1.74-5.43 2.85v-5.01V64.01c1.85-1.12 3.66-2.06 5.43-2.85 1.78-.8 3.52-1.45 5.24-1.98s3.4-.95 5.06-1.26c1.66-.32 3.29-.54 4.89-.68 1.61-.14 3.19-.2 4.75-.2s3.1.06 4.62.18c1.52.11 3.02.28 4.5.48 1.48.21 2.95.45 4.4.73s2.89.58 4.32.91 2.85.68 4.25 1.05c1.41.37 2.81.76 4.21 1.15 1.4.4 2.79.81 4.17 1.22 1.39.41 2.77.83 4.16 1.25 1.38.42 2.77.84 4.16 1.25s2.78.82 4.17 1.22 2.8.78 4.21 1.15 2.83.72 4.25 1.05c1.43.33 2.87.64 4.32.91 1.45.28 2.92.52 4.4.73s2.98.37 4.5.48 3.06.18 4.62.18 3.14-.06 4.75-.2 3.24-.36 4.89-.68c1.66-.32 3.34-.73 5.06-1.26s3.46-1.18 5.24-1.98 3.59-1.74 5.43-2.85V78.4z"/>
-                <path fill="var(--pride-blue, #888)" d="M124 92.8c-1.85 1.12-3.66 2.06-5.43 2.85-1.78.8-3.52 1.45-5.24 1.98s-3.4.95-5.06 1.26-3.29.54-4.89.68c-1.61.14-3.19.2-4.75.2s-3.1-.06-4.62-.18c-1.52-.11-3.02-.28-4.5-.48-1.48-.21-2.95-.45-4.4-.73s-2.89-.58-4.32-.91-2.85-.68-4.25-1.05c-1.41-.37-2.81-.76-4.21-1.15-1.4-.4-2.79-.81-4.17-1.22-1.39-.41-2.77-.83-4.16-1.25-1.38-.42-2.77-.84-4.16-1.25s-2.78-.82-4.17-1.22c-1.4-.4-2.8-.78-4.21-1.15s-2.83-.72-4.25-1.05-2.87-.64-4.32-.91c-1.45-.28-2.92-.52-4.4-.73s-2.98-.37-4.5-.48-3.06-.18-4.62-.18-3.14.06-4.75.2-3.24.36-4.89.68s-3.34.73-5.06 1.26-3.46 1.18-5.24 1.98-3.59 1.74-5.43 2.85v-5.01V78.41c1.85-1.12 3.66-2.06 5.43-2.85 1.78-.8 3.52-1.45 5.24-1.98s3.4-.95 5.06-1.26c1.66-.32 3.29-.54 4.89-.68 1.61-.14 3.19-.2 4.75-.2s3.1.06 4.62.18c1.52.11 3.02.28 4.5.48 1.48.21 2.95.45 4.4.73s2.89.58 4.32.91 2.85.68 4.25 1.05c1.41.37 2.81.76 4.21 1.15 1.4.4 2.79.81 4.17 1.22 1.39.41 2.77.83 4.16 1.25 1.38.42 2.77.84 4.16 1.25s2.78.82 4.17 1.22 2.8.78 4.21 1.15 2.83.72 4.25 1.05c1.43.33 2.87.64 4.32.91 1.45.28 2.92.52 4.4.73s2.98.37 4.5.48 3.06.18 4.62.18 3.14-.06 4.75-.2 3.24-.36 4.89-.68c1.66-.32 3.34-.73 5.06-1.26s3.46-1.18 5.24-1.98 3.59-1.74 5.43-2.85V92.8z"/>
-                <path fill="var(--pride-purple, #888)" d="M124 107.2c-1.85 1.12-3.66 2.06-5.43 2.85-1.78.8-3.52 1.45-5.24 1.98s-3.4.95-5.06 1.26c-1.66.32-3.29.54-4.89.68-1.61.14-3.19.2-4.75.2s-3.1-.06-4.62-.18c-1.52-.11-3.02-.28-4.5-.48-1.48-.21-2.95-.45-4.4-.73s-2.89-.58-4.32-.91-2.85-.68-4.25-1.05-2.81-.76-4.21-1.15c-1.4-.4-2.79-.81-4.17-1.22-1.39-.41-2.77-.83-4.16-1.25-1.38-.42-2.77-.84-4.16-1.25s-2.78-.82-4.17-1.22c-1.4-.4-2.8-.78-4.21-1.15s-2.83-.72-4.25-1.05-2.87-.64-4.32-.91c-1.45-.28-2.92-.52-4.4-.73s-2.98-.37-4.5-.48-3.06-.18-4.62-.18-3.14.06-4.75.2-3.24.36-4.89.68c-1.66.32-3.34.73-5.06 1.26s-3.46 1.18-5.24 1.98-3.59 1.74-5.43 2.85v-5.01V92.81c1.85-1.12 3.66-2.06 5.43-2.85s3.52-1.45 5.24-1.98 3.4-.95 5.06-1.26 3.29-.54 4.89-.68c1.61-.14 3.19-.2 4.75-.2s3.1.06 4.62.18c1.52.11 3.02.28 4.5.48s2.95.45 4.4.73 2.89.58 4.32.91 2.85.68 4.25 1.05c1.41.37 2.81.76 4.21 1.15 1.4.4 2.79.81 4.17 1.22 1.39.41 2.77.83 4.16 1.25 1.38.42 2.77.84 4.16 1.25s2.78.82 4.17 1.22c1.4.4 2.8.78 4.21 1.15s2.83.72 4.25 1.05c1.43.33 2.87.64 4.32.91 1.45.28 2.92.52 4.4.73s2.98.37 4.5.48 3.06.18 4.62.18 3.14-.06 4.75-.2 3.24-.36 4.89-.68s3.34-.73 5.06-1.26 3.46-1.18 5.24-1.98 3.59-1.74 5.43-2.85V107.2z"/>
-              </svg>
-              <span class="effect-name">Pride 2015</span>
-            </button>
-            <button class="effect-card" data-effect-id="33">
-              <svg class="effect-icon" viewBox="0 0 48 48" width="44" height="44" fill="none">
-                <path d="M6 11V37" stroke="var(--cw-1, #888)" stroke-width="4" stroke-linecap="round"/>
-                <path d="M15 18V30" stroke="var(--cw-2, #888)" stroke-width="4" stroke-linecap="round"/>
-                <path d="M24 11V37" stroke="var(--cw-3, #888)" stroke-width="4" stroke-linecap="round"/>
-                <path d="M33 4V44" stroke="var(--cw-4, #888)" stroke-width="4" stroke-linecap="round"/>
-                <path d="M42 15V33" stroke="var(--cw-5, #888)" stroke-width="4" stroke-linecap="round"/>
-              </svg>
-              <span class="effect-name">Colorwaves</span>
-            </button>
-            <button class="effect-card" data-effect-id="34">
-              <svg class="effect-icon" viewBox="0 0 24 24" width="44" height="44" fill="none">
-                <path d="M3 10C5.48276 10 7.34483 7 7.34483 7C7.34483 7 9.2069 10 11.6897 10C14.1724 10 16.6552 7 16.6552 7C16.6552 7 19.1379 10 21 10" stroke="var(--pc-wave-1, #888)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M3 17C5.48276 17 7.34483 14 7.34483 14C7.34483 14 9.2069 17 11.6897 17C14.1724 17 16.6552 14 16.6552 14C16.6552 14 19.1379 17 21 17" stroke="var(--pc-wave-2, #888)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <span class="effect-name">Pacifica</span>
-            </button>
-            <button class="effect-card" data-effect-id="35">
-              <svg class="effect-icon" viewBox="0 0 24 24" width="44" height="44">
-                <path fill="var(--tf-1, #888)" d="M10.25 12.33C10.129 12.3286 10.0097 12.3013 9.90001 12.25L7.44002 11L5.00002 12.25C4.87533 12.3165 4.7344 12.3464 4.59347 12.3363C4.45253 12.3261 4.31732 12.2764 4.20341 12.1928C4.0895 12.1092 4.00153 11.9951 3.94962 11.8637C3.89771 11.7323 3.88398 11.5889 3.91002 11.45L4.38002 8.72001L2.38002 6.78001C2.27697 6.68178 2.20358 6.55658 2.16822 6.41868C2.13286 6.28077 2.13695 6.13571 2.18002 6.00001C2.22367 5.86637 2.30401 5.7477 2.41187 5.65752C2.51973 5.56735 2.65076 5.5093 2.79002 5.49001L5.54002 5.09001L6.76002 2.61001C6.83048 2.49413 6.9296 2.39834 7.04782 2.33186C7.16604 2.26539 7.29939 2.23047 7.43502 2.23047C7.57064 2.23047 7.70399 2.26539 7.82221 2.33186C7.94043 2.39834 8.03955 2.49413 8.11001 2.61001L9.34002 5.10001L12.09 5.50001C12.2282 5.5209 12.3578 5.57998 12.4642 5.67058C12.5706 5.76119 12.6495 5.87972 12.6922 6.0128C12.7348 6.14589 12.7394 6.28823 12.7054 6.42379C12.6715 6.55935 12.6003 6.68273 12.5 6.78001L10.5 8.72001L11 11.45C11.0259 11.5881 11.0124 11.7307 10.9611 11.8616C10.9098 11.9924 10.8228 12.1062 10.71 12.19C10.575 12.2833 10.4142 12.3323 10.25 12.33ZM4.51002 6.76001L5.69002 7.92001C5.77798 8.00356 5.84405 8.10745 5.88241 8.22255C5.92078 8.33764 5.93025 8.46039 5.91002 8.58001L5.63002 10.21L7.09002 9.44001C7.19863 9.38548 7.31848 9.35708 7.44002 9.35708C7.56155 9.35708 7.6814 9.38548 7.79002 9.44001L9.25002 10.21L9.00002 8.58001C8.97978 8.46039 8.98925 8.33764 9.02762 8.22255C9.06598 8.10745 9.13205 8.00356 9.22002 7.92001L10.4 6.76001L8.73001 6.53001C8.61082 6.51105 8.49786 6.46397 8.40048 6.39267C8.3031 6.32137 8.2241 6.22791 8.17002 6.12001L7.44002 4.63001L6.71002 6.12001C6.65498 6.22915 6.57443 6.32341 6.4752 6.39478C6.37597 6.46616 6.26099 6.51255 6.14002 6.53001L4.51002 6.76001Z"/>
-                <path fill="var(--tf-2, #888)" d="M12.33 21.81C12.1727 21.8082 12.0195 21.7594 11.89 21.67C11.7763 21.5866 11.688 21.4733 11.635 21.3426C11.582 21.2119 11.5664 21.069 11.59 20.93L12.17 17.59L9.74002 15.22C9.63751 15.1236 9.56504 14.9997 9.53133 14.8631C9.49762 14.7264 9.50411 14.583 9.55002 14.45C9.59292 14.3177 9.67174 14.2 9.7777 14.1099C9.88365 14.0199 10.0126 13.961 10.15 13.94L13.51 13.46L15 10.41C15.0705 10.2941 15.1696 10.1983 15.2878 10.1318C15.406 10.0654 15.5394 10.0305 15.675 10.0305C15.8106 10.0305 15.944 10.0654 16.0622 10.1318C16.1804 10.1983 16.2795 10.2941 16.35 10.41L17.85 13.46L21.2 13.94C21.339 13.9593 21.4698 14.0173 21.5775 14.1073C21.6852 14.1973 21.7655 14.3157 21.8092 14.449C21.853 14.5824 21.8584 14.7253 21.825 14.8616C21.7915 14.9979 21.7205 15.1221 21.62 15.22L19.2 17.59L19.77 20.93C19.7947 21.0681 19.7806 21.2103 19.7295 21.3409C19.6783 21.4715 19.5919 21.5854 19.48 21.67C19.3622 21.7458 19.2251 21.7861 19.085 21.7861C18.9449 21.7861 18.8078 21.7458 18.69 21.67L15.69 20.1L12.69 21.67C12.5848 21.7481 12.4604 21.7965 12.33 21.81ZM11.87 15.21L13.5 16.79C13.5856 16.877 13.6493 16.9832 13.6858 17.0997C13.7223 17.2162 13.7306 17.3397 13.71 17.46L13.33 19.69L15.33 18.63C15.4386 18.5755 15.5585 18.5471 15.68 18.5471C15.8016 18.5471 15.9214 18.5755 16.03 18.63L18.03 19.69L17.65 17.46C17.6249 17.3397 17.6311 17.2149 17.6678 17.0977C17.7046 16.9804 17.7707 16.8745 17.86 16.79L19.48 15.21L17.24 14.88C17.1197 14.8644 17.0053 14.8186 16.9074 14.7469C16.8094 14.6753 16.7312 14.58 16.68 14.47L15.68 12.47L14.68 14.47C14.6288 14.58 14.5506 14.6753 14.4527 14.7469C14.3548 14.8186 14.2403 14.8644 14.12 14.88L11.87 15.21Z"/>
-              </svg>
-              <span class="effect-name">TwinkleFOX</span>
-            </button>
-            <button class="effect-card" data-effect-id="36">
-              <svg class="effect-icon" viewBox="100 40 850 420" width="72" height="44">
+<button class="effect-card" data-effect-id="36">
+                            <span class="fav-star" data-effect-id="36" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="100 40 850 420" width="72" height="44">
                 <g fill-rule="evenodd">
                   <path fill="var(--aurora-green, #888)" stroke="var(--aurora-green, #888)" stroke-width="1" d="M389,107h3l-3,4L163,305c-21.945,17.493-54.011,63.694-88,59-3.436-6.337-7.828-10.3-11-18,19.219-36.318,67.211-56.93,100-80Z"/>
                   <path fill="var(--aurora-cyan, #888)" stroke="var(--aurora-cyan, #888)" stroke-width="1" d="M457,92c0.332,10.3-51.457,53.177-61,65-33.4,41.376-76.31,74.817-112,114-24.755,27.178-50.562,58.826-80,81-9.948.839-15.231-.764-22-5l-4-6c0.185-29.222,51.218-58.157,70-73Z"/>
@@ -437,8 +383,9 @@
               </svg>
               <span class="effect-name">Aurora</span>
             </button>
-            <button class="effect-card" data-effect-id="37">
-              <svg class="effect-icon" viewBox="0 0 512 512" width="44" height="44">
+<button class="effect-card" data-effect-id="37">
+                            <span class="fav-star" data-effect-id="37" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 512 512" width="44" height="44">
                 <polygon points="253.109,256.188 212.219,256.188 233.688,512 247.688,512 261.156,512 275.359,512 296.844,256.188 255.922,256.188" fill="var(--pc-body, #888)"/>
                 <polygon points="306.578,512 356.609,512 400.703,256.188 338.688,256.188" fill="var(--pc-flap, #888)"/>
                 <polygon points="108.344,256.188 152.438,512 202.469,512 170.375,256.188" fill="var(--pc-flap, #888)"/>
@@ -446,30 +393,162 @@
               </svg>
               <span class="effect-name">Popcorn</span>
             </button>
+<button class="effect-card" data-effect-id="35">
+                            <span class="fav-star" data-effect-id="35" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 24 24" width="44" height="44">
+                <path fill="var(--tf-1, #888)" d="M10.25 12.33C10.129 12.3286 10.0097 12.3013 9.90001 12.25L7.44002 11L5.00002 12.25C4.87533 12.3165 4.7344 12.3464 4.59347 12.3363C4.45253 12.3261 4.31732 12.2764 4.20341 12.1928C4.0895 12.1092 4.00153 11.9951 3.94962 11.8637C3.89771 11.7323 3.88398 11.5889 3.91002 11.45L4.38002 8.72001L2.38002 6.78001C2.27697 6.68178 2.20358 6.55658 2.16822 6.41868C2.13286 6.28077 2.13695 6.13571 2.18002 6.00001C2.22367 5.86637 2.30401 5.7477 2.41187 5.65752C2.51973 5.56735 2.65076 5.5093 2.79002 5.49001L5.54002 5.09001L6.76002 2.61001C6.83048 2.49413 6.9296 2.39834 7.04782 2.33186C7.16604 2.26539 7.29939 2.23047 7.43502 2.23047C7.57064 2.23047 7.70399 2.26539 7.82221 2.33186C7.94043 2.39834 8.03955 2.49413 8.11001 2.61001L9.34002 5.10001L12.09 5.50001C12.2282 5.5209 12.3578 5.57998 12.4642 5.67058C12.5706 5.76119 12.6495 5.87972 12.6922 6.0128C12.7348 6.14589 12.7394 6.28823 12.7054 6.42379C12.6715 6.55935 12.6003 6.68273 12.5 6.78001L10.5 8.72001L11 11.45C11.0259 11.5881 11.0124 11.7307 10.9611 11.8616C10.9098 11.9924 10.8228 12.1062 10.71 12.19C10.575 12.2833 10.4142 12.3323 10.25 12.33ZM4.51002 6.76001L5.69002 7.92001C5.77798 8.00356 5.84405 8.10745 5.88241 8.22255C5.92078 8.33764 5.93025 8.46039 5.91002 8.58001L5.63002 10.21L7.09002 9.44001C7.19863 9.38548 7.31848 9.35708 7.44002 9.35708C7.56155 9.35708 7.6814 9.38548 7.79002 9.44001L9.25002 10.21L9.00002 8.58001C8.97978 8.46039 8.98925 8.33764 9.02762 8.22255C9.06598 8.10745 9.13205 8.00356 9.22002 7.92001L10.4 6.76001L8.73001 6.53001C8.61082 6.51105 8.49786 6.46397 8.40048 6.39267C8.3031 6.32137 8.2241 6.22791 8.17002 6.12001L7.44002 4.63001L6.71002 6.12001C6.65498 6.22915 6.57443 6.32341 6.4752 6.39478C6.37597 6.46616 6.26099 6.51255 6.14002 6.53001L4.51002 6.76001Z"/>
+                <path fill="var(--tf-2, #888)" d="M12.33 21.81C12.1727 21.8082 12.0195 21.7594 11.89 21.67C11.7763 21.5866 11.688 21.4733 11.635 21.3426C11.582 21.2119 11.5664 21.069 11.59 20.93L12.17 17.59L9.74002 15.22C9.63751 15.1236 9.56504 14.9997 9.53133 14.8631C9.49762 14.7264 9.50411 14.583 9.55002 14.45C9.59292 14.3177 9.67174 14.2 9.7777 14.1099C9.88365 14.0199 10.0126 13.961 10.15 13.94L13.51 13.46L15 10.41C15.0705 10.2941 15.1696 10.1983 15.2878 10.1318C15.406 10.0654 15.5394 10.0305 15.675 10.0305C15.8106 10.0305 15.944 10.0654 16.0622 10.1318C16.1804 10.1983 16.2795 10.2941 16.35 10.41L17.85 13.46L21.2 13.94C21.339 13.9593 21.4698 14.0173 21.5775 14.1073C21.6852 14.1973 21.7655 14.3157 21.8092 14.449C21.853 14.5824 21.8584 14.7253 21.825 14.8616C21.7915 14.9979 21.7205 15.1221 21.62 15.22L19.2 17.59L19.77 20.93C19.7947 21.0681 19.7806 21.2103 19.7295 21.3409C19.6783 21.4715 19.5919 21.5854 19.48 21.67C19.3622 21.7458 19.2251 21.7861 19.085 21.7861C18.9449 21.7861 18.8078 21.7458 18.69 21.67L15.69 20.1L12.69 21.67C12.5848 21.7481 12.4604 21.7965 12.33 21.81ZM11.87 15.21L13.5 16.79C13.5856 16.877 13.6493 16.9832 13.6858 17.0997C13.7223 17.2162 13.7306 17.3397 13.71 17.46L13.33 19.69L15.33 18.63C15.4386 18.5755 15.5585 18.5471 15.68 18.5471C15.8016 18.5471 15.9214 18.5755 16.03 18.63L18.03 19.69L17.65 17.46C17.6249 17.3397 17.6311 17.2149 17.6678 17.0977C17.7046 16.9804 17.7707 16.8745 17.86 16.79L19.48 15.21L17.24 14.88C17.1197 14.8644 17.0053 14.8186 16.9074 14.7469C16.8094 14.6753 16.7312 14.58 16.68 14.47L15.68 12.47L14.68 14.47C14.6288 14.58 14.5506 14.6753 14.4527 14.7469C14.3548 14.8186 14.2403 14.8644 14.12 14.88L11.87 15.21Z"/>
+              </svg>
+              <span class="effect-name">TwinkleFOX</span>
+            </button>
+<button class="effect-card" data-effect-id="29">
+                            <span class="fav-star" data-effect-id="29" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 512 512" width="44" height="44">
+                <path fill="var(--plasma-body, #888)" d="M24.03 14c-21.58 46.38.5 85.717 40.876 98.594 37.1 11.84 60.145 33.247 49.53 82.75-7.982 37.263 7.447 72.355 50.064 80.937 23.717 4.78 50.425 32.762 55 76.376-2.76 71.81 50.795 134.308 123.28 141.656 75.402 7.644 142.733-47.288 150.376-122.687 3.822-37.7-8.017-73.352-30.22-100.563-.008-.01-.02-.02-.03-.03-26.01-45.997-144.995-100.207-187.25-96.094-43.27 4.212-72.128-8.77-83.844-45.032C176.252 81.72 145.9 76.166 107.563 83c-34.144 6.09-69.725-22.114-83.53-69zm104.907 81.906c30.423-.038 55.034 29.16 49.563 61.28-13.876-19.435-33.808-41.88-75.938-53.78 8.897-5.175 17.857-7.49 26.376-7.5zm17.25 57.875c2.112-.166 4.53.692 7.594 3.157 4.09 3.288 8.36 9.51 10.75 17.625 2.394 8.117 2.367 16.305.72 22.313-1.647 6.008-4.567 9.222-7.188 10.25-2.62 1.028-5.537.63-9.625-2.656-4.087-3.29-8.357-9.51-10.75-17.626-2.392-8.117-2.366-16.305-.718-22.313 1.646-6.007 4.565-9.252 7.186-10.28.655-.257 1.328-.413 2.03-.47zm116.75 41.626c32.99-.243 66.205 13.118 73.22 43.53 2.483 9.94 5.295 18.77 8.343 26.533.537 5.562 1.883 11.263 4.03 16.874 4.208 10.99 10.827 19.884 19.064 25.5 8.236 5.615 19.05 7.832 28.47 3.25 9.417-4.583 14.638-14.054 16.56-24.125 1.4-7.336 1.18-15.307-.655-23.345 85.45 65.1 69.966 143.12 19.624 184.72-52.91 43.717-137.897 49.615-175.375-40.5 1.1.956 2.394 1.658 3.81 2.155 6.656 3.853 14.364 6.063 22.564 6.063 24.892 0 45.28-20.358 45.28-45.25 0-22.926-17.29-42-39.468-44.875-26.686-18.043-52.14-29.055-47.687-59.813 5.098 5.817 11.21 10.258 17.843 13 9.664 3.996 20.89 4.263 30.312-1.156 9.42-5.42 14.826-15.268 16.188-25.626 1.36-10.358-.985-21.562-6.907-31.78-5.922-10.22-14.492-17.818-24.156-21.814-3.195-1.32-6.553-2.216-9.97-2.656-.37-.223-.715-.468-1.092-.688zM130.25 214.03c11.856 21.624 105.586 9.302 92.344 100.19-22.438-80.46-92.42-36.018-92.344-100.19zm129.063.376c2.316-.033 4.845.502 7.562 1.625 5.434 2.248 11.147 7.042 15.125 13.907 3.978 6.866 5.292 14.178 4.53 19.97-.76 5.79-3.25 9.735-6.967 11.874-3.72 2.14-8.41 2.31-13.844.064-5.435-2.247-11.148-7.04-15.126-13.906-3.978-6.866-5.293-14.21-4.53-20 .76-5.792 3.25-9.705 6.967-11.844 1.86-1.07 3.966-1.654 6.282-1.688zm113.375 27.563c1.912-.07 4.124.653 6.968 2.593 4.334 2.955 9.13 8.847 12.156 16.75 3.026 7.902 3.638 16.036 2.47 22.156-1.17 6.118-3.844 9.58-6.376 10.81-2.53 1.233-5.447 1.08-9.78-1.874-4.335-2.955-9.132-8.816-12.157-16.72-3.027-7.9-3.638-16.067-2.47-22.186 1.168-6.12 3.843-9.58 6.375-10.813.633-.307 1.303-.545 2-.656.26-.04.54-.05.813-.06zm-90.094 102.25c14.79 0 26.594 11.8 26.594 26.592 0 14.792-11.803 26.563-26.594 26.563-14.79 0-26.594-11.77-26.594-26.563 0-14.79 11.803-26.593 26.594-26.593z"/>
+              </svg>
+              <span class="effect-name">Plasma</span>
+            </button>
+  </div>
+</div>
 
-            <!-- ── Nuevos efectos prioritarios (IDs 38-45) ── -->
-            <button class="effect-card" data-effect-id="38">
-              <svg class="effect-icon" viewBox="0 0 24 24" width="44" height="44" fill="none">
+<div class="effect-category" id="catPatterns">
+  <div class="category-header">
+    <h3>Patterns</h3>
+  </div>
+  <div class="scroll-row">
+<button class="effect-card" data-effect-id="4">
+                            <span class="fav-star" data-effect-id="4" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 24 24" width="44" height="44">
+                <circle cx="12" cy="6" r="5.5" fill="var(--rwb-red, #888)"/>
+                <circle cx="6" cy="18" r="5.5" fill="var(--rwb-white, #888)"/>
+                <circle cx="18" cy="18" r="5.5" fill="var(--rwb-blue, #888)"/>
+              </svg>
+              <span class="effect-name">Red White Blue</span>
+            </button>
+<button class="effect-card" data-effect-id="21">
+                            <span class="fav-star" data-effect-id="21" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 24 24" width="44" height="44">
+                <path d="M2 12h2a7.986 7.986 0 0 1 2.337-5.663 7.91 7.91 0 0 1 2.542-1.71 8.12 8.12 0 0 1 6.13-.041A2.488 2.488 0 0 0 17.5 7C18.886 7 20 5.886 20 4.5S18.886 2 17.5 2c-.689 0-1.312.276-1.763.725-2.431-.973-5.223-.958-7.635.059a9.928 9.928 0 0 0-3.18 2.139 9.92 9.92 0 0 0-2.14 3.179A10.005 10.005 0 0 0 2 12zm17.373 3.122c-.401.952-.977 1.808-1.71 2.541s-1.589 1.309-2.542 1.71a8.12 8.12 0 0 1-6.13.041A2.488 2.488 0 0 0 6.5 17C5.114 17 4 18.114 4 19.5S5.114 22 6.5 22c.689 0 1.312-.276 1.763-.725A9.965 9.965 0 0 0 12 22a9.983 9.983 0 0 0 9.217-6.102A9.992 9.992 0 0 0 22 12h-2a7.993 7.993 0 0 1-.627 3.122z" fill="var(--theater-mask, #888)"/>
+                <path d="M12 7.462c-2.502 0-4.538 2.036-4.538 4.538S9.498 16.538 12 16.538s4.538-2.036 4.538-4.538S14.502 7.462 12 7.462z" fill="var(--theater-ring, #888)"/>
+                <circle cx="12" cy="12" r="2.538" fill="var(--theater-dot, #888)"/>
+              </svg>
+              <span class="effect-name">Theater Chase</span>
+            </button>
+<button class="effect-card" data-effect-id="28">
+                            <span class="fav-star" data-effect-id="28" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 32 32" width="44" height="44">
+                <path d="M16,21c0.3,0,0.6-0.1,0.8-0.4l13-17c0.3-0.4,0.3-1.1-0.2-1.4c-0.4-0.3-1.1-0.3-1.4,0.2l-5.7,7.5l-1-4.8c-0.4-1.8-2-3.1-3.8-3.1h-3.4c-1.8,0-3.4,1.2-3.8,3L5.8,25.5c-0.3,1.1,0,2.2,0.7,3.1C7.2,29.5,8.2,30,9.3,30h13.3c1.1,0,2.2-0.5,2.9-1.4c0.7-0.9,0.9-2,0.7-3.1l-2.5-9.7c-0.1-0.5-0.7-0.9-1.2-0.7c-0.5,0.1-0.9,0.7-0.7,1.2l1.5,5.8H8.6l3.8-16.5c0.2-0.9,1-1.5,1.8-1.5h3.4c0.9,0,1.7,0.6,1.8,1.5l1.4,6.5l-5.6,7.4c-0.3,0.4-0.3,1.1,0.2,1.4C15.6,20.9,15.8,21,16,21z" fill="var(--bpm-body, #888)"/>
+                <path d="M15,8h2c0.6,0,1-0.4,1-1s-0.4-1-1-1h-2c-0.6,0-1,0.4-1,1S14.4,8,15,8z" fill="var(--bpm-beat, #888)"/>
+                <path d="M15,11h2c0.6,0,1-0.4,1-1s-0.4-1-1-1h-2c-0.6,0-1,0.4-1,1S14.4,11,15,11z" fill="var(--bpm-beat, #888)"/>
+                <path d="M15,14h2c0.6,0,1-0.4,1-1s-0.4-1-1-1h-2c-0.6,0-1,0.4-1,1S14.4,14,15,14z" fill="var(--bpm-beat, #888)"/>
+              </svg>
+              <span class="effect-name">BPM</span>
+            </button>
+<button class="effect-card" data-effect-id="32">
+                            <span class="fav-star" data-effect-id="32" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 128 128" width="44" height="44">
+                <path fill="var(--pride-red, #888)" d="M124 35.2c-1.85 1.12-3.66 2.06-5.43 2.85-1.78.8-3.52 1.45-5.24 1.98s-3.4.95-5.06 1.26c-1.66.32-3.29.54-4.89.68s-3.19.2-4.75.2-3.1-.06-4.62-.18-3.02-.28-4.5-.48c-1.48-.21-2.95-.45-4.4-.73s-2.89-.58-4.32-.91-2.85-.68-4.25-1.05c-1.41-.37-2.81-.76-4.21-1.15s-2.79-.81-4.17-1.22-2.77-.83-4.16-1.25-2.77-.84-4.16-1.25-2.78-.82-4.17-1.22-2.8-.78-4.21-1.15-2.83-.72-4.25-1.05-2.87-.64-4.32-.91c-1.45-.28-2.92-.52-4.4-.73s-2.98-.37-4.5-.48-3.06-.18-4.62-.18-3.14.06-4.75.2-3.24.36-4.89.68c-1.66.32-3.34.73-5.06 1.26s-3.46 1.18-5.24 1.98-3.59 1.74-5.43 2.85v-5.01V20.81c1.85-1.12 3.66-2.06 5.43-2.85s3.52-1.45 5.24-1.98 3.4-.95 5.06-1.26c1.66-.32 3.29-.54 4.89-.68 1.61-.14 3.19-.2 4.75-.2s3.1.06 4.62.18c1.52.11 3.02.28 4.5.48s2.95.45 4.4.73 2.89.58 4.32.91 2.85.68 4.25 1.05c1.41.37 2.81.76 4.21 1.15s2.79.81 4.17 1.22 2.77.83 4.16 1.25c1.38.42 2.77.84 4.16 1.25s2.78.82 4.17 1.22 2.8.78 4.21 1.15 2.83.72 4.25 1.05c1.43.33 2.87.64 4.32.91 1.45.28 2.92.52 4.4.73s2.98.37 4.5.48 3.06.18 4.62.18 3.14-.06 4.75-.2 3.24-.36 4.89-.68c1.66-.32 3.34-.73 5.06-1.26s3.46-1.18 5.24-1.98 3.59-1.74 5.43-2.85V35.2z"/>
+                <path fill="var(--pride-orange, #888)" d="M124 49.6c-1.85 1.12-3.66 2.06-5.43 2.85-1.78.8-3.52 1.45-5.24 1.98s-3.4.95-5.06 1.26c-1.66.32-3.29.54-4.89.68s-3.19.2-4.75.2-3.1-.06-4.62-.18-3.02-.28-4.5-.48c-1.48-.21-2.95-.45-4.4-.73s-2.89-.58-4.32-.91-2.85-.68-4.25-1.05c-1.41-.37-2.81-.76-4.21-1.15s-2.79-.81-4.17-1.22-2.77-.83-4.16-1.25-2.77-.84-4.16-1.25-2.78-.82-4.17-1.22-2.8-.78-4.21-1.15-2.83-.72-4.25-1.05-2.87-.64-4.32-.91c-1.45-.28-2.92-.52-4.4-.73s-2.98-.37-4.5-.48-3.06-.18-4.62-.18-3.14.06-4.75.2-3.24.36-4.89.68c-1.66.32-3.34.73-5.06 1.26s-3.46 1.18-5.24 1.98-3.59 1.74-5.43 2.85v-5.01v-4.37v-5.01c1.85-1.12 3.66-2.06 5.43-2.85 1.78-.8 3.52-1.45 5.24-1.98s3.4-.95 5.06-1.26c1.66-.32 3.29-.54 4.89-.68 1.61-.14 3.19-.2 4.75-.2s3.1.06 4.62.18c1.52.11 3.02.28 4.5.48s2.95.45 4.4.73 2.89.58 4.32.91 2.85.68 4.25 1.05c1.41.37 2.81.76 4.21 1.15 1.4.4 2.79.81 4.17 1.22 1.39.41 2.77.83 4.16 1.25 1.38.42 2.77.84 4.16 1.25s2.78.82 4.17 1.22 2.8.78 4.21 1.15 2.83.72 4.25 1.05c1.43.33 2.87.64 4.32.91 1.45.28 2.92.52 4.4.73s2.98.37 4.5.48 3.06.18 4.62.18 3.14-.06 4.75-.2 3.24-.36 4.89-.68c1.66-.32 3.34-.73 5.06-1.26s3.46-1.18 5.24-1.98 3.59-1.74 5.43-2.85V49.6z"/>
+                <path fill="var(--pride-yellow, #888)" d="M124 64c-1.85 1.12-3.66 2.06-5.43 2.85-1.78.8-3.52 1.45-5.24 1.98s-3.4.95-5.06 1.26c-1.66.32-3.29.54-4.89.68s-3.19.2-4.75.2-3.1-.06-4.62-.18-3.02-.28-4.5-.48c-1.48-.21-2.95-.45-4.4-.73s-2.89-.58-4.32-.91-2.85-.68-4.25-1.05c-1.41-.37-2.81-.76-4.21-1.15s-2.79-.81-4.17-1.22-2.78-.83-4.16-1.25-2.77-.84-4.16-1.25-2.78-.82-4.17-1.22-2.8-.78-4.21-1.15-2.83-.72-4.25-1.05-2.87-.64-4.32-.91c-1.45-.28-2.92-.52-4.4-.73s-2.98-.37-4.5-.48-3.06-.18-4.62-.18-3.14.06-4.75.2-3.24.36-4.89.68c-1.66.32-3.34.73-5.06 1.26s-3.46 1.18-5.24 1.98c-1.77.8-3.58 1.74-5.43 2.85v-5.01V49.61c1.85-1.12 3.66-2.06 5.43-2.85s3.52-1.45 5.24-1.98 3.4-.95 5.06-1.26c1.66-.32 3.29-.54 4.89-.68 1.61-.14 3.19-.2 4.75-.2s3.1.06 4.62.18c1.52.11 3.02.28 4.5.48 1.48.21 2.95.45 4.4.73s2.89.58 4.32.91 2.85.68 4.25 1.05c1.41.37 2.81.76 4.21 1.15 1.4.4 2.79.81 4.17 1.22 1.39.41 2.77.83 4.16 1.25s2.77.84 4.16 1.25 2.78.82 4.17 1.22 2.8.78 4.21 1.15 2.83.72 4.25 1.05c1.43.33 2.87.64 4.32.91 1.45.28 2.92.52 4.4.73s2.98.37 4.5.48 3.06.18 4.62.18 3.14-.06 4.75-.2 3.24-.36 4.89-.68c1.66-.32 3.34-.73 5.06-1.26s3.46-1.18 5.24-1.98 3.59-1.74 5.43-2.85V64z"/>
+                <path fill="var(--pride-green, #888)" d="M124 78.4c-1.85 1.12-3.66 2.06-5.43 2.85-1.78.8-3.52 1.45-5.24 1.98s-3.4.95-5.06 1.26-3.29.54-4.89.68c-1.61.14-3.19.2-4.75.2s-3.1-.06-4.62-.18c-1.52-.11-3.02-.28-4.5-.48-1.48-.21-2.95-.45-4.4-.73s-2.89-.58-4.32-.91-2.85-.68-4.25-1.05c-1.41-.37-2.81-.76-4.21-1.15s-2.79-.81-4.17-1.22c-1.39-.41-2.77-.83-4.16-1.25-1.38-.42-2.77-.84-4.16-1.25s-2.78-.82-4.17-1.22c-1.4-.4-2.8-.78-4.21-1.15s-2.83-.72-4.25-1.05-2.87-.64-4.32-.91c-1.45-.28-2.92-.52-4.4-.73s-2.98-.37-4.5-.48-3.06-.18-4.62-.18-3.14.06-4.75.2-3.24.36-4.89.68c-1.66.32-3.34.73-5.06 1.26s-3.46 1.18-5.24 1.98c-1.77.8-3.58 1.74-5.43 2.85v-5.01V64.01c1.85-1.12 3.66-2.06 5.43-2.85 1.78-.8 3.52-1.45 5.24-1.98s3.4-.95 5.06-1.26c1.66-.32 3.29-.54 4.89-.68 1.61-.14 3.19-.2 4.75-.2s3.1.06 4.62.18c1.52.11 3.02.28 4.5.48 1.48.21 2.95.45 4.4.73s2.89.58 4.32.91 2.85.68 4.25 1.05c1.41.37 2.81.76 4.21 1.15 1.4.4 2.79.81 4.17 1.22 1.39.41 2.77.83 4.16 1.25 1.38.42 2.77.84 4.16 1.25s2.78.82 4.17 1.22 2.8.78 4.21 1.15 2.83.72 4.25 1.05c1.43.33 2.87.64 4.32.91 1.45.28 2.92.52 4.4.73s2.98.37 4.5.48 3.06.18 4.62.18 3.14-.06 4.75-.2 3.24-.36 4.89-.68c1.66-.32 3.34-.73 5.06-1.26s3.46-1.18 5.24-1.98 3.59-1.74 5.43-2.85V78.4z"/>
+                <path fill="var(--pride-blue, #888)" d="M124 92.8c-1.85 1.12-3.66 2.06-5.43 2.85-1.78.8-3.52 1.45-5.24 1.98s-3.4.95-5.06 1.26-3.29.54-4.89.68c-1.61.14-3.19.2-4.75.2s-3.1-.06-4.62-.18c-1.52-.11-3.02-.28-4.5-.48-1.48-.21-2.95-.45-4.4-.73s-2.89-.58-4.32-.91-2.85-.68-4.25-1.05c-1.41-.37-2.81-.76-4.21-1.15-1.4-.4-2.79-.81-4.17-1.22-1.39-.41-2.77-.83-4.16-1.25-1.38-.42-2.77-.84-4.16-1.25s-2.78-.82-4.17-1.22c-1.4-.4-2.8-.78-4.21-1.15s-2.83-.72-4.25-1.05-2.87-.64-4.32-.91c-1.45-.28-2.92-.52-4.4-.73s-2.98-.37-4.5-.48-3.06-.18-4.62-.18-3.14.06-4.75.2-3.24.36-4.89.68s-3.34.73-5.06 1.26-3.46 1.18-5.24 1.98-3.59 1.74-5.43 2.85v-5.01V78.41c1.85-1.12 3.66-2.06 5.43-2.85 1.78-.8 3.52-1.45 5.24-1.98s3.4-.95 5.06-1.26c1.66-.32 3.29-.54 4.89-.68 1.61-.14 3.19-.2 4.75-.2s3.1.06 4.62.18c1.52.11 3.02.28 4.5.48 1.48.21 2.95.45 4.4.73s2.89.58 4.32.91 2.85.68 4.25 1.05c1.41.37 2.81.76 4.21 1.15 1.4.4 2.79.81 4.17 1.22 1.39.41 2.77.83 4.16 1.25 1.38.42 2.77.84 4.16 1.25s2.78.82 4.17 1.22 2.8.78 4.21 1.15 2.83.72 4.25 1.05c1.43.33 2.87.64 4.32.91 1.45.28 2.92.52 4.4.73s2.98.37 4.5.48 3.06.18 4.62.18 3.14-.06 4.75-.2 3.24-.36 4.89-.68c1.66-.32 3.34-.73 5.06-1.26s3.46-1.18 5.24-1.98 3.59-1.74 5.43-2.85V92.8z"/>
+                <path fill="var(--pride-purple, #888)" d="M124 107.2c-1.85 1.12-3.66 2.06-5.43 2.85-1.78.8-3.52 1.45-5.24 1.98s-3.4.95-5.06 1.26c-1.66.32-3.29.54-4.89.68-1.61.14-3.19.2-4.75.2s-3.1-.06-4.62-.18c-1.52-.11-3.02-.28-4.5-.48-1.48-.21-2.95-.45-4.4-.73s-2.89-.58-4.32-.91-2.85-.68-4.25-1.05-2.81-.76-4.21-1.15c-1.4-.4-2.79-.81-4.17-1.22-1.39-.41-2.77-.83-4.16-1.25-1.38-.42-2.77-.84-4.16-1.25s-2.78-.82-4.17-1.22c-1.4-.4-2.8-.78-4.21-1.15s-2.83-.72-4.25-1.05-2.87-.64-4.32-.91c-1.45-.28-2.92-.52-4.4-.73s-2.98-.37-4.5-.48-3.06-.18-4.62-.18-3.14.06-4.75.2-3.24.36-4.89.68c-1.66.32-3.34.73-5.06 1.26s-3.46 1.18-5.24 1.98-3.59 1.74-5.43 2.85v-5.01V92.81c1.85-1.12 3.66-2.06 5.43-2.85s3.52-1.45 5.24-1.98 3.4-.95 5.06-1.26 3.29-.54 4.89-.68c1.61-.14 3.19-.2 4.75-.2s3.1.06 4.62.18c1.52.11 3.02.28 4.5.48s2.95.45 4.4.73 2.89.58 4.32.91 2.85.68 4.25 1.05c1.41.37 2.81.76 4.21 1.15 1.4.4 2.79.81 4.17 1.22 1.39.41 2.77.83 4.16 1.25 1.38.42 2.77.84 4.16 1.25s2.78.82 4.17 1.22c1.4.4 2.8.78 4.21 1.15s2.83.72 4.25 1.05c1.43.33 2.87.64 4.32.91 1.45.28 2.92.52 4.4.73s2.98.37 4.5.48 3.06.18 4.62.18 3.14-.06 4.75-.2 3.24-.36 4.89-.68s3.34-.73 5.06-1.26 3.46-1.18 5.24-1.98 3.59-1.74 5.43-2.85V107.2z"/>
+              </svg>
+              <span class="effect-name">Pride 2015</span>
+            </button>
+<button class="effect-card" data-effect-id="5">
+                            <span class="fav-star" data-effect-id="5" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 48 48" width="44" height="44">
+                <path d="M4 36C4 36 9 33 14 33C21.2976 33 26.7024 39 34 39C39 39 44 36 44 36" stroke="var(--ripple-1, #888)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                <path d="M4 24C4 24 9 21 14 21C21.2976 21 26.7024 27 34 27C39 27 44 24 44 24" stroke="var(--ripple-2, #888)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                <path d="M4 12C4 12 9 9 14 9C21.2976 9 26.7024 15 34 15C39 15 44 12 44 12" stroke="var(--ripple-3, #888)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+              <span class="effect-name">Ripple</span>
+            </button>
+<button class="effect-card" data-effect-id="7">
+                            <span class="fav-star" data-effect-id="7" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 297 297" width="44" height="44">
+                <path fill="var(--juggle-dot-1, #888)" d="M148.5,0c-24.795,0-44.969,20.173-44.969,44.969c0,24.795,20.174,44.968,44.969,44.968s44.968-20.173,44.968-44.968C193.468,20.173,173.295,0,148.5,0z"/>
+                <path fill="var(--juggle-dot-2, #888)" d="M148.5,207.064c-24.795,0-44.969,20.173-44.969,44.968c0,24.796,20.174,44.969,44.969,44.969s44.968-20.173,44.968-44.969C193.468,227.236,173.295,207.064,148.5,207.064z"/>
+                <path fill="var(--juggle-dot-3, #888)" d="M89.936,148.5c0-24.795-20.173-44.969-44.968-44.969C20.173,103.531,0,123.705,0,148.5s20.173,44.969,44.969,44.969C69.764,193.469,89.936,173.295,89.936,148.5z"/>
+                <path fill="var(--juggle-dot-4, #888)" d="M252.031,103.531c-24.795,0-44.968,20.174-44.968,44.969s20.173,44.969,44.968,44.969c24.796,0,44.969-20.174,44.969-44.969S276.827,103.531,252.031,103.531z"/>
+                <path fill="var(--juggle-line, #888)" d="M243.089,212.119c3.227-4.789,1.961-11.289-2.829-14.516c-4.789-3.229-11.289-1.963-14.517,2.829c-6.766,10.041-15.281,18.558-25.31,25.315c-4.79,3.228-6.057,9.727-2.829,14.517c2.02,2.997,5.32,4.615,8.682,4.615c2.011,0,4.042-0.578,5.835-1.786C224.393,234.824,234.811,224.403,243.089,212.119z"/>
+                <path fill="var(--juggle-line, #888)" d="M96.566,225.748c-10.028-6.758-18.544-15.274-25.31-25.315c-3.229-4.792-9.73-6.058-14.517-2.829c-4.79,3.227-6.056,9.727-2.829,14.516c8.277,12.284,18.696,22.705,30.968,30.975c1.793,1.208,3.824,1.786,5.835,1.786c3.361,0,6.663-1.618,8.682-4.615C102.623,235.475,101.356,228.976,96.566,225.748z"/>
+                <path fill="var(--juggle-line, #888)" d="M84.879,53.906c-12.271,8.27-22.69,18.69-30.968,30.974c-3.226,4.79-1.961,11.289,2.829,14.517c1.792,1.208,3.824,1.786,5.835,1.786c3.36,0,6.662-1.617,8.682-4.615c6.766-10.041,15.281-18.559,25.31-25.315c4.79-3.228,6.057-9.727,2.829-14.517C96.166,51.944,89.666,50.678,84.879,53.906z"/>
+                <path fill="var(--juggle-line, #888)" d="M200.434,71.252c10.028,6.757,18.544,15.274,25.31,25.315c2.021,2.998,5.321,4.615,8.682,4.615c2.011,0,4.042-0.578,5.835-1.786c4.79-3.228,6.056-9.727,2.829-14.517c-8.277-12.283-18.696-22.704-30.968-30.974c-4.788-3.229-11.289-1.962-14.517,2.829C194.377,61.525,195.644,68.024,200.434,71.252z"/>
+                <path fill="var(--juggle-line, #888)" d="M266.5,215.249c-4.789-3.229-11.29-1.962-14.517,2.829c-9.061,13.448-20.469,24.859-33.904,33.913c-4.789,3.228-6.056,9.728-2.828,14.517c2.019,2.996,5.32,4.614,8.682,4.614c2.011,0,4.043-0.579,5.836-1.786c15.677-10.566,28.988-23.879,39.56-39.571C272.556,224.976,271.29,218.476,266.5,215.249z"/>
+                <path fill="var(--juggle-line, #888)" d="M78.921,251.991c-13.436-9.054-24.843-20.465-33.904-33.913c-3.228-4.789-9.727-6.058-14.517-2.829c-4.79,3.227-6.056,9.727-2.829,14.516c10.572,15.692,23.884,29.005,39.56,39.571c1.794,1.208,3.825,1.786,5.836,1.786c3.361,0,6.662-1.618,8.682-4.614C84.977,261.719,83.71,255.219,78.921,251.991z"/>
+                <path fill="var(--juggle-line, #888)" d="M30.5,81.75c1.792,1.208,3.823,1.786,5.835,1.786c3.36,0,6.661-1.617,8.682-4.615c9.063-13.45,20.47-24.859,33.903-33.912c4.79-3.227,6.057-9.727,2.829-14.516c-3.23-4.791-9.73-6.058-14.517-2.829C51.557,38.227,38.245,51.54,27.671,67.234C24.444,72.023,25.71,78.523,30.5,81.75z"/>
+                <path fill="var(--juggle-line, #888)" d="M218.08,45.009c13.434,9.053,24.84,20.462,33.903,33.912c2.02,2.998,5.321,4.615,8.682,4.615c2.012,0,4.043-0.578,5.835-1.786c4.79-3.227,6.056-9.727,2.829-14.516c-10.574-15.694-23.886-29.008-39.562-39.57c-4.788-3.229-11.287-1.962-14.516,2.829C212.023,35.282,213.29,41.782,218.08,45.009z"/>
+              </svg>
+              <span class="effect-name">Juggle</span>
+            </button>
+<button class="effect-card" data-effect-id="8">
+                            <span class="fav-star" data-effect-id="8" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="40 100 320 200" width="44" height="44">
+                <path d="M57 193.48C61.6479 150.493 84.5896 129 125.825 129C187.678 129 195.16 272 269.08 272C330.771 272 343 201.978 343 193.48" stroke="var(--sinelon-color, #888)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke-opacity="0.9"/>
+              </svg>
+              <span class="effect-name">Sinelon</span>
+            </button>
+<button class="effect-card" data-effect-id="38">
+                            <span class="fav-star" data-effect-id="38" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 24 24" width="44" height="44" fill="none">
                 <path stroke="var(--scanner-body, #888)" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" d="M2 9V7C2 4 4 2 7 2H17C20 2 22 4 22 7V9"/>
                 <path stroke="var(--scanner-body, #888)" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" d="M2 15V17C2 20 4 22 7 22H17C20 22 22 20 22 17V15"/>
                 <path stroke="var(--scanner-body, #888)" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" d="M2 12H22"/>
               </svg>
               <span class="effect-name">Scanner</span>
             </button>
-            <button class="effect-card" data-effect-id="39">
-              <svg class="effect-icon" viewBox="0 0 512 448" width="44" height="44">
+  </div>
+</div>
+
+<div class="effect-category" id="catStates">
+  <div class="category-header">
+    <h3>States</h3>
+  </div>
+  <div class="scroll-row">
+<button class="effect-card" data-effect-id="6">
+                            <span class="fav-star" data-effect-id="6" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="1 -14 46 38" width="44" height="44">
+                <g fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M 3,17 C 3,13.34 4.34,12 6,12 C 7.66,12 9,13.34 9,17"
+                        stroke="var(--bounce-trail, #888)"/>
+                  <path d="M 9,17 C 9,11.69 11.69,9 15,9 C 18.31,9 21,11.69 21,17"
+                        stroke="var(--bounce-trail, #888)"/>
+                  <path d="M 21,17 C 21,5 24,-2 27,-2"
+                        stroke="var(--bounce-trail, #888)"/>
+                </g>
+                <circle cx="38" cy="-6" r="7"
+                        fill="var(--bounce-ball, #888)"/>
+              </svg>
+              <span class="effect-name">Bouncing Balls</span>
+            </button>
+<button class="effect-card" data-effect-id="10">
+                            <span class="fav-star" data-effect-id="10" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 32 32" width="44" height="44">
+                <path fill="var(--breath-vein, #888)" d="M22.6,15.2l-4.1-3.5c-1-0.8-1.5-2-1.5-3.2V2c0-0.6-0.4-1-1-1s-1,0.4-1,1v6.6c0,1.2-0.5,2.4-1.5,3.2l-4.1,3.5c-0.4,0.4-0.5,1-0.1,1.4C9.4,16.9,9.7,17,10,17c0.2,0,0.5-0.1,0.6-0.2l4.1-3.5c0.5-0.4,0.9-0.9,1.2-1.4c0.3,0.5,0.7,1,1.2,1.4l4.1,3.5c0.2,0.2,0.4,0.2,0.6,0.2c0.3,0,0.6-0.1,0.8-0.4C23.1,16.2,23.1,15.6,22.6,15.2z"/>
+                <path fill="var(--breath-lung, #888)" d="M15,18C15,18,15,17.9,15,18l-0.2-2.1l-2.9,2.4c-1.2,1-3.2,0.8-4.2-0.4c-0.5-0.6-0.8-1.4-0.7-2.2c0.1-0.8,0.5-1.5,1.1-2l4.1-3.5c0.5-0.4,0.8-1,0.8-1.7v-3C12.5,5.2,12,5,11.3,5C7.2,5,2,13.9,2,23.4c0,3.8,0.5,5.6,1.7,6.3C4,29.9,4.3,30,4.6,30c0.8,0,1.7-0.5,2.4-0.9c0.7-0.4,1.4-0.8,1.9-0.8c3.9,0,6-1.3,6-8.3c0-0.9,0-1,0-1.3C15,18.6,15,18.4,15,18z"/>
+                <path fill="var(--breath-lung, #888)" d="M20.8,5C20,5,19.5,5.2,19,5.6v3c0,0.6,0.3,1.2,0.8,1.7l4.1,3.5c0.6,0.5,1,1.2,1.1,2c0.1,0.8-0.2,1.6-0.7,2.2C23.7,18.6,22.9,19,22,19c-0.7,0-1.4-0.2-1.9-0.7l-2.9-2.4L17,18c0,0.5,0,0.6,0,0.8c0,0.2,0,0.3,0,1.3c0,6.9,2.1,8.3,6,8.3c0.5,0,1.3,0.4,1.9,0.8c0.8,0.4,1.6,0.9,2.4,0.9c0.3,0,0.7-0.1,1-0.3c1.2-0.7,1.7-2.5,1.7-6.3C30,13.9,24.8,5,20.8,5z"/>
+              </svg>
+              <span class="effect-name">Breath</span>
+            </button>
+<button class="effect-card" data-effect-id="39">
+                            <span class="fav-star" data-effect-id="39" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 512 448" width="44" height="44">
                 <path fill="var(--heartbeat-body, #888)" d="m 365.71431,261.33402 87.14284,0 q -1.42816,1.75093 -2.85696,3.06087 -1.4288,1.31321 -2.57152,2.18867 l -0.85728,1.1662 -178.00003,175.00037 Q 263.42859,448 256.00001,448 q -7.42856,0 -12.57143,-5.24987 L 65.142864,267.16634 q -1.428576,-0.58474 -6.000007,-5.8333 l 105.428583,0 q 6.28571,0 11.28571,-3.93766 5,-3.93732 6.42856,-10.06234 l 20.00002,-81.95859 54.28572,194.54194 q 1.71428,5.83363 6.57142,9.62526 4.85715,3.79163 11.14286,3.79163 6,0 10.85715,-3.79163 4.85713,-3.79163 6.57142,-9.62526 l 41.71431,-141.45846 15.99996,32.66674 q 5.14286,10.20837 16.28574,10.20837 z M 512,136.50031 q 0,42.29169 -29.42857,87.50018 l -105.42855,0 -31.71433,-64.45836 q -2.28576,-4.95848 -7.2857,-7.8753 -4.99997,-2.91715 -10.42854,-2.3324 -12.85717,1.45693 -16,13.41655 L 274.85717,288.16811 218.85715,88.084263 q -1.71427,-5.833629 -6.71428,-9.625259 -5,-3.79163 -11.28572,-3.79163 -6.28572,0 -11.14286,3.937651 -4.85714,3.937323 -6.28571,10.062339 l -33.14287,135.333126 -120.857139,0 Q 0,178.792 0,136.50031 0,72.333335 36.285712,36.166668 72.571437,0 136.57143,0 q 17.7143,0 36.14286,6.2707097 18.42858,6.2710363 34.28572,16.9168043 15.85714,10.645768 27.28572,19.979312 11.42857,9.333218 21.71428,19.833291 Q 266.28573,52.500044 277.7143,43.166826 289.14287,33.833282 305,23.187514 320.85715,12.541746 339.28569,6.2707097 357.71431,0 375.42857,0 439.42855,0 475.71427,36.166668 512,72.333335 512,136.50031 Z"/>
               </svg>
               <span class="effect-name">Heartbeat</span>
             </button>
-            <button class="effect-card" data-effect-id="40">
-              <svg class="effect-icon" viewBox="0 0 512 512" width="44" height="44">
+<button class="effect-card" data-effect-id="40">
+                            <span class="fav-star" data-effect-id="40" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 512 512" width="44" height="44">
                 <path fill="var(--icu-body, #888)" d="M426,266a54.07,54.07,0,0,0-49.3,32H351.86l-27-81a22,22,0,0,0-42,.92L245.66,348.12l-48-281.74a22,22,0,0,0-43-1.72L94.82,298H32v44h80a22,22,0,0,0,21.34-16.66L171.69,172,218.3,445.62A22,22,0,0,0,238.76,464c.42,0,.82,0,1.24,0a22,22,0,0,0,21.15-16l44.47-149.62L315.13,327A22,22,0,0,0,336,342h40.7A54,54,0,1,0,426,266Z"/>
               </svg>
               <span class="effect-name">ICU</span>
             </button>
-            <button class="effect-card" data-effect-id="41">
-              <svg class="effect-icon" viewBox="0 0 512 512" width="44" height="44">
+<button class="effect-card" data-effect-id="41">
+                            <span class="fav-star" data-effect-id="41" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 512 512" width="44" height="44">
                 <g fill="var(--sunrise-body, #888)">
                   <rect x="239.312" y="69.57" width="33.391" height="89.042"/>
                   <rect x="89.778" y="131.509" transform="matrix(0.7071 -0.7071 0.7071 0.7071 -93.2864 126.846)" width="33.391" height="89.041"/>
@@ -482,8 +561,9 @@
               </svg>
               <span class="effect-name">Sunrise</span>
             </button>
-            <button class="effect-card" data-effect-id="42">
-              <svg class="effect-icon" viewBox="0 0 512 512" width="44" height="44">
+<button class="effect-card" data-effect-id="42">
+                            <span class="fav-star" data-effect-id="42" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 512 512" width="44" height="44">
                 <g>
                   <path fill="var(--drip-body, #888)" d="M441.177,272.994c-25.174-10.365-54.667-18.343-86.848-23.673c-3.153,13.161-8.876,25.328-16.623,35.939c13.624,1.902,26.314,4.283,37.682,7.127c38.906,9.736,57.818,23.296,57.818,41.458c0,18.163-18.912,31.724-57.818,41.459c-32.044,8.018-74.445,12.435-119.388,12.435c-44.941,0-87.341-4.416-119.386-12.435c-38.906-9.736-57.819-23.297-57.819-41.459c0-18.162,18.913-31.723,57.819-41.458c11.368-2.845,24.056-5.226,37.68-7.127c-7.747-10.611-13.47-22.777-16.623-35.939c-32.18,5.33-61.673,13.308-86.848,23.673C25.814,291.525,0,315.749,0,339.452s25.814,47.927,70.824,66.458c49.256,20.279,115.018,31.448,185.177,31.448s135.921-11.169,185.177-31.448C486.186,387.379,512,363.156,512,339.452C512,315.749,486.186,291.525,441.177,272.994z"/>
                   <path fill="var(--drip-body, #888)" d="M197.491,308.176c-18.034,1.758-34.758,4.332-49.308,7.644c-30.587,6.964-41.521,14.982-43.662,18.025c2.14,3.044,13.076,11.063,43.66,18.027c29.424,6.699,67.713,10.388,107.819,10.388c40.106,0,78.398-3.689,107.821-10.388c30.584-6.964,41.519-14.983,43.659-18.027c-2.14-3.044-13.076-11.063-43.66-18.025c-14.551-3.312-31.276-5.886-49.31-7.645c-16.53,11.772-36.717,18.724-58.51,18.724S214.021,319.946,197.491,308.176z"/>
@@ -492,36 +572,47 @@
               </svg>
               <span class="effect-name">Drip</span>
             </button>
-            <button class="effect-card" data-effect-id="43">
-              <svg class="effect-icon" viewBox="0 0 512 512" width="44" height="44">
+<button class="effect-card" data-effect-id="43">
+                            <span class="fav-star" data-effect-id="43" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 512 512" width="44" height="44">
                 <path fill="var(--candle-flame, #888)" d="M249.393,215.937c-23.035-8.643-25.913-77.738,8.635-77.738s31.669,69.095,8.635,77.738c14.399,0,66.482-11.498,71.982-71.982C344.401,80.617,295.455,34.548,258.028,0c-37.434,34.548-86.374,80.617-80.617,143.956C182.911,204.439,234.993,215.937,249.393,215.937z"/>
                 <path fill="var(--candle-body, #888)" d="M350.74,299.047c-7.238-48.479-78.328-53.85-97.91-53.85c-51.402,0-86.479,24.114-85.67,56.298c0.816,32.636-17.135,35.9-4.896,55.482c12.238,19.582,29.373,4.895,29.373,4.895v120.755c0,24.477,41.612,29.372,73.431,29.372c31.821,0,73.432-4.895,73.432-29.372v-83.216V360.24C350.74,360.24,358.892,353.713,350.74,299.047z"/>
               </svg>
               <span class="effect-name">Candle</span>
             </button>
-            <button class="effect-card" data-effect-id="44">
-              <svg class="effect-icon" viewBox="0 0 256 256" width="44" height="44">
+<button class="effect-card" data-effect-id="44">
+                            <span class="fav-star" data-effect-id="44" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 256 256" width="44" height="44">
                 <path fill="var(--chunchun-body, #888)" d="M236.4375,73.34375,213.207,57.85547A60.00943,60.00943,0,0,0,96,76V93.19385L1.75293,211.00244A7.99963,7.99963,0,0,0,8,224H112A104.11791,104.11791,0,0,0,216,120V100.28125l20.4375-13.625a7.99959,7.99959,0,0,0,0-13.3125Zm-126.292,67.77783-40,48a7.99987,7.99987,0,0,1-12.291-10.24316l40-48a7.99987,7.99987,0,0,1,12.291,10.24316ZM164,80a12,12,0,1,1,12-12A12,12,0,0,1,164,80Z"/>
               </svg>
               <span class="effect-name">Chunchun</span>
             </button>
-            <button class="effect-card" data-effect-id="45">
-              <svg class="effect-icon" viewBox="0 0 32 32" width="44" height="44">
+<button class="effect-card" data-effect-id="45">
+                            <span class="fav-star" data-effect-id="45" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 32 32" width="44" height="44">
                 <path fill="var(--halloween-body, #888)" d="M0 16q0.064 0.192 0.192 0.512t0.576 1.248 0.992 1.888 1.344 2.176 1.792 2.368 2.144 2.176 2.592 1.888 2.976 1.248 3.392 0.512q2.208 0 4.288-0.768t3.616-2.016 2.912-2.72 2.304-3.008 1.6-2.72 0.96-1.984l0.32-0.8q-0.064-0.16-0.192-0.48t-0.576-1.28-0.992-1.856-1.344-2.208-1.792-2.336-2.144-2.176-2.56-1.888-3.008-1.28-3.392-0.48q-2.208 0-4.288 0.768t-3.616 2.016-2.912 2.72-2.304 2.976-1.6 2.72-0.96 2.016zM6.016 16q0-2.72 1.344-5.024t3.616-3.616 5.024-1.344q2.048 0 3.872 0.8t3.2 2.112 2.144 3.2 0.8 3.872q0 2.72-1.344 5.024t-3.648 3.648-5.024 1.344q-2.016 0-3.872-0.8t-3.2-2.144-2.144-3.168-0.768-3.904zM10.016 16q0 2.496 1.728 4.256t4.256 1.76 4.256-1.76 1.76-4.256-1.76-4.224-4.256-1.76q-0.96 0-1.984 0.352v3.648h-3.648q-0.352 0.992-0.352 1.984z"></path>
               </svg>
               <span class="effect-name">Hallow Eyes</span>
             </button>
+  </div>
+</div>
 
-            <!-- ── Random FX ── -->
-            <button class="effect-card" data-effect-id="99">
-              <svg class="effect-icon" viewBox="0 0 512 512" width="44" height="44" fill="var(--effect-color, #888)">
+<div class="effect-category" id="catRandom">
+  <div class="category-header">
+    <h3>Random FX</h3>
+  </div>
+  <div class="scroll-row">
+    <button class="effect-card" data-effect-id="99">
+                            <span class="fav-star" data-effect-id="99" role="button" tabindex="0" aria-label="Toggle favorite"><span class="fas fa-star"></span></span>
+<svg class="effect-icon" viewBox="0 0 512 512" width="44" height="44" fill="var(--effect-color, #888)">
                 <path d="M454.608,111.204L280.557,6.804C272.992,2.268,264.504,0,256,0c-8.507,0-16.996,2.268-24.557,6.797L57.392,111.204c-5.346,3.203-9.916,7.37-13.555,12.192l207.902,124.707c2.622,1.575,5.896,1.575,8.518,0L468.16,123.396C464.521,118.574,459.955,114.407,454.608,111.204z M177.16,131.738c-12.056,8.371-31.302,8.16-42.984-0.49s-11.382-22.463,0.678-30.842c12.056-8.386,31.304-8.16,42.992,0.482C189.525,109.539,189.22,123.344,177.16,131.738z M376.303,134.126c-12.056,8.38-31.306,8.16-42.992-0.49s-11.378-22.462,0.685-30.841c12.053-8.38,31.302-8.168,42.985,0.482C388.664,111.928,388.359,125.732,376.303,134.126z"/>
                 <path d="M246.136,258.366L38.004,133.523c-2.457,5.802-3.794,12.116-3.794,18.62v208.084c0,16.773,8.801,32.311,23.182,40.946l174.051,104.392c5.828,3.496,12.203,5.629,18.714,6.435V265.464C250.156,262.556,248.631,259.858,246.136,258.366z M75.845,369.736c-12.052-6.571-21.829-21.671-21.829-33.728c0-12.056,9.777-16.502,21.829-9.931s21.826,21.671,21.826,33.728C97.671,371.861,87.902,376.306,75.845,369.736z M75.845,247.869c-12.052-6.578-21.829-21.678-21.829-33.728c0-12.056,9.777-16.501,21.829-9.931s21.826,21.671,21.826,33.728C97.671,249.986,87.902,254.44,75.845,247.869z M136.779,342.014c-12.056-6.571-21.826-21.671-21.826-33.728s9.769-16.502,21.826-9.931s21.829,21.671,21.829,33.728C158.608,344.131,148.835,348.585,136.779,342.014z M197.716,436.158c-12.056-6.571-21.83-21.671-21.83-33.727c0-12.049,9.773-16.495,21.83-9.924s21.826,21.67,21.826,33.72C219.541,438.284,209.772,442.729,197.716,436.158z M197.716,314.292c-12.056-6.57-21.83-21.671-21.83-33.727c0-12.056,9.773-16.502,21.83-9.931s21.826,21.671,21.826,33.727C219.541,316.417,209.772,320.863,197.716,314.292z"/>
                 <path d="M473.992,133.523L265.864,258.366c-2.494,1.492-4.02,4.19-4.02,7.098V512c6.506-0.806,12.889-2.939,18.714-6.435l174.051-104.392c14.381-8.635,23.182-24.172,23.182-40.946V152.143C477.79,145.64,476.453,139.326,473.992,133.523z M321.232,262.932c12.053-6.571,21.826-2.125,21.826,9.931c0,12.049-9.773,27.149-21.826,33.72c-12.06,6.571-21.83,2.125-21.83-9.924C299.402,284.604,309.172,269.503,321.232,262.932z M321.232,448.735c-12.06,6.57-21.83,2.125-21.83-9.931s9.77-27.15,21.83-33.728c12.053-6.571,21.826-2.118,21.826,9.931C343.058,427.064,333.285,442.164,321.232,448.735z M322.536,377.663c-12.056,6.571-21.83,2.117-21.83-9.939c0-12.048,9.773-27.149,21.83-33.72c12.056-6.57,21.826-2.125,21.826,9.931S334.592,371.085,322.536,377.663z M427.32,386.403c-12.056,6.571-21.826,2.125-21.826-9.931c0-12.056,9.769-27.156,21.826-33.72c12.056-6.578,21.829-2.133,21.829,9.924C449.149,364.732,439.376,379.833,427.32,386.403z M427.32,315.332c-12.056,6.563-21.826,2.125-21.826-9.931c0-12.056,9.769-27.157,21.826-33.728c12.056-6.571,21.829-2.125,21.829,9.931C449.149,293.653,439.376,308.761,427.32,315.332z M427.32,244.253c-12.056,6.57-21.826,2.125-21.826-9.924c0-12.056,9.769-27.157,21.826-33.728c12.056-6.571,21.829-2.125,21.829,9.931C449.149,222.582,439.376,237.682,427.32,244.253z"/>
               </svg>
               <span class="effect-name">Random FX</span>
             </button>
-          </div>
+  </div>
+</div>
         </div>
       </section>
 

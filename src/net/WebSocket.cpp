@@ -295,6 +295,21 @@ void notifyClients(bool includeParams)
         // Random mode flag (0=off, 1=randomFX, 2=randomVU)
         json["randomMode"] = randomMode;
 
+        // Random FX config (broadcast to all clients)
+        json["randomFXMode"] = randomFXMode;
+        json["randomFXDuration"] = randomFXDuration;
+        if (!randomFXPool.empty()) {
+            JsonArray pool = json["randomFXPool"].to<JsonArray>();
+            for (int id : randomFXPool) pool.add(id);
+        }
+        if (!randomFXCategories.empty()) {
+            JsonArray cats = json["randomFXCategories"].to<JsonArray>();
+            for (int c : randomFXCategories) cats.add(c);
+        }
+
+        // Direct effectId (for random FX cycling and general sync)
+        json["effectId"] = stripLed.effectId;
+
         // Params + meta solo en respuesta a acciones del usuario (evita que el
         // sync periódico sobreescriba sliders/checkboxes con valores viejos).
         if (includeParams) {
@@ -706,12 +721,39 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
         else if (strcmp(action, "randomFX") == 0)
         {
             randomMode = json["state"].as<bool>() ? 1 : 0;
+            if (randomMode == 1) {
+                lastRandomSwitch = millis();
+                randomPlaylistIndex = 0;
+            }
             _wsLogAction(clientId, 7, 1, 0, 0);
         }
         else if (strcmp(action, "randomVU") == 0)
         {
             randomMode = json["state"].as<bool>() ? 2 : 0;
             _wsLogAction(clientId, 7, 2, 0, 0);
+        }
+        else if (strcmp(action, "randomConfig") == 0)
+        {
+            if (!json["mode"].isNull())
+                randomFXMode = String((const char*)json["mode"]);
+            if (!json["duration"].isNull())
+                randomFXDuration = json["duration"].as<int>();
+            if (!json["effectPool"].isNull()) {
+                randomFXPool.clear();
+                for (JsonVariant v : json["effectPool"].as<JsonArray>())
+                    randomFXPool.push_back(v.as<int>());
+            }
+            if (!json["categories"].isNull()) {
+                randomFXCategories.clear();
+                for (JsonVariant v : json["categories"].as<JsonArray>())
+                    randomFXCategories.push_back(v.as<int>());
+            }
+            if (json["start"].as<bool>()) {
+                randomMode = 1;
+                randomPlaylistIndex = 0;
+                lastRandomSwitch = millis();
+            }
+            _wsLogAction(clientId, 7, 3, 0, 0);
         }
         // ── setParams: fx setters bajo mutex, saveEffectParams sin mutex ──
         else if (strcmp(action, "setParams") == 0)

@@ -470,109 +470,206 @@ function initLampControls() {
   // Effect cards
   initEffectCards();
 
-  // Effect search/filter
-  const searchInput = document.getElementById('effectSearch');
-  if (searchInput) {
-    searchInput.addEventListener('input', () => {
-      const q = searchInput.value.toLowerCase().trim();
-      $$('.effect-card').forEach(card => {
-        const name = card.querySelector('.effect-name');
-        if (!name) return;
-        const match = !q || name.textContent.toLowerCase().includes(q);
-        card.classList.toggle('hidden-by-search', !match);
-      });
-    });
-    // Clear search when navigating away from Lamp tab
-    document.addEventListener('tabSwitch', (e) => {
-      if (e.detail?.tab !== 'tabLamp' && searchInput.value) {
-        searchInput.value = '';
-        searchInput.dispatchEvent(new Event('input'));
-      }
-    });
-  }
+  // Initialize favorites from localStorage
+  initFavorites();
+
 }
 
 // ── Solid icon: refleja el color del picker solo si está activo ─────
 function updateSolidIcon(r, g, b) {
-  const card = document.querySelector('.effect-card[data-effect-id="0"]');
-  const el = card?.querySelector('.effect-icon');
-  if (!el) return;
-  if (card.classList.contains('active')) {
-    el.style.setProperty('--solid-fill', `rgb(${r},${g},${b})`);
-  } else {
-    el.style.removeProperty('--solid-fill');
-  }
+  document.querySelectorAll('.effect-card[data-effect-id="0"]').forEach(card => {
+    const el = card.querySelector('.effect-icon');
+    if (!el) return;
+    if (card.classList.contains('active')) {
+      el.style.setProperty('--solid-fill', `rgb(${r},${g},${b})`);
+    } else {
+      el.style.removeProperty('--solid-fill');
+    }
+  });
 }
 
 function initEffectCards() {
-  const cards = $$('.effect-card');
-  let activeCard = null;
+  const container = document.querySelector('.effects-scroll-container');
+  if (!container) return;
+  let activeEffId = null;
 
-  cards.forEach(card => {
-    card.addEventListener('click', () => {
-      const effId = parseInt(card.dataset.effectId);
-      if (isNaN(effId)) return;
+  // Single delegated click handler — covers original cards + fav row clones
+  container.addEventListener('click', e => {
+    // ── Star click — toggle favorite ──
+    const star = e.target.closest('.fav-star');
+    if (star) {
+      const effId = parseInt(star.dataset.effectId);
+      if (!isNaN(effId)) toggleFavorite(effId);
+      return;
+    }
 
-      // Toast warning if NeoPixel is off
-      if (!SML.powerOn) {
-        showToast('Turn on the NeoPixel strip first', 'warning');
+    // ── Card click ──
+    const card = e.target.closest('.effect-card');
+    if (!card) return;
+    const effId = parseInt(card.dataset.effectId);
+    if (isNaN(effId)) return;
+
+    // If Random FX config is open and Playlist mode → add/remove from playlist
+    if (effId !== 99 && effId !== 100) {
+      const cfgOpen = document.querySelector('#effectOffcanvas.open, #paramBottomSheet.open');
+      const rndTitle = cfgOpen && document.querySelector('#effectOffcanvasTitle, #paramSheetTitle');
+      if (rndTitle && rndTitle.textContent === 'Random FX' &&
+          localStorage.getItem('sml-random-mode') === 'playlist') {
+        addToPlaylist(effId);
         return;
       }
+    }
 
-      // wasActive check — moved here BEFORE early returns for Random cards
-      const wasActive = card.classList.contains('active');
+    // Toast warning if NeoPixel is off
+    if (!SML.powerOn) {
+      showToast('Turn on the NeoPixel strip first', 'warning');
+      return;
+    }
 
-      // ── Random FX (ID 99) ──
-      if (effId === 99) {
-        handleRandomFXClick(card, wasActive);
-        return;
-      }
-      // ── Random VU (ID 100) ──
-      if (effId === 100) {
-        handleRandomVUClick(card, wasActive);
-        return;
-      }
+    // wasActive: check if THIS effect is active on ANY instance
+    const wasActive = document.querySelector(`.effect-card[data-effect-id="${effId}"].active`) !== null;
 
-      // ── Normal effect cards ──
-      // Si el efecto ya está activo y no estamos en random mode,
-      // solo abrir configuración sin enviar comando redundante al ESP32
-      if (wasActive && !SML.randomFXMode && !SML.randomVUMode) {
-        closeEffectConfig();
-        showEffectConfig(effId, card);
-        return;
-      }
+    // ── Random FX (ID 99) ──
+    if (effId === 99) {
+      handleRandomFXClick(card, wasActive);
+      return;
+    }
+    // ── Random VU (ID 100) ──
+    if (effId === 100) {
+      handleRandomVUClick(card, wasActive);
+      return;
+    }
 
-      // Si random estaba activo, detenerlo (backend + frontend)
-      if (SML.randomFXMode) {
-        stopRandomFX();
-        sendCmd({ action: 'randomFX', state: false, effectId: effId });
-      } else if (SML.randomVUMode) {
-        stopRandomVU();
-        sendCmd({ action: 'randomVU', state: false, effectId: effId });
-      } else {
-        // Enviar comando de efecto solo (sin stop random)
-        sendCmd({ effectId: effId });
-      }
+    // ── Normal effect cards ──
+    if (wasActive && !SML.randomFXMode && !SML.randomVUMode) {
+      closeEffectConfig();
+      showEffectConfig(effId, card);
+      return;
+    }
 
-      // Si cambia a otro efecto, cerrar config abierta
-      if (activeCard && activeCard !== card) {
-        closeEffectConfig();
-      }
+    // Si random estaba activo, detenerlo
+    if (SML.randomFXMode) {
+      stopRandomFX();
+      sendCmd({ action: 'randomFX', state: false, effectId: effId });
+    } else if (SML.randomVUMode) {
+      stopRandomVU();
+      sendCmd({ action: 'randomVU', state: false, effectId: effId });
+    } else {
+      sendCmd({ effectId: effId });
+    }
 
-      // Actualizar estado visual
-      SML.effectId = effId;
-      cards.forEach(c => c.classList.remove('active'));
-      card.classList.add('active');
-      activeCard = card;
-      updateSolidIcon(SML.r, SML.g, SML.b);
-      updatePeekEffectInfo();
+    // Si cambia a otro efecto, cerrar config abierta
+    if (activeEffId !== null && activeEffId !== effId) {
+      closeEffectConfig();
+    }
 
-      // Segundo click en la misma card → mostrar config
-      if (wasActive) {
-        showEffectConfig(effId, card);
+    // Actualizar estado visual en TODAS las instancias del efecto
+    SML.effectId = effId;
+    $$('.effect-card').forEach(c => c.classList.remove('active'));
+    $$('.effect-card').forEach(c => {
+      if (parseInt(c.dataset.effectId) === effId) {
+        c.classList.add('active');
       }
     });
+    activeEffId = effId;
+    updateSolidIcon(SML.r, SML.g, SML.b);
+    updatePeekEffectInfo();
+
+    // Segundo click → mostrar config
+    if (wasActive) {
+      showEffectConfig(effId, card);
+    }
   });
+}
+
+// ============================================================================
+// FAVORITES — localStorage persistence + fav row sync
+// ============================================================================
+
+const FAV_KEY = 'sml-favorites';
+
+function getFavorites() {
+  try {
+    return JSON.parse(localStorage.getItem(FAV_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveFavorites(ids) {
+  localStorage.setItem(FAV_KEY, JSON.stringify(ids));
+}
+
+function syncFavRow() {
+  const favRow = document.getElementById('favScrollRow');
+  const favCat = document.getElementById('catFavorites');
+  if (!favRow || !favCat) return;
+
+  const ids = getFavorites();
+  favRow.innerHTML = '';
+
+  ids.forEach(effId => {
+    // Find original card in a non-favorites category
+    const original = document.querySelector(
+      `.effect-category:not(#catFavorites) .effect-card[data-effect-id="${effId}"]`
+    );
+    if (!original) return;
+    const clone = original.cloneNode(true);
+    favRow.appendChild(clone);
+  });
+
+  // Show/hide favorites category
+  favCat.style.display = ids.length ? '' : 'none';
+}
+
+function syncPlaylistRow() {
+  const plRow = document.getElementById('playlistScrollRow');
+  const plCat = document.getElementById('catPlaylist');
+  if (!plRow || !plCat) return;
+
+  const pl = getRandomPlaylist();
+  plRow.innerHTML = '';
+
+  pl.forEach(effId => {
+    const original = document.querySelector(
+      `.effect-category:not(#catFavorites):not(#catPlaylist) .effect-card[data-effect-id="${effId}"]`
+    );
+    if (!original) return;
+    const clone = original.cloneNode(true);
+    plRow.appendChild(clone);
+  });
+
+  plCat.style.display = pl.length ? '' : 'none';
+}
+
+function applyFavStars() {
+  const ids = getFavorites();
+  document.querySelectorAll('.fav-star').forEach(star => {
+    const effId = parseInt(star.dataset.effectId);
+    if (isNaN(effId)) return;
+    star.classList.toggle('active', ids.includes(effId));
+  });
+}
+
+function toggleFavorite(effId) {
+  const ids = getFavorites();
+  const idx = ids.indexOf(effId);
+
+  if (idx >= 0) {
+    ids.splice(idx, 1);
+  } else {
+    ids.push(effId);
+  }
+
+  saveFavorites(ids);
+  syncFavRow();
+  applyFavStars();
+}
+
+function initFavorites() {
+  syncFavRow();
+  syncPlaylistRow();
+  applyFavStars();
 }
 
 // ============================================================================
@@ -592,9 +689,38 @@ const RANDOM_VU_POOL = [
   50,                           // Palette Blend
 ];
 
+// ── Random FX categories (maps HTML category IDs to effect IDs) ──
+const RANDOM_CATEGORIES = [
+  { id: 'catFundamentals', name: 'Fundamentals', effectIds: [0, 25, 11, 20, 23, 33, 34] },
+  { id: 'catMoving',       name: 'Moving',       effectIds: [2, 3, 22, 24, 26, 9] },
+  { id: 'catDynamics',     name: 'Dynamics',     effectIds: [1, 27, 30, 31, 36, 37, 35, 29] },
+  { id: 'catPatterns',     name: 'Patterns',     effectIds: [4, 21, 28, 32, 5, 7, 8, 38] },
+  { id: 'catStates',       name: 'States',       effectIds: [6, 10, 39, 40, 41, 42, 43, 44, 45] },
+];
+
 function getRandomDuration() {
   const val = parseInt(localStorage.getItem('sml-random-duration') || '8');
   return Math.max(3000, val * 1000);
+}
+
+function getRandomCategories() {
+  try {
+    const val = JSON.parse(localStorage.getItem('sml-random-categories'));
+    if (Array.isArray(val)) return val;
+  } catch {}
+  // Default: all categories selected
+  return RANDOM_CATEGORIES.map(c => c.id);
+}
+
+function getRandomPlaylist() {
+  try {
+    const p = JSON.parse(localStorage.getItem('sml-random-playlist'));
+    return Array.isArray(p) ? p : [];
+  } catch { return []; }
+}
+
+function saveRandomPlaylist(list) {
+  localStorage.setItem('sml-random-playlist', JSON.stringify(list));
 }
 
 function handleRandomFXClick(card, wasActive) {
@@ -618,19 +744,34 @@ function handleRandomFXClick(card, wasActive) {
     updateSolidIcon(SML.r, SML.g, SML.b);
     updatePeekEffectInfo();
   } else {
+    const randomMode = localStorage.getItem('sml-random-mode') || 'all';
+
+    // Category/Playlist: abrir config y esperar OK en vez de arrancar
+    if (randomMode !== 'all') {
+      closeEffectConfig();
+      showEffectConfig(99, card);
+      return;
+    }
+
     // Detener VU random si estaba activo
     if (SML.randomVUMode) {
       stopRandomVU();
       sendCmd({ action: 'randomVU', state: false });
     }
 
-    // Iniciar random FX (avisa al backend)
-    sendCmd({ action: 'randomFX', state: true });
+    // Iniciar random FX via ESP32
+    sendCmd({
+      action: 'randomConfig',
+      mode: 'all',
+      duration: parseInt(localStorage.getItem('sml-random-duration') || '8'),
+      effectPool: RANDOM_FX_POOL,
+      start: true
+    });
     SML.randomFXMode = true;
+    SML._playlistIndex = 0;
     cards.forEach(c => c.classList.remove('active'));
     card.classList.add('active');
     updatePeekEffectInfo();
-    cycleRandomFX();
   }
 }
 
@@ -672,14 +813,23 @@ function handleRandomVUClick(card, wasActive) {
 }
 
 function cycleRandomFX() {
-  if (!SML.randomFXMode) return;
-  const pool = RANDOM_FX_POOL;
-  const id = pool[Math.floor(Math.random() * pool.length)];
-  SML.effectId = id;
-  sendCmd({ effectId: id });
-  // No marcar ninguna card como activa excepto la Random FX
-  // (cada efecto se ve solo por el tiempo que dure)
-  SML._randomFXTimer = setTimeout(cycleRandomFX, getRandomDuration());
+  // No-op: ESP32 handles cycling internally
+  // Kept as stub for backward compatibility
+}
+
+function highlightActiveCard(effId) {
+  // Immediate visual feedback — no espera la respuesta WS
+  $$('.effect-card').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll(`.effect-card[data-effect-id="${effId}"]`).forEach(c => c.classList.add('active'));
+}
+
+function scrollPlaylistTo(effId) {
+  const row = document.getElementById('playlistScrollRow');
+  if (!row) return;
+  const card = row.querySelector(`.effect-card[data-effect-id="${effId}"]`);
+  if (card) {
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
 }
 
 function cycleRandomVU() {
@@ -697,6 +847,8 @@ function stopRandomFX() {
     clearTimeout(SML._randomFXTimer);
     SML._randomFXTimer = null;
   }
+  // Quitar active de todas las tarjetas en scroll rows (playlist + categorías)
+  document.querySelectorAll('.scroll-row .effect-card.active').forEach(c => c.classList.remove('active'));
 }
 
 function stopRandomVU() {
@@ -743,9 +895,14 @@ function updatePeekEffectInfo() {
 }
 
 function showEffectConfig(effId, cardEl) {
-  // Special: Random FX/VU — show duration config inline
-  if (effId === 99 || effId === 100) {
-    showRandomDurationConfig(effId, cardEl);
+  // Random FX — full config with 3 modes
+  if (effId === 99) {
+    showRandomFXConfig(cardEl);
+    return;
+  }
+  // Random VU — simplified duration config
+  if (effId === 100) {
+    showRandomDurationConfig(cardEl);
     return;
   }
 
@@ -778,23 +935,15 @@ function showEffectConfig(effId, cardEl) {
   }
 }
 
-function showRandomDurationConfig(effId, cardEl) {
-  const label = effId === 99 ? 'Random FX' : 'Random VU';
-  const body = window.innerWidth < 768
-    ? document.getElementById('paramSheetBody')
-    : document.getElementById('effectOffcanvasBody');
-  const title = window.innerWidth < 768
-    ? document.getElementById('paramSheetTitle')
-    : document.getElementById('effectOffcanvasTitle');
-  const overlay = window.innerWidth < 768
-    ? document.getElementById('paramModalOverlay')
-    : document.getElementById('offcanvasOverlay');
-  const container = window.innerWidth < 768
-    ? document.getElementById('paramBottomSheet')
-    : document.getElementById('effectOffcanvas');
+function showRandomDurationConfig(cardEl) {
+  const mode = window.innerWidth < 768 ? 'sheet' : 'offcanvas';
+  const body = document.getElementById(mode === 'sheet' ? 'paramSheetBody' : 'effectOffcanvasBody');
+  const title = document.getElementById(mode === 'sheet' ? 'paramSheetTitle' : 'effectOffcanvasTitle');
+  const container = document.getElementById(mode === 'sheet' ? 'paramBottomSheet' : 'effectOffcanvas');
+  const overlay = document.getElementById(mode === 'sheet' ? 'paramModalOverlay' : 'offcanvasOverlay');
 
   if (!body || !title || !container) return;
-  title.textContent = label;
+  title.textContent = 'Random VU';
   const curVal = localStorage.getItem('sml-random-duration') || '8';
   body.innerHTML = `
     <div class="param-row">
@@ -804,8 +953,7 @@ function showRandomDurationConfig(effId, cardEl) {
     </div>
     <div class="palette-section-title" style="margin-top:12px"><span class="fas fa-info-circle"></span> About</div>
     <p style="font-size:0.8rem;color:var(--text-secondary);padding:8px;line-height:1.5">
-      Each effect plays for the set duration, then randomly switches to the next one.
-      Effects use their default parameters.
+      Each VU effect plays for the set duration, then randomly switches.
     </p>
   `;
   const slider = body.querySelector('#randomDurationInline');
@@ -816,9 +964,246 @@ function showRandomDurationConfig(effId, cardEl) {
       localStorage.setItem('sml-random-duration', slider.value);
     });
   }
+  container.classList.add('open');
+  if (overlay) overlay.classList.add('open');
+}
+
+function showRandomFXConfig(cardEl) {
+  const mode = window.innerWidth < 768 ? 'sheet' : 'offcanvas';
+  const body = document.getElementById(mode === 'sheet' ? 'paramSheetBody' : 'effectOffcanvasBody');
+  const title = document.getElementById(mode === 'sheet' ? 'paramSheetTitle' : 'effectOffcanvasTitle');
+  const container = document.getElementById(mode === 'sheet' ? 'paramBottomSheet' : 'effectOffcanvas');
+  const overlay = document.getElementById(mode === 'sheet' ? 'paramModalOverlay' : 'offcanvasOverlay');
+
+  if (!body || !title || !container) return;
+  title.textContent = 'Random FX';
+
+  const curDuration = localStorage.getItem('sml-random-duration') || '8';
+  const curMode = localStorage.getItem('sml-random-mode') || 'all';
+  const curCats = getRandomCategories();
+  const needsOk = curMode !== 'all' && SML.randomFXMode;
+
+  body.innerHTML = `
+    <div class="param-row">
+      <label>Duration (seconds)</label>
+      <input type="range" id="randomDurationSlider" min="3" max="30" value="${curDuration}" step="1">
+      <span class="param-value" id="randomDurationVal">${curDuration}s</span>
+    </div>
+
+    <div class="palette-section-title">Mode</div>
+    <div class="mode-pills">
+      <button class="mode-pill${curMode === 'all' ? ' active' : ''}" data-mode="all">All</button>
+      <button class="mode-pill${curMode === 'category' ? ' active' : ''}" data-mode="category">Category</button>
+      <button class="mode-pill${curMode === 'playlist' ? ' active' : ''}" data-mode="playlist">Playlist</button>
+    </div>
+
+    <div id="randomCatSection" class="random-section" style="display:${curMode === 'category' ? 'block' : 'none'}">
+      <div class="palette-section-title">Categories</div>
+      ${RANDOM_CATEGORIES.map(c => `<label class="category-checkbox">
+        <input type="checkbox" data-cat-id="${c.id}"${curCats.includes(c.id) ? ' checked' : ''}>
+        <span>${c.name} (${c.effectIds.length})</span>
+      </label>`).join('')}
+    </div>
+
+    <div id="randomPlaylistSection" class="random-section" style="display:${curMode === 'playlist' ? 'block' : 'none'}">
+      <div class="palette-section-title">Pick effects</div>
+      <div id="playlistPicker" class="playlist-picker">${renderPlaylistPicker()}</div>
+      <button id="clearPlaylistBtn" style="margin-top:10px;width:100%;padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:color-mix(in srgb,var(--bg-card) 50%,transparent);color:var(--text-secondary);cursor:pointer;font-size:0.78rem">Clear playlist</button>
+    </div>
+
+    <div id="randomOkSection" style="display:${curMode === 'all' ? 'none' : 'block'};margin-top:18px">
+      <button id="randomOkBtn" class="random-ok-btn">▶ Play</button>
+    </div>
+  `;
+
+  // Duration slider
+  const s = body.querySelector('#randomDurationSlider');
+  const v = body.querySelector('#randomDurationVal');
+  if (s && v) {
+    s.addEventListener('input', () => {
+      v.textContent = s.value + 's';
+      localStorage.setItem('sml-random-duration', s.value);
+    });
+  }
+
+  // Mode pills
+  body.querySelectorAll('.mode-pill').forEach(p => {
+    p.addEventListener('click', () => {
+      const newMode = p.dataset.mode;
+      body.querySelectorAll('.mode-pill').forEach(x => x.classList.remove('active'));
+      p.classList.add('active');
+      localStorage.setItem('sml-random-mode', newMode);
+      document.getElementById('randomCatSection').style.display = newMode === 'category' ? 'block' : 'none';
+      const plSec = document.getElementById('randomPlaylistSection');
+      plSec.style.display = newMode === 'playlist' ? 'block' : 'none';
+      const okSection = document.getElementById('randomOkSection');
+
+      if (newMode === 'all') {
+        // All: immediate start via ESP32
+        if (SML.randomFXMode) {
+          stopRandomFX();
+          sendCmd({ action: 'randomFX', state: false });
+        }
+        SML._playlistIndex = 0;
+        const durationSlider = document.getElementById('randomDurationSlider');
+        const duration = parseInt(durationSlider ? durationSlider.value : '8');
+        sendCmd({
+          action: 'randomConfig',
+          mode: 'all',
+          duration: duration,
+          effectPool: RANDOM_FX_POOL,
+          start: true
+        });
+        SML.randomFXMode = true;
+        okSection.style.display = 'none';
+      } else {
+        // Category or Playlist: stop and wait for OK
+        if (SML.randomFXMode) {
+          stopRandomFX();
+          sendCmd({ action: 'randomFX', state: false });
+        }
+        okSection.style.display = 'block';
+      }
+    });
+  });
+
+  // OK / Play button
+  const okBtn = body.querySelector('#randomOkBtn');
+  if (okBtn) {
+    okBtn.addEventListener('click', () => {
+      stopRandomFX();
+      // Build pool and config based on current mode
+      const newMode = (document.querySelector('.mode-pill.active') || {}).dataset?.mode || 'all';
+      const durationSlider = document.getElementById('randomDurationSlider');
+      const duration = parseInt(durationSlider ? durationSlider.value : '8');
+      let pool = [];
+      let categories = [];
+
+      if (newMode === 'category') {
+        document.querySelectorAll('.category-checkbox input:checked').forEach(cb => {
+          const cat = RANDOM_CATEGORIES.find(c => c.id === cb.dataset.catId);
+          if (cat) {
+            pool.push(...cat.effectIds);
+            categories.push(RANDOM_CATEGORIES.indexOf(cat));
+          }
+        });
+      } else if (newMode === 'playlist') {
+        pool = getRandomPlaylist();
+      } else {
+        pool = [...RANDOM_FX_POOL];
+      }
+
+      // Send config + start to ESP32
+      const msg = {
+        action: 'randomConfig',
+        mode: newMode,
+        duration: duration,
+        effectPool: pool.length > 0 ? pool : RANDOM_FX_POOL,
+        start: true
+      };
+      if (categories.length > 0) msg.categories = categories;
+      sendCmd(msg);
+
+      SML.randomFXMode = true;
+      SML._playlistIndex = 0;
+      // Clear card actives
+      $$('.effect-card').forEach(c => c.classList.remove('active'));
+      const rfCard = document.querySelector('.effect-card[data-effect-id="99"]');
+      if (rfCard) rfCard.classList.add('active');
+      updatePeekEffectInfo();
+      // Close config
+      container.classList.remove('open');
+      if (overlay) overlay.classList.remove('open');
+    });
+  }
+
+  // Category checkboxes
+  body.querySelectorAll('.category-checkbox input').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const cats = getRandomCategories();
+      const idx = cats.indexOf(cb.dataset.catId);
+      if (cb.checked && idx === -1) cats.push(cb.dataset.catId);
+      else if (!cb.checked && idx >= 0) cats.splice(idx, 1);
+      localStorage.setItem('sml-random-categories', JSON.stringify(cats));
+    });
+  });
+
+  // Clear playlist button
+  const clearBtn = body.querySelector('#clearPlaylistBtn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      saveRandomPlaylist([]);
+      refreshPlaylistUI();
+    });
+  }
+
+  // Playlist picker clicks
+  const pickerEl = body.querySelector('#playlistPicker');
+  if (pickerEl) {
+    pickerEl.addEventListener('click', e => {
+      const btn = e.target.closest('.playlist-pick-btn');
+      if (!btn) return;
+      const id = parseInt(btn.dataset.effId);
+      if (!isNaN(id)) addToPlaylist(id);
+    });
+  }
 
   container.classList.add('open');
   if (overlay) overlay.classList.add('open');
+}
+
+// ── Playlist helpers ──
+
+function getEffectNames() {
+  const names = {};
+  document.querySelectorAll('.effect-category:not(#catFavorites):not(#catPlaylist) .effect-card').forEach(card => {
+    const id = parseInt(card.dataset.effectId);
+    if (isNaN(id) || id === 99) return;
+    const name = card.querySelector('.effect-name')?.textContent;
+    if (name) names[id] = name;
+  });
+  return names;
+}
+
+function renderPlaylistPicker() {
+  const names = getEffectNames();
+  const pl = getRandomPlaylist();
+  return RANDOM_CATEGORIES.map(cat =>
+    cat.effectIds.map(id => {
+      const name = names[id];
+      if (!name) return '';
+      const idx = pl.indexOf(id);
+      const picked = idx >= 0;
+      return `<button class="playlist-pick-btn${picked ? ' picked' : ''}" data-eff-id="${id}">
+        <span class="playlist-pick-num">${picked ? (idx + 1) : '+'}</span>
+        ${name}
+      </button>`;
+    }).join('')
+  ).join('');
+}
+
+function refreshPlaylistUI() {
+  syncPlaylistRow();
+  const picker = document.getElementById('playlistPicker');
+  if (picker) picker.innerHTML = renderPlaylistPicker();
+}
+
+function addToPlaylist(effId) {
+  const pl = getRandomPlaylist();
+  const idx = pl.indexOf(effId);
+  if (idx >= 0) pl.splice(idx, 1); // click again = remove
+  else pl.push(effId);               // click once = add
+  saveRandomPlaylist(pl);
+  refreshPlaylistUI();
+}
+
+function removeFromPlaylist(effId) {
+  const pl = getRandomPlaylist();
+  const idx = pl.indexOf(effId);
+  if (idx < 0) return;
+  pl.splice(idx, 1);
+  saveRandomPlaylist(pl);
+  refreshPlaylistUI();
 }
 
 function renderEffectParams(effId, container) {
@@ -1412,10 +1797,16 @@ function handleMessage(data) {
     if (data.randomMode === 1) {
       SML.randomFXMode = true;
       SML.randomVUMode = false;
-      SML.effectId = 99;
-      $$('.effect-card').forEach(c =>
-        c.classList.toggle('active', parseInt(c.dataset.effectId) === 99)
-      );
+      // Highlight actual effect card + RF button as mode indicator
+      if (data.effectId !== undefined) SML.effectId = data.effectId;
+      $$('.effect-card').forEach(c => {
+        const id = parseInt(c.dataset.effectId);
+        c.classList.toggle('active', id === SML.effectId || id === 99);
+      });
+      // Auto-scroll playlist to active card
+      if ((data.randomFXMode === 'playlist') && data.effectId !== undefined) {
+        scrollPlaylistTo(data.effectId);
+      }
     } else if (data.randomMode === 2) {
       SML.randomVUMode = true;
       SML.randomFXMode = false;
@@ -1428,6 +1819,23 @@ function handleMessage(data) {
       SML.randomFXMode = false;
       SML.randomVUMode = false;
     }
+  }
+
+  // ── RANDOM FX CONFIG SYNC (from ESP32 broadcast) ──
+  if (data.randomFXPool && Array.isArray(data.randomFXPool)) {
+    if (data.randomFXMode) localStorage.setItem('sml-random-mode', data.randomFXMode);
+    if (data.randomFXDuration) localStorage.setItem('sml-random-duration', String(data.randomFXDuration));
+    if (data.randomFXMode === 'playlist') {
+      saveRandomPlaylist(data.randomFXPool);
+      syncPlaylistRow();
+    }
+  }
+  if (data.randomFXCategories && Array.isArray(data.randomFXCategories)) {
+    const CATEGORY_IDS = ['catFundamentals', 'catMoving', 'catDynamics', 'catPatterns', 'catStates'];
+    const catIds = data.randomFXCategories
+      .map(idx => CATEGORY_IDS[idx])
+      .filter(Boolean);
+    localStorage.setItem('sml-random-categories', JSON.stringify(catIds));
   }
 
   // ── EFFECT ──
