@@ -1,0 +1,260 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-12T23:48:00.000Z",
+  "title": "Design System: Smart Music Lamp (SML)",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "Amber Glow",
+        "canonical": "#fbbf24",
+        "tonalRamp": ["#1a1500", "#332b00", "#4d4000", "#806b00", "#b89700", "#fbbf24", "#fde68a", "#fef3c7"]
+      },
+      "accent-secondary": {
+        "role": "secondary",
+        "displayName": "Electric Sky",
+        "canonical": "#38bdf8",
+        "tonalRamp": ["#002033", "#003d66", "#005b99", "#0078cc", "#1a9ef0", "#38bdf8", "#7dd3fc", "#bae6fd"]
+      },
+      "accent-success": {
+        "role": "tertiary",
+        "displayName": "EM Green",
+        "canonical": "#34d399",
+        "tonalRamp": ["#002018", "#004d33", "#007a4d", "#00a66a", "#1fc98a", "#34d399", "#6ee7b7", "#a7f3d0"]
+      },
+      "accent-warning": {
+        "role": "tertiary",
+        "displayName": "Warning Orange",
+        "canonical": "#fb923c",
+        "tonalRamp": ["#2a1400", "#4d2600", "#703800", "#994d00", "#cc6b00", "#fb923c", "#fbbf24", "#fde68a"]
+      },
+      "accent-danger": {
+        "role": "tertiary",
+        "displayName": "Alert Red",
+        "canonical": "#f87171",
+        "tonalRamp": ["#2a0000", "#4d0000", "#700000", "#990000", "#cc3333", "#f87171", "#fca5a5", "#fecaca"]
+      },
+      "bg-primary": {
+        "role": "neutral",
+        "displayName": "Deep Navy",
+        "canonical": "#060b14",
+        "tonalRamp": ["#000000", "#020408", "#060b14", "#0a1220", "#0e1a2e", "#12243c", "#182e4a", "#203858"]
+      },
+      "bg-card": {
+        "role": "neutral",
+        "displayName": "Glass Card",
+        "canonical": "#182640",
+        "tonalRamp": ["#0a1020", "#0f1a30", "#182640", "#1f3050", "#263a60", "#2d4470", "#355080", "#3d5c90"]
+      },
+      "text-primary": {
+        "role": "neutral",
+        "displayName": "Glow White",
+        "canonical": "#edf2f7",
+        "tonalRamp": ["#666e78", "#8a929c", "#a0a8b2", "#b8bec8", "#cfd5de", "#edf2f7", "#f5f7fa", "#fafbfd"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display (Handmade)",
+        "purpose": "SML brand wordmark in the header. Warm cursive for identity."
+      },
+      "impact": {
+        "displayName": "Impact (Impactreg)",
+        "purpose": "Heroic logotype in the Neon Header variant. Condensed and powerful at large scale."
+      },
+      "body": {
+        "displayName": "Body (System Sans)",
+        "purpose": "All UI text — parameters, stats, descriptions."
+      },
+      "label": {
+        "displayName": "Label (System Sans Uppercase)",
+        "purpose": "Power labels, nav labels, stat headers. Always uppercase with tracking."
+      },
+      "mono": {
+        "displayName": "Mono (SF Mono / Fira Code)",
+        "purpose": "Data readouts — voltage, percentages, IP addresses."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card-rest",
+        "value": "0 2px 8px rgba(0,0,0,0.2), 0 8px 32px rgba(0,0,0,0.08)",
+        "purpose": "Default card shadow. Defines surface without lifting."
+      },
+      {
+        "name": "card-hover",
+        "value": "0 4px 16px rgba(0,0,0,0.25), 0 12px 40px rgba(0,0,0,0.12)",
+        "purpose": "Interactive hover lift. Paired with accent glow."
+      },
+      {
+        "name": "glow-accent",
+        "value": "0 0 24px var(--accent)",
+        "purpose": "Canonical glow for active/ON state. The accent color as light."
+      },
+      {
+        "name": "glow-soft",
+        "value": "0 0 40px color-mix(in srgb, var(--accent) 30%, transparent)",
+        "purpose": "Diffuse ambient glow behind major active elements."
+      }
+    ],
+    "motion": [
+      {
+        "name": "fast",
+        "value": "0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "State transitions — hover, active press, toggle switch."
+      },
+      {
+        "name": "normal",
+        "value": "0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Most UI transitions — color shifts, background changes."
+      },
+      {
+        "name": "slow",
+        "value": "0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Theme transitions, entrance reveals."
+      },
+      {
+        "name": "spring",
+        "value": "0.5s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "purpose": "Expressive motion — button press spring-back, icon scale pop."
+      },
+      {
+        "name": "nh-line-pulse",
+        "value": "3s ease-in-out infinite",
+        "purpose": "Neon header glow line pulse animation."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "480px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Power Button — OFF",
+      "kind": "button",
+      "refersTo": "power-card",
+      "description": "Metallic circular power button, 82×82px. Off state: muted inner border, no glow.",
+      "html": "<button class=\"ds-power-btn ds-power-btn--off\"><span class=\"ds-power-btn__icon fas fa-power-off\"></span></button>",
+      "css": ".ds-power-btn { display: flex; align-items: center; justify-content: center; width: 82px; height: 82px; border-radius: 50%; padding: 6px; background: conic-gradient(black, #444 10%, black 51%, #555 57%, #222 60%, #555 67%, black 75%); border: 4px solid #000; cursor: pointer; transition: all 0.3s ease; user-select: none; box-shadow: 0 0 20px rgba(0,0,0,0.5); } .ds-power-btn:active { transform: scale(0.96); } .ds-power-btn__icon { width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(210deg, #333 20%, #111); border: 4px solid #5a6a7e; box-shadow: inset -3px -2px 15px rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #5a6a7e; transition: all 0.3s ease; }"
+    },
+    {
+      "name": "Power Button — ON",
+      "kind": "button",
+      "refersTo": "power-card-on",
+      "description": "Metallic circular power button, ON state. Accent border and glow halo.",
+      "html": "<button class=\"ds-power-btn ds-power-btn--on\"><span class=\"ds-power-btn__icon ds-power-btn__icon--on fas fa-power-off\"></span></button>",
+      "css": ".ds-power-btn { display: flex; align-items: center; justify-content: center; width: 82px; height: 82px; border-radius: 50%; padding: 6px; background: conic-gradient(black, #444 10%, black 51%, #555 57%, #222 60%, #555 67%, black 75%); border: 4px solid #000; cursor: pointer; transition: all 0.3s ease; user-select: none; box-shadow: 0 0 20px rgba(0,0,0,0.5); } .ds-power-btn:active { transform: scale(0.96); } .ds-power-btn--on .ds-power-btn__icon { border-color: #fbbf24; color: #fbbf24; box-shadow: inset -3px -2px 15px rgba(0,0,0,0.85), 0 0 16px rgba(251,191,36,0.3); } .ds-power-btn__icon { width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(210deg, #333 20%, #111); border: 4px solid #5a6a7e; box-shadow: inset -3px -2px 15px rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #5a6a7e; transition: all 0.3s ease; }"
+    },
+    {
+      "name": "Glass Card — Rest",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Primary content container. Translucent glass with backdrop blur, inner edge highlight.",
+      "html": "<div class=\"ds-card\"><h3 class=\"ds-card__title\">Card Title</h3><p class=\"ds-card__body\">Glass surface with 16px blur backdrop filter, inner top-edge highlight, and soft shadow.</p></div>",
+      "css": ".ds-card { position: relative; background: rgba(24,38,64,0.7); border: 1px solid rgba(42,58,90,0.4); border-radius: 16px; padding: 24px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 2px 8px rgba(0,0,0,0.2), 0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.04); transition: background 0.25s, box-shadow 0.25s, border-color 0.25s, transform 0.5s cubic-bezier(0.34,1.56,0.64,1); overflow: hidden; } .ds-card::before { content: ''; position: absolute; top: 0; left: 10%; right: 10%; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent); border-radius: 50%; pointer-events: none; } .ds-card:hover { background: rgba(24,38,64,0.75); box-shadow: 0 4px 16px rgba(0,0,0,0.25), 0 12px 40px rgba(0,0,0,0.12), 0 0 40px rgba(251,191,36,0.05), inset 0 1px 0 rgba(255,255,255,0.06); border-color: rgba(42,58,90,0.6); transform: translateY(-1px); } .ds-card__title { font-size: 0.95rem; font-weight: 600; margin-bottom: 16px; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', 'Segoe UI', Roboto, sans-serif; } .ds-card__body { font-size: 0.875rem; line-height: 1.6; color: #a0aec0; }"
+    },
+    {
+      "name": "Nav Bar — Active Tab",
+      "kind": "nav",
+      "refersTo": "nav-btn-active",
+      "description": "Bottom tab bar active state — icon scales up, accent indicator bar animates in.",
+      "html": "<nav class=\"ds-nav\"><button class=\"ds-nav__btn ds-nav__btn--active\"><span class=\"ds-nav__icon fas fa-lightbulb\"></span><span class=\"ds-nav__label\">Lamp</span></button><button class=\"ds-nav__btn\"><span class=\"ds-nav__icon fas fa-music\"></span><span class=\"ds-nav__label\">Music</span></button></nav>",
+      "css": ".ds-nav { display: flex; height: 64px; background: rgba(8,12,20,0.97); backdrop-filter: blur(16px); border-radius: 12px; overflow: hidden; } .ds-nav__btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; flex: 1; font-size: 0.6rem; font-weight: 500; color: #5a6a7e; transition: color 0.15s; cursor: pointer; padding: 4px 2px; position: relative; letter-spacing: 0.3px; border: none; background: none; } .ds-nav__btn::after { content: ''; position: absolute; top: 0; left: 30%; right: 30%; height: 2.5px; background: #fbbf24; border-radius: 0 0 3px 3px; opacity: 0; transform: scaleX(0); transition: opacity 0.15s, transform 0.15s; } .ds-nav__btn--active { color: #fbbf24; } .ds-nav__btn--active::after { opacity: 1; transform: scaleX(1); } .ds-nav__btn--active .ds-nav__icon { transform: scale(1.15); filter: drop-shadow(0 0 6px rgba(251,191,36,0.4)); } .ds-nav__icon { font-size: 1.3rem; line-height: 1; transition: transform 0.5s cubic-bezier(0.34,1.56,0.64,1), color 0.15s; } .ds-nav__label { font-size: 0.6rem; font-weight: 500; letter-spacing: 0.3px; }"
+    },
+    {
+      "name": "Toggle Switch",
+      "kind": "input",
+      "refersTo": "switch",
+      "description": "Pill toggle 42×24px. Track dark, knob white. Checked fills with accent, knob slides right.",
+      "html": "<label class=\"ds-toggle\"><input type=\"checkbox\" class=\"ds-toggle__input\"><span class=\"ds-toggle__track\"><span class=\"ds-toggle__knob\"></span></span></label>",
+      "css": ".ds-toggle { position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0; cursor: pointer; } .ds-toggle__input { opacity: 0; width: 0; height: 0; position: absolute; } .ds-toggle__track { position: absolute; inset: 0; background: #2a3a5a; border-radius: 24px; transition: background 0.15s; } .ds-toggle__knob { position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background: #edf2f7; border-radius: 50%; transition: transform 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.3); } .ds-toggle__input:checked + .ds-toggle__track { background: #fbbf24; } .ds-toggle__input:checked + .ds-toggle__track .ds-toggle__knob { transform: translateX(18px); background: white; }"
+    },
+    {
+      "name": "Effect Card — Active",
+      "kind": "card",
+      "refersTo": "effect-card-active",
+      "description": "Grid card for selecting LED effects. Active state shows accent border and glow.",
+      "html": "<button class=\"ds-effect-card ds-effect-card--active\"><svg class=\"ds-effect-card__icon\" viewBox=\"0 0 24 24\" width=\"44\" height=\"44\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><circle cx=\"12\" cy=\"12\" r=\"4\" fill=\"currentColor\"/></svg><span class=\"ds-effect-card__label\">Moving Dot</span></button>",
+      "css": ".ds-effect-card { background: transparent; border: 1px solid rgba(42,58,90,0.25); border-radius: 12px; padding: 16px 8px; text-align: center; transition: all 0.15s; cursor: pointer; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); } .ds-effect-card:active { transform: scale(0.95); } .ds-effect-card:hover { transform: translateY(-5px); background: rgba(24,38,64,0.8); border-color: rgba(251,191,36,0.3); box-shadow: 0 12px 32px rgba(0,0,0,0.35), 0 4px 12px rgba(251,191,36,0.15), 0 0 40px rgba(251,191,36,0.08); } .ds-effect-card--active { border-color: #fbbf24; background: rgba(24,38,64,0.8); box-shadow: 0 0 20px rgba(251,191,36,0.25), inset 0 0 24px rgba(251,191,36,0.06); } .ds-effect-card--active:hover { transform: translateY(-5px); border-color: #fbbf24; box-shadow: 0 12px 36px rgba(0,0,0,0.35), 0 0 28px rgba(251,191,36,0.4), 0 0 60px rgba(251,191,36,0.15), inset 0 0 28px rgba(251,191,36,0.1); } .ds-effect-card__icon { width: 44px; height: 44px; border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: transform 0.5s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s; } .ds-effect-card__label { font-size: 0.7rem; font-weight: 600; color: #8b949e; letter-spacing: 0.3px; }"
+    },
+    {
+      "name": "Reset Button",
+      "kind": "button",
+      "refersTo": "btn-reset-params",
+      "description": "Pill button for resetting effect parameters. Transparent with border, accent on hover.",
+      "html": "<button class=\"ds-reset-btn\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M1 4v6h6\"/><path d=\"M3.51 15a9 9 0 1 0 2.13-9.36L1 10\"/></svg>Reset</button>",
+      "css": ".ds-reset-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 20px; font-size: 0.78rem; font-weight: 500; color: #8b949e; background: transparent; border: 1px solid #2a3040; border-radius: 20px; cursor: pointer; transition: all 0.15s; letter-spacing: 0.3px; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', 'Segoe UI', Roboto, sans-serif; } .ds-reset-btn:hover { color: #60a5fa; border-color: #60a5fa; background: rgba(96,165,250,0.08); box-shadow: 0 0 20px rgba(96,165,250,0.15); } .ds-reset-btn:active { transform: scale(0.96); }"
+    },
+    {
+      "name": "Theme Selector Card",
+      "kind": "card",
+      "refersTo": "theme-option",
+      "description": "Selectable card for choosing color theme. Shows accent gradient swatch.",
+      "html": "<div class=\"ds-theme-card ds-theme-card--active\"><div class=\"ds-theme-card__swatch\" style=\"background:linear-gradient(135deg,#fbbf24,#38bdf8)\"></div><span class=\"ds-theme-card__label\">SML Classic</span></div>",
+      "css": ".ds-theme-card { flex: 1; min-width: 100px; padding: 24px 16px; background: rgba(12,20,37,0.7); border: 2px solid transparent; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.15s; font-size: 0.8rem; font-weight: 500; backdrop-filter: blur(4px); } .ds-theme-card:active { transform: scale(0.96); } .ds-theme-card--active { border-color: #fbbf24; background: rgba(251,191,36,0.06); } .ds-theme-card__swatch { display: block; width: 100%; height: 48px; border-radius: 8px; margin-bottom: 8px; } .ds-theme-card__label { font-size: 0.8rem; font-weight: 500; color: #e6edf3; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', 'Segoe UI', Roboto, sans-serif; }"
+    },
+    {
+      "name": "Neon Header",
+      "kind": "custom",
+      "refersTo": "neon-header",
+      "description": "Heroic centered header. Impactreg logotype with 3-layer text-shadow glow, subtitle, animated glow line.",
+      "html": "<header class=\"ds-neon-header\"><div class=\"ds-neon-header__logo\">SML</div><p class=\"ds-neon-header__sub\">Smart Music Lamp</p><div class=\"ds-neon-header__glowline\"></div></header>",
+      "css": ".ds-neon-header { text-align: center; padding: 24px 16px 18px; position: relative; } .ds-neon-header__logo { font-family: 'Impactreg', sans-serif; font-size: 4.5rem; font-weight: 400; line-height: 0.85; color: #60a5fa; text-shadow: 0 0 10px rgba(96,165,250,0.6), 0 0 30px rgba(96,165,250,0.3), 0 0 60px rgba(96,165,250,0.15); letter-spacing: 0.06em; display: flex; align-items: center; justify-content: center; gap: 0.06em; transition: text-shadow 0.25s; } .ds-neon-header__sub { font-family: 'Handmade', cursive; font-size: 1.6rem; font-weight: 700; color: rgba(255,255,255,0.7); letter-spacing: 5px; margin-top: -1rem; position: relative; z-index: 2; text-shadow: 0 0 12px rgba(255,255,255,0.06); } .ds-neon-header__glowline { width: 60px; height: 2px; margin: 8px auto 0; background: linear-gradient(90deg, transparent, #60a5fa, transparent); border-radius: 2px; box-shadow: 0 0 16px #60a5fa; opacity: 0.8; animation: dsLinePulse 3s ease-in-out infinite; } @keyframes dsLinePulse { 0%, 100% { opacity: 0.8; width: 60px; } 50% { opacity: 1; width: 100px; } } @media (prefers-reduced-motion: reduce) { .ds-neon-header__glowline { animation: none; opacity: 0.8; width: 60px; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "\"The Dark Room\"",
+    "overview": "A control room atmosphere at night: amber and blue glow on black glass. Every surface is deep and translucent, every accent color carries a signal. The interface feels like it belongs to the hardware it controls — not a generic dashboard but the lamp's own consciousness rendered as light on glass.\n\nSML is an ESP32-powered smart lamp controlled entirely through this web panel. The design is deliberately dark, dense, and luminous. Backgrounds recede into near-black navy, while neon accent colors (amber, sky blue, emerald) emerge from the darkness with purpose: they indicate state, guide interaction, and reward attention. Glow is not decorative — it communicates.",
+    "keyCharacteristics": [
+      "Dark glass surfaces with backdrop-filter: blur(16px) on cards, creating layered translucency",
+      "Conic metallic power buttons (82×82px circles) that feel mechanical and precise",
+      "Neon accent colors that serve as state indicators, not decoration",
+      "Ambient radial gradients behind the interface for atmospheric depth",
+      "Glass cards with an inner top-edge highlight line for polished dimensionality",
+      "Three themeable color modes: SML Classic (amber), WLED Dark (blue), Midnight AMOLED (purple)"
+    ],
+    "rules": [
+      {
+        "name": "The Three Themes Rule",
+        "body": "SML ships three complete color themes — SML Classic (amber + sky), WLED Dark (blue + emerald), Midnight AMOLED (purple + teal on pure black). Each theme reassigns every accent, surface, text, border, and interactive token. No partial theming: switching a theme is a complete atmosphere change. The active theme is persisted in localStorage(\"sml-theme\") and applies on load.",
+        "section": "colors"
+      },
+      {
+        "name": "The Glow-Is-Signal Rule",
+        "body": "A glow effect always indicates an active, interactive, or connected state. The power button's ON halo, the nav button's active icon glow, the effect card's active border glow, the toggle's active fill — every luminous edge tells you something is engaged. If an element is not interactive and not active, it has no glow. box-shadow: 0 0 24px var(--accent) is the canonical glow declaration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two-Scale Rule",
+        "body": "The interface operates at two type scales: the product identity layer (display/impact, used in the header only) and the UI layer (title/body/label/mono, used everywhere else). They never intermix. A label never becomes a display face; the display face never shrinks to label size.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "Surfaces are flat at rest. Shadows appear only as a response to state (hover, activation, or connection). A card at rest has blur and transparency but no floating shadow. A card under interaction lifts. This prevents the interface from feeling like a stack of paper cards and keeps it feeling like engraved glass.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use the accent color as a deliberate state indicator — ON, active, connected, selected. If it has glow, it's interactive.",
+      "Do use glass card backgrounds with backdrop-filter: blur(16px) for content containers. The blur and transparency are the system's primary depth mechanism.",
+      "Do use prefers-reduced-motion media queries to disable entrance animations and pulsing effects. Motion enhances atmosphere; it never gates content.",
+      "Do use shape and position alongside color for status indicators (charging icon + green dot, battery bars + red text). Color should never be the sole carrier of meaning.",
+      "Do keep the header display faces separated: Handmade for the brand wordmark, Impactreg for the heroic logotype. Never swap their roles.",
+      "Do use the conic metallic power buttons as the primary power affordance. The machined-metal aesthetic reinforces the hardware-connected feel.",
+      "Do keep a 16px minimum padding inside glass cards. Tighter padding breaks the glass illusion."
+    ],
+    "donts": [
+      "Don't use gradient text (background-clip: text with a gradient). Text emphasis comes from weight, size, or glow — never from a gradient fill.",
+      "Don't use side-stripe borders (border-left or border-right greater than 1px as a colored accent). Use full borders, background tints, or glow instead.",
+      "Don't use generic IoT dashboard aesthetics — no flat white cards with drop shadows, no light gray on white, no Bootstrap/AdminLTE styling, no Material Design elevation shadows or floating action buttons.",
+      "Don't apply glow to inactive or non-interactive elements. Glow is a signal, not a decoration.",
+      "Don't use snprintf() with format specifiers in the ESP32 firmware — it causes Interrupt wdt timeout crashes after WiFi initialization.",
+      "Don't let glass cards nest inside each other. One level of glass depth is the limit — nested cards break the translucency illusion.",
+      "Don't use the Handmade display face below 1.5rem or above 3.5rem (outside the header). It loses legibility at small sizes and overwhelms at large.",
+      "Don't mix two display faces on the same screen element. Handmade and Impactreg should never appear in the same component."
+    ]
+  }
+}
