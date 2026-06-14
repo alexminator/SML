@@ -1188,6 +1188,10 @@ function showRandomFXConfig(cardEl) {
     clearBtn.addEventListener('click', () => {
       saveRandomPlaylist([]);
       refreshPlaylistUI();
+      // Propagar a todos los clientes vía ESP32
+      if (SML.isMaster) {
+        sendCmd({ action: 'randomConfig', effectPool: [], mode: 'playlist' });
+      }
     });
   }
 

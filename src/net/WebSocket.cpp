@@ -298,7 +298,10 @@ void notifyClients(bool includeParams)
         // Random FX config (broadcast to all clients)
         json["randomFXMode"] = randomFXMode;
         json["randomFXDuration"] = randomFXDuration;
-        if (!randomFXPool.empty()) {
+        // ⚠ SIEMPRE incluimos randomFXPool, incluso vacío: cuando el master
+        //   limpia la playlist, el broadcast con una array vacía es lo único
+        //   que permite a los otros clientes sincronizar su estado local.
+        {
             JsonArray pool = json["randomFXPool"].to<JsonArray>();
             for (int id : randomFXPool) pool.add(id);
         }
