@@ -525,7 +525,7 @@ function initEffectCards() {
       }
     }
 
-    // Toast warning if NeoPixel is off
+    // Toast warning if NeoPixel is off (applies to ALL effects including Random)
     if (!SML.powerOn) {
       showToast('Turn on the NeoPixel strip first', 'warning');
       return;
@@ -1994,7 +1994,9 @@ function handleMessage(data) {
     }
 
     // Direct effectId from server
-    if (data.effectId !== undefined) {
+    // ⚠ Solo cuando NeoPixel está encendido — si está apagado, ningún
+    //   efecto debe marcarse como activo (todos en gris).
+    if (data.effectId !== undefined && SML.powerOn) {
       SML.effectId = data.effectId;
       $$('.effect-card').forEach(c => {
         c.classList.toggle('active', parseInt(c.dataset.effectId) === data.effectId);

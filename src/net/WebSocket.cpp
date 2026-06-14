@@ -554,7 +554,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             // Si solo venía lv, responder con el estado completo + retornar
             // notifyClients toma su propio dataMutex — no retenerlo aquí.
             stateGeneration++;
-            notifyClients();
+            notifyClients(false);
             return;
         }
 
@@ -575,7 +575,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
         // ⚠ action puede ser NULL si el mensaje solo trae effectId
         if (action == nullptr) {
             stateGeneration++;
-            notifyClients();  // notifyClients toma su propio dataMutex
+            notifyClients(false);  // notifyClients toma su propio dataMutex
             notifyWSClientList();  // Broadcast updated action log
             return;
         }
@@ -829,7 +829,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
                 if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) != pdTRUE) {
                     // Si falla, no podemos seguir — notificar y salir
                     stateGeneration++;
-                    notifyClients();
+                    notifyClients(false);
                     notifyWSClientList();
                     return;
                 }
@@ -840,7 +840,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             } // end if dataMutex acquired
         } // end else (shared-state actions)
         stateGeneration++;
-        notifyClients();
+        notifyClients(false);
         notifyWSClientList();  // Broadcast updated action log
     }
 }
