@@ -831,6 +831,16 @@ input[type="range"]::-moz-range-thumb {
   margin: 0;
 }
 
+/* ── Active category highlight (Random FX Category mode) ── */
+.category-header.active h3 {
+  color: var(--accent);
+}
+
+.category-header.active {
+  border-left: 3px solid var(--accent);
+  padding-left: calc(2px + 3px);
+}
+
 .scroll-row {
   display: flex;
   gap: 8px;

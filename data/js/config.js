@@ -150,8 +150,8 @@ function _formatActionEntry(e) {
     case 6: // bt
       const btSvg = '<svg viewBox="0 0 24 24" width="14" height="14" style="vertical-align:middle;display:inline-block"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" fill="currentColor"/></svg>';
       return `<span class="ws-action-time">${timeStr}</span> ${btSvg} BT ${e.v1 ? 'ON' : 'OFF'}`;
-    case 7: // random
-      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-shuffle" style="color:var(--accent)"></span> Random ${e.v1 === 1 ? 'FX' : 'VU'} ${e.v1 ? 'ON' : 'OFF'}`;
+    case 7: // random (v1=1 randomFX, v1=2 randomVU, v1=3 randomConfig)
+      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-shuffle" style="color:var(--accent)"></span> Random ${e.v1 === 2 ? 'VU' : 'FX'} ON`;
     case 8: // batería (visualización de carga)
     return `<span class="ws-action-time">${timeStr}</span><span class="fas fa-battery-full" style="color:${e.v1 ? '#5cb85c' : 'var(--text-secondary)'}"></span> Battery ${e.v1 ? 'ON' : 'OFF'}`;
     case 9: // temperatura (visualización de sensor)

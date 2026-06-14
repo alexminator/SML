@@ -881,6 +881,28 @@ function scrollPlaylistTo(effId) {
   }
 }
 
+function scrollToCategoryCard(effId) {
+  const card = document.querySelector(
+    `.effect-category:not(#catFavorites):not(#catPlaylist) .effect-card[data-effect-id="${effId}"]`
+  );
+  if (card) {
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
+}
+
+function highlightCategories(catIds) {
+  document.querySelectorAll('.category-header').forEach(h => h.classList.remove('active'));
+  if (catIds && catIds.length) {
+    catIds.forEach(catId => {
+      const cat = document.getElementById(catId);
+      if (cat) {
+        const header = cat.querySelector('.category-header');
+        if (header) header.classList.add('active');
+      }
+    });
+  }
+}
+
 function cycleRandomVU() {
   if (!SML.randomVUMode) return;
   const pool = RANDOM_VU_POOL;
@@ -898,6 +920,8 @@ function stopRandomFX() {
   }
   // Quitar active de todas las tarjetas en scroll rows (playlist + categorías)
   document.querySelectorAll('.scroll-row .effect-card.active').forEach(c => c.classList.remove('active'));
+  // Limpiar highlight de categorías
+  highlightCategories(null);
 }
 
 function stopRandomVU() {
@@ -1143,6 +1167,10 @@ function showRandomFXConfig(cardEl) {
         });
       } else if (newMode === 'playlist') {
         pool = getRandomPlaylist();
+        if (pool.length === 0) {
+          showToast('Add at least one effect to the playlist first', 'warning');
+          return;
+        }
       } else {
         pool = [...RANDOM_FX_POOL];
       }
@@ -1887,6 +1915,12 @@ function handleMessage(data) {
       if ((data.randomFXMode === 'playlist') && data.effectId !== undefined) {
         scrollPlaylistTo(data.effectId);
       }
+      // Category mode: highlight ALL selected categories + scroll to active card
+      if ((data.randomFXMode === 'category') && data.effectId !== undefined) {
+        const selected = getRandomCategories();
+        highlightCategories(selected.length > 0 ? selected : null);
+        scrollToCategoryCard(data.effectId);
+      }
     } else if (data.randomMode === 2) {
       SML.randomVUMode = true;
       SML.randomFXMode = false;
@@ -1895,9 +1929,10 @@ function handleMessage(data) {
         c.classList.toggle('active', parseInt(c.dataset.effectId) === 100)
       );
     } else {
-      // randomMode === 0 — limpiar flags
+      // randomMode === 0 — limpiar flags + highlights de categorías
       SML.randomFXMode = false;
       SML.randomVUMode = false;
+      highlightCategories(null);
     }
   }
 
@@ -2574,6 +2609,62 @@ function renderBatteryChart() {
 
   // Clear
   ctx.clearRect(0, 0, w, h);
+
+  // ── Battery status icon (top-left corner) ──
+  const iconX = 18;
+  const iconY = 18;
+  const iconS = 16;
+
+  if (SML.fullBatt) {
+    // Checkmark — verde
+    ctx.strokeStyle = '#5cb85c';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(iconX, iconY + iconS * 0.45);
+    ctx.lineTo(iconX + iconS * 0.33, iconY + iconS * 0.72);
+    ctx.lineTo(iconX + iconS * 0.7, iconY + iconS * 0.28);
+    ctx.stroke();
+  } else if (SML.charging) {
+    // Lightning bolt — verde
+    ctx.fillStyle = '#5cb85c';
+    ctx.beginPath();
+    ctx.moveTo(iconX + iconS * 0.55, iconY);
+    ctx.lineTo(iconX + iconS * 0.25, iconY + iconS * 0.55);
+    ctx.lineTo(iconX + iconS * 0.48, iconY + iconS * 0.55);
+    ctx.lineTo(iconX + iconS * 0.38, iconY + iconS);
+    ctx.lineTo(iconX + iconS * 0.75, iconY + iconS * 0.45);
+    ctx.lineTo(iconX + iconS * 0.52, iconY + iconS * 0.45);
+    ctx.closePath();
+    ctx.fill();
+  } else {
+    // Battery outline — color según nivel
+    const bLvl = SML.battDisplayLevel;
+    let batColor;
+    if (bLvl <= 15) batColor = '#ff4444';
+    else if (bLvl <= 30) batColor = '#ff8800';
+    else if (bLvl <= 50) batColor = '#ffaa00';
+    else if (bLvl <= 75) batColor = '#aadd00';
+    else batColor = '#5cb85c';
+
+    const bw = iconS * 0.65;
+    const bh = iconS * 0.85;
+    const bx = iconX;
+    const by = iconY + (iconS - bh) / 2;
+
+    ctx.strokeStyle = batColor;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(bx, by, bw, bh);
+    // Terminal
+    ctx.fillStyle = batColor;
+    ctx.fillRect(bx + bw * 0.35, by - 2.5, bw * 0.3, 2.5);
+    // Fill level
+    if (bLvl > 0) {
+      const fillH = (bh - 3) * Math.min(bLvl / 100, 1);
+      ctx.fillRect(bx + 1.5, by + bh - 1.5 - fillH, bw - 3, fillH);
+    }
+  }
 
   // Need at least 2 points to draw
   if (count < 2) {
