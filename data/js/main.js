@@ -86,6 +86,11 @@ const SML = {
   battHistory: [],
   _battHistoryInitialized: false,
 
+  // Client identity (WebSocket master/slave)
+  clientId: 0,
+  isMaster: false,
+  _hasReceivedClientList: false,
+
   // UI
   currentTab: 'tabLamp',
   isDesktop: window.innerWidth >= 768,
@@ -542,6 +547,11 @@ function initEffectCards() {
 
     // ── Normal effect cards ──
     if (wasActive && !SML.randomFXMode && !SML.randomVUMode) {
+      // SLAVE: no puede configurar parámetros de efectos
+      if (!SML.isMaster) {
+        showToast('Only the master can configure effect parameters', 'info');
+        return;
+      }
       closeEffectConfig();
       showEffectConfig(effId, card);
       return;
@@ -726,6 +736,29 @@ function saveRandomPlaylist(list) {
 function handleRandomFXClick(card, wasActive) {
   const cards = $$('.effect-card');
 
+  // SLAVE: toggle simple, sin config ni timer
+  if (!SML.isMaster) {
+    if (wasActive) {
+      showToast('Only the master can configure random mode', 'info');
+      return;
+    }
+    if (SML.randomFXMode) {
+      stopRandomFX();
+      sendCmd({ action: 'randomFX', state: false });
+      SML.effectId = 0;
+      sendCmd({ effectId: 0 });
+      cards.forEach(c => c.classList.remove('active'));
+    } else {
+      sendCmd({ action: 'randomConfig', mode: 'all', duration: 8, effectPool: RANDOM_FX_POOL, start: true });
+      SML.randomFXMode = true;
+      SML._playlistIndex = 0;
+      cards.forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+    }
+    updatePeekEffectInfo();
+    return;
+  }
+
   if (wasActive) {
     // Segundo click → mostrar config de duración
     closeEffectConfig();
@@ -744,22 +777,16 @@ function handleRandomFXClick(card, wasActive) {
     updateSolidIcon(SML.r, SML.g, SML.b);
     updatePeekEffectInfo();
   } else {
-    const randomMode = localStorage.getItem('sml-random-mode') || 'all';
-
-    // Category/Playlist: abrir config y esperar OK en vez de arrancar
-    if (randomMode !== 'all') {
-      closeEffectConfig();
-      showEffectConfig(99, card);
-      return;
-    }
-
     // Detener VU random si estaba activo
     if (SML.randomVUMode) {
       stopRandomVU();
       sendCmd({ action: 'randomVU', state: false });
     }
 
-    // Iniciar random FX via ESP32
+    // Iniciar random FX via ESP32 — siempre en modo 'all' desde el click.
+    // Si el usuario quiere category/playlist, segundo click → config.
+    // (localStorage no debe interferir: un valor previo 'playlist' evitaría
+    //  la activación directa y abriría config, lo cual el usuario NO espera)
     sendCmd({
       action: 'randomConfig',
       mode: 'all',
@@ -777,6 +804,28 @@ function handleRandomFXClick(card, wasActive) {
 
 function handleRandomVUClick(card, wasActive) {
   const cards = $$('.effect-card');
+
+  // SLAVE: toggle simple, sin config ni timer
+  if (!SML.isMaster) {
+    if (wasActive) {
+      showToast('Only the master can configure random mode', 'info');
+      return;
+    }
+    if (SML.randomVUMode) {
+      stopRandomVU();
+      sendCmd({ action: 'randomVU', state: false });
+      SML.effectId = 0;
+      sendCmd({ effectId: 0 });
+      cards.forEach(c => c.classList.remove('active'));
+    } else {
+      sendCmd({ action: 'randomVU', state: true });
+      SML.randomVUMode = true;
+      cards.forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+    }
+    updatePeekEffectInfo();
+    return;
+  }
 
   if (wasActive) {
     // Segundo click → mostrar config de duración
@@ -895,6 +944,11 @@ function updatePeekEffectInfo() {
 }
 
 function showEffectConfig(effId, cardEl) {
+  // SLAVE: no puede configurar random mode
+  if ((effId === 99 || effId === 100) && !SML.isMaster) {
+    showToast('Only the master can configure random mode', 'info');
+    return;
+  }
   // Random FX — full config with 3 modes
   if (effId === 99) {
     showRandomFXConfig(cardEl);
@@ -1591,6 +1645,12 @@ function handleMessage(data) {
   // ── CONSOLE DEBUG — valores que manda el ESP32 ──
   console.debug('[SML ← ESP32]', JSON.stringify(data));
 
+  // ── PRIVATE CLIENT ID (mensaje individual al conectarse) ──
+  if (data.yourClientId !== undefined) {
+    SML.clientId = data.yourClientId;
+    return;  // No hay otros campos en este mensaje
+  }
+
   // ── TEMPERATURE / HUMIDITY ──
   if (data.temperature !== undefined) {
     SML.temp = data.temperature;
@@ -2059,6 +2119,20 @@ function handleMessage(data) {
   if (data.wsClientList !== undefined && Array.isArray(data.wsClientList)) {
     if (typeof updateWSClientList === 'function') {
       updateWSClientList(data.wsClientList, data.wsActionLog);
+    }
+    // ── MASTER/SLAVE DETECTION — find ourselves in the client list ──
+    const myEntry = data.wsClientList.find(c => c.id === SML.clientId);
+    if (myEntry) {
+      const wasMaster = SML.isMaster;
+      SML.isMaster = !!myEntry.master;
+      // Handover on subsequent updates: slave → master, start timer if random active
+      if (SML._hasReceivedClientList && !wasMaster && SML.isMaster) {
+        if (SML.randomVUMode && !SML._randomVUTimer) {
+          cycleRandomVU();
+        }
+        // Random FX is ESP32-driven so no frontend timer needed
+      }
+      SML._hasReceivedClientList = true;
     }
   }
   // ── WEBSOCKET ACTION LOG (mensaje independiente, sin client list) ──

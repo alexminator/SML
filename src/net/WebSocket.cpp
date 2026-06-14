@@ -476,6 +476,48 @@ static void sendBatteryHistory() {
     ws.textAll(outBuf, jsonLen);
 }
 
+// ── Overload: send battery history to a SINGLE client (no ws.textAll) ────
+static void sendBatteryHistory(AsyncWebSocketClient* client) {
+    if (!client) return;
+    if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(200)) != pdTRUE) {
+        return;
+    }
+
+    batt.loadBatteryLog();
+
+    if (batt.battLogCount == 0) {
+        xSemaphoreGive(dataMutex);
+        return;
+    }
+
+    int count = min(batt.battLogCount, BATT_LOG_SIZE);
+    size_t cap = JSON_ARRAY_SIZE(count) + count * JSON_OBJECT_SIZE(3) + 64;
+    DynamicJsonDocument doc(cap);
+    JsonArray arr = doc["battHistory"].to<JsonArray>();
+    int idx = (batt.battLogHead + BATT_LOG_SIZE - count) % BATT_LOG_SIZE;
+    for (int i = 0; i < count; i++) {
+        JsonObject e = arr.add().to<JsonObject>();
+        e["t"] = batt.battLog[idx].uptime;
+        e["v"] = batt.battLog[idx].voltage;
+        e["l"] = batt.battLog[idx].level;
+        idx = (idx + 1) % BATT_LOG_SIZE;
+    }
+
+    xSemaphoreGive(dataMutex);
+
+    static char outBuf[2048];
+    size_t jsonLen = serializeJson(doc, outBuf, sizeof(outBuf));
+    if (jsonLen >= sizeof(outBuf)) return;
+
+    Serial.print("[BATT] sendBatteryHistory → client #");
+    Serial.print(client->id());
+    Serial.print(": ");
+    Serial.print(count);
+    Serial.print(" entries, jsonLen=");
+    Serial.println(jsonLen);
+    client->text(outBuf, jsonLen);
+}
+
 // ============================================================================
 // Handle incoming WebSocket messages
 // ============================================================================
@@ -842,10 +884,36 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
         _lastSentClGen = 0xFE;
         _lastSentLogGen = 0xFE;
         stateGeneration++;
+
+        // ⚠ Enviar mensajes con pequeño delay entre ellos para evitar
+        //   desbordar el buffer TCP del cliente recién conectado.
+        //   lwIP tiene un buffer de ~2-4KB; 3 ws.textAll() seguidos pueden
+        //   saturarlo y causar desconexión intermitente del 2º cliente.
+
+        // 1. yourClientId PRIMERO — mensaje pequeño, crítico para identidad
+        {
+            StaticJsonDocument<64> privMsg;
+            privMsg["yourClientId"] = client->id();
+            char privBuf[96];
+            size_t privLen = serializeJson(privMsg, privBuf, sizeof(privBuf));
+            if (privLen > 0 && privLen < sizeof(privBuf)) {
+                client->text(privBuf, privLen);
+            }
+        }
+        vTaskDelay(pdMS_TO_TICKS(5));
+
+        // 2. Full state broadcast to all clients
         notifyClients(true);
+        vTaskDelay(pdMS_TO_TICKS(5));
+
+        // 3. Client list + action log
         notifyWSClientList();
-        // Send battery history (separate message — now uses static buffer, proven to work)
-        sendBatteryHistory();
+        vTaskDelay(pdMS_TO_TICKS(5));
+
+        // 4. Battery history: solo al cliente nuevo, no a todos
+        //    (los clientes existentes ya lo tienen, y si no pueden pedirlo
+        //     con action: 'requestBattHistory')
+        sendBatteryHistory(client);
         break;
     }
     case WS_EVT_DISCONNECT:
