@@ -527,13 +527,14 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
     {
-        StaticJsonDocument<512> json;
+        StaticJsonDocument<1024> json;
         DeserializationError err = deserializeJson(json, data);
         if (err)
         {
 #ifdef DEBUG_WEBSOCKET
-            debuglnD("deserializeJson() failed with code ");
-            debuglnD(err.c_str());
+            debugD("deserializeJson() failed with code ");
+            debugD(err.c_str());
+            debugD("\n");
 #endif
             return;
         }
@@ -794,6 +795,19 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
                 randomMode = 1;
                 randomPlaylistIndex = 0;
                 lastRandomSwitch = millis();
+                // Pick the FIRST random effect immediately — no esperar
+                // randomFXDuration segundos para que el usuario vea algo.
+                if (!randomFXPool.empty()) {
+                    int firstId;
+                    if (randomFXMode == "playlist") {
+                        firstId = randomFXPool[randomPlaylistIndex];
+                        randomPlaylistIndex = (randomPlaylistIndex + 1) % randomFXPool.size();
+                    } else {
+                        firstId = randomFXPool[random(0, randomFXPool.size())];
+                    }
+                    stripLed.effectId = firstId;
+                    if (stripLed.powerState) stripLed.update();
+                }
             }
             _wsLogAction(clientId, 7, 3, 0, 0);
         }
