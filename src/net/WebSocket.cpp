@@ -592,6 +592,14 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             return;
         }
 
+        // ── REQUEST FULL STATE (cliente vuelve de minimizar / reconecta) ──
+        //   Envía notifyClients(true) a TODOS los clientes. Sin side effects.
+        if (strcmp(action, "requestFullState") == 0) {
+            stateGeneration++;
+            notifyClients(true);
+            return;
+        }
+
         // ── REQUEST BATTERY HISTORY (for chart) ─────────────────────────
         if (strcmp(action, "requestBattHistory") == 0) {
             Serial.println("[BATT] requestBattHistory received from client");

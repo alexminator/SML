@@ -1587,6 +1587,9 @@ function connectWS() {
     clearTimeout(SML.wsReconnectTimer);
     // Remove skeletons when connected
     document.querySelectorAll('.skeleton').forEach(el => el.classList.remove('skeleton'));
+    // Doble seguro: pedir estado fresco tras reconexión (el ESP32 ya envía
+    // estado en onWsEvent CONNECT, pero por si el buffer descartó algo)
+    setTimeout(() => sendCmd({ action: 'requestFullState' }), 300);
   };
 
   SML.ws.onclose = (evt) => {
@@ -1644,6 +1647,19 @@ function sendCmd(obj) {
     SML.ws.send(JSON.stringify(obj));
   }
 }
+
+// ── Page Visibility API: al volver de minimizar, refrescar estado ──
+//   Cuando el navegador descongela la tab, el WebSocket puede estar
+//   abierto pero los mensajes encolados pueden no reflejar el estado
+//   completo. Pedir full state explícitamente evita datos stale.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    if (SML.ws && SML.ws.readyState === WebSocket.OPEN) {
+      console.debug('[VIS] tab visible → requesting full state');
+      sendCmd({ action: 'requestFullState' });
+    }
+  }
+});
 
 function handleMessage(data) {
   // ── CONSOLE DEBUG — valores que manda el ESP32 ──
