@@ -1187,7 +1187,10 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ── SVG-based effect icons (sin fondo circular, color via --effect-color) ── */
-.effect-card .effect-icon[viewBox] {
+/* Selector con misma especificidad que .effect-card .effect-icon (0,0,2,0)
+   para anular border-radius: 50% de la regla base.
+   viewBox ya no esta en el <svg> de la card — se movio al <symbol> del sprite. */
+.effect-card svg.effect-icon {
   border-radius: 0;
   background: none;
   display: block;
@@ -1264,15 +1267,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* Rainbow Beat (data-effect-id="3"): colores arcoíris vibrantes */
-.effect-card[data-effect-id="3"] .effect-icon path:nth-child(1) {
-  stroke: var(--rainbow-1, #888);
-}
-.effect-card[data-effect-id="3"] .effect-icon path:nth-child(2) {
-  stroke: var(--rainbow-2, #888);
-}
-.effect-card[data-effect-id="3"] .effect-icon path:nth-child(3) {
-  stroke: var(--rainbow-3, #888);
-}
+/* Nota: stroke inline en cada path del <symbol> (no nth-child porque no penetra <use>) */
 .effect-card[data-effect-id="3"].active .effect-icon {
   --rainbow-1: #FF2D55;
   --rainbow-2: #FFD60A;
@@ -1497,15 +1492,16 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* SVG icons: drop-shadow en vez de box-shadow (sigue la silueta, no el cuadrado) */
-.effect-card:hover .effect-icon[viewBox] {
+/* Nota: selector svg.effect-icon porque viewBox esta en el <symbol>, no en el <svg> */
+.effect-card:hover svg.effect-icon {
   box-shadow: none;
   filter: drop-shadow(0 0 14px color-mix(in srgb, var(--accent) 30%, transparent));
 }
-.effect-card.active .effect-icon[viewBox] {
+.effect-card.active svg.effect-icon {
   box-shadow: none;
   filter: drop-shadow(0 0 14px var(--effect-color));
 }
-.effect-card.active:hover .effect-icon[viewBox] {
+.effect-card.active:hover svg.effect-icon {
   box-shadow: none;
   filter: drop-shadow(0 0 24px var(--effect-color));
 }
@@ -3793,6 +3789,24 @@ input[type="range"]::-moz-range-thumb {
 
   .scroll-row .effect-card {
     width: 130px;
+  }
+
+  /* Desktop: categories as 2D grid instead of horizontal scroll-row */
+  .effect-category .scroll-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+    gap: 8px;
+    overflow: visible;
+    scroll-snap-type: none;
+    -webkit-overflow-scrolling: auto;
+    scrollbar-width: initial;
+  }
+  .effect-category .scroll-row::-webkit-scrollbar {
+    display: none;
+  }
+  .effect-category .scroll-row .effect-card {
+    width: auto;
+    min-height: 90px;
   }
 }
 
