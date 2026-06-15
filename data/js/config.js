@@ -40,7 +40,6 @@ function updateSystemInfo(data) {
 
   // ── IP ADDRESS ──
   if (data.ip !== undefined) {
-    setDataValue(document.getElementById('deviceIP'), data.ip);
     setDataValue(document.getElementById('sysIP'), data.ip);
   }
 
@@ -49,17 +48,17 @@ function updateSystemInfo(data) {
     setDataValue(document.getElementById('sysVersion'), data.ver);
   }
 
+  // ── MAC ADDRESS ──
+  if (data.mac !== undefined) {
+    setDataValue(document.getElementById('sysMAC'), data.mac);
+  }
+
   // ── SSID placeholder (cuando el input está vacío) ──
   if (data.ssid !== undefined) {
     const ssidEl = document.getElementById('wifiSsid');
     if (ssidEl && !ssidEl.value) ssidEl.placeholder = data.ssid;
   }
 
-  // ── LED COUNT (static — defined in config.h) ──
-  const ledsEl = document.getElementById('sysLEDs');
-  if (ledsEl && ledsEl.textContent === '--') {
-    setDataValue(ledsEl, 24);
-  }
 }
 
 /**

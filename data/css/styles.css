@@ -3930,6 +3930,13 @@ input[type="range"]::-moz-range-thumb {
     padding: var(--space-xs) 0 0;
     gap: 0;
   }
+
+  /* Info grid: MAC e IP ocupan todo el ancho en móvil */
+  .info-item:nth-child(5),
+  .info-item:nth-child(6) {
+    grid-column: 1 / -1;
+    text-align: center;
+  }
 }
 
 /* Small mobile (<400px): Compact sizing */

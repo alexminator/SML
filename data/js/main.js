@@ -1624,7 +1624,7 @@ function connectWS() {
     SML.connected = false;
     updateConnectionStatus(false);
     // Re-add skeleton to data elements when disconnected
-    document.querySelectorAll('.stat-value, .info-value, #weatherHumVal, #weatherHeatIndex, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #deviceIP, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
+    document.querySelectorAll('.stat-value, .info-value, #weatherHumVal, #weatherHeatIndex, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
       .forEach(el => {
         if (el.textContent === '--' || el.textContent === '--.-' || el.textContent === '--.--V' || el.textContent === '--%' || el.textContent === '--.-°C') {
           el.classList.add('skeleton');
@@ -2401,7 +2401,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme();
 
   // Add skeleton loading to all data-bearing elements
-  document.querySelectorAll('.stat-value, .info-value, #weatherHumVal, #weatherHeatIndex, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #deviceIP, #sysLEDs, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
+  document.querySelectorAll('.stat-value, .info-value, #weatherHumVal, #weatherHeatIndex, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
     .forEach(el => el.classList.add('skeleton'));
 
   // Tabs

@@ -271,6 +271,7 @@ void notifyClients(bool includeParams)
         // WiFi information
         json["ssid"] = WiFi.SSID();
         json["ip"] = WiFi.localIP();
+        json["mac"] = WiFi.macAddress();
         json["rssi"] = WiFi.RSSI();
 
         // System info (for Config tab)
@@ -409,6 +410,7 @@ void notifySensorData()
         json["humidity"] = hum;
         json["ssid"] = WiFi.SSID();
         json["ip"] = WiFi.localIP();
+        json["mac"] = WiFi.macAddress();
         json["rssi"] = WiFi.RSSI();
 
         // System info (for Config tab)
