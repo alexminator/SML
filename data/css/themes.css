@@ -53,7 +53,9 @@
   /* ── Glassmorphism ── */
   --glass-bg: color-mix(in srgb, var(--bg-elevated) 60%, transparent);
   --glass-border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
-  --glass-blur: blur(16px);
+  --glass-blur-sm: 4px;   /* interactive elements, effect cards, overlays */
+  --glass-blur-md: 12px;  /* content cards, panels, widgets */
+  --glass-blur-lg: 20px;  /* chrome, nav bars, offcanvas, sheets */
   --glass-card-bg: color-mix(in srgb, var(--bg-card) 70%, transparent);
   --glass-card-border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
 

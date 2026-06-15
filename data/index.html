@@ -36,7 +36,7 @@
          ============================================================ -->
     <header id="statusBar">
       <div class="status-left">
-        <span id="connectionIndicator" style="font-size:0.7rem;color:var(--accent-danger)">○</span>
+        <span id="connectionIndicator" role="status" aria-label="Connection status">○</span>
         <div class="wifi-signal" id="wifiBars">
           <div class="wifi-bar"></div>
           <div class="wifi-bar"></div>
@@ -46,11 +46,11 @@
       </div>
       <div class="status-right">
         <div class="ws-indicator" id="wsIndicator" title="WebSocket Clients">
-          <span class="fas fa-eye" id="wsEyeIcon"></span>
+          <span class="fas fa-eye" id="wsEyeIcon" aria-hidden="true"></span>
           <span class="ws-count" id="wsCount">0</span>
         </div>
         <div class="batt-indicator">
-          <span class="batt-percent">--</span>
+          <span class="batt-percent" aria-label="Battery level">--</span>
           <div class="batt-icon">
             <div class="batt-fill high" style="width:50%"></div>
           </div>
@@ -64,28 +64,28 @@
          ============================================================ -->
     <nav class="sidebar" id="sidebar">
       <button class="sidebar-btn active" data-tab="tabLamp">
-        <span class="nav-icon fas fa-lightbulb"></span>
+        <span class="nav-icon fas fa-lightbulb" aria-hidden="true"></span>
         <span class="nav-label">Lamp</span>
       </button>
       <button class="sidebar-btn" data-tab="tabMusic">
-        <span class="nav-icon fas fa-music"></span>
+        <span class="nav-icon fas fa-music" aria-hidden="true"></span>
         <span class="nav-label">Music</span>
       </button>
       <button class="sidebar-btn" data-tab="tabPeek">
-        <span class="nav-icon fas fa-eye"></span>
+        <span class="nav-icon fas fa-eye" aria-hidden="true"></span>
         <span class="nav-label">Peek</span>
       </button>
       <button class="sidebar-btn" data-tab="tabWeather">
-        <span class="nav-icon fas fa-thermometer-half"></span>
+        <span class="nav-icon fas fa-thermometer-half" aria-hidden="true"></span>
         <span class="nav-label">Weather</span>
       </button>
       <button class="sidebar-btn" data-tab="tabBattery">
-        <span class="nav-icon fas fa-battery-three-quarters"></span>
+        <span class="nav-icon fas fa-battery-three-quarters" aria-hidden="true"></span>
         <span class="nav-label">Battery</span>
       </button>
       <div class="sidebar-spacer"></div>
       <button class="sidebar-btn" data-tab="tabConfig">
-        <span class="nav-icon fas fa-cog"></span>
+        <span class="nav-icon fas fa-cog" aria-hidden="true"></span>
         <span class="nav-label">Config</span>
       </button>
     </nav>
@@ -110,13 +110,13 @@
             <div class="power-row">
               <div class="power-control">
                 <div class="power-card on" id="lampToggle">
-                  <div class="power-card-icon"><span class="fas fa-power-off"></span></div>
+                  <div class="power-card-icon"><span class="fas fa-power-off" aria-hidden="true"></span></div>
                 </div>
                 <span class="power-card-label">Lamp</span>
               </div>
               <div class="power-control">
                 <div class="power-card on" id="neoToggle">
-                  <div class="power-card-icon"><span class="fas fa-power-off"></span></div>
+                  <div class="power-card-icon"><span class="fas fa-power-off" aria-hidden="true"></span></div>
                 </div>
                 <span class="power-card-label">Neopixel</span>
               </div>
@@ -773,6 +773,7 @@
       <!-- ===== TAB: WEATHER ===== -->
       <section id="tabWeather" class="tab-content">
         <div class="card">
+          <h2 class="card-title"><span class="fas fa-thermometer-half"></span> Weather</h2>
           <div class="weather-container">
             <!-- Thermometer + datos lado a lado -->
             <div class="weather-main">
@@ -833,6 +834,7 @@
       <!-- ===== TAB: BATTERY ===== -->
       <section id="tabBattery" class="tab-content">
         <div class="card">
+          <h2 class="card-title"><span class="fas fa-battery-three-quarters"></span> Battery</h2>
           <div class="battery-container" style="position:relative">
             <button class="battery-chart-btn" id="batteryChartBtn" title="Battery history">
               <span class="fas fa-chart-line"></span>
@@ -1003,27 +1005,27 @@
          ============================================================ -->
     <nav id="bottomNav">
       <button class="nav-btn active" data-tab="tabLamp">
-        <span class="nav-icon fas fa-lightbulb"></span>
+        <span class="nav-icon fas fa-lightbulb" aria-hidden="true"></span>
         <span>Lamp</span>
       </button>
       <button class="nav-btn" data-tab="tabMusic">
-        <span class="nav-icon fas fa-music"></span>
+        <span class="nav-icon fas fa-music" aria-hidden="true"></span>
         <span>Music</span>
       </button>
       <button class="nav-btn" data-tab="tabPeek">
-        <span class="nav-icon fas fa-eye"></span>
+        <span class="nav-icon fas fa-eye" aria-hidden="true"></span>
         <span>Peek</span>
       </button>
       <button class="nav-btn" data-tab="tabWeather">
-        <span class="nav-icon fas fa-thermometer-half"></span>
+        <span class="nav-icon fas fa-thermometer-half" aria-hidden="true"></span>
         <span>Weather</span>
       </button>
       <button class="nav-btn" data-tab="tabBattery">
-        <span class="nav-icon fas fa-battery-three-quarters"></span>
+        <span class="nav-icon fas fa-battery-three-quarters" aria-hidden="true"></span>
         <span>Battery</span>
       </button>
       <button class="nav-btn" data-tab="tabConfig">
-        <span class="nav-icon fas fa-cog"></span>
+        <span class="nav-icon fas fa-cog" aria-hidden="true"></span>
         <span>Config</span>
       </button>
     </nav>

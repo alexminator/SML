@@ -130,6 +130,11 @@ input:focus, select:focus {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 ::selection {
   background: color-mix(in srgb, var(--accent) 30%, transparent);
   color: var(--text-primary);
@@ -148,8 +153,8 @@ input:focus, select:focus {
   z-index: 100;
   height: var(--status-h);
   background: var(--status-bar-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: var(--glass-blur-lg);
+  -webkit-backdrop-filter: var(--glass-blur-lg);
   border-bottom: var(--glass-border);
   display: flex;
   align-items: center;
@@ -174,7 +179,7 @@ input:focus, select:focus {
 
 /* ── Connection indicator ── */
 #connectionIndicator {
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   font-weight: 700;
   transition: color var(--t-fast);
   text-shadow: 0 0 6px currentColor;
@@ -325,8 +330,8 @@ input:focus, select:focus {
     color-mix(in srgb, var(--bg-primary) 92%, transparent) 0%,
     color-mix(in srgb, var(--bg-primary) 70%, transparent) 50%,
     transparent 100%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: var(--glass-blur-md);
+  -webkit-backdrop-filter: var(--glass-blur-md);
   border-bottom: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
   overflow: visible;
 }
@@ -378,8 +383,8 @@ input:focus, select:focus {
   z-index: 100;
   height: var(--nav-h);
   background: var(--nav-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: var(--glass-blur-lg);
+  -webkit-backdrop-filter: var(--glass-blur-lg);
   border-top: var(--glass-border);
   box-shadow: 0 -4px 24px rgba(0,0,0,0.2);
   display: flex;
@@ -459,8 +464,8 @@ input:focus, select:focus {
     bottom: 0;
     width: var(--sidebar-collapsed-w);
     background: var(--nav-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: var(--glass-blur-lg);
+    -webkit-backdrop-filter: var(--glass-blur-lg);
     border-right: var(--glass-border);
     flex-direction: column;
     align-items: center;
@@ -588,8 +593,8 @@ input:focus, select:focus {
   border-radius: var(--radius-glass);
   padding: var(--space-xl);
   margin-bottom: var(--space-lg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: var(--glass-blur-md);
+  -webkit-backdrop-filter: var(--glass-blur-md);
   box-shadow:
     0 2px 8px rgba(0,0,0,0.2),
     0 8px 32px rgba(0,0,0,0.08),
@@ -623,18 +628,22 @@ input:focus, select:focus {
 }
 
 .card-title {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-family: var(--font-impact);
+  font-size: 1.2rem;
+  font-weight: 500;
   margin-bottom: var(--space-md);
   display: flex;
   align-items: center;
   gap: var(--space-sm);
   color: var(--text-primary);
   letter-spacing: 0.4px;
+  text-transform: uppercase;
 }
 
 .card-title .fas,
-.card-title .far {
+.card-title .far,
+.config-card h3 .fas,
+.config-card h3 .far {
   color: var(--accent);
   font-size: 0.9em;
 }
@@ -678,7 +687,7 @@ input:focus, select:focus {
   background: conic-gradient(black, #444 10%, black 51%, #555 57%, #222 60%, #555 67%, black 75%);
   border: 4px solid #000;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   box-shadow: 0 0 20px rgba(0,0,0,0.5);
@@ -701,7 +710,7 @@ input:focus, select:focus {
   justify-content: center;
   font-size: 1.6rem;
   color: var(--text-muted);
-  transition: all 0.3s ease;
+  transition: border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* ON state — accent border + glow */
@@ -750,6 +759,11 @@ input[type="range"] {
   padding: 0;
   cursor: pointer;
   position: relative;
+}
+
+input[type="range"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* Gradient fill on slider track (WebKit) */
@@ -846,7 +860,7 @@ input[type="range"]::-moz-range-thumb {
   gap: 8px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  padding: 4px 0 10px;
+  padding: 10px 0 10px;
   -webkit-overflow-scrolling: touch;
   /* Thin scrollbar visible on desktop */
   scrollbar-width: thin;
@@ -927,7 +941,7 @@ input[type="range"]::-moz-range-thumb {
   font-size: 0.78rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s, color 0.2s;
 }
 
 .mode-pill.active {
@@ -969,7 +983,7 @@ input[type="range"]::-moz-range-thumb {
   background: color-mix(in srgb, var(--bg-card) 50%, transparent);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all var(--t-fast);
+  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast), transform var(--t-fast);
 }
 
 #clearPlaylistBtn:hover {
@@ -1006,7 +1020,7 @@ input[type="range"]::-moz-range-thumb {
   background: color-mix(in srgb, var(--bg-card) 50%, transparent);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all var(--t-fast);
+  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
   white-space: nowrap;
 }
 
@@ -1087,11 +1101,11 @@ input[type="range"]::-moz-range-thumb {
   border-radius: var(--radius-md);
   padding: var(--space-md) var(--space-sm);
   text-align: center;
-  transition: all var(--t-fast);
+  transition: transform var(--t-fast), background var(--t-fast), border-color var(--t-fast), box-shadow var(--t-fast);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
 }
 
 .effect-card:active {
@@ -1117,35 +1131,34 @@ input[type="range"]::-moz-range-thumb {
     inset 0 0 24px color-mix(in srgb, var(--accent) 6%, transparent);
 }
 
-/* ── Pulse animation for active card in scroll rows (playlist/category) ── */
+/* ── Ambient "alive" glow for active card in scroll rows (playlist/category) ── */
+/* Ultra-slow breathing — barely perceptible, like the card is softly energized */
 .scroll-row .effect-card.active {
-  animation: fxPulse 1.2s ease-in-out infinite;
+  animation: fxGlow 3.5s ease-in-out infinite;
   z-index: 2;
 }
 
-@keyframes fxPulse {
+@keyframes fxGlow {
   0%, 100% {
     box-shadow:
-      0 0 10px color-mix(in srgb, var(--accent) 25%, transparent),
-      0 0 25px color-mix(in srgb, var(--accent) 10%, transparent),
-      inset 0 0 20px color-mix(in srgb, var(--accent) 5%, transparent);
-    border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+      0 0 12px color-mix(in srgb, var(--accent) 18%, transparent),
+      0 0 28px color-mix(in srgb, var(--accent) 6%, transparent),
+      inset 0 0 20px color-mix(in srgb, var(--accent) 4%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 75%, transparent);
   }
   50% {
     box-shadow:
-      0 0 20px color-mix(in srgb, var(--accent) 60%, transparent),
-      0 0 50px color-mix(in srgb, var(--accent) 30%, transparent),
-      0 0 80px color-mix(in srgb, var(--accent) 12%, transparent),
-      inset 0 0 30px color-mix(in srgb, var(--accent) 15%, transparent);
+      0 0 18px color-mix(in srgb, var(--accent) 30%, transparent),
+      0 0 40px color-mix(in srgb, var(--accent) 12%, transparent),
+      inset 0 0 24px color-mix(in srgb, var(--accent) 6%, transparent);
     border-color: var(--accent);
   }
 }
 
-/* Override hover so the pulse animation keeps running on active scroll-row cards */
+/* On hover, active card still lifts but keeps the ambient glow */
 .scroll-row .effect-card.active:hover {
-  animation: fxPulse 1.2s ease-in-out infinite;
+  animation: fxGlow 3.5s ease-in-out infinite;
   transform: translateY(-5px);
-  border-color: var(--accent);
   background: color-mix(in srgb, var(--bg-card) 80%, color-mix(in srgb, var(--accent) 5%, transparent));
 }
 
@@ -1537,7 +1550,7 @@ input[type="range"]::-moz-range-thumb {
   border-radius: var(--radius-md);
   padding: var(--space-lg);
   margin-top: var(--space-sm);
-  backdrop-filter: blur(8px);
+  backdrop-filter: var(--glass-blur-md);
 }
 
 .effect-params-panel.open {
@@ -1639,7 +1652,7 @@ input[type="range"]::-moz-range-thumb {
   border: 1px solid var(--border);
   border-radius: 20px;
   cursor: pointer;
-  transition: all var(--t-fast);
+  transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
   letter-spacing: 0.3px;
 }
 
@@ -1694,7 +1707,7 @@ input[type="range"]::-moz-range-thumb {
   padding: 10px 8px 8px;
   border-radius: 10px;
   border: 2px solid transparent;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   position: relative;
   width: 100%;
   max-width: 88px;
@@ -1726,7 +1739,7 @@ input[type="range"]::-moz-range-thumb {
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.05),
     0 2px 6px rgba(0,0,0,0.35);
-  transition: all 0.2s ease;
+  transition: box-shadow 0.2s ease;
 }
 
 .palette-swatch:hover .palette-swatch-bar {
@@ -1896,7 +1909,7 @@ input[type="range"]::-moz-range-thumb {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 80ms;
+  transition: background 80ms, box-shadow 80ms, transform 80ms;
 }
 
 /* BT toggle (right lobe) — estilo iPod como el panel de control */
@@ -1918,7 +1931,7 @@ input[type="range"]::-moz-range-thumb {
   height: 34px;
   color: var(--text-secondary);
   filter: drop-shadow(0 -0.03em rgba(0,0,0,0.2)) drop-shadow(0 0.03em 0.03em rgba(255,255,255,0.55));
-  transition: all 80ms;
+  transition: color 80ms, filter 80ms;
 }
 
 .small.bt-toggle:hover {
@@ -2384,7 +2397,7 @@ input[type="range"]::-moz-range-thumb {
   background: var(--glass-card-bg);
   border-radius: var(--radius-md);
   border: var(--glass-card-border);
-  backdrop-filter: blur(4px);
+  backdrop-filter: var(--glass-blur-sm);
   min-width: 0;
   transition: background var(--t-normal), border-color var(--t-normal);
 }
@@ -2417,7 +2430,7 @@ input[type="range"]::-moz-range-thumb {
   border: var(--glass-card-border);
   border-radius: var(--radius-md);
   min-width: 180px;
-  backdrop-filter: blur(8px);
+  backdrop-filter: var(--glass-blur-md);
 }
 .widget-date {
   display: flex;
@@ -2497,7 +2510,7 @@ input[type="range"]::-moz-range-thumb {
   background: var(--glass-card-bg);
   border-radius: var(--radius-md);
   border: var(--glass-card-border);
-  backdrop-filter: blur(4px);
+  backdrop-filter: var(--glass-blur-sm);
 }
 
 .battery-stat .stat-value {
@@ -2554,8 +2567,8 @@ input[type="range"]::-moz-range-thumb {
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--text-secondary);
-  transition: all var(--t-fast);
-  backdrop-filter: blur(4px);
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+  backdrop-filter: var(--glass-blur-sm);
   letter-spacing: 0.3px;
 }
 
@@ -2578,7 +2591,7 @@ input[type="range"]::-moz-range-thumb {
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
   cursor: pointer;
-  backdrop-filter: blur(4px);
+  backdrop-filter: var(--glass-blur-sm);
 }
 
 .peek-toolbar select:focus {
@@ -2625,9 +2638,9 @@ input[type="range"]::-moz-range-thumb {
   justify-content: center;
   color: rgba(255, 255, 255, 0.4);
   cursor: pointer;
-  transition: all var(--t-fast);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast), transform var(--t-fast);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
 }
 
 .peek-canvas-config-btn:hover {
@@ -2663,8 +2676,8 @@ input[type="range"]::-moz-range-thumb {
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: var(--glass-blur-md);
+  -webkit-backdrop-filter: var(--glass-blur-md);
   box-shadow:
     0 4px 16px rgba(0,0,0,0.15),
     inset 0 1px 0 color-mix(in srgb, white 4%, transparent);
@@ -2703,7 +2716,7 @@ input[type="range"]::-moz-range-thumb {
   border-radius: var(--radius-glass);
   padding: var(--space-xl);
   margin-bottom: var(--space-md);
-  backdrop-filter: blur(12px);
+  backdrop-filter: var(--glass-blur-md);
   transition: background var(--t-fast), border-color var(--t-fast);
 }
 
@@ -2716,19 +2729,15 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .config-card h3 {
+  font-family: var(--font-impact);
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 500;
   margin-bottom: var(--space-md);
   display: flex;
   align-items: center;
   gap: var(--space-sm);
   color: var(--text-primary);
-}
-
-.config-card h3 .fas,
-.config-card h3 .far {
-  color: var(--accent);
-  font-size: 0.9em;
+  text-transform: uppercase;
 }
 
 .config-desc {
@@ -2810,10 +2819,10 @@ input[type="range"]::-moz-range-thumb {
   border-radius: var(--radius-md);
   text-align: center;
   cursor: pointer;
-  transition: all var(--t-fast);
+  transition: border-color var(--t-fast), background var(--t-fast), transform var(--t-fast);
   font-size: 0.8rem;
   font-weight: 500;
-  backdrop-filter: blur(4px);
+  backdrop-filter: var(--glass-blur-sm);
 }
 
 .theme-option:active {
@@ -3114,8 +3123,8 @@ input[type="range"]::-moz-range-thumb {
   inset: 0;
   background: rgba(0,0,0,0.5);
   z-index: 200;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
 }
 
 .offcanvas-overlay.open {
@@ -3131,8 +3140,8 @@ input[type="range"]::-moz-range-thumb {
   height: 100vh;
   height: 100dvh;
   background: var(--nav-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: var(--glass-blur-lg);
+  -webkit-backdrop-filter: var(--glass-blur-lg);
   border-left: var(--glass-border);
   z-index: 210;
   transition: right var(--t-normal);
@@ -3166,7 +3175,7 @@ input[type="range"]::-moz-range-thumb {
   align-items: center;
   justify-content: center;
   font-size: 1.4rem;
-  transition: all var(--t-fast);
+  transition: background var(--t-fast), color var(--t-fast), box-shadow var(--t-fast);
   color: var(--text-muted);
   border: none;
   background: transparent;
@@ -3194,7 +3203,7 @@ input[type="range"]::-moz-range-thumb {
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--t-normal);
-  backdrop-filter: blur(2px);
+  backdrop-filter: var(--glass-blur-sm);
 }
 .modal-overlay.open {
   opacity: 1;
@@ -3208,8 +3217,8 @@ input[type="range"]::-moz-range-thumb {
   bottom: 0;
   z-index: 210;
   background: var(--nav-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: var(--glass-blur-lg);
+  -webkit-backdrop-filter: var(--glass-blur-lg);
   border-top: var(--glass-border);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   padding: var(--space-lg);
@@ -3298,8 +3307,8 @@ input[type="range"]::-moz-range-thumb {
   align-items: center;
   gap: var(--space-sm);
   background: color-mix(in srgb, var(--bg-elevated) 85%, transparent);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: var(--glass-blur-lg);
+  -webkit-backdrop-filter: var(--glass-blur-lg);
   border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
   border-radius: var(--radius-md);
   padding: 12px var(--space-xl);
@@ -3396,10 +3405,10 @@ input[type="range"]::-moz-range-thumb {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all var(--t-fast);
+  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
   font-size: 0.85rem;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
 }
 .battery-chart-btn:hover {
   background: color-mix(in srgb, var(--bg-card-hover) 70%, transparent);
@@ -3671,7 +3680,7 @@ input[type="range"]::-moz-range-thumb {
   border-radius: var(--radius-xl);
   padding: 0;
   box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(16px);
+  backdrop-filter: var(--glass-blur-md);
   display: flex;
   align-items: center;
   justify-content: center;
