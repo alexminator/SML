@@ -1626,7 +1626,7 @@ function connectWS() {
     // Re-add skeleton to data elements when disconnected
     document.querySelectorAll('.stat-value, .info-value, #weatherHumVal, #weatherHeatIndex, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #deviceIP, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
       .forEach(el => {
-        if (el.textContent === '--' || el.textContent === '--.-' || el.textContent === '--.--V' || el.textContent === '--%') {
+        if (el.textContent === '--' || el.textContent === '--.-' || el.textContent === '--.--V' || el.textContent === '--%' || el.textContent === '--.-°C') {
           el.classList.add('skeleton');
         }
       });
@@ -1714,12 +1714,12 @@ function handleMessage(data) {
     }
 
     // Weather display
-    setDataValue(document.getElementById('weatherTempVal'), value.toFixed(1));
+    setDataValue(document.getElementById('weatherTempVal'), value.toFixed(1) + '°C');
   }
 
   if (data.humidity !== undefined) {
     SML.hum = data.humidity;
-    setDataValue(document.getElementById('weatherHumVal'), Math.round(data.humidity));
+    setDataValue(document.getElementById('weatherHumVal'), Math.round(data.humidity) + '%');
   }
 
   // ── BATTERY HISTORY (from ESP32 LittleFS — standalone message) ──
@@ -2224,7 +2224,7 @@ function handleMessage(data) {
                - 0.016424828 * H * H + 0.002211732 * T * T * H
                + 0.00072546 * T * H * H - 0.000003582 * T * T * H * H;
       }
-      setDataValue(hi, feels.toFixed(1));
+      setDataValue(hi, feels.toFixed(1) + '°C');
     }
   }
 }
