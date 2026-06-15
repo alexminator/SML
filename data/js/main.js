@@ -1911,15 +1911,21 @@ function handleMessage(data) {
         const id = parseInt(c.dataset.effectId);
         c.classList.toggle('active', id === SML.effectId || id === 99);
       });
-      // Auto-scroll playlist to active card
-      if ((data.randomFXMode === 'playlist') && data.effectId !== undefined) {
-        scrollPlaylistTo(data.effectId);
-      }
-      // Category mode: highlight ALL selected categories + scroll to active card
-      if ((data.randomFXMode === 'category') && data.effectId !== undefined) {
-        const selected = getRandomCategories();
-        highlightCategories(selected.length > 0 ? selected : null);
-        scrollToCategoryCard(data.effectId);
+      // Auto-scroll + category highlight según el modo random FX
+      if (data.effectId !== undefined) {
+        const fxMode = data.randomFXMode || 'all';
+        if (fxMode === 'playlist') {
+          highlightCategories(null);
+          scrollPlaylistTo(data.effectId);
+        } else if (fxMode === 'category') {
+          const selected = getRandomCategories();
+          highlightCategories(selected.length > 0 ? selected : null);
+          scrollToCategoryCard(data.effectId);
+        } else {
+          // 'all' mode: scroll to effect pero sin highlight de categorías
+          highlightCategories(null);
+          scrollToCategoryCard(data.effectId);
+        }
       }
     } else if (data.randomMode === 2) {
       SML.randomVUMode = true;
