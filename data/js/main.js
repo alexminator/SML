@@ -2564,6 +2564,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const rebootBtn = document.getElementById('rebootBtn');
   if (rebootBtn) {
     rebootBtn.addEventListener('click', () => {
+      if (!SML.isMaster) { showToast('Only the master can reboot the device', 'info'); return; }
+      // Double-check using toast confirmation
+      showToast('⚠️ Reboot the ESP32? The connection will be lost for a few seconds.', 'warning');
       if (confirm('⚠️ Reboot the ESP32? The connection will be lost for a few seconds.')) {
         showToast('Rebooting...', 'info');
         sendCmd({ action: 'reboot' });
@@ -2573,6 +2576,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const factoryResetBtn = document.getElementById('factoryResetBtn');
   if (factoryResetBtn) {
     factoryResetBtn.addEventListener('click', () => {
+      if (!SML.isMaster) { showToast('Only the master can factory reset the device', 'info'); return; }
+      // Double-check using toast confirmation
+      showToast('⚠️⚠️ FACTORY RESET — This will:\n\n• Clear WiFi credentials\n• Reset all effect parameters to defaults\n• Restart the device\n\nYou will need to re-connect to WiFi after this.\n\nAre you sure?', 'warning');
       if (confirm('⚠️⚠️ FACTORY RESET — This will:\n\n• Clear WiFi credentials\n• Reset all effect parameters to defaults\n• Restart the device\n\nYou will need to re-connect to WiFi after this.\n\nAre you sure?')) {
         if (confirm('⚠️ Last chance — Really factory reset?')) {
           showToast('Factory resetting...', 'error');
