@@ -354,9 +354,17 @@
         <span class="nav-label">Battery</span>
       </button>
       <div class="sidebar-spacer"></div>
+      <button class="sidebar-btn" data-tab="tabHelp">
+        <span class="nav-icon fas fa-question-circle" aria-hidden="true"></span>
+        <span class="nav-label">Help</span>
+      </button>
       <button class="sidebar-btn" data-tab="tabConfig">
         <span class="nav-icon fas fa-cog" aria-hidden="true"></span>
         <span class="nav-label">Config</span>
+      </button>
+      <button class="sidebar-btn" data-tab="tabAbout">
+        <span class="nav-icon fas fa-info-circle" aria-hidden="true"></span>
+        <span class="nav-label">About</span>
       </button>
     </nav>
 
@@ -748,11 +756,7 @@
               <div class="effect-icon" style="background:linear-gradient(135deg,#3dcadf,#f17a65)"></div>
               <span class="effect-name">Ocean VU</span>
             </button>
-            <!-- ── Nuevos efectos VU (IDs 46-50) ── -->
-            <button class="effect-card" data-effect-id="46">
-              <div class="effect-icon" style="background:linear-gradient(135deg,#1a237e,#4fc3f7)"></div>
-              <span class="effect-name">Gravimeter</span>
-            </button>
+            <!-- ── Nuevos efectos VU (IDs 46-48) ── -->
             <button class="effect-card" data-effect-id="47">
               <div class="effect-icon" style="background:linear-gradient(90deg,#4caf50,#ffeb3b,#f44336)"></div>
               <span class="effect-name">Noisemeter</span>
@@ -760,14 +764,6 @@
             <button class="effect-card" data-effect-id="48">
               <div class="effect-icon" style="background:linear-gradient(135deg,#e040fb,#7c4dff,#448aff)"></div>
               <span class="effect-name">DJ Light</span>
-            </button>
-            <button class="effect-card" data-effect-id="49">
-              <div class="effect-icon" style="background:linear-gradient(135deg,#00e676,#00bcd4,#7c4dff)"></div>
-              <span class="effect-name">PS1D GEQ</span>
-            </button>
-            <button class="effect-card" data-effect-id="50">
-              <div class="effect-icon" style="background:linear-gradient(135deg,#ff6f00,#e040fb,#00e5ff)"></div>
-              <span class="effect-name">Palette Blend</span>
             </button>
 
             <!-- ── Random VU ── -->
@@ -803,10 +799,6 @@
               </div>
               <canvas id="peekCanvas" width="320" height="320"></canvas>
             </div>
-            <p class="text-muted peek-hint">
-              <span class="fas fa-info-circle"></span>
-              33 LEDs interpolados — previsualización en tiempo real del efecto.
-            </p>
           </div>
         </div>
       </section>
@@ -1035,6 +1027,153 @@
               <div class="ws-client-empty">No clients connected</div>
             </div>
           </div>
+
+          <!-- Help & About (mobile-friendly) -->
+          <div class="config-actions">
+            <button class="config-action-btn" id="mobileHelpBtn">
+              <span class="fas fa-question-circle"></span>
+              <span>Help & Tips</span>
+              <span class="fas fa-chevron-right"></span>
+            </button>
+            <button class="config-action-btn" id="mobileAboutBtn">
+              <span class="fas fa-info-circle"></span>
+              <span>About</span>
+              <span class="fas fa-chevron-right"></span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== TAB: HELP ===== -->
+      <section id="tabHelp" class="tab-content">
+        <div class="card">
+          <h2 class="card-title"><span class="fas fa-question-circle"></span> Help & Tips</h2>
+          <p class="card-subtitle">Quick reference for SML features</p>
+          <div class="help-grid">
+            <div class="help-card">
+              <span class="help-icon fas fa-paint-brush"></span>
+              <h3>LED Effects</h3>
+              <p>Browse and select effects in the Effects tab. Click the gear icon to tweak parameters like speed, color, and intensity.</p>
+            </div>
+            <div class="help-card">
+              <span class="help-icon fas fa-random"></span>
+              <h3>Random Mode</h3>
+              <p>Let the lamp cycle through effects automatically. Choose from All, Favorites, Categories, or create a custom playlist.</p>
+            </div>
+            <div class="help-card">
+              <span class="help-icon fas fa-music"></span>
+              <h3>Bluetooth Audio</h3>
+              <p>Pair your device to "SML Speaker" via Bluetooth. Use play/pause and volume controls in the Music tab. The VU meters in Effects tab react to audio in real time.</p>
+            </div>
+            <div class="help-card">
+              <span class="help-icon fas fa-eye"></span>
+              <h3>Live Preview (Peek)</h3>
+              <p>Watch a real-time preview of the LED strip in the Peek tab. The canvas streams live colors from the ESP32 at ~30 FPS, interpolated to 33 virtual LEDs. Switch between strip and circle layout.</p>
+            </div>
+            <div class="help-card">
+              <span class="help-icon fas fa-battery-three-quarters"></span>
+              <h3>Battery Mode</h3>
+              <p>If mains power goes out, the lamp switches to battery automatically. You can still play music via Bluetooth, but LED effects are disabled to save power. The ESP32 cycles WiFi to conserve energy until a client reconnects.</p>
+            </div>
+            <div class="help-card">
+              <span class="help-icon fas fa-cloud-upload-alt"></span>
+              <h3>OTA Updates</h3>
+              <p>Upload new firmware over WiFi at <code>http://&lt;esp32-ip&gt;/update</code>. No USB cable needed. The ESP32 will reboot with the new firmware.</p>
+            </div>
+            <div class="help-card">
+              <span class="help-icon fas fa-thermometer-half"></span>
+              <h3>Environmental</h3>
+              <p>The built-in DHT22 sensor reports temperature and humidity in the Weather tab. Data updates every 3 seconds.</p>
+            </div>
+            <div class="help-card">
+              <span class="help-icon fas fa-cog"></span>
+              <h3>Configuration</h3>
+              <p>In the Config tab you can change the theme, update WiFi SSID and password, reboot the ESP32, or perform a factory reset. <strong>Factory reset</strong> erases all settings — use with caution.</p>
+            </div>
+            <div class="help-card">
+              <span class="help-icon fas fa-list"></span>
+              <h3>Client Logs</h3>
+              <p>The Config tab shows connected WebSocket clients and a log of their actions. Useful for debugging and knowing who or what is controlling the lamp in real time.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== TAB: ABOUT ===== -->
+      <section id="tabAbout" class="tab-content">
+        <div class="card about-card">
+          <div class="about-header">
+            <div class="about-avatar">
+              <img src="img/alexminator.jpg" alt="Alexminator avatar" class="about-avatar-img">
+            </div>
+            <h2 class="about-name">Alexminator</h2>
+            <p class="about-role">Smart Music Lamp · Developer</p>
+            <div class="about-contacts">
+              <a href="mailto:alexminator99@gmail.com" class="about-contact-link" aria-label="Email alexminator99@gmail.com" target="_blank">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12ZM16.5725 9.385C16.829 9.5425 16.9955 9.826 16.9955 10.15L17 14.65C17 15.145 16.595 15.55 16.1 15.55H8.9C8.405 15.55 8 15.145 8 14.65V10.15C8 9.826 8.171 9.5425 8.4275 9.385L12.5 7L16.5725 9.385ZM16.0955 10.1545V10.15L12.5 8.04401L8.89999 10.15L12.5 12.4L16.0955 10.1545ZM8.89999 14.65V11.203L12.5 13.462L16.0955 11.2165L16.1 14.65H8.89999Z" fill="currentColor"/>
+                </svg>
+              </a>
+              <a href="https://www.facebook.com/alexander.rivasalpizar/" class="about-contact-link" aria-label="Facebook" target="_blank" rel="noopener">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2.03998C6.5 2.03998 2 6.52998 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.84998C10.44 7.33998 11.93 5.95998 14.22 5.95998C15.31 5.95998 16.45 6.14998 16.45 6.14998V8.61998H15.19C13.95 8.61998 13.56 9.38998 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96C15.9164 21.5878 18.0622 20.3855 19.6099 18.57C21.1576 16.7546 22.0054 14.4456 22 12.06C22 6.52998 17.5 2.03998 12 2.03998Z" fill="currentColor"/>
+                </svg>
+              </a>
+              <a href="https://www.linkedin.com/in/alexander-rivas-73532037" class="about-contact-link" aria-label="LinkedIn" target="_blank" rel="noopener">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2ZM8.5 16.5H6.75V10H8.5V16.5ZM7.625 9.25C6.975 9.25 6.5 8.75 6.5 8.125C6.5 7.5 7.025 7 7.625 7C8.225 7 8.75 7.5 8.75 8.125C8.75 8.75 8.275 9.25 7.625 9.25ZM17.5 16.5H15.75V13.125C15.75 12.225 15.1 11.75 14.5 11.75C13.9 11.75 13.5 12.15 13.5 12.75V16.5H11.75V10H13.5V10.75C13.8 10.25 14.5 9.75 15.5 9.75C16.8 9.75 17.5 10.75 17.5 12.25V16.5Z" fill="currentColor"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <div class="about-divider"></div>
+
+          <div class="about-section">
+            <h3><span class="fas fa-microchip"></span> Tech Stack</h3>
+            <div class="about-techs">
+              <span class="about-tag">ESP32</span>
+              <span class="about-tag">C++</span>
+              <span class="about-tag">Arduino Framework</span>
+              <span class="about-tag">FastLED</span>
+              <span class="about-tag">WS2812B</span>
+              <span class="about-tag">PlatformIO</span>
+              <span class="about-tag">WebSockets</span>
+              <span class="about-tag">HTML/CSS/JS</span>
+              <span class="about-tag">Font Awesome</span>
+              <span class="about-tag">LittleFS</span>
+              <span class="about-tag">ArduinoJson</span>
+              <span class="about-tag">FreeRTOS</span>
+            </div>
+          </div>
+
+          <div class="about-section">
+            <h3><span class="fas fa-lightbulb"></span> Acknowledgments</h3>
+            <ul class="about-list">
+              <li>Inspired by <strong>WLED</strong> — the binary LED streaming protocol and live preview format</li>
+              <li>Built with assistance from <strong>Claude</strong> (Anthropic) — AI-powered code generation and design</li>
+            </ul>
+          </div>
+
+          <div class="about-section">
+            <h3><span class="fas fa-link"></span> Links</h3>
+            <div class="about-links">
+              <a href="https://github.com/alexminator/SML" target="_blank" rel="noopener" class="about-link">
+                <span class="fab fa-github"></span> GitHub
+              </a>
+              <a href="https://kno.wled.ge/" target="_blank" rel="noopener" class="about-link">
+                <span class="fas fa-external-link-alt"></span> WLED
+              </a>
+            </div>
+          </div>
+
+          <div class="about-footer">
+            <div class="about-footer-brand">
+              <img src="img/SML.png" alt="SML Logo" class="about-footer-logo">
+              <p class="about-footer-caption">Smart Music Lamp</p>
+            </div>
+            <p class="about-footer-copy">© 2023-2026 Alexminator · v1.0</p>
+          </div>
         </div>
       </section>
     </div>
@@ -1096,6 +1235,32 @@
       <div class="param-bottom-sheet-body" id="paramSheetBody">
         <p class="text-muted">Select an effect to configure</p>
       </div>
+    </div>
+
+    <!-- ============================================================
+         ABOUT MODAL (mobile)
+         ============================================================ -->
+    <div class="modal-overlay" id="aboutModalOverlay"></div>
+    <div class="param-bottom-sheet about-bottom-sheet" id="aboutModal">
+      <div class="param-bottom-sheet-header">
+        <div class="param-bottom-sheet-handle"></div>
+        <h3>About SML</h3>
+        <button class="param-sheet-close" id="aboutModalClose">&times;</button>
+      </div>
+      <div class="param-bottom-sheet-body" id="aboutModalBody"></div>
+    </div>
+
+    <!-- ============================================================
+         HELP MODAL (mobile)
+         ============================================================ -->
+    <div class="modal-overlay" id="helpModalOverlay"></div>
+    <div class="param-bottom-sheet about-bottom-sheet" id="helpModal">
+      <div class="param-bottom-sheet-header">
+        <div class="param-bottom-sheet-handle"></div>
+        <h3>Help & Tips</h3>
+        <button class="param-sheet-close" id="helpModalClose">&times;</button>
+      </div>
+      <div class="param-bottom-sheet-body" id="helpModalBody"></div>
     </div>
 
     <!-- ============================================================

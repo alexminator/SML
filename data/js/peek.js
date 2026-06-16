@@ -239,20 +239,12 @@ class PeekRenderer {
   renderStrip(ctx, data, w, h, pad) {
     const count = data.length;
     const spacing = (w - pad * 2) / count;
-    const r = Math.max(3, spacing * 0.35);
+    const r = Math.max(4, spacing * 0.65);
     const cy = h / 2;
 
-    // Center line (subtle)
-    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(pad, cy);
-    ctx.lineTo(w - pad, cy);
-    ctx.stroke();
-
-    // Glow band below LEDs
+    // Glow band behind LEDs
     ctx.fillStyle = 'rgba(255,255,255,0.02)';
-    ctx.fillRect(pad, cy - r * 3, w - pad * 2, r * 6);
+    ctx.fillRect(pad, cy - r * 2.5, w - pad * 2, r * 5);
 
     data.forEach((led, i) => {
       // Skip LEDs during sweep animation
@@ -264,12 +256,12 @@ class PeekRenderer {
       const x = pad + spacing * i + spacing / 2;
 
       // Glow
-      const glow = ctx.createRadialGradient(x, cy, 0, x, cy, r * 2.5);
-      glow.addColorStop(0, `rgba(${led.r},${led.g},${led.b},0.3)`);
+      const glow = ctx.createRadialGradient(x, cy, 0, x, cy, r * 3);
+      glow.addColorStop(0, `rgba(${led.r},${led.g},${led.b},0.35)`);
       glow.addColorStop(1, `rgba(${led.r},${led.g},${led.b},0)`);
       ctx.fillStyle = glow;
       ctx.beginPath();
-      ctx.arc(x, cy, r * 2.5, 0, Math.PI * 2);
+      ctx.arc(x, cy, r * 3, 0, Math.PI * 2);
       ctx.fill();
 
       // LED dot
@@ -282,15 +274,6 @@ class PeekRenderer {
       ctx.strokeStyle = 'rgba(255,255,255,0.06)';
       ctx.lineWidth = 0.5;
       ctx.stroke();
-
-      // Index number (small, below dot)
-      if (spacing > 8) {
-        ctx.fillStyle = 'rgba(255,255,255,0.12)';
-        ctx.font = `${Math.max(5, spacing * 0.3)}px monospace`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
-        ctx.fillText(i + 1, x, cy + r + 3);
-      }
     });
   }
 

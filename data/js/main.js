@@ -43,8 +43,7 @@ const effectIdToName = {
   38: 'Larson Scanner', 39: 'Heartbeat', 40: 'ICU',
   41: 'Sunrise', 42: 'Drip', 43: 'Candle', 44: 'Chunchun',
   45: 'Halloween Eyes',
-  46: 'Gravimeter VU', 47: 'Noisemeter VU', 48: 'DJ Light VU', 49: 'PS1 DGEQ VU',
-  50: 'Palette Blend VU',
+  47: 'Noisemeter VU', 48: 'DJ Light VU',
 };
 
 // ============================================================================
@@ -289,7 +288,7 @@ function setTheme(themeName) {
     // Remove after transition completes
     setTimeout(() => {
       document.documentElement.classList.remove('theme-transitioning');
-    }, 400);
+    }, 600);
   });
 }
 
@@ -498,9 +497,67 @@ function initEffectCards() {
   if (!container) return;
   let activeEffId = null;
 
-  // Single delegated click handler — covers original cards + fav row clones
+  // ── Shared effect activation logic (used by both normal & VU handlers) ──
+  function activateEffect(effId, wasActive, card) {
+    // Random FX (ID 99)
+    if (effId === 99) {
+      handleRandomFXClick(card, wasActive);
+      return;
+    }
+    // Random VU (ID 100)
+    if (effId === 100) {
+      handleRandomVUClick(card, wasActive);
+      return;
+    }
+
+    // Normal effect cards — show config on re-click
+    if (wasActive && !SML.randomFXMode && !SML.randomVUMode) {
+      if (!SML.isMaster) {
+        showToast('Only the master can configure effect parameters', 'info');
+        return;
+      }
+      closeEffectConfig();
+      showEffectConfig(effId, card);
+      return;
+    }
+
+    // Stop random modes if active
+    if (SML.randomFXMode) {
+      stopRandomFX();
+      sendCmd({ action: 'randomFX', state: false, effectId: effId });
+    } else if (SML.randomVUMode) {
+      stopRandomVU();
+      sendCmd({ action: 'randomVU', state: false, effectId: effId });
+    } else {
+      sendCmd({ effectId: effId });
+    }
+
+    // Close config panel if switching effects
+    if (activeEffId !== null && activeEffId !== effId) {
+      closeEffectConfig();
+    }
+
+    // Update visual state on ALL effect-card instances
+    SML.effectId = effId;
+    $$('.effect-card').forEach(c => c.classList.remove('active'));
+    $$('.effect-card').forEach(c => {
+      if (parseInt(c.dataset.effectId) === effId) {
+        c.classList.add('active');
+      }
+    });
+    activeEffId = effId;
+    updateSolidIcon(SML.r, SML.g, SML.b);
+    updatePeekEffectInfo();
+
+    // Second click → show config
+    if (wasActive) {
+      showEffectConfig(effId, card);
+    }
+  }
+
+  // ── Handler #1: Normal effects (Effects tab inside .effects-scroll-container) ──
   container.addEventListener('click', e => {
-    // ── Star click — toggle favorite ──
+    // Star click — toggle favorite
     const star = e.target.closest('.fav-star');
     if (star) {
       const effId = parseInt(star.dataset.effectId);
@@ -508,7 +565,7 @@ function initEffectCards() {
       return;
     }
 
-    // ── Card click ──
+    // Card click
     const card = e.target.closest('.effect-card');
     if (!card) return;
     const effId = parseInt(card.dataset.effectId);
@@ -525,71 +582,35 @@ function initEffectCards() {
       }
     }
 
-    // Toast warning if NeoPixel is off (applies to ALL effects including Random)
+    // Toast warning if NeoPixel is off
     if (!SML.powerOn) {
       showToast('Turn on the NeoPixel strip first', 'warning');
       return;
     }
 
-    // wasActive: check if THIS effect is active on ANY instance
     const wasActive = document.querySelector(`.effect-card[data-effect-id="${effId}"].active`) !== null;
+    activateEffect(effId, wasActive, card);
+  });
 
-    // ── Random FX (ID 99) ──
-    if (effId === 99) {
-      handleRandomFXClick(card, wasActive);
-      return;
-    }
-    // ── Random VU (ID 100) ──
-    if (effId === 100) {
-      handleRandomVUClick(card, wasActive);
-      return;
-    }
+  // ── Handler #2: VU effect cards (Music tab inside .effects-grid) ──
+  const vuGrid = document.querySelector('#tabMusic .effects-grid');
+  if (vuGrid) {
+    vuGrid.addEventListener('click', e => {
+      const card = e.target.closest('.effect-card');
+      if (!card) return;
+      const effId = parseInt(card.dataset.effectId);
+      if (isNaN(effId)) return;
 
-    // ── Normal effect cards ──
-    if (wasActive && !SML.randomFXMode && !SML.randomVUMode) {
-      // SLAVE: no puede configurar parámetros de efectos
-      if (!SML.isMaster) {
-        showToast('Only the master can configure effect parameters', 'info');
+      // Toast warning if NeoPixel is off
+      if (!SML.powerOn) {
+        showToast('Turn on the NeoPixel strip first', 'warning');
         return;
       }
-      closeEffectConfig();
-      showEffectConfig(effId, card);
-      return;
-    }
 
-    // Si random estaba activo, detenerlo
-    if (SML.randomFXMode) {
-      stopRandomFX();
-      sendCmd({ action: 'randomFX', state: false, effectId: effId });
-    } else if (SML.randomVUMode) {
-      stopRandomVU();
-      sendCmd({ action: 'randomVU', state: false, effectId: effId });
-    } else {
-      sendCmd({ effectId: effId });
-    }
-
-    // Si cambia a otro efecto, cerrar config abierta
-    if (activeEffId !== null && activeEffId !== effId) {
-      closeEffectConfig();
-    }
-
-    // Actualizar estado visual en TODAS las instancias del efecto
-    SML.effectId = effId;
-    $$('.effect-card').forEach(c => c.classList.remove('active'));
-    $$('.effect-card').forEach(c => {
-      if (parseInt(c.dataset.effectId) === effId) {
-        c.classList.add('active');
-      }
+      const wasActive = document.querySelector(`.effect-card[data-effect-id="${effId}"].active`) !== null;
+      activateEffect(effId, wasActive, card);
     });
-    activeEffId = effId;
-    updateSolidIcon(SML.r, SML.g, SML.b);
-    updatePeekEffectInfo();
-
-    // Segundo click → mostrar config
-    if (wasActive) {
-      showEffectConfig(effId, card);
-    }
-  });
+  }
 }
 
 // ============================================================================
@@ -694,9 +715,8 @@ const RANDOM_FX_POOL = [
 ];
 
 const RANDOM_VU_POOL = [
-  12,13,14,15,16,17,            // RainbowVU → OceanVU
-  46,47,48,49,                  // Gravimeter → PS1DGEQ
-  50,                           // Palette Blend
+  12, 13, 14, 15, 16, 17,     // RainbowVU → OceanVU (no Gravimeter, PS1DGEQ, Palette Blend removed)
+  47, 48,                      // Noisemeter, DJ Light
 ];
 
 // ── Random FX categories (maps HTML category IDs to effect IDs) ──
@@ -2012,11 +2032,8 @@ function handleMessage(data) {
       'candleStatus': 43,
       'chunchunStatus': 44,
       'halloweenEyesStatus': 45,
-      'gravimeterVUStatus': 46,
       'noisemeterVUStatus': 47,
       'djlightVUStatus': 48,
-      'ps1dgeqVUStatus': 49,
-      'paletteBlendVUStatus': 50,
     };
 
     for (const [key, id] of Object.entries(effectNameToId)) {
@@ -2308,7 +2325,7 @@ function _processToastQueue() {
     if (toast.parentNode) toast.remove();
     _toastActive = false;
     _processToastQueue();
-  }, 3000);
+  }, 3500);
 }
 
 // ============================================================================
@@ -2429,6 +2446,96 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   const modOv = document.getElementById('paramModalOverlay');
   if (modOv) modOv.addEventListener('click', closeEffectConfig);
+
+  /* ── Modal helpers: About & Help on mobile ── */
+  let modalTouchStartY = 0;
+  let modalTouchCurrentY = 0;
+  let modalIsDragging = false;
+
+  function openModal(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('open');
+    const overlay = document.getElementById(id + 'Overlay');
+    if (overlay) overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    // Populate body from tab content on first open
+    const bodyId = id + 'Body';
+    const body = document.getElementById(bodyId);
+    if (body && !body.children.length) {
+      const tabId = id === 'helpModal' ? 'tabHelp' : 'tabAbout';
+      const src = document.getElementById(tabId);
+      if (src) {
+        const clone = src.cloneNode(true);
+        clone.classList.remove('tab-content'); // remove hidden visibility
+        clone.classList.remove('active');
+        body.appendChild(clone);
+      }
+    }
+  }
+  function closeModal(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('open');
+    const overlay = document.getElementById(id + 'Overlay');
+    if (overlay) overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    // Reset drag state
+    modalIsDragging = false;
+    if (el) el.style.transform = '';
+  }
+
+  document.getElementById('mobileHelpBtn')?.addEventListener('click', () => openModal('helpModal'));
+  document.getElementById('mobileAboutBtn')?.addEventListener('click', () => openModal('aboutModal'));
+
+  document.getElementById('helpModalClose')?.addEventListener('click', () => closeModal('helpModal'));
+  document.getElementById('aboutModalClose')?.addEventListener('click', () => closeModal('aboutModal'));
+
+  document.getElementById('helpModalOverlay')?.addEventListener('click', () => closeModal('helpModal'));
+  document.getElementById('aboutModalOverlay')?.addEventListener('click', () => closeModal('aboutModal'));
+
+  // Keyboard: Escape closes modals
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeModal('helpModal');
+      closeModal('aboutModal');
+    }
+  });
+
+  // Also apply swipe-to-dismiss to the effect param sheet
+  const paramSheet = document.getElementById('paramBottomSheet');
+  if (paramSheet) {
+    paramSheet.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1) return;
+      modalTouchStartY = e.touches[0].clientY;
+      modalTouchCurrentY = modalTouchStartY;
+      modalIsDragging = false;
+    }, { passive: true });
+    paramSheet.addEventListener('touchmove', (e) => {
+      if (e.touches.length !== 1) return;
+      modalTouchCurrentY = e.touches[0].clientY;
+      const dy = modalTouchCurrentY - modalTouchStartY;
+      if (dy > 0) {
+        if (!modalIsDragging && dy > 10) modalIsDragging = true;
+        if (modalIsDragging) {
+          paramSheet.style.transform = `translateY(${dy}px)`;
+          paramSheet.style.transition = 'none';
+        }
+      }
+    }, { passive: true });
+    paramSheet.addEventListener('touchend', () => {
+      if (!modalIsDragging) return;
+      const dy = modalTouchCurrentY - modalTouchStartY;
+      paramSheet.style.transition = '';
+      if (dy > 100) {
+        closeEffectConfig();
+      } else {
+        paramSheet.style.transform = '';
+      }
+      modalIsDragging = false;
+    }, { passive: true });
+  }
 
   // Peek canvas config gear — abre el panel del efecto actual
   document.getElementById('peekCanvasConfigBtn')?.addEventListener('click', () => {

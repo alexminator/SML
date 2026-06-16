@@ -59,11 +59,15 @@
 #include "../vu/vu4.h"
 #include "../vu/vu5.h"
 #include "../vu/vu6.h"
-#include "../vu/vu7.h"
 #include "../vu/vu8.h"
 #include "../vu/vu9.h"
-#include "../vu/vu10.h"
-#include "../vu/vu11.h"
+
+// ── No-op placeholder for removed VU effects (Gravimeter, PS1DGEQ, Palette Blend) ──
+class RemovedEffect : public Effect {
+public:
+    RemovedEffect(CRGB* l, uint16_t n) : Effect(l, n) {}
+    void render() override { /* no-op — effect removed */ }
+};
 
 // ============================================================================
 // EFFECT REGISTRY — definición única (ODR-safe)
@@ -127,12 +131,11 @@ const EffectEntry effectRegistry[] = {
     { "halloweenEyesStatus",    new HalloweenEyesEffect(leds, N_PIXELS) },
 
     // ── Nuevos efectos VU (46-50) ───────────────────────────────────────────
-    { "gravimeterVUStatus",     new GravimeterVUEffect(leds, N_PIXELS) },
+    { "gravimeterVUStatus",     new RemovedEffect(leds, N_PIXELS) },
     { "noisemeterVUStatus",     new NoisemeterVUEffect(leds, N_PIXELS) },
     { "djlightVUStatus",        new DJLightVUEffect(leds, N_PIXELS) },
-    { "ps1dgeqVUStatus",        new PS1DGEQVUEffect(leds, N_PIXELS) },
-    // ── Nuevo efecto VU (50) ────────────────────────────────────────────────
-    { "paletteBlendVUStatus",   new PaletteBlendVUEffect(leds, N_PIXELS) },
+    { "ps1dgeqVUStatus",        new RemovedEffect(leds, N_PIXELS) },
+    { "paletteBlendVUStatus",   new RemovedEffect(leds, N_PIXELS) },
 };
 
 constexpr uint8_t EFFECT_COUNT =

@@ -115,7 +115,7 @@
   --border-light: #1a2a3a;
   --border-glow: color-mix(in srgb, var(--accent) 15%, transparent);
 
-  --scrollbar-thumb: #2a3a5a;
+  --scrollbar-thumb: #4a6a9a;
   --scrollbar-track: #060b14;
 
   --toggle-bg: #2a3a5a;
@@ -171,7 +171,7 @@
   --border-light: #1a202e;
   --border-glow: color-mix(in srgb, var(--accent) 15%, transparent);
 
-  --scrollbar-thumb: #2a3040;
+  --scrollbar-thumb: #4a6078;
   --scrollbar-track: #080c14;
 
   --toggle-bg: #2a3040;
@@ -228,7 +228,7 @@
   --border-light: #0e0e18;
   --border-glow: color-mix(in srgb, var(--accent) 15%, transparent);
 
-  --scrollbar-thumb: #1a1a2a;
+  --scrollbar-thumb: #3a3a5a;
   --scrollbar-track: #000000;
 
   --toggle-bg: #1a1a2a;
