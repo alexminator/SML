@@ -788,27 +788,24 @@
             <div class="peek-toolbar">
               <button class="active" data-peek-mode="strip">━━━ Strip</button>
               <button data-peek-mode="circle">◉ Circle</button>
-              <select id="peekResolution">
-                <option value="1">Full (1:1)</option>
-                <option value="2">1/2</option>
-                <option value="3">1/3</option>
-                <option value="4">1/4</option>
-              </select>
               <button id="peekToggle">▶ Start</button>
             </div>
             <div class="peek-canvas-wrapper">
               <div class="peek-canvas-header">
                 <span class="peek-canvas-effect-name" id="peekCanvasEffectName">—</span>
-                <button class="peek-canvas-config-btn" id="peekCanvasConfigBtn" title="Configure effect">
-                  <span class="fas fa-cog"></span>
-                </button>
+                <div class="peek-canvas-header-right">
+                  <span class="peek-fps" id="peekFps"></span>
+                  <span class="peek-stream-dot" id="peekStreamDot"></span>
+                  <button class="peek-canvas-config-btn" id="peekCanvasConfigBtn" title="Configure effect">
+                    <span class="fas fa-cog"></span>
+                  </button>
+                </div>
               </div>
               <canvas id="peekCanvas" width="320" height="320"></canvas>
             </div>
             <p class="text-muted peek-hint">
               <span class="fas fa-info-circle"></span>
-              <strong>Full (1:1)</strong> sends every LED — crispest preview, most bandwidth.
-              1/2 skips every other LED, 1/4 sends a quarter. Halve the resolution if the stream stutters.
+              33 LEDs interpolados — previsualización en tiempo real del efecto.
             </p>
           </div>
         </div>
@@ -835,17 +832,15 @@
               <!-- Datos a la derecha -->
               <div class="weather-info">
                 <div class="weather-stats">
-                  <div class="weather-stat">
+                  <div class="weather-stat weather-stat-temp">
+                    <span class="fas fa-sun weather-stat-icon"></span>
                     <div class="stat-value" id="weatherTempVal">--.-°C</div>
                     <div class="stat-label">Temperature</div>
                   </div>
-                  <div class="weather-stat">
+                  <div class="weather-stat weather-stat-hum">
+                    <span class="fas fa-tint weather-stat-icon"></span>
                     <div class="stat-value" id="weatherHumVal">--%</div>
                     <div class="stat-label">Humidity</div>
-                  </div>
-                  <div class="weather-stat">
-                    <div class="stat-value" id="weatherHeatIndex">--.-°C</div>
-                    <div class="stat-label">Feels Like</div>
                   </div>
                 </div>
 

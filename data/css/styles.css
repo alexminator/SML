@@ -351,13 +351,25 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   display: inline-block;
   letter-spacing: 0.08em;
   line-height: 0.85;
-  background: linear-gradient(135deg, var(--accent), var(--accent-secondary), var(--accent));
-  background-size: 200% 200%;
+  background: linear-gradient(90deg,
+    #ff0055, #ff5500, #ffcc00, #00cc66, #00bbff, #4444ff, #aa44ff, #ff0088, #ff0055);
+  background-size: 900% 100%;
+  background-position: 0% 50%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: none;
   -webkit-box-reflect: below 2px linear-gradient(transparent 55%, rgba(0,0,0,0.15));
+  animation: ledCycle var(--cycle) linear infinite;
+}
+
+/* Cada letra cicla a su propio ritmo — como LEDs independientes */
+.glowing span:nth-child(1) { --cycle: 3s; }
+.glowing span:nth-child(2) { --cycle: 3.7s; }
+.glowing span:nth-child(3) { --cycle: 4.5s; }
+
+@keyframes ledCycle {
+  to { background-position: 100% 50%; }
 }
 
 #smlSubtitle {
@@ -544,13 +556,21 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 }
 
 .tab-content {
-  display: none;
-  padding: var(--space-md) var(--space-lg);
-  animation: tabFadeIn 0.3s ease;
+  opacity: 0;
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+  padding: 0 var(--space-lg);
+  transition: opacity 0.25s ease, visibility 0s 0.25s;
 }
 
 .tab-content.active {
-  display: block;
+  opacity: 1;
+  visibility: visible;
+  height: auto;
+  padding: var(--space-md) var(--space-lg);
+  animation: tabFadeIn 0.3s ease;
+  transition: opacity 0.25s ease, visibility 0s 0s;
 }
 
 @keyframes tabFadeIn {
@@ -2394,7 +2414,58 @@ input[type="range"]::-moz-range-thumb {
   border: var(--glass-card-border);
   backdrop-filter: var(--glass-blur-sm);
   min-width: 0;
+  position: relative;
+  overflow: hidden;
   transition: background var(--t-normal), border-color var(--t-normal);
+}
+
+/* Subtle animated shimmer across the card */
+.weather-stat::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    color-mix(in srgb, var(--accent) 3%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 200%;
+  animation: weatherShimmer 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes weatherShimmer {
+  0%   { background-position: 0% 0%; }
+  50%  { background-position: 100% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+/* Temp card: warm tint */
+.weather-stat-temp {
+  border-color: color-mix(in srgb, var(--accent) 20%, var(--border));
+}
+
+/* Humidity card: cool tint */
+.weather-stat-hum {
+  border-color: color-mix(in srgb, var(--accent-secondary) 20%, var(--border));
+}
+
+.weather-stat-icon {
+  font-size: 1.4rem;
+  display: block;
+  margin-bottom: 6px;
+  line-height: 1;
+}
+
+.weather-stat-temp .weather-stat-icon {
+  color: #f59e0b;
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.35));
+}
+
+.weather-stat-hum .weather-stat-icon {
+  color: #0ea5e9;
+  filter: drop-shadow(0 0 8px rgba(14, 165, 233, 0.35));
 }
 
 .weather-stat .stat-value {
@@ -2583,22 +2654,7 @@ input[type="range"]::-moz-range-thumb {
   background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
-.peek-toolbar select {
-  padding: 8px 14px;
-  font-size: 0.8rem;
-  background: var(--glass-card-bg);
-  border: var(--glass-card-border);
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  cursor: pointer;
-  backdrop-filter: var(--glass-blur-sm);
-}
-
-.peek-toolbar select:focus {
-  border-color: var(--accent);
-}
-
-/* ── Peek canvas header overlay (effect name + config gear) ── */
+/* ── Peek canvas header overlay (effect name + FPS + config gear) ── */
 .peek-canvas-header {
   position: absolute;
   top: 0; left: 0; right: 0;
@@ -2624,6 +2680,48 @@ input[type="range"]::-moz-range-thumb {
 
 .peek-canvas-effect-name.has-effect {
   color: rgba(255, 255, 255, 0.85);
+}
+
+/* ── FPS counter overlay ── */
+.peek-fps {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.35);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+  transition: color var(--t-fast);
+  min-width: 36px;
+  text-align: right;
+}
+
+.peek-fps.active {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ── Streaming status dot ── */
+.peek-stream-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  transition: background var(--t-fast), box-shadow var(--t-fast);
+}
+
+.peek-stream-dot.active {
+  background: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+  animation: peekDotPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes peekDotPulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(34, 197, 94, 0.6); }
+  50% { box-shadow: 0 0 12px rgba(34, 197, 94, 0.3); }
+}
+
+.peek-canvas-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .peek-canvas-config-btn {
@@ -2667,17 +2765,13 @@ input[type="range"]::-moz-range-thumb {
   width: 100%;
   max-width: 400px;
   aspect-ratio: 1;
-  background:
-    radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--accent) 2%, transparent) 0%, transparent 70%),
-    color-mix(in srgb, var(--bg-secondary) 80%, transparent);
+  background: var(--bg-primary);
   border-radius: var(--radius-lg);
   border: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: var(--glass-blur-md);
-  -webkit-backdrop-filter: var(--glass-blur-md);
   box-shadow:
     0 4px 16px rgba(0,0,0,0.15),
     inset 0 1px 0 color-mix(in srgb, white 4%, transparent);
@@ -2835,23 +2929,92 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .theme-option .theme-swatch {
+  position: relative;
   display: block;
   width: 100%;
-  height: 48px;
+  height: 64px;
   border-radius: var(--radius-sm);
   margin-bottom: var(--space-sm);
+  overflow: hidden;
 }
 
+/* Card simulada dentro del swatch */
+.theme-option .theme-swatch::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 5px;
+  border: 1px solid;
+}
+
+/* Accent dot + text lines */
+.theme-option .theme-swatch::after {
+  content: '';
+  position: absolute;
+  top: 22px;
+  left: 14px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  box-shadow:
+    19px 0 0 0 var(--text-line),
+    33px 0 0 0 var(--text-line),
+    19px 10px 0 0 var(--text-line-short),
+    33px 10px 0 0 var(--text-line-short);
+}
+
+/* ── SML Classic: navy bg, gold accent ── */
 .theme-option[data-theme="sml-classic"] .theme-swatch {
-  background: linear-gradient(135deg, #fbbf24, #38bdf8);
+  background: #0c1425;
+}
+.theme-option[data-theme="sml-classic"] .theme-swatch::before {
+  background: #182640;
+  border-color: #2a3a5a;
+}
+.theme-option[data-theme="sml-classic"] .theme-swatch::after {
+  background: #fbbf24;
+  box-shadow:
+    0 0 6px rgba(251, 191, 36, 0.4),
+    19px 0 0 0 rgba(90, 106, 126, 0.35),
+    33px 0 0 0 rgba(90, 106, 126, 0.25),
+    19px 10px 0 0 rgba(90, 106, 126, 0.25),
+    33px 10px 0 0 rgba(90, 106, 126, 0.15);
 }
 
+/* ── WLED Dark: charcoal bg, blue accent ── */
 .theme-option[data-theme="wled-dark"] .theme-swatch {
-  background: linear-gradient(135deg, #60a5fa, #34d399);
+  background: #0e1420;
+}
+.theme-option[data-theme="wled-dark"] .theme-swatch::before {
+  background: #1a2336;
+  border-color: #2a3040;
+}
+.theme-option[data-theme="wled-dark"] .theme-swatch::after {
+  background: #60a5fa;
+  box-shadow:
+    0 0 6px rgba(96, 165, 250, 0.4),
+    19px 0 0 0 rgba(74, 82, 104, 0.35),
+    33px 0 0 0 rgba(74, 82, 104, 0.25),
+    19px 10px 0 0 rgba(74, 82, 104, 0.25),
+    33px 10px 0 0 rgba(74, 82, 104, 0.15);
 }
 
+/* ── Midnight AMOLED: pure black, purple accent ── */
 .theme-option[data-theme="midnight-amoled"] .theme-swatch {
-  background: linear-gradient(135deg, #a78bfa, #2dd4bf);
+  background: #000000;
+}
+.theme-option[data-theme="midnight-amoled"] .theme-swatch::before {
+  background: #0f0f1e;
+  border-color: #1a1a2a;
+}
+.theme-option[data-theme="midnight-amoled"] .theme-swatch::after {
+  background: #a78bfa;
+  box-shadow:
+    0 0 6px rgba(167, 139, 250, 0.4),
+    19px 0 0 0 rgba(74, 74, 90, 0.35),
+    33px 0 0 0 rgba(74, 74, 90, 0.25),
+    19px 10px 0 0 rgba(74, 74, 90, 0.25),
+    33px 10px 0 0 rgba(74, 74, 90, 0.15);
 }
 
 /* ── System info grid ── */
@@ -3854,6 +4017,10 @@ input[type="range"]::-moz-range-thumb {
 
 /* Mobile (<768px): Layout adjustments */
 @media (max-width: 767px) {
+  :root {
+    --status-h: 36px;
+  }
+
   .player {
     font-size: 1.6rem;
   }
@@ -3865,20 +4032,21 @@ input[type="range"]::-moz-range-thumb {
     max-width: 100%;
   }
 
-  /* ── Weather: stack vertically on mobile ── */
+  /* ── Weather: side-by-side on mobile ── */
   .weather-main {
-    flex-direction: column;
-    gap: var(--space-xl);
+    flex-direction: row;
+    gap: var(--space-md);
     align-items: center;
   }
 
   .weather-info {
-    width: 100%;
-    gap: var(--space-md);
+    flex: 1;
+    min-width: 0;
+    gap: var(--space-sm);
   }
 
   .weather-stats {
-    max-width: 320px;
+    max-width: 100%;
   }
 
   .weather-stat .stat-value {
@@ -3937,6 +4105,23 @@ input[type="range"]::-moz-range-thumb {
     grid-column: 1 / -1;
     text-align: center;
   }
+
+  /* SML header compacto en móvil */
+  .glowing span {
+    font-size: 4.2rem;
+    letter-spacing: 0.05em;
+    line-height: 0.85;
+  }
+
+  #smlSubtitle {
+    font-size: 1.6rem;
+    margin-top: -1.3rem;
+    line-height: 1.4;
+  }
+
+  #smlHeader {
+    padding: 14px var(--space-md) 10px;
+  }
 }
 
 /* Small mobile (<400px): Compact sizing */
@@ -3967,17 +4152,6 @@ input[type="range"]::-moz-range-thumb {
     padding: var(--space-sm) var(--space-md);
   }
 
-  .glowing span {
-    font-size: 3.8rem;
-    letter-spacing: 0.05em;
-    line-height: 0.85;
-  }
-
-  #smlSubtitle {
-    font-size: 1.6rem;
-    margin-top: -1rem;
-  }
-
   .effects-grid {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   }
@@ -4004,18 +4178,23 @@ input[type="range"]::-moz-range-thumb {
 
 /* Landscape mobile: More efficient use of vertical space */
 @media (max-height: 500px) {
+  :root {
+    --status-h: 32px;
+  }
+
   #smlHeader {
-    padding: var(--space-sm) var(--space-md);
+    padding: 8px var(--space-md) 6px;
   }
 
   .glowing span {
-    font-size: 3.8rem;
+    font-size: 3.6rem;
     line-height: 0.85;
   }
 
   #smlSubtitle {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
     margin-top: -1rem;
+    line-height: 1.3;
   }
 }
 

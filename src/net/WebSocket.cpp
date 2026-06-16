@@ -159,19 +159,19 @@ void notifyWSClientList() {
             if (logBuf) {
                 size_t written = serializeJson(logJson, logBuf, jsonLen);
 #ifdef DEBUG_WEBSOCKET
-                Serial.print("📋 Log JSON: ");
-                Serial.print(_wsLogCount);
-                Serial.print(" entries, capacity=");
-                Serial.print(capacity);
-                Serial.print(", jsonLen=");
-                Serial.print(jsonLen);
-                Serial.print(", written=");
-                Serial.print(written);
-                Serial.print(", measure=");
-                Serial.print(measureJson(logJson));
-                if (written < jsonLen - 1) Serial.print(" ⚠ NEAR_TRUNCATED!");
-                if (written == 0)           Serial.print(" ⚠ WRITE_FAILED!");
-                Serial.println();
+                debugD("📋 Log JSON: ");
+                debugD_NUM(_wsLogCount, "%u");
+                debugD(" entries, capacity=");
+                debugD_NUM(capacity, "%u");
+                debugD(", jsonLen=");
+                debugD_NUM(jsonLen, "%u");
+                debugD(", written=");
+                debugD_NUM(written, "%u");
+                debugD(", measure=");
+                debugD_NUM(measureJson(logJson), "%u");
+                if (written < jsonLen - 1) debugD(" ⚠ NEAR_TRUNCATED!");
+                if (written == 0)           debugD(" ⚠ WRITE_FAILED!");
+                debugD("\n");
 #endif
                 ws.textAll(logBuf, written);
                 free(logBuf);
@@ -474,10 +474,12 @@ static void sendBatteryHistory() {
     size_t jsonLen = serializeJson(doc, outBuf, sizeof(outBuf));
     if (jsonLen >= sizeof(outBuf)) return;
 
-    Serial.print("[BATT] sendBatteryHistory — sending ");
-    Serial.print(count);
-    Serial.print(" entries, jsonLen=");
-    Serial.println(jsonLen);
+#ifdef DEBUG_BATTERY
+    debugD("[BATT] sendBatteryHistory — sending ");
+    debugD_NUM(count, "%d");
+    debugD(" entries, jsonLen=");
+    debuglnD_NUM(jsonLen, "%u");
+#endif
     ws.textAll(outBuf, jsonLen);
 }
 
@@ -514,12 +516,14 @@ static void sendBatteryHistory(AsyncWebSocketClient* client) {
     size_t jsonLen = serializeJson(doc, outBuf, sizeof(outBuf));
     if (jsonLen >= sizeof(outBuf)) return;
 
-    Serial.print("[BATT] sendBatteryHistory → client #");
-    Serial.print(client->id());
-    Serial.print(": ");
-    Serial.print(count);
-    Serial.print(" entries, jsonLen=");
-    Serial.println(jsonLen);
+#ifdef DEBUG_BATTERY
+    debugD("[BATT] sendBatteryHistory → client #");
+    debugD_NUM(client->id(), "%u");
+    debugD(": ");
+    debugD_NUM(count, "%d");
+    debugD(" entries, jsonLen=");
+    debuglnD_NUM(jsonLen, "%u");
+#endif
     client->text(outBuf, jsonLen);
 }
 
@@ -604,7 +608,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
 
         // ── REQUEST BATTERY HISTORY (for chart) ─────────────────────────
         if (strcmp(action, "requestBattHistory") == 0) {
-            Serial.println("[BATT] requestBattHistory received from client");
+#ifdef DEBUG_BATTERY
+            debuglnD("[BATT] requestBattHistory received from client");
+#endif
             sendBatteryHistory();
             return;
         }

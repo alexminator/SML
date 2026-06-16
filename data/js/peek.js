@@ -2,7 +2,11 @@
    peek.js — SML Peek Tab (Live Canvas Preview)
    Streams real LED colors from ESP32 via binary WebSocket frames.
    Format: 0x4C 0x02 <w> <h> <RGB data> (WLED-compatible)
+   Displays 33 interpolated LEDs regardless of real strip length.
    ────────────────────────────────────────────────────────────────────────────── */
+
+const VISUAL_LEDS = 33;      // Cuantos LEDs visuales mostramos (strip y círculo)
+const DRAW_FPS = 30;          // Target FPS del render loop
 
 let peek = null;
 
@@ -10,14 +14,22 @@ class PeekRenderer {
   constructor(canvasId) {
     this.canvas = document.getElementById(canvasId);
     if (!this.canvas) return;
-    this.ctx = this.canvas.getContext('2d');
+    this.ctx = this.canvas.getContext('2d', { alpha: true });
     this.mode = 'strip';
-    this.resolution = 1;
-    this.ledCount = 24;
+    this.ledCount = VISUAL_LEDS;
     this.running = false;
-    this.ready = false; // true after first binary frame arrives
+    this.ready = false;         // true after first binary frame arrives
+    this.sweeping = false;      // true durante la animación de barrido inicial
+    this.sweepProgress = 0;     // 0.0 → 1.0
+    this._sweepStart = 0;
 
-    this.ledData = [];
+    this.ledData = [];          // raw data from ESP32 (24 LEDs)
+    this.displayData = [];      // interpolated data (33 LEDs)
+
+    // FPS tracking
+    this._fpsHistory = [];
+    this._lastFrameTime = 0;
+    this.fps = 0;
   }
 
   /* ── Resize canvas to fit container ── */
@@ -37,28 +49,50 @@ class PeekRenderer {
     else this.drawIdle();
   }
 
-  setResolution(res) {
-    this.resolution = parseInt(res) || 1;
+  /* ── Interpolación lineal: N reales → M visuales ── */
+  interpolateLEDs(data, targetCount) {
+    if (!data || data.length === 0) return [];
+    const sourceCount = data.length;
+    if (sourceCount === targetCount) return [...data];
+
+    const result = [];
+    for (let i = 0; i < targetCount; i++) {
+      const pos = (i / targetCount) * sourceCount;
+      const idx = Math.floor(pos);
+      const frac = pos - idx;
+      const next = (idx + 1) % sourceCount;
+
+      result.push({
+        r: Math.round(data[idx].r + (data[next].r - data[idx].r) * frac),
+        g: Math.round(data[idx].g + (data[next].g - data[idx].g) * frac),
+        b: Math.round(data[idx].b + (data[next].b - data[idx].b) * frac),
+      });
+    }
+    return result;
   }
 
-  /* ── Start / stop render loop ── */
+  /* ── Start the render loop ── */
   start() {
     if (this.running) return;
     this.running = true;
+    this.sweeping = false;
+    this.sweepProgress = 0;
+    this._fpsHistory = [];
+    this.fps = 0;
+    this._lastFrameTime = 0;
     this.tick();
   }
 
   stop() {
     this.running = false;
+    this.sweeping = false;
     this.drawIdle();
   }
 
-  /* ── Receive binary data from ESP32 (WLED format) ── */
+  /* ── Receive binary data from ESP32 ── */
   feedBinary(data) {
-    // WebSocket binaryType='arraybuffer' → data is ArrayBuffer, wrap in Uint8Array
     const bytes = data instanceof ArrayBuffer ? new Uint8Array(data) : data;
     if (bytes[0] !== 0x4C) return;
-    // version 1 = single strip, version 2 = 2D matrix
     const version = bytes[1];
     if (version !== 0x01 && version !== 0x02) return;
     const w = bytes[2];
@@ -72,10 +106,13 @@ class PeekRenderer {
       }
     }
     this.ledData = colors;
-    this.ledCount = w * h;
+    this.displayData = this.interpolateLEDs(colors, VISUAL_LEDS);
+
     if (!this.ready) {
       this.ready = true;
-      if (this.running) this.render(); // immediate first frame
+      this.sweeping = true;
+      this._sweepStart = performance.now();
+      if (this.running) this.render();
     }
   }
 
@@ -91,7 +128,25 @@ class PeekRenderer {
     }
 
     try {
-      if (this.ready && this.ledData.length > 0) {
+      // Update FPS
+      const now = performance.now();
+      if (this._lastFrameTime > 0) {
+        const dt = now - this._lastFrameTime;
+        this._fpsHistory.push(1000 / dt);
+        if (this._fpsHistory.length > 20) this._fpsHistory.shift();
+        this.fps = Math.round(
+          this._fpsHistory.reduce((a, b) => a + b, 0) / this._fpsHistory.length
+        );
+      }
+      this._lastFrameTime = now;
+
+      // Update sweep progress
+      if (this.sweeping && this.ready) {
+        this.sweepProgress = Math.min(1, (now - this._sweepStart) / 500);
+        if (this.sweepProgress >= 1) this.sweeping = false;
+      }
+
+      if (this.ready && this.displayData.length > 0) {
         this.render();
       } else {
         this.drawWaiting();
@@ -100,62 +155,73 @@ class PeekRenderer {
       console.warn('Peek render error:', e);
     }
 
-    setTimeout(() => this.tick(), 33);
+    setTimeout(() => this.tick(), Math.round(1000 / DRAW_FPS));
   }
 
-  /* ── Waiting state (running but no ESP32 data yet) ── */
+  /* ── Waiting state ── */
   drawWaiting() {
     const ctx = this.ctx;
     const w = this.canvas.width;
     const h = this.canvas.height;
     if (!ctx || w === 0) return;
 
-    ctx.fillStyle = '#1a1a2e';
-    ctx.fillRect(0, 0, w, h);
+    ctx.clearRect(0, 0, w, h);
 
-    ctx.fillStyle = '#666';
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
     ctx.font = `${Math.max(14, w / 20)}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('⏳ Waiting for LED data...', w / 2, h / 2 - 8);
 
     ctx.font = `${Math.max(10, w / 30)}px sans-serif`;
-    ctx.fillStyle = '#444';
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
     ctx.fillText('Turn on the NeoPixel strip to start streaming', w / 2, h / 2 + 20);
   }
 
-  /* ── Idle state (not running) ── */
+  /* ── Idle state ── */
   drawIdle() {
     const ctx = this.ctx;
     const w = this.canvas.width;
     const h = this.canvas.height;
     if (!ctx || w === 0) return;
 
-    ctx.fillStyle = '#1a1a2e';
-    ctx.fillRect(0, 0, w, h);
+    ctx.clearRect(0, 0, w, h);
 
-    ctx.fillStyle = '#555';
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
     ctx.font = `${Math.max(14, w / 20)}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('▶ Press Start to preview', w / 2, h / 2 - 8);
 
     ctx.font = `${Math.max(11, w / 28)}px sans-serif`;
-    ctx.fillStyle = '#333';
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
     ctx.fillText('(real-time LED stream from ESP32)', w / 2, h / 2 + 20);
   }
 
-  /* ── Render current LED data on canvas ── */
+  /* ── Update header overlays (FPS, status dot, effect name) ── */
+  updateUI() {
+    const fpsEl = document.getElementById('peekFps');
+    const dotEl = document.getElementById('peekStreamDot');
+    if (fpsEl) {
+      fpsEl.textContent = this.ready && this.running ? `${this.fps} FPS` : '';
+      fpsEl.classList.toggle('active', this.ready && this.running);
+    }
+    if (dotEl) {
+      dotEl.classList.toggle('active', this.ready && this.running);
+    }
+  }
+
+  /* ── Main render ── */
   render() {
     const ctx = this.ctx;
     const w = this.canvas.width;
     const h = this.canvas.height;
     if (!ctx || w === 0) return;
 
-    ctx.fillStyle = '#1a1a2e';
-    ctx.fillRect(0, 0, w, h);
+    // Clear to transparent — el fondo lo da el wrapper via CSS
+    ctx.clearRect(0, 0, w, h);
 
-    const data = this.ledData;
+    const data = this.displayData;
     if (!data || data.length === 0) return;
 
     const pad = Math.max(8, w * 0.03);
@@ -165,9 +231,11 @@ class PeekRenderer {
     } else {
       this.renderCircle(ctx, data, w, h, pad);
     }
+
+    this.updateUI();
   }
 
-  /* ── Strip layout ── */
+  /* ── Strip layout con índices ── */
   renderStrip(ctx, data, w, h, pad) {
     const count = data.length;
     const spacing = (w - pad * 2) / count;
@@ -175,19 +243,29 @@ class PeekRenderer {
     const cy = h / 2;
 
     // Center line (subtle)
-    ctx.strokeStyle = '#2a2a4e';
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(pad, cy);
     ctx.lineTo(w - pad, cy);
     ctx.stroke();
 
+    // Glow band below LEDs
+    ctx.fillStyle = 'rgba(255,255,255,0.02)';
+    ctx.fillRect(pad, cy - r * 3, w - pad * 2, r * 6);
+
     data.forEach((led, i) => {
+      // Skip LEDs during sweep animation
+      if (this.sweeping) {
+        const threshold = i / count;
+        if (threshold > this.sweepProgress) return;
+      }
+
       const x = pad + spacing * i + spacing / 2;
 
       // Glow
       const glow = ctx.createRadialGradient(x, cy, 0, x, cy, r * 2.5);
-      glow.addColorStop(0, `rgba(${led.r},${led.g},${led.b},0.25)`);
+      glow.addColorStop(0, `rgba(${led.r},${led.g},${led.b},0.3)`);
       glow.addColorStop(1, `rgba(${led.r},${led.g},${led.b},0)`);
       ctx.fillStyle = glow;
       ctx.beginPath();
@@ -199,6 +277,20 @@ class PeekRenderer {
       ctx.arc(x, cy, r, 0, Math.PI * 2);
       ctx.fillStyle = `rgb(${led.r},${led.g},${led.b})`;
       ctx.fill();
+
+      // Subtle border
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 0.5;
+      ctx.stroke();
+
+      // Index number (small, below dot)
+      if (spacing > 8) {
+        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+        ctx.font = `${Math.max(5, spacing * 0.3)}px monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText(i + 1, x, cy + r + 3);
+      }
     });
   }
 
@@ -206,30 +298,36 @@ class PeekRenderer {
   renderCircle(ctx, data, w, h, pad) {
     const cx = w / 2;
     const cy = h / 2;
-    const radius = Math.min(w, h) * 0.35;
+    const radius = Math.min(w, h) * 0.38;
     const count = data.length;
     const angleStep = (Math.PI * 2) / count;
 
     // Ring background
-    ctx.strokeStyle = '#2a2a4e';
-    ctx.lineWidth = radius * 0.35;
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    ctx.lineWidth = radius * 0.4;
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
     ctx.stroke();
 
     data.forEach((led, i) => {
+      // Skip LEDs during sweep animation
+      if (this.sweeping) {
+        const threshold = i / count;
+        if (threshold > this.sweepProgress) return;
+      }
+
       const angle = -Math.PI / 2 + angleStep * i;
       const x = cx + Math.cos(angle) * radius;
       const y = cy + Math.sin(angle) * radius;
       const dotR = Math.max(3, radius * 0.07);
 
       // Glow
-      const glow = ctx.createRadialGradient(x, y, 0, x, y, dotR * 2.5);
-      glow.addColorStop(0, `rgba(${led.r},${led.g},${led.b},0.3)`);
+      const glow = ctx.createRadialGradient(x, y, 0, x, y, dotR * 3);
+      glow.addColorStop(0, `rgba(${led.r},${led.g},${led.b},0.35)`);
       glow.addColorStop(1, `rgba(${led.r},${led.g},${led.b},0)`);
       ctx.fillStyle = glow;
       ctx.beginPath();
-      ctx.arc(x, y, dotR * 2.5, 0, Math.PI * 2);
+      ctx.arc(x, y, dotR * 3, 0, Math.PI * 2);
       ctx.fill();
 
       // LED dot
@@ -237,39 +335,35 @@ class PeekRenderer {
       ctx.arc(x, y, dotR, 0, Math.PI * 2);
       ctx.fillStyle = `rgb(${led.r},${led.g},${led.b})`;
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 0.5;
       ctx.stroke();
 
-      // Pin 1 marker — small dot outside the ring at LED 0 position
+      // Pin 1 marker (LED 0)
       if (i === 0) {
-        const pinDist = radius + dotR + 5;
+        const pinDist = radius + dotR + 6;
         const px = cx + Math.cos(angle) * pinDist;
         const py = cy + Math.sin(angle) * pinDist;
         ctx.beginPath();
         ctx.arc(px, py, 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,255,255,0.4)';
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
         ctx.fill();
       }
     });
 
     // Center hub
-    ctx.fillStyle = '#2a2a4e';
+    ctx.fillStyle = 'rgba(255,255,255,0.04)';
     ctx.beginPath();
-    ctx.arc(cx, cy, radius * 0.08, 0, Math.PI * 2);
+    ctx.arc(cx, cy, radius * 0.06, 0, Math.PI * 2);
     ctx.fill();
   }
 }
 
 /* ── Called from main.js when binary ESP32 data arrives ── */
 function handlePeekBinary(data) {
-  // data es ArrayBuffer (por binaryType='arraybuffer'), lo envolvemos en Uint8Array
   const bytes = data instanceof ArrayBuffer ? new Uint8Array(data) : data;
-  console.debug(`[Peek] Binary frame: ${bytes.byteLength} bytes, ${bytes.length} pixels, sample=RGB(${bytes[4]},${bytes[5]},${bytes[6]})`, bytes);
   if (peek && peek.running) {
     peek.feedBinary(bytes);
-  } else {
-    console.debug(`[Peek] Binary dropped — not running`);
   }
 }
 
@@ -297,14 +391,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Resolution dropdown
-  const resSelect = document.getElementById('peekResolution');
-  if (resSelect) {
-    resSelect.addEventListener('change', () => {
-      if (peek) peek.setResolution(resSelect.value);
-    });
-  }
-
   // Start / Stop toggle
   const peekToggle = document.getElementById('peekToggle');
   if (peekToggle) {
@@ -313,7 +399,6 @@ document.addEventListener('DOMContentLoaded', () => {
         peek.stop();
         peekToggle.textContent = '▶ Start';
         peekToggle.classList.remove('active');
-        // Opt-out from live view
         if (typeof sendCmd === 'function') sendCmd({ lv: false });
       } else {
         if (typeof SML !== 'undefined' && !SML.powerOn) {
@@ -326,7 +411,6 @@ document.addEventListener('DOMContentLoaded', () => {
         peek.start();
         peekToggle.textContent = '⏸ Stop';
         peekToggle.classList.add('active');
-        // Opt-in to live view (WLED-style)
         if (typeof sendCmd === 'function') sendCmd({ lv: true });
       }
     });

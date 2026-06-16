@@ -157,12 +157,21 @@ void Battery::logBatteryReading() {
         if (battLogCount == 0) {
             lastLoggedVoltage = filteredVolts;
         }
-        Serial.print("[BATT] log loaded, count=");
-        Serial.print(battLogCount);
-        Serial.print(", lastV=");
-        Serial.print(lastLoggedVoltage, 3);
-        Serial.print(", lastT=");
-        Serial.println(lastLogUptime);
+#ifdef DEBUG_BATTERY
+        {
+            int _v_int = (int)(lastLoggedVoltage);
+            int _v_frac = (int)((lastLoggedVoltage - _v_int) * 1000);
+            if (_v_frac < 0) _v_frac = -_v_frac;
+            debugD("[BATT] log loaded, count=");
+            debugD_NUM(battLogCount, "%d");
+            debugD(", lastV=");
+            debugD_NUM(_v_int, "%d");
+            debugD(".");
+            debugD_NUM03(_v_frac);
+            debugD(", lastT=");
+            debuglnD_NUM(lastLogUptime, "%u");
+        }
+#endif
     }
 
     uint32_t now = millis() / 1000;
@@ -184,12 +193,21 @@ void Battery::logBatteryReading() {
     battLog[battLogHead].voltage = (float)filteredVolts;
     battLog[battLogHead].level = (uint8_t)constrain(battLvl, 0, 100);
 
-    Serial.print("[BATT] WRITE entry #");
-    Serial.print(battLogCount);
-    Serial.print(" V=");
-    Serial.print(filteredVolts, 3);
-    Serial.print(" t=");
-    Serial.println(now);
+#ifdef DEBUG_BATTERY
+    {
+        int _v_int = (int)(filteredVolts);
+        int _v_frac = (int)((filteredVolts - _v_int) * 1000);
+        if (_v_frac < 0) _v_frac = -_v_frac;
+        debugD("[BATT] WRITE entry #");
+        debugD_NUM(battLogCount, "%d");
+        debugD(" V=");
+        debugD_NUM(_v_int, "%d");
+        debugD(".");
+        debugD_NUM03(_v_frac);
+        debugD(" t=");
+        debuglnD_NUM(now, "%u");
+    }
+#endif
 
     // Advance head (circular)
     battLogHead = (battLogHead + 1) % BATT_LOG_SIZE;

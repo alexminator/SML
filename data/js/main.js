@@ -1624,7 +1624,7 @@ function connectWS() {
     SML.connected = false;
     updateConnectionStatus(false);
     // Re-add skeleton to data elements when disconnected
-    document.querySelectorAll('.stat-value, .info-value, #weatherHumVal, #weatherHeatIndex, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
+    document.querySelectorAll('.stat-value, .info-value, #weatherHumVal, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
       .forEach(el => {
         if (el.textContent === '--' || el.textContent === '--.-' || el.textContent === '--.--V' || el.textContent === '--%' || el.textContent === '--.-°C') {
           el.classList.add('skeleton');
@@ -2210,23 +2210,6 @@ function handleMessage(data) {
     updateSystemInfo(data);
   }
 
-  // ── WEATHER HEAT INDEX ──
-  if (data.temperature !== undefined && data.humidity !== undefined) {
-    const hi = document.getElementById('weatherHeatIndex');
-    if (hi) {
-      // Simple heat index approximation
-      const T = data.temperature;
-      const H = data.humidity;
-      let feels = T;
-      if (T >= 27) {
-        feels = -8.784695 + 1.61139411 * T + 2.338548 * H
-               - 0.14611605 * T * H - 0.012308094 * T * T
-               - 0.016424828 * H * H + 0.002211732 * T * T * H
-               + 0.00072546 * T * H * H - 0.000003582 * T * T * H * H;
-      }
-      setDataValue(hi, feels.toFixed(1) + '°C');
-    }
-  }
 }
 
 function updateConnectionStatus(connected) {
@@ -2401,7 +2384,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme();
 
   // Add skeleton loading to all data-bearing elements
-  document.querySelectorAll('.stat-value, .info-value, #weatherHumVal, #weatherHeatIndex, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
+  document.querySelectorAll('.stat-value, .info-value, #weatherHumVal, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
     .forEach(el => el.classList.add('skeleton'));
 
   // Tabs
