@@ -1522,6 +1522,298 @@ input[type="range"]::-moz-range-thumb {
   --effect-color: #F5F0E1;
 }
 
+/* Rainbow VU (data-effect-id="12"): 5 barras de ecualizador con colores arcoíris */
+/* ── Animación VU: cada barra sube y baja como un medidor real ── */
+.effect-card[data-effect-id="12"].active .effect-icon {
+  --rvu-1: #FF3B30;    /* rojo */
+  --rvu-2: #FF9500;    /* naranja */
+  --rvu-3: #FFCC00;    /* amarillo */
+  --rvu-4: #34C759;    /* verde */
+  --rvu-5: #007AFF;    /* azul */
+  --effect-color: #FF9500;
+}
+.effect-card[data-effect-id="12"].active .effect-icon .vu-b {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation-duration: 0.65s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+.effect-card[data-effect-id="12"].active .effect-icon .vu-b-1 {
+  animation-name: vu-bounce-1;
+  animation-delay: 0.00s;
+}
+.effect-card[data-effect-id="12"].active .effect-icon .vu-b-2 {
+  animation-name: vu-bounce-2;
+  animation-delay: 0.12s;
+}
+.effect-card[data-effect-id="12"].active .effect-icon .vu-b-3 {
+  animation-name: vu-bounce-3;
+  animation-delay: 0.22s;
+}
+.effect-card[data-effect-id="12"].active .effect-icon .vu-b-4 {
+  animation-name: vu-bounce-4;
+  animation-delay: 0.15s;
+}
+.effect-card[data-effect-id="12"].active .effect-icon .vu-b-5 {
+  animation-name: vu-bounce-5;
+  animation-delay: 0.04s;
+}
+
+/* Cada barra escala distinto según su altura base para no salirse del viewBox */
+@keyframes vu-bounce-1 { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.8); } }
+@keyframes vu-bounce-2 { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.5); } }
+@keyframes vu-bounce-3 { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.25); } }
+@keyframes vu-bounce-4 { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.45); } }
+@keyframes vu-bounce-5 { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.7); } }
+
+/* Rainbow Hue (data-effect-id="14"): mismas barras VU, colores verde→azul heredados de rainbow */
+.effect-card[data-effect-id="14"].active .effect-icon {
+  --rhue-1: #76FF03;    /* verde neón */
+  --rhue-2: #00E676;    /* verde esmeralda */
+  --rhue-3: #00BFA5;    /* teal */
+  --rhue-4: #00BCD4;    /* cian */
+  --rhue-5: #448AFF;    /* azul */
+  --effect-color: #00BFA5;
+}
+.effect-card[data-effect-id="14"].active .effect-icon .vu-b {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation-duration: 0.65s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+.effect-card[data-effect-id="14"].active .effect-icon .vu-b-1 {
+  animation-name: vu-bounce-1;
+  animation-delay: 0.00s;
+}
+.effect-card[data-effect-id="14"].active .effect-icon .vu-b-2 {
+  animation-name: vu-bounce-2;
+  animation-delay: 0.12s;
+}
+.effect-card[data-effect-id="14"].active .effect-icon .vu-b-3 {
+  animation-name: vu-bounce-3;
+  animation-delay: 0.22s;
+}
+.effect-card[data-effect-id="14"].active .effect-icon .vu-b-4 {
+  animation-name: vu-bounce-4;
+  animation-delay: 0.15s;
+}
+.effect-card[data-effect-id="14"].active .effect-icon .vu-b-5 {
+  animation-name: vu-bounce-5;
+  animation-delay: 0.04s;
+}
+
+/* Ripple VU (data-effect-id="15"): ondas concéntricas expansivas */
+.effect-card[data-effect-id="15"].active .effect-icon {
+  --ripple-1: #00BCD4;    /* cian interior */
+  --ripple-2: #26C6DA;    /* cian claro */
+  --ripple-3: #4DD0E1;    /* celeste */
+  --ripple-4: #80DEEA;    /* celeste muy claro / exterior */
+  --effect-color: #26C6DA;
+}
+.effect-card[data-effect-id="15"] .ripple-ring {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  animation: ripple-scale 1.5s ease-in-out infinite;
+  animation-play-state: paused;
+}
+.effect-card[data-effect-id="15"].active .ripple-ring {
+  animation-play-state: running;
+}
+.effect-card[data-effect-id="15"] .ripple-1 { animation-delay: 0.0s; }
+.effect-card[data-effect-id="15"] .ripple-2 { animation-delay: 0.25s; }
+.effect-card[data-effect-id="15"] .ripple-3 { animation-delay: 0.5s; }
+.effect-card[data-effect-id="15"] .ripple-4 { animation-delay: 0.75s; }
+@keyframes ripple-scale {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* 3 Bars VU (data-effect-id="16"): barras horizontales crecen del centro */
+.effect-card[data-effect-id="16"].active .effect-icon {
+  --hbar3-1: #00838F;    /* teal oscuro */
+  --hbar3-2: #00BCD4;    /* cian */
+  --hbar3-3: #4DD0E1;    /* cian claro */
+  --effect-color: #00BCD4;
+}
+.effect-card[data-effect-id="16"].active .effect-icon .hbar3 {
+  transform-box: fill-box;
+  transform-origin: center center;
+  animation-duration: 0.7s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+.effect-card[data-effect-id="16"].active .effect-icon .hbar3-1 {
+  animation-name: hbar3-swell-1;
+  animation-delay: 0.0s;
+}
+.effect-card[data-effect-id="16"].active .effect-icon .hbar3-2 {
+  animation-name: hbar3-swell-2;
+  animation-delay: 0.18s;
+}
+.effect-card[data-effect-id="16"].active .effect-icon .hbar3-3 {
+  animation-name: hbar3-swell-3;
+  animation-delay: 0.09s;
+}
+@keyframes hbar3-swell-1 { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.6); } }
+@keyframes hbar3-swell-2 { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.2); } }
+@keyframes hbar3-swell-3 { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.4); } }
+
+/* Ocean VU (data-effect-id="17"): ondas sinusoidales que ondulan como el mar */
+.effect-card[data-effect-id="17"].active .effect-icon {
+  --ocean-1: #006064;    /* teal profundo */
+  --ocean-2: #00838F;    /* teal */
+  --ocean-3: #26C6DA;    /* cyan claro */
+  --effect-color: #00838F;
+}
+.effect-card[data-effect-id="17"] .ocean-wv {
+  transform-box: fill-box;
+  transform-origin: center center;
+  animation-duration: 1.2s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-play-state: paused;
+}
+.effect-card[data-effect-id="17"].active .ocean-wv {
+  animation-play-state: running;
+}
+.effect-card[data-effect-id="17"] .ocean-wv-1 { animation-name: ocean-flow-1; animation-delay: 0.0s; }
+.effect-card[data-effect-id="17"] .ocean-wv-2 { animation-name: ocean-flow-2; animation-delay: 0.2s; }
+.effect-card[data-effect-id="17"] .ocean-wv-3 { animation-name: ocean-flow-3; animation-delay: 0.4s; }
+@keyframes ocean-flow-1 {
+  0%, 100% { transform: scaleY(1) translateX(0); }
+  50% { transform: scaleY(1.12) translateX(2.5px); }
+}
+@keyframes ocean-flow-2 {
+  0%, 100% { transform: scaleY(1) translateX(0); }
+  50% { transform: scaleY(1.12) translateX(-2.5px); }
+}
+@keyframes ocean-flow-3 {
+  0%, 100% { transform: scaleY(1) translateX(0); }
+  50% { transform: scaleY(1.12) translateX(2.5px); }
+}
+
+/* DJ Light (data-effect-id="48"): tornamesa con brillo y mano pinchando */
+.effect-card[data-effect-id="48"].active .effect-icon {
+  --dj-body: #2D2D2D;                  /* cuerpo tornamesa */
+  --dj-shine-color: rgba(255,255,255,0.15);  /* brillo del vinilo */
+  --dj-label-fill: #E0E0E0;            /* etiqueta central */
+  --dj-label-stroke: #555;             /* borde etiqueta */
+  --dj-hand-fill: #FFFFFF;             /* mano/brazo */
+  --dj-hand-stroke: #555;              /* contorno mano */
+  --effect-color: #FFFFFF;
+}
+/* ── Brillo oscila a la izquierda simulando el giro del disco ── */
+.effect-card[data-effect-id="48"] .dj-shine-grp {
+  transform-box: view-box;
+  transform-origin: 230.59px 232.941px;
+  animation: dj-shine-move 0.8s ease-in-out infinite;
+  animation-play-state: paused;
+}
+.effect-card[data-effect-id="48"].active .dj-shine-grp {
+  animation-play-state: running;
+}
+@keyframes dj-shine-move {
+  0%, 100% { transform: rotate(35deg); }
+  50% { transform: rotate(10deg); }
+}
+/* ── Mano que golpetea verticalmente como pinchando ── */
+.effect-card[data-effect-id="48"] .dj-hand-grp {
+  animation: dj-tap 0.35s ease-in-out infinite;
+  animation-play-state: paused;
+}
+.effect-card[data-effect-id="48"].active .dj-hand-grp {
+  animation-play-state: running;
+}
+@keyframes dj-tap {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-50px); }
+  60% { transform: translateY(10px); }
+}
+
+/* Old Skool (data-effect-id="13"): 6 LEDs estilo VU meter */
+.effect-card[data-effect-id="13"] .os-led-1,
+.effect-card[data-effect-id="13"] .os-led-2,
+.effect-card[data-effect-id="13"] .os-led-3,
+.effect-card[data-effect-id="13"] .os-led-4,
+.effect-card[data-effect-id="13"] .os-led-5,
+.effect-card[data-effect-id="13"] .os-led-6 {
+  fill: #888;
+}
+.effect-card[data-effect-id="13"].active .os-led-1 {
+  --os-led-1: #4CAF50;
+  animation: os-pulse-1 0.9s ease-in-out infinite;
+}
+.effect-card[data-effect-id="13"].active .os-led-2 {
+  --os-led-2: #4CAF50;
+  animation: os-pulse-2 0.9s ease-in-out infinite;
+}
+.effect-card[data-effect-id="13"].active .os-led-3 {
+  --os-led-3: #8BC34A;
+  animation: os-pulse-3 0.9s ease-in-out infinite;
+}
+.effect-card[data-effect-id="13"].active .os-led-4 {
+  --os-led-4: #FFEB3B;
+  animation: os-pulse-4 0.9s ease-in-out infinite;
+}
+.effect-card[data-effect-id="13"].active .os-led-5 {
+  --os-led-5: #FF9800;
+  animation: os-pulse-5 0.9s ease-in-out infinite;
+}
+.effect-card[data-effect-id="13"].active .os-led-6 {
+  --os-led-6: #F44336;
+  animation: os-pulse-6 0.9s ease-in-out infinite;
+}
+@keyframes os-pulse-1 {
+  0%, 100% { fill: #4CAF50; }
+  35% { fill: #555; }
+}
+@keyframes os-pulse-2 {
+  0%, 100% { fill: #4CAF50; }
+  30%, 65% { fill: #555; }
+}
+@keyframes os-pulse-3 {
+  0%, 100% { fill: #8BC34A; }
+  25%, 55% { fill: #555; }
+}
+@keyframes os-pulse-4 {
+  0%, 100% { fill: #FFEB3B; }
+  15%, 45%, 75% { fill: #555; }
+}
+@keyframes os-pulse-5 {
+  0%, 100% { fill: #555; }
+  10%, 40%, 70%, 90% { fill: #FF9800; }
+}
+@keyframes os-pulse-6 {
+  0%, 100% { fill: #555; }
+  5%, 35%, 65%, 85% { fill: #F44336; }
+}
+
+/* Noisemeter (data-effect-id="47"): medidor VU con aguja estilo noise */
+.effect-card[data-effect-id="47"].active .effect-icon {
+  --nm-body: #FFD700;
+  --nm-needle: #FF3366;
+  --effect-color: #FFD700;
+}
+.effect-card[data-effect-id="47"] .nm-needle-grp {
+  transform-box: view-box;
+  transform-origin: 50% 73.53%;
+  animation: nm-swing 0.8s ease-in-out infinite;
+  animation-play-state: paused;
+}
+.effect-card[data-effect-id="47"].active .nm-needle-grp {
+  animation-play-state: running;
+}
+@keyframes nm-swing {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(93.78deg); }
+  100% { transform: rotate(0deg); }
+}
+
 /* SVG icons: drop-shadow en vez de box-shadow (sigue la silueta, no el cuadrado) */
 /* Nota: selector svg.effect-icon porque viewBox esta en el <symbol>, no en el <svg> */
 .effect-card:hover svg.effect-icon {
