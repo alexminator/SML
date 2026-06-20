@@ -522,16 +522,27 @@ O también desde la interfaz web, en la pestaña **Config** → sección **Firmw
 
 ## Colaboradores
 
-¿Te gusta el proyecto? ¡Las contribuciones son bienvenidas!
-
-Si tienes una sugerencia de mejora, encuentras un bug, o quieres añadir un nuevo efecto:
-1. Haz un **fork** del repositorio
-2. Crea una rama con tu feature (`git checkout -b feature/NuevaFeature`)
-3. Haz commit de tus cambios (`git commit -m 'Add: NuevaFeature'`)
-4. Sube la rama (`git push origin feature/NuevaFeature`)
-5. Abre un **Pull Request**
-
-También puedes simplemente [abrir un issue](https://github.com/alexminator/SML/issues) para reportar bugs o sugerir ideas.
+<table style="width:100%">
+  <tr>
+    <th><b>Alexminator</b></th>
+    <th><b>20-EverGreen-2</b></th>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/alexminator"><img src="https://avatars.githubusercontent.com/u/9116486?s=400&v=4" width=150px height=150px alt="alexminator"/></a></td>
+    <td align="center"><a href="https://github.com/20-EverGreen-2"><img src="https://avatars.githubusercontent.com/u/84293898?v=4" width="150px" alt="20-EverGreen-2"></a></td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="https://twitter.com/alexminator99"><img src="https://github.com/alexminator/ALT_nano/blob/master/img/twitter-48.png" width="32px" height="32px"></a>
+      <a href="https://www.facebook.com/alexander.rivasalpizar/"><img src="https://github.com/alexminator/ALT_nano/blob/master/img/facebook-48.png" width="32px" height="32px"></a>
+      <a href="https://www.linkedin.com/in/alexander-rivas-73532037/"><img src="https://github.com/alexminator/ALT_nano/blob/master/img/linkedin-48.png" width="32px" height="32px"></a>
+      <a href="https://t.me/Alexminator"><img src="https://github.com/alexminator/ALT_nano/blob/master/img/telegram-app-48.png" width="32px" height="32px"></a>
+    </td>
+    <td align="center">
+      <a href="https://t.me/Deltatronics"><img src="https://github.com/alexminator/ALT_nano/blob/master/img/telegram-app-48.png" width="32px" height="32px"></a>
+    </td>
+  </tr>
+</table>
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 
@@ -539,7 +550,7 @@ También puedes simplemente [abrir un issue](https://github.com/alexminator/SML/
 
 ## Licencia
 
-Distribuido bajo la licencia **GNU General Public License v3.0**. Consulta el archivo `LICENSE` para más información.
+*El proyecto SML se publica bajo la licencia <a href="https://github.com/alexminator/SML/blob/master/LICENSE">GNU General Public License v3.0</a>.*
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 
@@ -547,12 +558,10 @@ Distribuido bajo la licencia **GNU General Public License v3.0**. Consulta el ar
 
 ## Contacto
 
-**Alexminator** — [@alexminator](https://github.com/alexminator)
+> **_Necesitas ayuda?_**
+> **_Contácteme 📨 [alexminator99@gmail.com](mailto:alexminator99@gmail.com?Subject=SML_issues)_**
 
-- 🔗 LinkedIn: [alexminator](https://www.linkedin.com/in/alexminator/)
-- 📧 Email: *(disponible en perfil de GitHub)*
-
-Link del proyecto: [https://github.com/alexminator/SML](https://github.com/alexminator/SML)
+[![GitHub followers](https://img.shields.io/github/followers/alexminator.svg?label=Follow%20@alexminator&style=social)](https://github.com/alexminator/) [![Twitter Follow](https://img.shields.io/twitter/follow/alexminator?style=social)](https://twitter.com/alexminator99)
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 
@@ -560,10 +569,8 @@ Link del proyecto: [https://github.com/alexminator/SML](https://github.com/alexm
 
 ## Programas
 
-Este proyecto ha participado en:
-
-- **[Hacktoberfest](https://hacktoberfest.com/)** — contribuciones open source
-- **SocialSparks** — programa de mentores open source
+* [VSCODE](https://code.visualstudio.com/) - Editor de código.
+* [PlatformIO](https://platformio.org/) - IDE de programación para C/C++, orientado al hardware.
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 
@@ -571,12 +578,14 @@ Este proyecto ha participado en:
 
 ## Agradecimientos
 
-- [danilopinotti](https://github.com/danilopinotti) por la librería [Battery18650Stats](https://github.com/danilopinotti/Battery18650Stats)
-- [me-no-dev](https://github.com/me-no-dev) por [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer) y [AsyncTCP](https://github.com/me-no-dev/AsyncTCP)
-- [FastLED](https://github.com/FastLED/FastLED) por la increíble librería de LEDs
-- [ElegantOTA](https://github.com/ayushsharma82/ElegantOTA) por las actualizaciones OTA sin complicaciones
-- [PlatformIO](https://platformio.org/) por el excelente ecosistema de desarrollo embebido
-- A mi mujer, por ser la inspiración inicial de este proyecto ❤️
+* [danilopinotti](https://github.com/danilopinotti) por la librería [Battery18650Stats](https://github.com/danilopinotti/Battery18650Stats)
+* [me-no-dev](https://github.com/me-no-dev) por [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer) y [AsyncTCP](https://github.com/me-no-dev/AsyncTCP)
+* [FastLED](https://github.com/FastLED/FastLED) por la increíble librería de LEDs
+* [ElegantOTA](https://github.com/ayushsharma82/ElegantOTA) por las actualizaciones OTA sin complicaciones
+* [PlatformIO](https://platformio.org/) por el excelente ecosistema de desarrollo embebido
+* _A la comunidad cubana de Arduino._
+* _A todo aquel que me brindó su ayuda cuando tenía dudas, en especial a mi hijo._
+* A mi mujer, por ser la inspiración inicial de este proyecto ❤️
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 
