@@ -352,6 +352,8 @@ In `src/config/debug_config.h` you can control which messages appear on the seri
 
 The ESP32 runs an asynchronous web server ([ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer)) with real-time WebSocket communication. It supports up to **8 simultaneous clients**, and changes are reflected instantly on all connected devices (ideal for family control).
 
+![WebSocket](https://github.com/alexminator/SML/blob/master/img/websokect.png)
+
 The interface is organized into **8 tabs** accessible from the sidebar (or bottom bar on mobile):
 
 ### 💡 Lamp
@@ -362,6 +364,8 @@ Main lamp control:
 - **Brightness slider** for the Neopixel strip
 - **Light effects** (see Effects section)
 
+![Lamp](https://github.com/alexminator/SML/blob/master/img/tab%20lamp.png)
+
 ### 🎵 Music
 Bluetooth speaker control:
 - **Play / Pause**
@@ -370,6 +374,8 @@ Bluetooth speaker control:
 - **On/Off** for the Bluetooth module
 - **VU effects** — music visualization
 
+![Music](https://github.com/alexminator/SML/blob/master/img/music%20tab.png)
+
 ### 👁️ Live Preview (Peek)
 Real-time LED strip preview via a canvas updated over WebSocket (~30 FPS). Displays the 24 LEDs interpolated as 33 virtual LEDs with two view modes:
 - **Strip** — horizontal linear layout
@@ -377,18 +383,26 @@ Real-time LED strip preview via a canvas updated over WebSocket (~30 FPS). Displ
 - **Quick config** button for the active effect
 - FPS indicator and stream status
 
+![Live Preview](https://github.com/alexminator/SML/blob/master/img/live%20preview.png)
+
 ### 🌡️ Weather
 DHT22 sensor data:
 - **Temperature** (°C)
 - **Relative humidity** (%)
 - Updates every 3 seconds
 
+![Weather](https://github.com/alexminator/SML/blob/master/img/weather%20tab.png)
+
 ### 🔋 Battery
 Detailed battery status:
 - **Charge percentage**
 - **Current voltage**
 - **Status**: charging / fully charged / discharging
+- **Historical voltage graph**
 - Visual power source indicator (AC or battery)
+
+![Battery](https://github.com/alexminator/SML/blob/master/img/batt%20tab.png)
+![Battery Graph](https://github.com/alexminator/SML/blob/master/img/batt%20graph.png)
 
 ### ⚙️ Config
 Advanced configuration panel:
@@ -399,11 +413,15 @@ Advanced configuration panel:
 - **Connected clients**: list of active WebSocket connections
 - **Activity logs**: record of actions performed from the web interface
 
+![System Info](https://github.com/alexminator/SML/blob/master/img/system%20info.png)
+
 ### ❓ Help
 Quick reference guide for all lamp features.
 
 ### ℹ️ About
 Project information, version, and links.
+
+![About](https://github.com/alexminator/SML/blob/master/img/about.png)
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 
@@ -434,6 +452,8 @@ In addition to traditional visual effects, there are **VU effects** that react t
 - **Ripple VU** — concentric waves reacting to the rhythm
 - **Frequency Spectrum** — equalizer-style visualization
 
+![VU Effect](https://github.com/alexminator/SML/blob/master/img/Vu%20effect.png)
+
 ### How to Configure an Effect
 
 1. **Single click/tap** — selects and activates the effect
@@ -442,6 +462,8 @@ In addition to traditional visual effects, there are **VU effects** that react t
    - **Color** — palette or primary color
    - **Intensity** — brightness or effect intensity
    - Effect-specific parameters
+
+![Effect Config](https://github.com/alexminator/SML/blob/master/img/effect%20config.png)
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 

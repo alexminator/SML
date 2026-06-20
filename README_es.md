@@ -342,6 +342,8 @@ En `src/config/debug_config.h` puedes controlar qué mensajes se muestran por el
 
 El ESP32 monta un servidor web asíncrono ([ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer)) con comunicación en tiempo real vía WebSocket. Soporta hasta **8 clientes simultáneos** y los cambios se reflejan en todos al instante (ideal para control familiar).
 
+![WebSocket](https://github.com/alexminator/SML/blob/master/img/websokect.png)
+
 La web está organizada en **8 pestañas** accesibles desde la barra lateral (o barra inferior en móvil):
 
 ### 💡 Lamp
@@ -352,6 +354,8 @@ Control principal de la lámpara:
 - **Slider de brillo** para la tira Neopixel
 - **Efectos de luz** (ver sección Efectos)
 
+![Lamp](https://github.com/alexminator/SML/blob/master/img/tab%20lamp.png)
+
 ### 🎵 Music
 Control del altavoz Bluetooth:
 - **Play / Pause**
@@ -360,6 +364,7 @@ Control del altavoz Bluetooth:
 - **Encendido/apagado** del módulo Bluetooth
 - **Efectos VU** visualizadores al compás de la música
 
+![Music](https://github.com/alexminator/SML/blob/master/img/music%20tab.png)
 ### 👁️ Live Preview (Peek)
 Vista previa en tiempo real de la tira LED mediante un canvas que se actualiza vía WebSocket (~30 FPS). Muestra los 24 LEDs interpolados como 33 LEDs virtuales con dos modos de visualización:
 - **Strip** — tira lineal horizontal
@@ -367,19 +372,24 @@ Vista previa en tiempo real de la tira LED mediante un canvas que se actualiza v
 - Botón de **configuración rápida** del efecto activo
 - Indicador de FPS y estado del stream
 
+![Live Preview](https://github.com/alexminator/SML/blob/master/img/live%20preview.png)
 ### 🌡️ Weather
 Datos del sensor DHT22:
 - **Temperatura** (°C)
 - **Humedad** relativa (%)
 - Actualización cada 3 segundos
 
+![Weather](https://github.com/alexminator/SML/blob/master/img/weather%20tab.png)
 ### 🔋 Battery
 Estado detallado de la batería:
 - **Porcentaje** de carga
 - **Voltaje** actual
 - **Estado**: cargando / completamente cargada / en descarga
+- **Gráfica histórica** del voltaje de la batería
 - Indicador visual del estado de energía (AC o batería)
 
+![Battery](https://github.com/alexminator/SML/blob/master/img/batt%20tab.png)
+![Battery Graph](https://github.com/alexminator/SML/blob/master/img/batt%20graph.png)
 ### ⚙️ Config
 Panel de configuración avanzada:
 - **Temas**: SML Classic, WLED Dark, Midnight AMOLED
@@ -389,11 +399,14 @@ Panel de configuración avanzada:
 - **Clientes conectados**: lista de WebSockets activos
 - **Logs de actividad**: registro de acciones realizadas desde la web
 
+![System Info](https://github.com/alexminator/SML/blob/master/img/system%20info.png)
 ### ❓ Help
 Guía rápida de todas las funcionalidades de la lámpara.
 
 ### ℹ️ About
 Información del proyecto, versión y enlaces.
+
+![About](https://github.com/alexminator/SML/blob/master/img/about.png)
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 
@@ -424,6 +437,8 @@ Además de los efectos visuales tradicionales, hay **efectos VU** que reaccionan
 - **Ripple VU** — ondas concéntricas que reaccionan al ritmo
 - **Frecuency Spectrum** — visualización tipo ecualizador
 
+![VU Effect](https://github.com/alexminator/SML/blob/master/img/Vu%20effect.png)
+
 ### Cómo configurar un efecto
 
 1. **Un clic/tap** — selecciona y activa el efecto
@@ -432,6 +447,8 @@ Además de los efectos visuales tradicionales, hay **efectos VU** que reaccionan
    - **Color** — paleta o color primario
    - **Intensity** — brillo o intensidad del efecto
    - Parámetros específicos según el efecto
+
+![Effect Config](https://github.com/alexminator/SML/blob/master/img/effect%20config.png)
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 
