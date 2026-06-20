@@ -285,3 +285,301 @@ Existen mensajes de depuración obligatorios como los de conexión y servicios w
 4. Variables web
   * `const unsigned long refresh` tiempo de demora para el envío de información, 3 segundos por defecto
 
+> **Nota** :
+> Actualmente el proyecto usa [PlatformIO](https://platformio.org/) como entorno de desarrollo. El archivo `platformio.ini` en la raíz del proyecto contiene toda la configuración de compilación, dependencias y puerto serie.
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
+## Construcción y Flash
+
+### Requisitos
+
+- [VS Code](https://code.visualstudio.com/) con la extensión [PlatformIO](https://platformio.org/install/ide?install=vscode)
+- O bien [PlatformIO Core](https://platformio.org/install/cli) por línea de comandos
+
+### Compilar y subir
+
+```bash
+# Compilar el proyecto
+pio run
+
+# Subir firmware al ESP32
+pio run --target upload
+
+# Monitorear puerto serie
+pio device monitor
+
+# Limpiar archivos de compilación
+pio run --target clean
+```
+
+### Subir archivos de la interfaz web
+
+Los archivos HTML, CSS, JS e imágenes están en la carpeta `data/` y se almacenan en LittleFS (SPIFFS) del ESP32. Después de modificar cualquier archivo web:
+
+```bash
+pio run --target uploadfs
+```
+
+### Configuración de depuración
+
+En `src/config/debug_config.h` puedes controlar qué mensajes se muestran por el puerto serie:
+
+| Macro | Descripción |
+|-------|-------------|
+| `DEBUGLEVEL_DEBUGGING` | Habilita toda la depuración |
+| `#define DHT` | Muestra mensajes del sensor DHT22 |
+| `#define BATTERY` | Muestra mensajes del monitoreo de batería |
+| `#define DEBUG_POWER_MANAGEMENT` | Muestra transiciones del gestor de energía |
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
+## Interfaz Web
+
+El ESP32 monta un servidor web asíncrono ([ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer)) con comunicación en tiempo real vía WebSocket. Soporta hasta **8 clientes simultáneos** y los cambios se reflejan en todos al instante (ideal para control familiar).
+
+La web está organizada en **8 pestañas** accesibles desde la barra lateral (o barra inferior en móvil):
+
+### 💡 Lamp
+Control principal de la lámpara:
+- **Encendido/apagado** de la lámpara LED principal
+- **Encendido/apagado** de la tira Neopixel
+- **Selector de color** con rueda cromática (iro.js)
+- **Slider de brillo** para la tira Neopixel
+- **Efectos de luz** (ver sección Efectos)
+
+### 🎵 Music
+Control del altavoz Bluetooth:
+- **Play / Pause**
+- **Volumen + / Volumen -**
+- **Fast Forward / Rewind**
+- **Encendido/apagado** del módulo Bluetooth
+- **Efectos VU** visualizadores al compás de la música
+
+### 👁️ Live Preview (Peek)
+Vista previa en tiempo real de la tira LED mediante un canvas que se actualiza vía WebSocket (~30 FPS). Muestra los 24 LEDs interpolados como 33 LEDs virtuales con dos modos de visualización:
+- **Strip** — tira lineal horizontal
+- **Circle** — disposición circular (simula la forma real de la lámpara)
+- Botón de **configuración rápida** del efecto activo
+- Indicador de FPS y estado del stream
+
+### 🌡️ Weather
+Datos del sensor DHT22:
+- **Temperatura** (°C)
+- **Humedad** relativa (%)
+- Actualización cada 3 segundos
+
+### 🔋 Battery
+Estado detallado de la batería:
+- **Porcentaje** de carga
+- **Voltaje** actual
+- **Estado**: cargando / completamente cargada / en descarga
+- Indicador visual del estado de energía (AC o batería)
+
+### ⚙️ Config
+Panel de configuración avanzada:
+- **Temas**: SML Classic, WLED Dark, Midnight AMOLED
+- **WiFi**: cambiar SSID y contraseña sin necesidad de subir firmware
+- **Actualización de firmware**: enlace directo a ElegantOTA
+- **Info del sistema**: uptime, heap libre, RSSI WiFi, versión de firmware, dirección MAC e IP
+- **Clientes conectados**: lista de WebSockets activos
+- **Logs de actividad**: registro de acciones realizadas desde la web
+
+### ❓ Help
+Guía rápida de todas las funcionalidades de la lámpara.
+
+### ℹ️ About
+Información del proyecto, versión y enlaces.
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
+## Efectos LED
+
+El proyecto incluye **más de 40 efectos visuales** organizados en categorías. Se acceden desde la pestaña **Lamp** → sección Effects.
+
+### Categorías
+
+| Categoría | Descripción |
+|-----------|-------------|
+| ⭐ **Favorites** | Tus efectos favoritos (marcados con estrella) |
+| 📋 **Playlist** | Lista personalizada para modo aleatorio |
+| 🔧 **Fundamentals** | Efectos base: sólido, destello, fade |
+| 🏃 **Moving** | Efectos con movimiento: dot, cometa, sinelon, scan |
+| ⚡ **Dynamics** | Efectos dinámicos: fuego, relámpago, aurora, popcorn |
+| 🎨 **Patterns** | Patrones: arcoíris, teatro, sweep, dissolve |
+| 🌡️ **States** | Efectos de estado: batería, temperatura |
+| 🔀 **Random** | Modo aleatorio (ver sección siguiente) |
+
+### Efectos VU (Music Visualization)
+
+Además de los efectos visuales tradicionales, hay **efectos VU** que reaccionan al audio que reproduce el altavoz Bluetooth. Se encuentran en la pestaña **Music** y se activan automáticamente cuando hay entrada de audio. Algunos ejemplos:
+
+- **Rainbow VU** — barras multicolor al compás
+- **Ripple VU** — ondas concéntricas que reaccionan al ritmo
+- **Frecuency Spectrum** — visualización tipo ecualizador
+
+### Cómo configurar un efecto
+
+1. **Un clic/tap** — selecciona y activa el efecto
+2. **Segundo clic/tap** (en el mismo efecto ya activo) — abre el panel de configuración donde puedes ajustar:
+   - **Speed** — velocidad del efecto
+   - **Color** — paleta o color primario
+   - **Intensity** — brillo o intensidad del efecto
+   - Parámetros específicos según el efecto
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
+## Modo Aleatorio (Random Mode)
+
+La lámpara puede ciclar efectos automáticamente sin intervención. Hay dos modalidades:
+
+### Random FX
+Cicla entre efectos visuales de la tira Neopixel con una duración configurable por efecto.
+
+**Modos de selección:**
+- **All** — cualquier efecto disponible
+- **Favorites** — solo tus efectos marcados como favoritos
+- **Categories** — elige una o más categorías específicas
+- **Playlist** — secuencia personalizada que tú mismo ordenas
+
+### Random VU
+Similar al anterior pero con los efectos VU (visualización de música). Ideal para dejar la lámpara en modo ambientación musical.
+
+### Controles
+- **Duración por efecto** — tiempo que cada efecto permanece activo (configurable)
+- **Encender/apagar** desde la tarjeta Random FX o Random VU en la lista de efectos
+- Vista previa del efecto actual en el panel Peek
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
+## Gestión de Energía (Power Management)
+
+El ESP32 implementa un sistema automático de gestión de energía con máquina de estados que detecta la fuente de alimentación y optimiza el consumo.
+
+### Estados
+
+| Estado | Fuente | WiFi | CPU | Neopixel | Consumo |
+|--------|--------|------|-----|----------|---------|
+| **AC_MODE** | Corriente | Siempre ON | 240 MHz | Encendido | ~180 mA |
+| **BATTERY_CONNECTING** | Batería | 10s ON / espera 30s | 240 MHz | Apagado | ~120 mA |
+| **BATTERY_ACTIVE** | Batería + cliente conectado | Siempre ON | 240 MHz | Apagado | ~120 mA |
+| **BATTERY_SLEEP** | Batería sin cliente | 10s ON / 60s OFF | 80 MHz | Apagado | ~25 mA |
+
+### Transiciones
+- **Pérdida de AC** → intenta conectar 10s → espera cliente 30s → duerme si no hay cliente
+- **Cliente se conecta** → despierta al instante desde cualquier estado
+- **Cliente se desconecta** → espera 30s por reconexión → duerme
+- **Vuelve AC** → retorna inmediatamente a operación completa
+- **Batería < 15%** → fuerza máximo ahorro
+
+### Detección de fuente
+Usa los pines del TP4056: si está cargando o la batería está llena, asume que hay corriente AC. Incluye debounce de 3 segundos para evitar cambios bruscos por flickers.
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
+## Actualizaciones OTA
+
+Puedes actualizar el firmware del ESP32 sin necesidad de cable USB, directamente desde el navegador:
+
+1. Conéctate a la red WiFi del ESP32
+2. Abre `http://<ip-del-esp32>/update`
+3. Selecciona el archivo `.bin` compilado
+4. Haz clic en **Update** y espera a que el ESP32 se reinicie
+
+O también desde la interfaz web, en la pestaña **Config** → sección **Firmware Update**.
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
+## Por hacer
+
+- [ ] Sistema de alarmas programadas (encender lámpara a una hora)
+- [ ] Notificaciones push al móvil cuando la batería esté baja
+- [ ] Efectos colaborativos (varios ESP32 sincronizados)
+- [ ] Integración con Home Assistant
+- [ ] App nativa para Android/iOS
+- [ ] Perfiles de usuario (guardar configuración completa)
+- [ ] Soporte para tiras LED direccionables más grandes (>100 LEDs)
+- [ ] Ecualizador gráfico en tiempo real en la web
+- [ ] Modo despertador (simular amanecer con los LEDs)
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
+## Colaboradores
+
+¿Te gusta el proyecto? ¡Las contribuciones son bienvenidas!
+
+Si tienes una sugerencia de mejora, encuentras un bug, o quieres añadir un nuevo efecto:
+1. Haz un **fork** del repositorio
+2. Crea una rama con tu feature (`git checkout -b feature/NuevaFeature`)
+3. Haz commit de tus cambios (`git commit -m 'Add: NuevaFeature'`)
+4. Sube la rama (`git push origin feature/NuevaFeature`)
+5. Abre un **Pull Request**
+
+También puedes simplemente [abrir un issue](https://github.com/alexminator/SML/issues) para reportar bugs o sugerir ideas.
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
+## Licencia
+
+Distribuido bajo la licencia **GNU General Public License v3.0**. Consulta el archivo `LICENSE` para más información.
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
+## Contacto
+
+**Alexminator** — [@alexminator](https://github.com/alexminator)
+
+- 🔗 LinkedIn: [alexminator](https://www.linkedin.com/in/alexminator/)
+- 📧 Email: *(disponible en perfil de GitHub)*
+
+Link del proyecto: [https://github.com/alexminator/SML](https://github.com/alexminator/SML)
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
+## Programas
+
+Este proyecto ha participado en:
+
+- **[Hacktoberfest](https://hacktoberfest.com/)** — contribuciones open source
+- **SocialSparks** — programa de mentores open source
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
+## Agradecimientos
+
+- [danilopinotti](https://github.com/danilopinotti) por la librería [Battery18650Stats](https://github.com/danilopinotti/Battery18650Stats)
+- [me-no-dev](https://github.com/me-no-dev) por [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer) y [AsyncTCP](https://github.com/me-no-dev/AsyncTCP)
+- [FastLED](https://github.com/FastLED/FastLED) por la increíble librería de LEDs
+- [ElegantOTA](https://github.com/ayushsharma82/ElegantOTA) por las actualizaciones OTA sin complicaciones
+- [PlatformIO](https://platformio.org/) por el excelente ecosistema de desarrollo embebido
+- A mi mujer, por ser la inspiración inicial de este proyecto ❤️
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
+**[⬆ Volver al inicio](#readme-top)**
