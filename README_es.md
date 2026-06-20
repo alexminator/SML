@@ -525,11 +525,9 @@ O también desde la interfaz web, en la pestaña **Config** → sección **Firmw
 <table style="width:100%">
   <tr>
     <th><b>Alexminator</b></th>
-    <th><b>20-EverGreen-2</b></th>
   </tr>
   <tr>
     <td align="center"><a href="https://github.com/alexminator"><img src="https://avatars.githubusercontent.com/u/9116486?s=400&v=4" width=150px height=150px alt="alexminator"/></a></td>
-    <td align="center"><a href="https://github.com/20-EverGreen-2"><img src="https://avatars.githubusercontent.com/u/84293898?v=4" width="150px" alt="20-EverGreen-2"></a></td>
   </tr>
   <tr>
     <td align="center">
@@ -537,9 +535,6 @@ O también desde la interfaz web, en la pestaña **Config** → sección **Firmw
       <a href="https://www.facebook.com/alexander.rivasalpizar/"><img src="https://github.com/alexminator/ALT_nano/blob/master/img/facebook-48.png" width="32px" height="32px"></a>
       <a href="https://www.linkedin.com/in/alexander-rivas-73532037/"><img src="https://github.com/alexminator/ALT_nano/blob/master/img/linkedin-48.png" width="32px" height="32px"></a>
       <a href="https://t.me/Alexminator"><img src="https://github.com/alexminator/ALT_nano/blob/master/img/telegram-app-48.png" width="32px" height="32px"></a>
-    </td>
-    <td align="center">
-      <a href="https://t.me/Deltatronics"><img src="https://github.com/alexminator/ALT_nano/blob/master/img/telegram-app-48.png" width="32px" height="32px"></a>
     </td>
   </tr>
 </table>
