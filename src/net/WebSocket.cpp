@@ -129,8 +129,8 @@ void notifyWSClientList() {
             }
         }
 
-        // ── MENSAJE 2: Action log (solo si hay cambios) ─────────────────────────
-        if (_lastSentLogGen == 0xFE) {   // dirty flag → hay cambios sin enviar
+        // ── MENSAJE 2: Action log (solo si hay cambios Y hay entradas) ──────────
+        if (_lastSentLogGen == 0xFE && _wsLogCount > 0) {   // dirty flag + data to send
             // Capacidad calculada con las macros oficiales de ArduinoJson.
             //   JSON_ARRAY_SIZE(N)  → slots del array
             //   JSON_OBJECT_SIZE(6) → slots para cada entrada (6 campos)
@@ -254,7 +254,11 @@ void notifyClients(bool includeParams)
 {
     // Take mutex for reading shared data
     if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
-        StaticJsonDocument<2048> json;
+        // ⚠ DynamicJsonDocument (heap) en vez de StaticJsonDocument (stack):
+        //   notifyClients se llama DESDE handleWebSocketMessage, que ya tiene
+        //   StaticJsonDocument<1024> en su stack. Con 2 objetos static el
+        //   stack supera los 4KB del server task → overflow → crash + reboot.
+        DynamicJsonDocument json(2048);
 
         // Usar valores numéricos directamente en JSON
         json["battVoltage"] = batt.battVolts;
@@ -311,6 +315,9 @@ void notifyClients(bool includeParams)
             for (int c : randomFXCategories) cats.add(c);
         }
 
+        // Random VU config (broadcast for multi-client sync)
+        json["randomVUDuration"] = randomVUDuration;
+
         // Direct effectId (for random FX cycling and general sync)
         json["effectId"] = stripLed.effectId;
 
@@ -355,25 +362,22 @@ void notifyClients(bool includeParams)
             return;
         }
 
-        // Fixed-size buffer (static — NOT on task stack, TaskWebSocket solo tiene 4KB)
-        static char buffer[2048];
-        size_t len = serializeJson(json, buffer, sizeof(buffer));
-
-        if (len >= sizeof(buffer)) {
+        // Usar heap en vez de stack para evitar overflow (mismo patrón que
+        // notifyWSClientList). El buffer se mide primero y se asigna exacto.
+        size_t jsonLen = measureJson(json) + 1;  // +1 para null byte
+        char* buffer = (char*)malloc(jsonLen);
+        if (buffer) {
+            size_t len = serializeJson(json, buffer, jsonLen);
 #ifdef DEBUG_WEBSOCKET
-            debuglnE("JSON serialization failed - buffer too small");
+            debugD("WebSocket payload size: ");
+            debuglnD_NUM(len, "%u");
+            debuglnD(" bytes");
 #endif
-            xSemaphoreGive(dataMutex);
-            return;
+            if (len > 0 && len < jsonLen) {
+                ws.textAll(buffer, len);
+            }
+            free(buffer);
         }
-
-#ifdef DEBUG_WEBSOCKET
-        debugD("WebSocket payload size: ");
-        debuglnD_NUM(len, "%u");
-        debuglnD(" bytes");
-#endif
-
-        ws.textAll(buffer, len);
 
         xSemaphoreGive(dataMutex);
     } else {
@@ -418,8 +422,8 @@ void notifySensorData()
         json["heap"] = ESP.getFreeHeap() / 1024;
         json["ver"] = SML_VERSION;
 
-        // Static buffer (not on task stack — TaskWebSocket solo tiene 4KB)
-        static char buffer[512];
+        // Buffer local (512 bytes en stack es seguro — TaskWebSocket tiene 4KB)
+        char buffer[512];
         size_t len = serializeJson(json, buffer, sizeof(buffer));
 
         if (len > 0 && len < sizeof(buffer)) {
@@ -469,18 +473,20 @@ static void sendBatteryHistory() {
 
     xSemaphoreGive(dataMutex);
 
-    // Serialize to static buffer and send via textAll (same as notifyClients)
-    static char outBuf[2048];
-    size_t jsonLen = serializeJson(doc, outBuf, sizeof(outBuf));
-    if (jsonLen >= sizeof(outBuf)) return;
-
+    // Serialize to heap buffer (evita 2KB en stack cuando se llama desde handleWebSocketMessage)
+    size_t jsonLen = measureJson(doc) + 1;
+    char* outBuf = (char*)malloc(jsonLen);
+    if (outBuf) {
+        jsonLen = serializeJson(doc, outBuf, jsonLen);
 #ifdef DEBUG_BATTERY
-    debugD("[BATT] sendBatteryHistory — sending ");
-    debugD_NUM(count, "%d");
-    debugD(" entries, jsonLen=");
-    debuglnD_NUM(jsonLen, "%u");
+        debugD("[BATT] sendBatteryHistory — sending ");
+        debugD_NUM(count, "%d");
+        debugD(" entries, jsonLen=");
+        debuglnD_NUM(jsonLen, "%u");
 #endif
-    ws.textAll(outBuf, jsonLen);
+        ws.textAll(outBuf, jsonLen);
+        free(outBuf);
+    }
 }
 
 // ── Overload: send battery history to a SINGLE client (no ws.textAll) ────
@@ -512,9 +518,11 @@ static void sendBatteryHistory(AsyncWebSocketClient* client) {
 
     xSemaphoreGive(dataMutex);
 
-    static char outBuf[2048];
-    size_t jsonLen = serializeJson(doc, outBuf, sizeof(outBuf));
-    if (jsonLen >= sizeof(outBuf)) return;
+    // Serialize to heap buffer (evita 2KB en stack)
+    size_t jsonLen = measureJson(doc) + 1;
+    char* outBuf = (char*)malloc(jsonLen);
+    if (outBuf) {
+        jsonLen = serializeJson(doc, outBuf, jsonLen);
 
 #ifdef DEBUG_BATTERY
     debugD("[BATT] sendBatteryHistory → client #");
@@ -525,6 +533,8 @@ static void sendBatteryHistory(AsyncWebSocketClient* client) {
     debuglnD_NUM(jsonLen, "%u");
 #endif
     client->text(outBuf, jsonLen);
+    free(outBuf);
+    }
 }
 
 // ============================================================================
@@ -791,8 +801,34 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
         }
         else if (strcmp(action, "randomVU") == 0)
         {
-            randomMode = json["state"].as<bool>() ? 2 : 0;
+            if (json["state"].as<bool>()) {
+                randomMode = 2;
+                randomVUDuration = json["duration"] | 8;
+                if (!json["effectPool"].isNull()) {
+                    randomVUPool.clear();
+                    for (JsonVariant v : json["effectPool"].as<JsonArray>())
+                        randomVUPool.push_back(v.as<int>());
+                }
+                if (randomVUPool.empty()) {
+                    // Fallback: built-in VU IDs (12-17, 47-48)
+                    int defaultPool[] = {12, 13, 14, 15, 16, 17, 47, 48};
+                    randomVUPool.assign(defaultPool, defaultPool + 8);
+                }
+                lastRandomSwitch = millis();
+                // Pick first VU effect immediately
+                int firstId = randomVUPool[random(0, randomVUPool.size())];
+                stripLed.effectId = firstId;
+                if (stripLed.powerState) stripLed.update();
+            } else {
+                randomMode = 0;
+            }
             _wsLogAction(clientId, 7, 2, 0, 0);
+        }
+        else if (strcmp(action, "randomVUConfig") == 0)
+        {
+            if (!json["duration"].isNull())
+                randomVUDuration = json["duration"].as<int>();
+            _wsLogAction(clientId, 7, 3, 0, 0);
         }
         else if (strcmp(action, "randomConfig") == 0)
         {

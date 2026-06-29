@@ -60,6 +60,28 @@ void TaskWebSocket(void *pvParameters) {
             }
         }
 
+        // ── Random VU cycling (ESP32-side timer — unificado con FX) ──
+        if (randomMode == 2) {
+            bool didSwitch = false;
+            if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+                if (!randomVUPool.empty()) {
+                    unsigned long now = millis();
+                    if (now - lastRandomSwitch >= (unsigned long)randomVUDuration * 1000) {
+                        int nextId = randomVUPool[random(0, randomVUPool.size())];
+                        stripLed.effectId = nextId;
+                        if (stripLed.powerState) stripLed.update();
+                        lastRandomSwitch = now;
+                        didSwitch = true;
+                    }
+                }
+                xSemaphoreGive(dataMutex);
+            }
+            if (didSwitch) {
+                stateGeneration++;
+                notifyClients(false);
+            }
+        }
+
         // Periodic broadcast of client list + action log (cada ~15s)
         // notifyWSClientList() tiene dirty-check interno, solo envía si hubo cambios
         static uint8_t wsListCycle = 0;
@@ -249,7 +271,6 @@ void readSensor() {
         dht.temperature().getEvent(&event);
         if (!isnan(event.temperature)) {
             temp = event.temperature;
-            stateGeneration++;  // Signal new temp data
 #ifdef DEBUG_TEMPERATURE
             debugD("Temperature: ");
             debugD_FLOAT1(temp);
@@ -270,7 +291,6 @@ void readSensor() {
         dht.humidity().getEvent(&event);
         if (!isnan(event.relative_humidity)) {
             hum = event.relative_humidity;
-            stateGeneration++;  // Signal new humidity data
 #ifdef DEBUG_TEMPERATURE
             debugD("Humidity: ");
             debugD_FLOAT1(hum);
@@ -285,6 +305,9 @@ void readSensor() {
             vTaskDelay(pdMS_TO_TICKS(retryDelay));
         }
     }
+
+    // Single dirty flag increment after reading both sensors
+    stateGeneration++;
 }
 
 // ============================================================================

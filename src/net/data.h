@@ -1,3 +1,5 @@
+#pragma once
+
 // WiFi credentials - set via build flags from .env file
 // For development: create .env file with WIFI_SSID and WIFI_PASS
 #ifndef DEFAULT_WIFI_SSID

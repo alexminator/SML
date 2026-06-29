@@ -838,7 +838,7 @@ function handleRandomVUClick(card, wasActive) {
       sendCmd({ effectId: 0 });
       cards.forEach(c => c.classList.remove('active'));
     } else {
-      sendCmd({ action: 'randomVU', state: true });
+      sendCmd({ action: 'randomVU', state: true, duration: parseInt(localStorage.getItem('sml-random-duration') || '8') });
       SML.randomVUMode = true;
       cards.forEach(c => c.classList.remove('active'));
       card.classList.add('active');
@@ -871,13 +871,17 @@ function handleRandomVUClick(card, wasActive) {
       sendCmd({ action: 'randomFX', state: false });
     }
 
-    // Iniciar random VU (avisa al backend)
-    sendCmd({ action: 'randomVU', state: true });
+    // Iniciar random VU — ESP32 gestiona el cycling internamente
+    sendCmd({
+      action: 'randomVU',
+      state: true,
+      duration: parseInt(localStorage.getItem('sml-random-duration') || '8'),
+      effectPool: RANDOM_VU_POOL
+    });
     SML.randomVUMode = true;
     cards.forEach(c => c.classList.remove('active'));
     card.classList.add('active');
     updatePeekEffectInfo();
-    cycleRandomVU();
   }
 }
 
@@ -924,12 +928,8 @@ function highlightCategories(catIds) {
 }
 
 function cycleRandomVU() {
-  if (!SML.randomVUMode) return;
-  const pool = RANDOM_VU_POOL;
-  const id = pool[Math.floor(Math.random() * pool.length)];
-  SML.effectId = id;
-  sendCmd({ effectId: id });
-  SML._randomVUTimer = setTimeout(cycleRandomVU, getRandomDuration());
+  // Stub: ESP32 maneja el cycling internamente (TaskWebSocket)
+  // Mantenida como stub por compatibilidad.
 }
 
 function stopRandomFX() {
@@ -1060,6 +1060,9 @@ function showRandomDurationConfig(cardEl) {
     slider.addEventListener('input', () => {
       valEl.textContent = slider.value + 's';
       localStorage.setItem('sml-random-duration', slider.value);
+    });
+    slider.addEventListener('change', () => {
+      sendCmd({ action: 'randomVUConfig', duration: parseInt(slider.value) });
     });
   }
   container.classList.add('open');
@@ -1681,13 +1684,18 @@ function connectWS() {
 function scheduleReconnect() {
   clearTimeout(SML.wsReconnectTimer);
 
-  // Exponential backoff: 1s → 2s → 4s → 8s → 16s → 30s (cap)
+  // Exponential backoff: 1s → 1.5s → 2.25s → ... → 30s (cap)
+  // + jitter aleatorio (±30%) para evitar que todos los clientes
+  //   reconecten simultáneamente tras un reinicio del ESP32.
   const delay = SML.wsRetryDelay || 1000;
   SML.wsReconnectCount = (SML.wsReconnectCount || 0) + 1;
   SML.wsRetryDelay = Math.min(delay * 1.5, 30000);
 
-  console.debug(`[WS] reconnect #${SML.wsReconnectCount} in ${delay}ms`);
-  SML.wsReconnectTimer = setTimeout(connectWS, delay);
+  const jitter = 0.7 + Math.random() * 0.6;  // [0.7, 1.3]
+  const actualDelay = Math.round(delay * jitter);
+
+  console.debug(`[WS] reconnect #${SML.wsReconnectCount} in ${actualDelay}ms (base ${delay}ms)`);
+  SML.wsReconnectTimer = setTimeout(connectWS, actualDelay);
 }
 
 function sendCmd(obj) {
@@ -1950,10 +1958,12 @@ function handleMessage(data) {
     } else if (data.randomMode === 2) {
       SML.randomVUMode = true;
       SML.randomFXMode = false;
-      SML.effectId = 100;
-      $$('.effect-card').forEach(c =>
-        c.classList.toggle('active', parseInt(c.dataset.effectId) === 100)
-      );
+      if (data.effectId !== undefined) SML.effectId = data.effectId;
+      $$('.effect-card').forEach(c => {
+        const id = parseInt(c.dataset.effectId);
+        c.classList.toggle('active', id === SML.effectId || id === 100);
+      });
+      if (data.effectId !== undefined) scrollToCategoryCard(data.effectId);
     } else {
       // randomMode === 0 — limpiar flags + highlights de categorías
       SML.randomFXMode = false;
@@ -1977,6 +1987,11 @@ function handleMessage(data) {
       .map(idx => CATEGORY_IDS[idx])
       .filter(Boolean);
     localStorage.setItem('sml-random-categories', JSON.stringify(catIds));
+  }
+
+  // ── RANDOM VU CONFIG SYNC (from ESP32 broadcast) ──
+  if (data.randomVUDuration !== undefined) {
+    localStorage.setItem('sml-random-duration', String(data.randomVUDuration));
   }
 
   // ── EFFECT ──
@@ -2889,5 +2904,14 @@ function renderBatteryChart() {
     ctx.textAlign = align;
     ctx.textBaseline = 'top';
     ctx.fillText(t, mapX(i), h - pad.bottom + 4);
+  });
+}
+
+// ── PWA Service Worker ───────────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(reg => {
+    console.debug('[PWA] ServiceWorker registered, scope:', reg.scope);
+  }).catch(err => {
+    console.warn('[PWA] ServiceWorker registration failed:', err);
   });
 }

@@ -69,6 +69,10 @@ void applyStateConfiguration(PowerState state) {
             powerManagementControllingWiFi = true;  // Power management controls WiFi
             // Neopixel: OFF
             // ESP32 LEDs: ON (built-in, always on)
+            // ⚠ sleepCycleStart se inicializa en 0 en AppState.cpp. Si no se
+            //   resetea aquí, el primer ciclo usa millis()-0 = uptime completo,
+            //   truncando o saltando la primera fase de sueño.
+            sleepCycleStart = millis();
             break;
 
         case POWER_BATTERY_CONNECTING:

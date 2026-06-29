@@ -84,6 +84,10 @@ std::vector<int> randomFXCategories;
 unsigned long lastRandomSwitch = 0;
 int randomPlaylistIndex = 0;
 
+// Random VU config
+int randomVUDuration = 8;
+std::vector<int> randomVUPool;
+
 PowerState currentPowerState = POWER_AC_MODE;
 PowerState previousPowerState = POWER_AC_MODE;
 unsigned long lastStateChange = 0;
