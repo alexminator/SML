@@ -226,7 +226,7 @@ void initWebServer()
     server.on("/wifi-info", HTTP_GET, [](AsyncWebServerRequest *request)
     {
       AsyncResponseStream *response = request->beginResponseStream("application/json");
-      StaticJsonDocument<256> json;
+      JsonDocument json;
       json["status"] = "ok";
       json["ssid"] = WiFi.SSID();
       json["ip"] = WiFi.localIP();
@@ -309,7 +309,7 @@ void initWebServer()
 
     // Endpoint: metadata de todos los efectos (estilo WLED /json/fxda)
     server.on("/fxdata", HTTP_GET, [](AsyncWebServerRequest *request) {
-      StaticJsonDocument<8192> fxJson;
+      JsonDocument fxJson;
       JsonObject metas = fxJson.to<JsonObject>();
       for (uint8_t i = 0; i < EFFECT_COUNT; i++) {
         Effect* fx = effectRegistry[i].instance;
@@ -324,7 +324,7 @@ void initWebServer()
 
     // Endpoint: lista de paletas con nombres y colores representativos
     server.on("/palettes", HTTP_GET, [](AsyncWebServerRequest *request) {
-      StaticJsonDocument<8192> pDoc;
+      JsonDocument pDoc;
       uint8_t cnt = PaletteManager::count();
       // Nombres
       JsonArray names = pDoc["names"].to<JsonArray>();
@@ -336,7 +336,7 @@ void initWebServer()
       JsonArray allSwatches = pDoc["swatches"].to<JsonArray>();
       for (uint8_t i = 0; i < cnt; i++) {
         PaletteManager::getSwatch(i, swatch, 6);
-        JsonArray sw = allSwatches.add().to<JsonArray>();
+        JsonArray sw = allSwatches.add<JsonArray>();
         for (uint8_t j = 0; j < 6; j++) {
           sw.add(swatch[j].r);
           sw.add(swatch[j].g);

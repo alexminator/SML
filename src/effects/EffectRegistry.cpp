@@ -153,7 +153,7 @@ void saveEffectParams() {
         return;
     }
 
-    DynamicJsonDocument doc(12288);
+    JsonDocument doc;
     for (uint8_t i = 0; i < EFFECT_COUNT; i++) {
         Effect* fx = effectRegistry[i].instance;
         if (!fx) continue;
@@ -181,7 +181,7 @@ void loadEffectParams() {
     if (!LittleFS.exists("/params.json")) return;
     File f = LittleFS.open("/params.json", "r");
     if (!f) return;
-    DynamicJsonDocument doc(12288);
+    JsonDocument doc;
     DeserializationError err = deserializeJson(doc, f);
     if (err) {
         f.close();
