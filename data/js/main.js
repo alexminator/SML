@@ -885,10 +885,6 @@ function handleRandomVUClick(card, wasActive) {
   }
 }
 
-function cycleRandomFX() {
-  // No-op: ESP32 handles cycling internally
-  // Kept as stub for backward compatibility
-}
 
 function highlightActiveCard(effId) {
   // Immediate visual feedback — no espera la respuesta WS
@@ -927,10 +923,6 @@ function highlightCategories(catIds) {
   }
 }
 
-function cycleRandomVU() {
-  // Stub: ESP32 maneja el cycling internamente (TaskWebSocket)
-  // Mantenida como stub por compatibilidad.
-}
 
 function stopRandomFX() {
   SML.randomFXMode = false;
@@ -2222,10 +2214,7 @@ function handleMessage(data) {
       SML.isMaster = !!myEntry.master;
       // Handover on subsequent updates: slave → master, start timer if random active
       if (SML._hasReceivedClientList && !wasMaster && SML.isMaster) {
-        if (SML.randomVUMode && !SML._randomVUTimer) {
-          cycleRandomVU();
-        }
-        // Random FX is ESP32-driven so no frontend timer needed
+        // Random FX and VU are ESP32-driven — no frontend timer needed
       }
       SML._hasReceivedClientList = true;
     }
@@ -2285,11 +2274,6 @@ function updateWSClientCount(slaves, max) {
 // PLAYER CONTROLS (bridge for player.js)
 // ============================================================================
 
-function initPlayerBridge() {
-  // player.js (IIFE) auto-initializes — no bridge action needed here.
-}
-
-// sendWebSocketCommand is already declared in player.js — bridge not needed here.
 
 // ============================================================================
 // TOAST — FIFO queue, one at a time

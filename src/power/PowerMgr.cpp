@@ -361,27 +361,34 @@ void updatePowerStateMachine() {
 
 void checkWebSocketClients() {
     static unsigned long lastCheck = 0;
+    static uint8_t disconnectConsecutive = 0;  // debounce counter
 
     if (millis() - lastCheck > 5000) {  // Every 5 seconds
         bool actuallyConnected = (ws.count() > 0);
 
-        if (actuallyConnected != webSocketClientConnected) {
-            #ifdef DEBUG_POWER_MANAGEMENT
-            debugD("WebSocket status changed: ");
-            debugD(webSocketClientConnected ? "connected" : "disconnected");
-            debugD(" → ");
-            debuglnD(actuallyConnected ? "connected" : "disconnected");
-            #endif
-
-            webSocketClientConnected = actuallyConnected;
-
-            // Trigger state transition
-            if (actuallyConnected) {
+        if (actuallyConnected) {
+            // Connected → reset debounce, immediate transition to ACTIVE
+            disconnectConsecutive = 0;
+            if (!webSocketClientConnected) {
+                #ifdef DEBUG_POWER_MANAGEMENT
+                debugD("WebSocket status changed: disconnected → connected\n");
+                #endif
+                webSocketClientConnected = true;
                 if (currentPowerState == POWER_BATTERY_SLEEP ||
                     currentPowerState == POWER_BATTERY_CONNECTING) {
                     transitionToState(POWER_BATTERY_ACTIVE);
                 }
-            } else {
+            }
+        } else {
+            // Not connected → require 2 consecutive checks (10s) to avoid
+            // false positives from transient ws.count() == 0 during cleanup.
+            disconnectConsecutive++;
+            if (disconnectConsecutive >= 2 && webSocketClientConnected) {
+                #ifdef DEBUG_POWER_MANAGEMENT
+                debugD("WebSocket status changed: connected → disconnected (debounced)\n");
+                #endif
+                webSocketClientConnected = false;
+                disconnectConsecutive = 0;
                 if (currentPowerState == POWER_BATTERY_ACTIVE) {
                     transitionToState(POWER_BATTERY_CONNECTING);
                 }

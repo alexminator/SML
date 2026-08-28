@@ -26,7 +26,6 @@
 // ============================================================================
 
 AsyncWebServer server(HTTP_PORT);
-Status status = COLOR;
 
 // ============================================================================
 // LittleFS initialization
@@ -187,62 +186,13 @@ void initWiFi()
 // Template processor (for server-side HTML variable replacement)
 // ============================================================================
 
-const char* processor(const String &var)
-{
-    static char buffer[64];
-    switch (status)
-    {
-    case COLOR:
-    {
-        StaticJsonDocument<128> doc;
-        doc["color"]["r"] = stripLed.R;
-        doc["color"]["g"] = stripLed.G;
-        doc["color"]["b"] = stripLed.B;
-        serializeJson(doc, buffer, sizeof(buffer));
-        return buffer;
-    }
-    case BRIGHTNESS:
-        itoa(stripLed.brightness, buffer, 10);
-        return buffer;
-    case STRIPLED:
-        return stripLed.powerState ? "on" : "off";
-    case BLUETOOTH:
-        return bt_powerState ? "on" : "off";
-    case FIRE_STATE:
-    case MOVINGDOT_STATE:
-    case RAINBOWBEAT_STATE:
-    case RWB_STATE:
-    case RIPPLE_STATE:
-    case TWINKLE_STATE:
-    case BALLS_STATE:
-    case JUGGLE_STATE:
-    case SINELON_STATE:
-    case COMET_STATE:
-    case BREATH_STATE:
-    case COLORSWEEP_STATE:
-    case VU1:
-    case VU2:
-    case VU3:
-    case VU4:
-    case VU5:
-    case VU6:
-    case LAMP:
-        return lampState ? "on" : "off";
-    case TEMPNEO:
-    case BATTNEO:
-    default:
-        buffer[0] = '\0';
-        return buffer;
-    }
-}
-
 // ============================================================================
 // Root request handler
 // ============================================================================
 
 void onRootRequest(AsyncWebServerRequest *request)
 {
-    request->send(LittleFS, "/index.html", "text/html", false, processor);
+    request->send(LittleFS, "/index.html", "text/html");
 }
 
 // ============================================================================

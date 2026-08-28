@@ -156,6 +156,11 @@ void notifyWSClientList() {
             // Buffer exacto para serializar: medimos primero, asignamos después.
             size_t jsonLen = measureJson(logJson) + 1;  // +1 para null byte
             char* logBuf = (char*)malloc(jsonLen);
+            if (!logBuf) {
+#ifdef DEBUG_WEBSOCKET
+                debuglnW("⚠ malloc failed for action log JSON");
+#endif
+            }
             if (logBuf) {
                 size_t written = serializeJson(logJson, logBuf, jsonLen);
 #ifdef DEBUG_WEBSOCKET
@@ -366,6 +371,11 @@ void notifyClients(bool includeParams)
         // notifyWSClientList). El buffer se mide primero y se asigna exacto.
         size_t jsonLen = measureJson(json) + 1;  // +1 para null byte
         char* buffer = (char*)malloc(jsonLen);
+        if (!buffer) {
+#ifdef DEBUG_WEBSOCKET
+            debuglnW("⚠ malloc failed for notifyClients JSON");
+#endif
+        }
         if (buffer) {
             size_t len = serializeJson(json, buffer, jsonLen);
 #ifdef DEBUG_WEBSOCKET
@@ -476,6 +486,11 @@ static void sendBatteryHistory() {
     // Serialize to heap buffer (evita 2KB en stack cuando se llama desde handleWebSocketMessage)
     size_t jsonLen = measureJson(doc) + 1;
     char* outBuf = (char*)malloc(jsonLen);
+    if (!outBuf) {
+#ifdef DEBUG_BATTERY
+        debuglnW("[BATT] ⚠ malloc failed for battery history");
+#endif
+    }
     if (outBuf) {
         jsonLen = serializeJson(doc, outBuf, jsonLen);
 #ifdef DEBUG_BATTERY
@@ -521,6 +536,11 @@ static void sendBatteryHistory(AsyncWebSocketClient* client) {
     // Serialize to heap buffer (evita 2KB en stack)
     size_t jsonLen = measureJson(doc) + 1;
     char* outBuf = (char*)malloc(jsonLen);
+    if (!outBuf) {
+#ifdef DEBUG_BATTERY
+        debuglnW("[BATT] ⚠ malloc failed for battery history (single client)");
+#endif
+    }
     if (outBuf) {
         jsonLen = serializeJson(doc, outBuf, jsonLen);
 
@@ -701,6 +721,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
         // ── SHARED-STATE ACTIONS (todo bajo dataMutex) ───────────────────────
         else
         {
+            bool needsSaveParams = false;  // flag for setParams → save after release
             if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
 
         if (strcmp(action, "toggle") == 0)
@@ -866,7 +887,10 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             }
             _wsLogAction(clientId, 7, 3, 0, 0);
         }
-        // ── setParams: fx setters bajo mutex, saveEffectParams sin mutex ──
+        // ── setParams: fx setters bajo mutex, saveEffectParams después ──
+        // ⚠ FIX:原来的release/re-take causaba fragilidad y riesgo de deadlock.
+        //   Ahora solo seteamos un flag y llamamos saveEffectParams después
+        //   de liberar el mutex, evitando el patrón peligroso.
         else if (strcmp(action, "setParams") == 0)
         {
             uint8_t id = json["effectId"].as<uint8_t>();
@@ -891,22 +915,20 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
                 debugD_NUM(fx->getCheck1(), "%d");
                 debugD("\n");
 #endif
-                // ⚠ Liberar mutex ANTES de saveEffectParams (lo toma internamente)
-                xSemaphoreGive(dataMutex);
-                saveEffectParams();
-                // Volver a tomar (se libera al final del bloque else)
-                if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) != pdTRUE) {
-                    // Si falla, no podemos seguir — notificar y salir
-                    stateGeneration++;
-                    notifyClients(false);
-                    notifyWSClientList();
-                    return;
-                }
+                needsSaveParams = true;  // save after mutex release — no risk
             }
         }
 
                 xSemaphoreGive(dataMutex);
             } // end if dataMutex acquired
+
+            // ⚠ saveEffectParams toma dataMutex internamente — se llama
+            //   DESPUÉS de liberar el bloque compartido para evitar
+            //   el patrón release/re-take que causaba fragilidad.
+            if (needsSaveParams) {
+                saveEffectParams();
+            }
+
         } // end else (shared-state actions)
         stateGeneration++;
         notifyClients(false);
