@@ -56,10 +56,8 @@ void applyStateConfiguration(PowerState state) {
             WiFi.setSleep(false);
             setCpuFrequencyMhz(240);
             powerManagementControllingWiFi = true;  // Power management controls WiFi
-            // Neopixel: OFF (user requirement)
+            // Neopixel: strip not powered on battery — no FastLED commands needed
             // ESP32 LEDs: ON (built-in, always on)
-            FastLED.clear();
-            FastLED.show();
             break;
 
         case POWER_BATTERY_SLEEP:
@@ -245,9 +243,7 @@ void handleBatterySleepState() {
             setCpuFrequencyMhz(80);
         }
 
-        // Neopixel strip disabled
-        FastLED.clear();
-        FastLED.show();
+        // Neopixel: strip not powered on battery — no FastLED commands needed
 
     } else if (elapsedInCycle < SLEEP_DURATION + AWAKE_DURATION) {
         // === PHASE 2: AWAKE (60-70 seconds) ===
@@ -323,17 +319,14 @@ void updatePowerStateMachine() {
 
         case POWER_BATTERY_ACTIVE:
             // Battery with active WebSocket user
-            // Full WiFi/CPU for responsiveness, Neopixel OFF
+            // Full WiFi/CPU for responsiveness
+            // Neopixel: strip not powered on battery — no FastLED commands needed
             if (WiFi.getSleep() == true) {
                 WiFi.setSleep(false);
             }
             if (getCpuFrequencyMhz() != 240) {
                 setCpuFrequencyMhz(240);
             }
-
-            // Ensure Neopixel is OFF on battery
-            FastLED.clear();
-            FastLED.show();
 
             // If client disconnects, go back to CONNECTING (wait 30s)
             if (!webSocketClientConnected) {

@@ -1014,13 +1014,21 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
         // Notify remaining clients about the updated list
         notifyWSClientList();
 
-        // If in battery active mode, go back to connecting (wait 30s)
-        if (currentPowerState == POWER_BATTERY_ACTIVE &&
-            _wsClientCount == 0) {
+        // When no clients remain: turn off the LED strip and wait for reconnect
+        if (_wsClientCount == 0) {
+            stripLed.powerState = false;
+            stripLed.clear();
+            FastLED.show();
+
+            stateGeneration++;  // Notify all clients of the new neostatus
+
+            // If in battery active mode, go back to connecting (wait 30s)
+            if (currentPowerState == POWER_BATTERY_ACTIVE) {
 #ifdef DEBUG_POWER_MANAGEMENT
-            debuglnD("💤 No clients left - waiting 30s for reconnect");
+                debuglnD("💤 No clients left - waiting 30s for reconnect");
 #endif
-            transitionToState(POWER_BATTERY_CONNECTING);
+                transitionToState(POWER_BATTERY_CONNECTING);
+            }
         }
         break;
     }

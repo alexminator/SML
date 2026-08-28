@@ -1623,6 +1623,7 @@ function connectWS() {
   websocket = SML.ws;
 
   SML.ws.onopen = () => {
+    const wasReconnecting = SML.connected === false && SML.wsReconnectCount > 0;
     SML.connected = true;
     SML.wsReconnectCount = 0;
     SML.wsRetryDelay = 1000;          // Reset backoff on successful connect
@@ -1630,14 +1631,23 @@ function connectWS() {
     clearTimeout(SML.wsReconnectTimer);
     // Remove skeletons when connected
     document.querySelectorAll('.skeleton').forEach(el => el.classList.remove('skeleton'));
+    // Toast on reconnection
+    if (wasReconnecting) {
+      showToast('Conexión WebSocket restaurada', 'success');
+    }
     // Doble seguro: pedir estado fresco tras reconexión (el ESP32 ya envía
     // estado en onWsEvent CONNECT, pero por si el buffer descartó algo)
     setTimeout(() => sendCmd({ action: 'requestFullState' }), 300);
   };
 
   SML.ws.onclose = (evt) => {
+    const hadConnection = SML.connected === true;
     SML.connected = false;
     updateConnectionStatus(false);
+    // Toast on unexpected disconnect (not clean close)
+    if (hadConnection && evt.code !== 1000 && evt.code !== 1001) {
+      showToast('Conexión WebSocket perdida — reconectando...', 'error');
+    }
     // Re-add skeleton to data elements when disconnected
     document.querySelectorAll('.stat-value, .info-value, #weatherHumVal, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
       .forEach(el => {
@@ -2328,6 +2338,51 @@ function _processToastQueue() {
 }
 
 // ============================================================================
+// CONFIRM MODAL — replaces native confirm() with styled modal
+// ============================================================================
+
+function showConfirm({ title, message, confirmText, confirmClass, icon }) {
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('confirmModalOverlay');
+    const modal = document.getElementById('confirmModal');
+    const iconEl = document.getElementById('confirmModalIcon');
+    const titleEl = document.getElementById('confirmModalTitle');
+    const msgEl = document.getElementById('confirmModalMessage');
+    const okBtn = document.getElementById('confirmModalOk');
+    const cancelBtn = document.getElementById('confirmModalCancel');
+
+    if (!overlay || !modal) { resolve(false); return; }
+
+    iconEl.innerHTML = icon || '<span class="fas fa-exclamation-triangle" style="color:var(--accent-warning)"></span>';
+    titleEl.textContent = title || 'Are you sure?';
+    msgEl.textContent = message || '';
+    okBtn.textContent = confirmText || 'Confirm';
+    okBtn.className = 'btn ' + (confirmClass || 'btn-danger');
+
+    overlay.classList.add('open');
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    function cleanup(result) {
+      overlay.classList.remove('open');
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      overlay.removeEventListener('click', onOverlay);
+      resolve(result);
+    }
+    function onOk() { cleanup(true); }
+    function onCancel() { cleanup(false); }
+    function onOverlay(e) { if (e.target === overlay) cleanup(false); }
+
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    overlay.addEventListener('click', onOverlay);
+  });
+}
+
+// ============================================================================
 // RESIZE
 // ============================================================================
 
@@ -2559,30 +2614,37 @@ document.addEventListener('DOMContentLoaded', () => {
   const wifiBtn = document.getElementById('wifiSaveBtn');
   if (wifiBtn) wifiBtn.addEventListener('click', saveWiFiConfig);
 
-  // Reboot / Factory Reset
+  // Reboot
   const rebootBtn = document.getElementById('rebootBtn');
   if (rebootBtn) {
-    rebootBtn.addEventListener('click', () => {
+    rebootBtn.addEventListener('click', async () => {
       if (!SML.isMaster) { showToast('Only the master can reboot the device', 'info'); return; }
-      // Double-check using toast confirmation
-      showToast('⚠️ Reboot the ESP32? The connection will be lost for a few seconds.', 'warning');
-      if (confirm('⚠️ Reboot the ESP32? The connection will be lost for a few seconds.')) {
+      const ok = await showConfirm({
+        title: 'Reboot ESP32?',
+        message: 'The connection will be lost for a few seconds while the device restarts.',
+        confirmText: 'Reboot',
+        icon: '<span class="fas fa-redo-alt" style="color:var(--accent-warning)"></span>',
+      });
+      if (ok) {
         showToast('Rebooting...', 'info');
         sendCmd({ action: 'reboot' });
       }
     });
   }
+  // Factory Reset
   const factoryResetBtn = document.getElementById('factoryResetBtn');
   if (factoryResetBtn) {
-    factoryResetBtn.addEventListener('click', () => {
+    factoryResetBtn.addEventListener('click', async () => {
       if (!SML.isMaster) { showToast('Only the master can factory reset the device', 'info'); return; }
-      // Double-check using toast confirmation
-      showToast('⚠️⚠️ FACTORY RESET — This will:\n\n• Clear WiFi credentials\n• Reset all effect parameters to defaults\n• Restart the device\n\nYou will need to re-connect to WiFi after this.\n\nAre you sure?', 'warning');
-      if (confirm('⚠️⚠️ FACTORY RESET — This will:\n\n• Clear WiFi credentials\n• Reset all effect parameters to defaults\n• Restart the device\n\nYou will need to re-connect to WiFi after this.\n\nAre you sure?')) {
-        if (confirm('⚠️ Last chance — Really factory reset?')) {
-          showToast('Factory resetting...', 'error');
-          sendCmd({ action: 'factoryReset' });
-        }
+      const ok = await showConfirm({
+        title: 'Factory Reset?',
+        message: 'This will clear WiFi credentials, reset all effect parameters to defaults, and restart the device. You will need to re-connect to WiFi after this.',
+        confirmText: 'Factory Reset',
+        icon: '<span class="fas fa-exclamation-circle" style="color:var(--accent-danger)"></span>',
+      });
+      if (ok) {
+        showToast('Factory resetting...', 'error');
+        sendCmd({ action: 'factoryReset' });
       }
     });
   }
