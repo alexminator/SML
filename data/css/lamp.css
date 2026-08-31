@@ -1,0 +1,170 @@
+/* ===== POWER SECTION — Physical 3D Buttons ===== */
+.power-section {
+  margin-bottom: var(--space-xl);
+}
+
+.power-row {
+  display: flex;
+  gap: var(--space-xl);
+  justify-content: center;
+  margin-top: var(--space-md);
+}
+
+/* Button wrapper (label sits below the circular button) */
+.power-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* Power button — metallic ring + inner circle (conic/linear gradient) */
+.power-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  padding: 6px;
+  background: conic-gradient(black, #444 10%, black 51%, #555 57%, #222 60%, #555 67%, black 75%);
+  border: 4px solid #000;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.power-card:active {
+  transform: scale(0.92);
+  filter: brightness(0.85);
+}
+
+/* Inner circle — metallic concave with accent border when ON */
+.power-card-icon {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-image: linear-gradient(210deg, #333 20%, #111);
+  border: 4px solid var(--text-muted);
+  box-shadow: inset -3px -2px 15px rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: var(--text-muted);
+  transition: border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, filter 0.15s ease;
+}
+
+.power-card:active .power-card-icon {
+  filter: brightness(0.8);
+  box-shadow:
+    inset -3px -2px 15px rgba(0,0,0,0.85),
+    inset 0 0 20px rgba(0,0,0,0.5);
+}
+
+/* ON state — accent border + glow */
+.power-card.on .power-card-icon {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow:
+    inset -3px -2px 15px rgba(0,0,0,0.85),
+    0 0 16px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* Label sits below the button */
+.power-card-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-align: center;
+  user-select: none;
+}
+
+.power-card.on + .power-card-label,
+.power-control:has(.power-card.on) .power-card-label {
+  color: var(--accent);
+}
+
+/* ===== COLOR PICKER ===== */
+.color-picker-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: var(--space-sm) 0 var(--space-md);
+}
+
+/* ===== CUSTOM RANGE SLIDER (general) ===== */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--slider-track);
+  outline: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+}
+
+input[type="range"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Gradient fill on slider track (WebKit) */
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 5px;
+  border-radius: 3px;
+  background: linear-gradient(90deg,
+    var(--slider-fill) 0%,
+    var(--slider-fill) var(--slider-pct, 50%),
+    var(--slider-track) var(--slider-pct, 50%),
+    var(--slider-track) 100%);
+}
+
+/* Gradient fill on slider track (Firefox) */
+input[type="range"]::-moz-range-track {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--slider-track);
+}
+
+input[type="range"]::-moz-range-progress {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--slider-fill);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  background: radial-gradient(circle at 40% 35%, var(--slider-thumb), color-mix(in srgb, var(--slider-thumb) 80%, #000));
+  cursor: pointer;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--slider-fill) 30%, transparent);
+  transition: transform var(--t-fast), box-shadow var(--t-fast);
+  position: relative;
+  z-index: 2;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  background: radial-gradient(circle at 40% 35%, var(--slider-thumb), color-mix(in srgb, var(--slider-thumb) 80%, #000));
+  cursor: pointer;
+  border: none;
+}
+
+/* Card overflow override — scroll rows must not be clipped */
+.card:has(.effects-scroll-container) {
+  overflow: visible;
+}
+

@@ -184,9 +184,19 @@ void TaskWiFiMonitor(void *pvParameters) {
                     static unsigned long lastAttempt = 0;
                     if (millis() - lastAttempt > 10000) {   // retry every 10s
 #ifdef DEBUG_WIFI
-                        debuglnD("WiFi — reconnecting...");
+                        debuglnD("WiFi — reconnecting (fresh begin)...");
 #endif
-                        WiFi.reconnect();
+                        // ⚠ WiFi.reconnect() solo funciona si WiFi fue conectado
+                        //   exitosamente antes en esta sesión. Si initWiFi() falló
+                        //   en setup (batería muerta, router lento, etc.),
+                        //   reconnect() es un no-op silencioso. Usamos WiFi.begin()
+                        //   con credenciales guardadas para forzar conexión fresca.
+                        if (strlen(savedSSID) > 0) {
+                            WiFi.disconnect(true);  // Limpiar estado previo
+                            WiFi.begin(savedSSID, savedPass);
+                        } else {
+                            WiFi.reconnect();  // Fallback si no hay credenciales guardadas
+                        }
                         lastAttempt = millis();
                     }
                 }

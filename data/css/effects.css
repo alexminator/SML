@@ -1,0 +1,1317 @@
+/* ===== EFFECT SCROLL CATEGORIES ===== */
+.effects-scroll-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.effect-category {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  padding: 0 2px;
+}
+
+.category-header h3 {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* ── Active category highlight (Random FX Category mode) ── */
+.category-header.active h3 {
+  color: var(--accent);
+}
+
+.category-header.active {
+  border-left: 3px solid var(--accent);
+  padding-left: calc(2px + 3px);
+}
+
+.scroll-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 10px 0 10px;
+  -webkit-overflow-scrolling: touch;
+  /* Thin scrollbar visible on desktop */
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.scroll-row::-webkit-scrollbar {
+  height: 5px;
+}
+
+.scroll-row::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-row::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text-muted) 30%, transparent);
+  border-radius: 4px;
+}
+
+/* Cards inside scroll rows — uniform fixed size, no grid wrap */
+.scroll-row .effect-card {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  width: 110px;
+  min-height: 100px;
+}
+
+/* ── Favorite star ── */
+.fav-star {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  color: var(--text-muted);
+  opacity: 0.3;
+  font-size: 0.75rem;
+  transition: opacity 0.2s, transform 0.2s, color 0.2s;
+  border: none;
+  background: none;
+  padding: 0;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fav-star:hover {
+  opacity: 0.7;
+  transform: scale(1.2);
+}
+
+.fav-star.active {
+  opacity: 1;
+  color: var(--accent);
+}
+
+/* ── Random FX config: mode pills, category checkboxes, playlist ── */
+.mode-pills {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+
+.mode-pill {
+  flex: 1;
+  padding: 7px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.mode-pill.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.random-section {
+  margin-bottom: 12px;
+}
+
+.category-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.category-checkbox:hover {
+  background: var(--bg-secondary);
+}
+
+.category-checkbox input {
+  accent-color: var(--accent);
+}
+
+#clearPlaylistBtn {
+  width: 100%;
+  padding: 8px 14px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-card) 50%, transparent);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast), transform var(--t-fast);
+}
+
+#clearPlaylistBtn:hover {
+  border-color: color-mix(in srgb, var(--accent-danger) 50%, var(--border));
+  color: var(--accent-danger);
+  background: color-mix(in srgb, var(--accent-danger) 8%, transparent);
+}
+
+#clearPlaylistBtn:active {
+  transform: scale(0.97);
+}
+
+
+/* ── Playlist picker (inline effect pills inside config panel) ── */
+.playlist-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 4px 2px;
+  scrollbar-width: thin;
+}
+
+.playlist-pick-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-card) 50%, transparent);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
+  white-space: nowrap;
+}
+
+.playlist-pick-btn:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.playlist-pick-btn:active {
+  transform: scale(0.95);
+}
+
+.playlist-pick-btn.picked {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.playlist-pick-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 0.65rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.playlist-pick-btn:not(.picked) .playlist-pick-num {
+  background: color-mix(in srgb, var(--border) 40%, transparent);
+  color: var(--text-muted);
+}
+
+.playlist-pick-btn.picked .playlist-pick-num {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ── Random OK / Play button ── */
+.random-ok-btn {
+  display: block;
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, var(--accent-secondary)));
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.random-ok-btn:hover {
+  box-shadow: 0 6px 24px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.random-ok-btn:active {
+  transform: scale(0.96);
+}
+
+.effects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--space-sm);
+}
+
+.effect-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--glass-card-bg);
+  border: 1px solid color-mix(in srgb, var(--border) 25%, transparent);
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-sm);
+  text-align: center;
+  transition: transform var(--t-fast), background var(--t-fast), border-color var(--t-fast), box-shadow var(--t-fast);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  backdrop-filter: var(--glass-blur-sm);
+  -webkit-backdrop-filter: var(--glass-blur-sm);
+}
+
+.effect-card:active {
+  transform: scale(0.95);
+}
+
+/* ── Clean hover — lift and accent glow ── */
+.effect-card:hover {
+  transform: translateY(-5px);
+  background: color-mix(in srgb, var(--bg-card) 80%, var(--bg-elevated) 20%);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border) 70%);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.35),
+    0 4px 12px color-mix(in srgb, var(--accent) 15%, transparent),
+    0 0 40px color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.effect-card.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--bg-card) 80%, color-mix(in srgb, var(--accent) 5%, transparent));
+  box-shadow:
+    0 0 20px color-mix(in srgb, var(--accent) 25%, transparent),
+    inset 0 0 24px color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+/* ── Ambient "alive" glow for active card in scroll rows (playlist/category) ── */
+/* Ultra-slow breathing — barely perceptible, like the card is softly energized */
+.scroll-row .effect-card.active {
+  animation: fxGlow 3.5s ease-in-out infinite;
+  z-index: 2;
+}
+
+@keyframes fxGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 12px color-mix(in srgb, var(--accent) 18%, transparent),
+      0 0 28px color-mix(in srgb, var(--accent) 6%, transparent),
+      inset 0 0 20px color-mix(in srgb, var(--accent) 4%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 75%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 18px color-mix(in srgb, var(--accent) 30%, transparent),
+      0 0 40px color-mix(in srgb, var(--accent) 12%, transparent),
+      inset 0 0 24px color-mix(in srgb, var(--accent) 6%, transparent);
+    border-color: var(--accent);
+  }
+}
+
+/* On hover, active card still lifts but keeps the ambient glow */
+.scroll-row .effect-card.active:hover {
+  animation: fxGlow 3.5s ease-in-out infinite;
+  transform: translateY(-5px);
+  background: color-mix(in srgb, var(--bg-card) 80%, color-mix(in srgb, var(--accent) 5%, transparent));
+}
+
+.effect-card.active:hover {
+  transform: translateY(-5px);
+  border-color: var(--accent);
+  box-shadow:
+    0 12px 36px rgba(0, 0, 0, 0.35),
+    0 0 28px color-mix(in srgb, var(--accent) 40%, transparent),
+    0 0 60px color-mix(in srgb, var(--accent) 15%, transparent),
+    inset 0 0 28px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.effect-card .effect-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  margin: 0 auto var(--space-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: transform var(--t-spring), box-shadow var(--t-normal);
+  z-index: 1;
+  position: relative;
+}
+
+/* ── SVG-based effect icons (sin fondo circular, color via --effect-color) ── */
+/* Selector con misma especificidad que .effect-card .effect-icon (0,0,2,0)
+   para anular border-radius: 50% de la regla base.
+   viewBox ya no esta en el <svg> de la card — se movio al <symbol> del sprite. */
+.effect-card svg.effect-icon {
+  border-radius: 0;
+  background: none;
+  display: block;
+}
+
+/* Solid (data-effect-id="0"): color del picker */
+.effect-card[data-effect-id="0"].active .effect-icon {
+  --effect-color: var(--solid-fill, #888);
+}
+
+/* Fire (data-effect-id="1"): color activo */
+.effect-card[data-effect-id="1"].active .effect-icon {
+  --effect-color: #FF4500;
+}
+
+/* Moving Dot (data-effect-id="2"): color activo */
+.effect-card[data-effect-id="2"].active .effect-icon {
+  --effect-trail-color: #A8DCD1;
+  --effect-dot-color: #2B6A8C;
+  --effect-color: #2B6A8C;  /* glow del drop-shadow */
+}
+
+/* Color Wipe (data-effect-id="21"): goma rosa + banda azul + papel */
+.effect-card[data-effect-id="20"].active .effect-icon {
+  --wipe-goma: #4488CC;
+  --wipe-goma-band: #F08080;
+  --wipe-line: #E0E0E0;
+  --effect-color: #F08080;
+}
+
+/* Theater Chase (data-effect-id="22"): máscara 3 colores */
+.effect-card[data-effect-id="21"].active .effect-icon {
+  --theater-mask: #E91E63;
+  --theater-ring: #9C27B0;
+  --theater-dot: #FFD93D;
+  --effect-color: #E91E63;
+}
+
+/* Dissolve (data-effect-id="24"): círculo semilleno */
+.effect-card[data-effect-id="23"].active .effect-icon {
+  --dissolve-ring: #3D5AFE;
+  --dissolve-fill: #7C4DFF;
+  --effect-color: #3D5AFE;
+}
+
+/* Running Lights (data-effect-id="23"): barras de velocidad + luz */
+.effect-card[data-effect-id="22"].active .effect-icon {
+  --run-bar: #FF6B35;
+  --run-glow: #FFD93D;
+  --effect-color: #FF6B35;
+}
+
+/* Dual Scan (data-effect-id="25"): color activo */
+.effect-card[data-effect-id="24"].active .effect-icon {
+  --scan-dot: #FF6B6B;
+  --scan-trail: #FFD93D;
+  --effect-color: #FF6B6B;  /* glow del drop-shadow */
+}
+
+/* Juggle (data-effect-id="8"): patrón de malabares */
+.effect-card[data-effect-id="7"].active .effect-icon {
+  --juggle-dot-1: #FF6B6B;
+  --juggle-dot-2: #6BCB77;
+  --juggle-dot-3: #4D96FF;
+  --juggle-dot-4: #FFD93D;
+  --juggle-line: #A66CFF;
+  --effect-color: #A66CFF;
+}
+
+/* Sinelon (data-effect-id="9"): barrido sinusoidal */
+.effect-card[data-effect-id="8"].active .effect-icon {
+  --sinelon-color: #00BCD4;
+  --effect-color: #00BCD4;
+}
+
+/* Rainbow Beat (data-effect-id="3"): colores arcoíris vibrantes */
+/* Nota: stroke inline en cada path del <symbol> (no nth-child porque no penetra <use>) */
+.effect-card[data-effect-id="3"].active .effect-icon {
+  --rainbow-1: #FF2D55;
+  --rainbow-2: #FFD60A;
+  --rainbow-3: #00A8FF;
+  --effect-color: #FF2D55;
+}
+
+/* Red White Blue (data-effect-id="4"): colores patrios */
+.effect-card[data-effect-id="4"].active .effect-icon {
+  --rwb-red: #FF1744;
+  --rwb-white: #FFFFFF;
+  --rwb-blue: #2979FF;
+  --effect-color: #FF1744;
+}
+
+/* Ripple (data-effect-id="5"): 3 ondas de agua */
+.effect-card[data-effect-id="5"].active .effect-icon {
+  --ripple-1: #FF6B35;
+  --ripple-2: #FFD93D;
+  --ripple-3: #00BCD4;
+  --effect-color: #FF6B35;
+}
+
+/* Comet (data-effect-id="10"): colores originales del SVG */
+.effect-card[data-effect-id="9"].active .effect-icon {
+  --comet-body: #E9573F;
+  --comet-head: #FFCE54;
+  --effect-color: #E9573F;
+}
+
+/* Meteor (data-effect-id="27"): fuego */
+.effect-card[data-effect-id="26"].active .effect-icon {
+  --meteor-color: #FF6D00;
+  --effect-color: #FF6D00;
+}
+
+/* Breath (data-effect-id="11"): pulmones */
+.effect-card[data-effect-id="10"].active .effect-icon {
+  --breath-vein: #E85D75;
+  --breath-lung: #FF8FA3;
+  --effect-color: #E85D75;
+}
+
+/* Color Sweep (data-effect-id="12"): flechas + círculos */
+.effect-card[data-effect-id="11"].active .effect-icon {
+  --sweep-arrow: #2979FF;
+  --sweep-dot-1: #FFD93D;
+  --sweep-dot-2: #FF6B6B;
+  --effect-color: #2979FF;
+}
+
+
+
+/* Sparkle (data-effect-id="28"): tres destellos */
+.effect-card[data-effect-id="27"].active .effect-icon {
+  --sparkle-1: #FFD60A;
+  --sparkle-2: #FF6B9D;
+  --sparkle-3: #00D4FF;
+  --effect-color: #FFD60A;
+}
+
+/* Fade (data-effect-id="26"): degradado de púrpuras */
+.effect-card[data-effect-id="25"].active .effect-icon {
+  --fade-1: #7C3AED;
+  --fade-2: #6D28D9;
+  --fade-3: #9333EA;
+  --fade-4: #A855F7;
+  --fade-5: #C084FC;
+  --effect-color: #7C3AED;
+}
+
+/* Bouncing Balls (data-effect-id="7"): 3 arcos + pelota */
+.effect-card[data-effect-id="6"].active .effect-icon {
+  --bounce-trail: #00BCD4;
+  --bounce-ball: #FF6B35;
+  --effect-color: #00BCD4;
+}
+
+/* Fireworks (data-effect-id="32"): estallido + chispas */
+.effect-card[data-effect-id="30"].active .effect-icon {
+  --fw-inner: #FFEE58;    /* amarillo brillante – núcleo caliente */
+  --fw-mid: #FFD700;      /* dorado – explosión media */
+  --fw-outer: #FF6F00;    /* naranja – anillo exterior */
+  --fw-spark-1: #FFD700;  /* chispas doradas */
+  --fw-spark-2: #E65100;  /* chispas naranja intenso */
+  --effect-color: #FFD700;
+}
+
+/* Lightning (data-effect-id="33"): rayo eléctrico */
+.effect-card[data-effect-id="31"].active .effect-icon {
+  --lt-body: #FFEA00;      /* amarillo eléctrico */
+  --effect-color: #FFEA00;
+}
+
+/* Popcorn (data-effect-id="39"): envase + palomitas */
+.effect-card[data-effect-id="37"].active .effect-icon {
+  --pc-body: #E53935;      /* rojo clásico - envase */
+  --pc-flap: #C62828;      /* rojo oscuro - solapas */
+  --pc-popcorn: #FFD700;   /* dorado - palomitas */
+  --effect-color: #FFD700;
+}
+
+/* Pacifica (data-effect-id="36"): olas */
+.effect-card[data-effect-id="34"].active .effect-icon {
+  --pc-wave-1: #4DD0E1;    /* cian - ola superior */
+  --pc-wave-2: #0288D1;    /* azul - ola inferior */
+  --effect-color: #4DD0E1;
+}
+
+/* Colorwaves (data-effect-id="35"): barras arcoíris */
+.effect-card[data-effect-id="33"].active .effect-icon {
+  --cw-1: #E53935;      /* rojo */
+  --cw-2: #FF8F00;      /* ámbar */
+  --cw-3: #43A047;      /* verde */
+  --cw-4: #1E88E5;      /* azul */
+  --cw-5: #8E24AA;      /* púrpura */
+  --effect-color: #43A047;
+}
+
+/* BPM (data-effect-id="30"): latido cardíaco */
+.effect-card[data-effect-id="28"].active .effect-icon {
+  --bpm-body: #E53935;    /* rojo - corazón */
+  --bpm-beat: #FF5252;    /* rojo claro - pulso */
+  --effect-color: #E53935;
+}
+
+/* TwinkleFOX (data-effect-id="37"): dos centellos */
+.effect-card[data-effect-id="35"].active .effect-icon {
+  --tf-1: #FFD60A;        /* amarillo - estrella 1 */
+  --tf-2: #FF6B9D;        /* rosa - estrella 2 */
+  --effect-color: #FFD60A;
+}
+
+/* Hallow Eyes (data-effect-id="45"): verde espectral */
+.effect-card[data-effect-id="45"].active .effect-icon {
+  --halloween-body: #76FF03;
+  --effect-color: #76FF03;
+}
+
+/* Sunrise (data-effect-id="41"): dorado amanecer */
+.effect-card[data-effect-id="41"].active .effect-icon {
+  --sunrise-body: #FF9100;
+  --effect-color: #FF9100;
+}
+
+/* Plasma (data-effect-id="29"): púrpura neón */
+.effect-card[data-effect-id="29"].active .effect-icon {
+  --plasma-body: #D500F9;
+  --effect-color: #D500F9;
+}
+
+/* Heartbeat (data-effect-id="39"): rojo corazón */
+.effect-card[data-effect-id="39"].active .effect-icon {
+  --heartbeat-body: #E53935;
+  --effect-color: #E53935;
+}
+
+/* Candle (data-effect-id="43"): llama ámbar + cuerpo blanco */
+.effect-card[data-effect-id="43"].active .effect-icon {
+  --candle-flame: #FF6D00;
+  --candle-body: #F5F0E1;
+  --effect-color: #FF6D00;
+}
+
+/* ICU (data-effect-id="40"): verde monitor cardíaco */
+.effect-card[data-effect-id="40"].active .effect-icon {
+  --icu-body: #00E676;
+  --effect-color: #00E676;
+}
+
+/* Scanner (data-effect-id="38"): cian láser */
+.effect-card[data-effect-id="38"].active .effect-icon {
+  --scanner-body: #00BCD4;
+  --effect-color: #00BCD4;
+}
+
+/* Drip (data-effect-id="42"): agua azul intenso + gota azul claro */
+.effect-card[data-effect-id="42"].active .effect-icon {
+  --drip-body: #0288D1;
+  --drip-drop: #80D8FF;
+  --effect-color: #0288D1;
+}
+
+/* Aurora (data-effect-id="36"): aurora boreal multicolor */
+.effect-card[data-effect-id="36"].active .effect-icon {
+  --aurora-green: #00E676;
+  --aurora-cyan: #00BCD4;
+  --aurora-teal: #26C6DA;
+  --aurora-purple: #7C4DFF;
+  --aurora-pink: #FF4081;
+  --aurora-blue: #448AFF;
+  --effect-color: #00E676;
+}
+
+/* Chunchun (data-effect-id="44"): naranja pollito */
+.effect-card[data-effect-id="44"].active .effect-icon {
+  --chunchun-body: #FF6D00;
+  --effect-color: #FF6D00;
+}
+
+/* Pride 2015 (data-effect-id="32"): bandera arcoíris */
+.effect-card[data-effect-id="32"].active .effect-icon {
+  --pride-red: #E53935;
+  --pride-orange: #FB8D00;
+  --pride-yellow: #FFE000;
+  --pride-green: #43A047;
+  --pride-blue: #1565C0;
+  --pride-purple: #7A1FA6;
+  --effect-color: #FFE000;
+}
+
+/* Random FX (data-effect-id="99"): marfil como dado real */
+.effect-card[data-effect-id="99"].active .effect-icon {
+  --random-body: #F5F0E1;
+  --effect-color: #F5F0E1;
+}
+
+/* Random VU (data-effect-id="100"): marfil como dado real */
+.effect-card[data-effect-id="100"].active .effect-icon {
+  --random-body: #F5F0E1;
+  --effect-color: #F5F0E1;
+}
+
+/* Rainbow VU (data-effect-id="12"): 5 barras de ecualizador con colores arcoíris */
+/* ── Animación VU: cada barra sube y baja como un medidor real ── */
+.effect-card[data-effect-id="12"].active .effect-icon {
+  --rvu-1: #FF3B30;    /* rojo */
+  --rvu-2: #FF9500;    /* naranja */
+  --rvu-3: #FFCC00;    /* amarillo */
+  --rvu-4: #34C759;    /* verde */
+  --rvu-5: #007AFF;    /* azul */
+  --effect-color: #FF9500;
+}
+.effect-card[data-effect-id="12"].active .effect-icon .vu-b {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation-duration: 0.65s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+.effect-card[data-effect-id="12"].active .effect-icon .vu-b-1 {
+  animation-name: vu-bounce-1;
+  animation-delay: 0.00s;
+}
+.effect-card[data-effect-id="12"].active .effect-icon .vu-b-2 {
+  animation-name: vu-bounce-2;
+  animation-delay: 0.12s;
+}
+.effect-card[data-effect-id="12"].active .effect-icon .vu-b-3 {
+  animation-name: vu-bounce-3;
+  animation-delay: 0.22s;
+}
+.effect-card[data-effect-id="12"].active .effect-icon .vu-b-4 {
+  animation-name: vu-bounce-4;
+  animation-delay: 0.15s;
+}
+.effect-card[data-effect-id="12"].active .effect-icon .vu-b-5 {
+  animation-name: vu-bounce-5;
+  animation-delay: 0.04s;
+}
+
+/* Cada barra escala distinto según su altura base para no salirse del viewBox */
+@keyframes vu-bounce-1 { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.8); } }
+@keyframes vu-bounce-2 { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.5); } }
+@keyframes vu-bounce-3 { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.25); } }
+@keyframes vu-bounce-4 { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.45); } }
+@keyframes vu-bounce-5 { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.7); } }
+
+/* Rainbow Hue (data-effect-id="14"): mismas barras VU, colores verde→azul heredados de rainbow */
+.effect-card[data-effect-id="14"].active .effect-icon {
+  --rhue-1: #76FF03;    /* verde neón */
+  --rhue-2: #00E676;    /* verde esmeralda */
+  --rhue-3: #00BFA5;    /* teal */
+  --rhue-4: #00BCD4;    /* cian */
+  --rhue-5: #448AFF;    /* azul */
+  --effect-color: #00BFA5;
+}
+.effect-card[data-effect-id="14"].active .effect-icon .vu-b {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation-duration: 0.65s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+.effect-card[data-effect-id="14"].active .effect-icon .vu-b-1 {
+  animation-name: vu-bounce-1;
+  animation-delay: 0.00s;
+}
+.effect-card[data-effect-id="14"].active .effect-icon .vu-b-2 {
+  animation-name: vu-bounce-2;
+  animation-delay: 0.12s;
+}
+.effect-card[data-effect-id="14"].active .effect-icon .vu-b-3 {
+  animation-name: vu-bounce-3;
+  animation-delay: 0.22s;
+}
+.effect-card[data-effect-id="14"].active .effect-icon .vu-b-4 {
+  animation-name: vu-bounce-4;
+  animation-delay: 0.15s;
+}
+.effect-card[data-effect-id="14"].active .effect-icon .vu-b-5 {
+  animation-name: vu-bounce-5;
+  animation-delay: 0.04s;
+}
+
+/* Ripple VU (data-effect-id="15"): ondas concéntricas expansivas */
+.effect-card[data-effect-id="15"].active .effect-icon {
+  --ripple-1: #00BCD4;    /* cian interior */
+  --ripple-2: #26C6DA;    /* cian claro */
+  --ripple-3: #4DD0E1;    /* celeste */
+  --ripple-4: #80DEEA;    /* celeste muy claro / exterior */
+  --effect-color: #26C6DA;
+}
+.effect-card[data-effect-id="15"] .ripple-ring {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  animation: ripple-scale 1.5s ease-in-out infinite;
+  animation-play-state: paused;
+}
+.effect-card[data-effect-id="15"].active .ripple-ring {
+  animation-play-state: running;
+}
+.effect-card[data-effect-id="15"] .ripple-1 { animation-delay: 0.0s; }
+.effect-card[data-effect-id="15"] .ripple-2 { animation-delay: 0.25s; }
+.effect-card[data-effect-id="15"] .ripple-3 { animation-delay: 0.5s; }
+.effect-card[data-effect-id="15"] .ripple-4 { animation-delay: 0.75s; }
+@keyframes ripple-scale {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* 3 Bars VU (data-effect-id="16"): barras horizontales crecen del centro */
+.effect-card[data-effect-id="16"].active .effect-icon {
+  --hbar3-1: #00838F;    /* teal oscuro */
+  --hbar3-2: #00BCD4;    /* cian */
+  --hbar3-3: #4DD0E1;    /* cian claro */
+  --effect-color: #00BCD4;
+}
+.effect-card[data-effect-id="16"].active .effect-icon .hbar3 {
+  transform-box: fill-box;
+  transform-origin: center center;
+  animation-duration: 0.7s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+.effect-card[data-effect-id="16"].active .effect-icon .hbar3-1 {
+  animation-name: hbar3-swell-1;
+  animation-delay: 0.0s;
+}
+.effect-card[data-effect-id="16"].active .effect-icon .hbar3-2 {
+  animation-name: hbar3-swell-2;
+  animation-delay: 0.18s;
+}
+.effect-card[data-effect-id="16"].active .effect-icon .hbar3-3 {
+  animation-name: hbar3-swell-3;
+  animation-delay: 0.09s;
+}
+@keyframes hbar3-swell-1 { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.6); } }
+@keyframes hbar3-swell-2 { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.2); } }
+@keyframes hbar3-swell-3 { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.4); } }
+
+/* Ocean VU (data-effect-id="17"): ondas sinusoidales que ondulan como el mar */
+.effect-card[data-effect-id="17"].active .effect-icon {
+  --ocean-1: #006064;    /* teal profundo */
+  --ocean-2: #00838F;    /* teal */
+  --ocean-3: #26C6DA;    /* cyan claro */
+  --effect-color: #00838F;
+}
+.effect-card[data-effect-id="17"] .ocean-wv {
+  transform-box: fill-box;
+  transform-origin: center center;
+  animation-duration: 1.2s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-play-state: paused;
+}
+.effect-card[data-effect-id="17"].active .ocean-wv {
+  animation-play-state: running;
+}
+.effect-card[data-effect-id="17"] .ocean-wv-1 { animation-name: ocean-flow-1; animation-delay: 0.0s; }
+.effect-card[data-effect-id="17"] .ocean-wv-2 { animation-name: ocean-flow-2; animation-delay: 0.2s; }
+.effect-card[data-effect-id="17"] .ocean-wv-3 { animation-name: ocean-flow-3; animation-delay: 0.4s; }
+@keyframes ocean-flow-1 {
+  0%, 100% { transform: scaleY(1) translateX(0); }
+  50% { transform: scaleY(1.12) translateX(2.5px); }
+}
+@keyframes ocean-flow-2 {
+  0%, 100% { transform: scaleY(1) translateX(0); }
+  50% { transform: scaleY(1.12) translateX(-2.5px); }
+}
+@keyframes ocean-flow-3 {
+  0%, 100% { transform: scaleY(1) translateX(0); }
+  50% { transform: scaleY(1.12) translateX(2.5px); }
+}
+
+/* DJ Light (data-effect-id="48"): tornamesa con brillo y mano pinchando */
+.effect-card[data-effect-id="48"].active .effect-icon {
+  --dj-body: #2D2D2D;                  /* cuerpo tornamesa */
+  --dj-shine-color: rgba(255,255,255,0.15);  /* brillo del vinilo */
+  --dj-label-fill: #E0E0E0;            /* etiqueta central */
+  --dj-label-stroke: #555;             /* borde etiqueta */
+  --dj-hand-fill: #FFFFFF;             /* mano/brazo */
+  --dj-hand-stroke: #555;              /* contorno mano */
+  --effect-color: #FFFFFF;
+}
+/* ── Brillo oscila a la izquierda simulando el giro del disco ── */
+.effect-card[data-effect-id="48"] .dj-shine-grp {
+  transform-box: view-box;
+  transform-origin: 230.59px 232.941px;
+  animation: dj-shine-move 0.8s ease-in-out infinite;
+  animation-play-state: paused;
+}
+.effect-card[data-effect-id="48"].active .dj-shine-grp {
+  animation-play-state: running;
+}
+@keyframes dj-shine-move {
+  0%, 100% { transform: rotate(35deg); }
+  50% { transform: rotate(10deg); }
+}
+/* ── Mano que golpetea verticalmente como pinchando ── */
+.effect-card[data-effect-id="48"] .dj-hand-grp {
+  animation: dj-tap 0.35s ease-in-out infinite;
+  animation-play-state: paused;
+}
+.effect-card[data-effect-id="48"].active .dj-hand-grp {
+  animation-play-state: running;
+}
+@keyframes dj-tap {
+  0%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-50px); }
+  60% { transform: translateY(10px); }
+}
+
+/* Old Skool (data-effect-id="13"): 6 LEDs estilo VU meter */
+.effect-card[data-effect-id="13"] .os-led-1,
+.effect-card[data-effect-id="13"] .os-led-2,
+.effect-card[data-effect-id="13"] .os-led-3,
+.effect-card[data-effect-id="13"] .os-led-4,
+.effect-card[data-effect-id="13"] .os-led-5,
+.effect-card[data-effect-id="13"] .os-led-6 {
+  fill: #888;
+}
+.effect-card[data-effect-id="13"].active .os-led-1 {
+  --os-led-1: #4CAF50;
+  animation: os-pulse-1 0.9s ease-in-out infinite;
+}
+.effect-card[data-effect-id="13"].active .os-led-2 {
+  --os-led-2: #4CAF50;
+  animation: os-pulse-2 0.9s ease-in-out infinite;
+}
+.effect-card[data-effect-id="13"].active .os-led-3 {
+  --os-led-3: #8BC34A;
+  animation: os-pulse-3 0.9s ease-in-out infinite;
+}
+.effect-card[data-effect-id="13"].active .os-led-4 {
+  --os-led-4: #FFEB3B;
+  animation: os-pulse-4 0.9s ease-in-out infinite;
+}
+.effect-card[data-effect-id="13"].active .os-led-5 {
+  --os-led-5: #FF9800;
+  animation: os-pulse-5 0.9s ease-in-out infinite;
+}
+.effect-card[data-effect-id="13"].active .os-led-6 {
+  --os-led-6: #F44336;
+  animation: os-pulse-6 0.9s ease-in-out infinite;
+}
+@keyframes os-pulse-1 {
+  0%, 100% { fill: #4CAF50; }
+  35% { fill: #555; }
+}
+@keyframes os-pulse-2 {
+  0%, 100% { fill: #4CAF50; }
+  30%, 65% { fill: #555; }
+}
+@keyframes os-pulse-3 {
+  0%, 100% { fill: #8BC34A; }
+  25%, 55% { fill: #555; }
+}
+@keyframes os-pulse-4 {
+  0%, 100% { fill: #FFEB3B; }
+  15%, 45%, 75% { fill: #555; }
+}
+@keyframes os-pulse-5 {
+  0%, 100% { fill: #555; }
+  10%, 40%, 70%, 90% { fill: #FF9800; }
+}
+@keyframes os-pulse-6 {
+  0%, 100% { fill: #555; }
+  5%, 35%, 65%, 85% { fill: #F44336; }
+}
+
+/* Noisemeter (data-effect-id="47"): medidor VU con aguja estilo noise */
+.effect-card[data-effect-id="47"].active .effect-icon {
+  --nm-body: #FFD700;
+  --nm-needle: #FF3366;
+  --effect-color: #FFD700;
+}
+.effect-card[data-effect-id="47"] .nm-needle-grp {
+  transform-box: view-box;
+  transform-origin: 50% 73.53%;
+  animation: nm-swing 0.8s ease-in-out infinite;
+  animation-play-state: paused;
+}
+.effect-card[data-effect-id="47"].active .nm-needle-grp {
+  animation-play-state: running;
+}
+@keyframes nm-swing {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(93.78deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* SVG icons: drop-shadow en vez de box-shadow (sigue la silueta, no el cuadrado) */
+/* Nota: selector svg.effect-icon porque viewBox esta en el <symbol>, no en el <svg> */
+.effect-card:hover svg.effect-icon {
+  box-shadow: none;
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--accent) 30%, transparent));
+}
+.effect-card.active svg.effect-icon {
+  box-shadow: none;
+  filter: drop-shadow(0 0 14px var(--effect-color));
+}
+.effect-card.active:hover svg.effect-icon {
+  box-shadow: none;
+  filter: drop-shadow(0 0 24px var(--effect-color));
+}
+
+.effect-card:hover .effect-icon {
+  transform: scale(1.12);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.effect-card.active .effect-icon {
+  box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.effect-card.active:hover .effect-icon {
+  transform: scale(1.15);
+  box-shadow: 0 0 30px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.effect-card .effect-name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: color var(--t-fast);
+  line-height: 1.3;
+  position: relative;
+  z-index: 1;
+}
+
+.effect-card:hover .effect-name {
+  color: var(--text-primary);
+}
+
+.effect-card.active .effect-name {
+  color: var(--accent);
+}
+
+/* ── Effect params panel ── */
+.effect-params-panel {
+  display: none;
+  background: color-mix(in srgb, var(--bg-elevated) 60%, transparent);
+  border: var(--glass-card-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  margin-top: var(--space-sm);
+  backdrop-filter: var(--glass-blur-md);
+}
+
+.effect-params-panel.open {
+  display: block;
+}
+
+.param-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-sm);
+  padding: var(--space-sm) 0;
+}
+
+.param-row label:not(.switch) {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  min-width: 75px;
+  font-weight: 500;
+}
+
+.param-row input[type="range"] {
+  flex: 1;
+}
+
+.param-row .param-value {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  min-width: 30px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* ── Toggle switch ── */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.switch .slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: var(--toggle-bg);
+  border-radius: 24px;
+  transition: background var(--t-fast);
+}
+
+.switch .slider::before {
+  content: '';
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: var(--text-primary);
+  border-radius: 50%;
+  transition: transform var(--t-fast);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.switch input:checked + .slider {
+  background: var(--toggle-active);
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(18px);
+  background: white;
+}
+
+.param-reset-row {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: var(--glass-border);
+}
+
+.btn-reset-params {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast), box-shadow var(--t-fast), transform var(--t-fast);
+  letter-spacing: 0.3px;
+}
+
+.btn-reset-params:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.btn-reset-params:active {
+  transform: scale(0.96);
+}
+
+/* ===== PALETTE SELECTOR ===== */
+.palette-section {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: var(--glass-border);
+}
+
+.palette-section-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-sm);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.palette-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 6px 4px;
+  scrollbar-width: thin;
+  justify-items: center;
+}
+
+.palette-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  padding: 10px 8px 8px;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  width: 100%;
+  max-width: 88px;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+.palette-swatch:hover {
+  border-color: var(--border);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.palette-swatch.selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent), 0 4px 16px rgba(0,0,0,0.3);
+}
+
+.palette-swatch-bar {
+  display: flex;
+  border-radius: 6px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 64px;
+  height: 12px;
+  border: 1px solid var(--border);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    0 2px 6px rgba(0,0,0,0.35);
+  transition: box-shadow 0.2s ease;
+}
+
+.palette-swatch:hover .palette-swatch-bar {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 3px 10px rgba(0,0,0,0.4);
+}
+
+.palette-color {
+  display: block;
+  flex: 1;
+  height: 100%;
+}
+
+.palette-name {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  line-height: 1.1;
+  text-align: center;
+  width: 100%;
+  max-width: 64px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  letter-spacing: 0.01em;
+  transition: color 0.2s ease;
+}
+
+.palette-swatch:hover .palette-name {
+  color: var(--text-secondary);
+}
+
+.palette-swatch.selected .palette-name {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.palette-check-mark {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  line-height: 20px;
+  text-align: center;
+  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.45);
+  display: none;
+  animation: paletteCheckPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes paletteCheckPop {
+  0% { transform: scale(0.3); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.palette-swatch.selected .palette-check-mark {
+  display: block;
+}
+
+/* Desktop: 3 paletas por fila, más grandes */
+@media (min-width: 900px) {
+  .palette-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    max-height: 380px;
+    padding: 8px 4px;
+    justify-items: stretch;
+  }
+  .palette-swatch {
+    max-width: unset;
+    padding: 14px 12px 10px;
+    gap: 6px;
+    border-radius: 12px;
+  }
+  .palette-swatch:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  }
+  .palette-swatch.selected {
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent), 0 6px 24px rgba(0,0,0,0.35);
+  }
+  .palette-swatch-bar {
+    max-width: 80px;
+    height: 14px;
+    border-radius: 7px;
+  }
+  .palette-name {
+    font-size: 0.68rem;
+    max-width: unset;
+  }
+  .palette-check-mark {
+    width: 22px;
+    height: 22px;
+    font-size: 0.75rem;
+    line-height: 22px;
+    top: -7px;
+    right: -7px;
+  }
+}
+
