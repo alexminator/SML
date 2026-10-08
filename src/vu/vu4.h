@@ -63,8 +63,8 @@ private:
                 break;
 
             default:
-                leds[(center + rippleStep + N_PIXELS) % N_PIXELS] += ColorFromPalette(PaletteManager::getPalette(_paletteIndex), rippleHue, 255 / rippleStep * 2, LINEARBLEND);
-                leds[(center - rippleStep + N_PIXELS) % N_PIXELS] += ColorFromPalette(PaletteManager::getPalette(_paletteIndex), rippleHue, 255 / rippleStep * 2, LINEARBLEND);
+                leds[(center + rippleStep + N_PIXELS) % N_PIXELS] += ColorFromPalette(PaletteManager::getPalette(_paletteIndex), rippleHue, 255 / (rippleStep * 2), LINEARBLEND);
+                leds[(center - rippleStep + N_PIXELS) % N_PIXELS] += ColorFromPalette(PaletteManager::getPalette(_paletteIndex), rippleHue, 255 / (rippleStep * 2), LINEARBLEND);
                 rippleStep++;
                 break;
         }

@@ -236,12 +236,13 @@ void Battery::saveBatteryLog() {
     size_t cap = JSON_ARRAY_SIZE(battLogCount)
                + battLogCount * JSON_OBJECT_SIZE(3)
                + 64;
-    DynamicJsonDocument doc(cap);
+    JsonDocument doc;
+    doc.reserve(cap);
 
     JsonArray arr = doc["battLog"].to<JsonArray>();
     int idx = (battLogHead + BATT_LOG_SIZE - battLogCount) % BATT_LOG_SIZE;
     for (int i = 0; i < battLogCount; i++) {
-        JsonObject e = arr.add().to<JsonObject>();
+        JsonObject e = arr.add<JsonObject>();
         e["t"] = battLog[idx].uptime;
         e["v"] = battLog[idx].voltage;
         e["l"] = battLog[idx].level;
@@ -279,7 +280,8 @@ void Battery::loadBatteryLog() {
 
     // Estimate capacity: file size + 20% margin
     size_t fileSize = f.size();
-    DynamicJsonDocument doc(fileSize + 256);
+    JsonDocument doc;
+    doc.reserve(fileSize + 256);
     DeserializationError err = deserializeJson(doc, f);
     f.close();
 
@@ -395,7 +397,8 @@ void loadGlobalState() {
     if (!LittleFS.exists("/state.json")) return;
     File f = LittleFS.open("/state.json", "r");
     if (!f) return;
-    DynamicJsonDocument doc(1024);
+    JsonDocument doc;
+    doc.reserve(1024);
     DeserializationError err = deserializeJson(doc, f);
     if (err) {
         f.close();
@@ -425,7 +428,8 @@ void saveGlobalState() {
 #endif
         return;
     }
-    DynamicJsonDocument doc(1024);
+    JsonDocument doc;
+    doc.reserve(1024);
     doc["R"] = stripLed.R;
     doc["G"] = stripLed.G;
     doc["B"] = stripLed.B;

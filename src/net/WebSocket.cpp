@@ -110,12 +110,13 @@ void notifyWSClientList() {
         // ── MENSAJE 1: Client list ──────────────────────────────────────────────
         //   Se envía solo si _wsClChangesGeneration cambió (nuevo cliente / desconexión)
         if (_wsClChangesGeneration != _lastSentClGen) {
-            StaticJsonDocument<512> clJson;
+            JsonDocument clJson;
+            clJson.reserve(512);
             clJson["wsSlaves"] = (_wsClientCount > 0) ? _wsClientCount - 1 : 0;
             clJson["wsMax"] = WS_MAX_CLIENTS;
             JsonArray arr = clJson["wsClientList"].to<JsonArray>();
             for (uint8_t i = 0; i < _wsClientCount; i++) {
-                JsonObject c = arr.add().to<JsonObject>();
+                JsonObject c = arr.add<JsonObject>();
                 c["id"] = _wsClientIds[i];
                 c["ip"] = _wsClientIps[i];
                 c["master"] = (_wsClientIds[i] == _wsMasterId);
@@ -138,12 +139,13 @@ void notifyWSClientList() {
             size_t capacity = JSON_ARRAY_SIZE(_wsLogCount)
                            + _wsLogCount * JSON_OBJECT_SIZE(6)
                            + 64;
-            DynamicJsonDocument logJson(capacity);
+            JsonDocument logJson;
+            logJson.reserve(capacity);
             JsonArray logArr = logJson["wsActionLog"].to<JsonArray>();
             uint8_t idx = (_wsLogHead + WS_LOG_SIZE - _wsLogCount) % WS_LOG_SIZE;
             for (uint8_t i = 0; i < _wsLogCount; i++) {
                 WsLogEntry* e = &_wsActionLog[idx];
-                JsonObject le = logArr.add().to<JsonObject>();
+                JsonObject le = logArr.add<JsonObject>();
                 le["t"]  = e->timestamp;
                 le["c"]  = e->clientId;
                 le["ty"] = e->type;
@@ -254,7 +256,8 @@ void notifyClients(bool includeParams)
 {
     // Take mutex for reading shared data
     if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
-        StaticJsonDocument<2048> json;
+        JsonDocument json;
+        json.reserve(2048);
 
         // Usar valores numéricos directamente en JSON
         json["battVoltage"] = batt.battVolts;
@@ -405,7 +408,8 @@ void notifySensorData()
         lastGen = stateGeneration;
 
         // Small document — only real-time sensor/status fields (~180 bytes)
-        StaticJsonDocument<512> json;
+        JsonDocument json;
+        json.reserve(512);
 
         json["level"] = batt.battLvl;
         json["battVoltage"] = batt.battVolts;
@@ -466,11 +470,12 @@ static void sendBatteryHistory() {
     // Use the same buffer+mutex pattern as notifyClients (proven to work)
     int count = min(batt.battLogCount, BATT_LOG_SIZE);
     size_t cap = JSON_ARRAY_SIZE(count) + count * JSON_OBJECT_SIZE(3) + 64;
-    DynamicJsonDocument doc(cap);
+    JsonDocument doc;
+    doc.reserve(cap);
     JsonArray arr = doc["battHistory"].to<JsonArray>();
     int idx = (batt.battLogHead + BATT_LOG_SIZE - count) % BATT_LOG_SIZE;
     for (int i = 0; i < count; i++) {
-        JsonObject e = arr.add().to<JsonObject>();
+        JsonObject e = arr.add<JsonObject>();
         e["t"] = batt.battLog[idx].uptime;
         e["v"] = batt.battLog[idx].voltage;
         e["l"] = batt.battLog[idx].level;
@@ -509,11 +514,12 @@ static void sendBatteryHistory(AsyncWebSocketClient* client) {
 
     int count = min(batt.battLogCount, BATT_LOG_SIZE);
     size_t cap = JSON_ARRAY_SIZE(count) + count * JSON_OBJECT_SIZE(3) + 64;
-    DynamicJsonDocument doc(cap);
+    JsonDocument doc;
+    doc.reserve(cap);
     JsonArray arr = doc["battHistory"].to<JsonArray>();
     int idx = (batt.battLogHead + BATT_LOG_SIZE - count) % BATT_LOG_SIZE;
     for (int i = 0; i < count; i++) {
-        JsonObject e = arr.add().to<JsonObject>();
+        JsonObject e = arr.add<JsonObject>();
         e["t"] = batt.battLog[idx].uptime;
         e["v"] = batt.battLog[idx].voltage;
         e["l"] = batt.battLog[idx].level;
@@ -546,7 +552,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
     {
-        StaticJsonDocument<1024> json;
+        JsonDocument json;
+        json.reserve(1024);
         DeserializationError err = deserializeJson(json, data);
         if (err)
         {
@@ -952,7 +959,8 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
 
         // 1. yourClientId PRIMERO — mensaje pequeño, crítico para identidad
         {
-            StaticJsonDocument<64> privMsg;
+            JsonDocument privMsg;
+            privMsg.reserve(64);
             privMsg["yourClientId"] = client->id();
             char privBuf[96];
             size_t privLen = serializeJson(privMsg, privBuf, sizeof(privBuf));
