@@ -51,11 +51,7 @@ private:
 
                 // propagation = ((state/decay - 1) * (speed + 1)) / 256
                 // propI = integer pixel offset, propF = fractional (for sub-pixel smoothing)
-                // ⚠ state/decay - 1 ENTERO (no unsigned): si state < decay,
-                //   state/decay = 0, y 0-1 con unsigned wrappearía a 0xFFFFFFFF.
-                int steps = (int)(state / decay) - 1;
-                if (steps < 0) steps = 0;
-                unsigned propagation = (unsigned)steps * ((unsigned)params.speed + 1);
+                unsigned propagation = ((state / decay - 1) * ((unsigned)params.speed + 1));
                 int propI = propagation >> 8;
                 unsigned propF = propagation & 0xFF;
 

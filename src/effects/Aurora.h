@@ -37,11 +37,7 @@ private:
     CRGB     basecolor;
 
 public:
-    AuroraWave()
-        : center(0), ageFactor_cached(0), ttl(0), age(0), width(0)
-        , basealpha(0), speed_factor(0), wave_start(0), wave_end(0)
-        , goingleft(false), _alive(false), basecolor(CRGB(0,0,0))
-    {}
+    AuroraWave() : _alive(false) {}
 
     void init(uint32_t segment_length, CRGB color) {
         ttl = random16(500, 1501);

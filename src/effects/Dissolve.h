@@ -108,12 +108,7 @@ public:
         }
 
         // ── Avanzar fase ───────────────────────────────────────────────────
-        // ⚠ _step es uint8_t (max 255). Para speed<16, el threshold
-        //   (255-speed)+15 excede 255, y _step nunca lo alcanza → fase
-        //   atascada. Cap a 254 para garantizar que siempre pueda progresar.
-        unsigned rawThreshold = (255 - params.speed) + 15U;
-        uint8_t threshold = (rawThreshold > 254) ? 254 : (uint8_t)rawThreshold;
-        if (_step > threshold) {
+        if (_step > (255 - params.speed) + 15U) {
             _dissolvePhase = !_dissolvePhase;
             _step = 0;
         } else {
