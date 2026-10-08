@@ -41,7 +41,12 @@ Todos los efectos viven en `src/effects/`; el VU meter en `src/vu/`. Los agregad
 - `/battlog.json` — historial de batería
 
 ## Dependencias clave
-- ArduinoJson (@^7.0.0 en `platformio.ini`)
+- ArduinoJson @^7.0.0 en `platformio.ini`
+  - **Nota importante**: la versión resuelta (v7.4.3) NO tiene
+    `JsonDocument::reserve()`. Para documentos con capacidad mínima conocida,
+    usa `DynamicJsonDocument doc(capacity);` en vez de
+    `JsonDocument doc; doc.reserve(capacity);`. El primero sigue soportado
+    en v7 y garantiza la capacidad.
 - ESPAsyncWebServer / AsyncTCP
 - FastLED
 - ElegantOTA
