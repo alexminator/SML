@@ -80,8 +80,22 @@ function updateWSClientList(clients, actionLog) {
 
   // Keep client list reference for re-renders when only log arrives
   if (clients) container._clients = clients;
-  // Keep log reference for re-renders when only log arrives
-  if (actionLog) container._actionLog = actionLog;
+
+  // Merge action log entries into the local accumulated history (avoid duplicates).
+  // This prevents the master's old log from disappearing when a slave connects
+  // and the ESP32's circular buffer (WS_LOG_SIZE=64) overwrites the oldest master
+  // entries with the slave's newer ones.
+  if (actionLog && Array.isArray(actionLog)) {
+    if (!container._actionLog) container._actionLog = [];
+    const existingKeys = new Set(container._actionLog.map(e => _actionLogKey(e)));
+    for (const entry of actionLog) {
+      const key = _actionLogKey(entry);
+      if (!existingKeys.has(key)) {
+        container._actionLog.push(entry);
+        existingKeys.add(key);
+      }
+    }
+  }
 
   // Use stored clients if none provided (standalone actionLog message)
   clients = container._clients || [];
@@ -131,6 +145,16 @@ function updateWSClientList(clients, actionLog) {
 
     container.appendChild(wrapper);
   });
+}
+
+/**
+ * Build a unique key for an action log entry to avoid duplicates when
+ * merging the ESP32's circular-buffer log into the browser's local history.
+ * @param {Object} e - Log entry {t, c, ty, v1, v2, v3}
+ * @returns {string} unique key
+ */
+function _actionLogKey(e) {
+  return `${e.t}|${e.c}|${e.ty}|${e.v1}|${e.v2}|${e.v3}`;
 }
 
 /**
