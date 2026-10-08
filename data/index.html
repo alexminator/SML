@@ -1065,6 +1065,23 @@
           </div>
         </div>
 
+        <!-- WiFi Loss Protection -->
+        <div class="config-section">
+          <div class="config-card">
+            <h3><span class="fas fa-power-off"></span> WiFi Loss Protection</h3>
+            <p class="config-desc">
+              If the ESP32 loses its WiFi link (AP off or out of range) for longer than this time,
+              the LED strip turns off. When the connection returns, the effect resumes automatically.
+              A client disconnecting alone (phone asleep / switched app) does NOT trigger this.
+            </p>
+            <div class="config-input-group">
+              <label for="wifiTimeoutInput">Timeout (seconds)</label>
+              <input type="number" id="wifiTimeoutInput" min="5" max="3600" step="5" placeholder="30">
+            </div>
+            <button class="config-btn" id="wifiTimeoutSaveBtn">Save Timeout</button>
+          </div>
+        </div>
+
         <!-- System Info -->
         <div class="config-section">
           <div class="config-card">

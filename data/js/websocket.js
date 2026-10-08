@@ -41,9 +41,9 @@ function connectWS() {
     clearTimeout(SML.wsReconnectTimer);
     // Remove skeletons when connected
     document.querySelectorAll('.skeleton').forEach(el => el.classList.remove('skeleton'));
-    // Toast on reconnection
+    // Reanudar: quitar banner de cuenta atrás y avisar de la reactivación
     if (wasReconnecting) {
-      showToast('Conexión WebSocket restaurada', 'success');
+      stopWifiCountdown(true);
     }
     // Doble seguro: pedir estado fresco tras reconexión (el ESP32 ya envía
     // estado en onWsEvent CONNECT, pero por si el buffer descartó algo)
@@ -54,9 +54,10 @@ function connectWS() {
     const hadConnection = SML.connected === true;
     SML.connected = false;
     updateConnectionStatus(false);
-    // Toast on unexpected disconnect (not clean close)
+    // Toast + cuenta atrás on unexpected disconnect (not clean close)
     if (hadConnection && evt.code !== 1000 && evt.code !== 1001) {
       showToast('Conexión WebSocket perdida — reconectando...', 'error');
+      startWifiCountdown();
     }
     // Re-add skeleton to data elements when disconnected
     document.querySelectorAll('.stat-value, .info-value, #weatherHumVal, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
@@ -91,6 +92,73 @@ function connectWS() {
       // Ignore non-JSON
     }
   };
+}
+
+// ============================================================================
+// CONTEO DE APAGADO POR PÉRDIDA DE WIFI
+// ============================================================================
+// Al caer la conexión, cuenta atrás del timeout configurado (SML.wifiTimeout).
+// ⚠ El ESP32 solo apaga la tira si ÉL pierde el enlace WiFi; si solo se cayó el
+// cliente (móvil en reposo), el WiFi del ESP32 sigue y la tira NO se apaga.
+let _wifiCountdownTimer = null;
+
+function _wifiCountdownEl() {
+  let el = document.getElementById('wifiCountdownBanner');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'wifiCountdownBanner';
+    el.style.cssText = [
+      'position:fixed', 'left:50%', 'top:14px', 'transform:translateX(-50%)',
+      'z-index:100000', 'max-width:92vw', 'padding:10px 16px', 'border-radius:12px',
+      'font:14px/1.35 system-ui,sans-serif', 'color:#fff', 'text-align:center',
+      'background:rgba(198,40,40,.95)', 'box-shadow:0 6px 20px rgba(0,0,0,.45)',
+      'pointer-events:none'
+    ].join(';');
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+// Modo AC = la tira realmente tiene energía (dispositivo enchufado a la fuente).
+// El firmware marca batería como (!fullBatt && !charging), así que invertimos
+// esa lógica. En batería la tira ya está sin 5V y este aviso no aplica.
+function isACPower() {
+  return !!(SML.charging || SML.fullBatt);
+}
+
+function startWifiCountdown() {
+  // Aviso de apagado SOLO en modo AC. En batería basta el toast de desconexión.
+  if (!isACPower()) return;
+  const total = (typeof SML !== 'undefined' && SML.wifiTimeout > 0) ? SML.wifiTimeout : 30;
+  let remaining = total;
+  const el = _wifiCountdownEl();
+  const render = () => {
+    if (remaining > 0) {
+      el.innerHTML =
+        '<span class="fas fa-triangle-exclamation" style="color:#ffd54f;margin-right:6px"></span>' +
+        'Sin conexión — la tira LED se apagará en <b>' + remaining + ' s</b> si el dispositivo perdió la conexión';
+    } else {
+      el.innerHTML =
+        '<span class="fas fa-power-off" style="color:#ff8a80;margin-right:6px"></span>' +
+        'Tira LED apagada — esperando reconexión';
+    }
+  };
+  render();
+  clearInterval(_wifiCountdownTimer);
+  _wifiCountdownTimer = setInterval(() => {
+    remaining -= 1;
+    render();
+    if (remaining <= 0) clearInterval(_wifiCountdownTimer);
+  }, 1000);
+}
+
+function stopWifiCountdown(restored) {
+  if (_wifiCountdownTimer) { clearInterval(_wifiCountdownTimer); _wifiCountdownTimer = null; }
+  const el = document.getElementById('wifiCountdownBanner');
+  const hadBanner = !!el;
+  if (el) el.remove();
+  // Aviso de reactivación solo si veníamos avisando del apagado (modo AC).
+  if (restored && hadBanner) showToast('Conexión restaurada — tira reactivada', 'success');
 }
 
 function scheduleReconnect() {

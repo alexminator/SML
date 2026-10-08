@@ -59,6 +59,13 @@ function updateSystemInfo(data) {
     if (ssidEl && !ssidEl.value) ssidEl.placeholder = data.ssid;
   }
 
+  // ── WiFi-loss strip timeout (segundos) ──
+  if (data.wifiTimeout !== undefined) {
+    if (typeof SML !== 'undefined') SML.wifiTimeout = data.wifiTimeout;
+    const t = document.getElementById('wifiTimeoutInput');
+    if (t && document.activeElement !== t) t.value = data.wifiTimeout;
+  }
+
 }
 
 /**

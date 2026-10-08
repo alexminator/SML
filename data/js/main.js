@@ -102,6 +102,9 @@ const SML = {
   // WebSocket reconnect state
   wsReconnectCount: 0,
   wsRetryDelay: 1000,
+
+  // Timeout de apagado de la tira al perder WiFi (segundos) — sincronizado del ESP32
+  wifiTimeout: 30,
 };
 
 // ============================================================================
@@ -459,6 +462,28 @@ document.addEventListener('DOMContentLoaded', () => {
   // Config save buttons
   const wifiBtn = document.getElementById('wifiSaveBtn');
   if (wifiBtn) wifiBtn.addEventListener('click', saveWiFiConfig);
+
+  // WiFi-loss strip timeout save
+  const wifiTimeoutBtn = document.getElementById('wifiTimeoutSaveBtn');
+  if (wifiTimeoutBtn) {
+    wifiTimeoutBtn.addEventListener('click', () => {
+      const input = document.getElementById('wifiTimeoutInput');
+      const secs = parseInt(input && input.value, 10);
+      if (!secs || secs < 5 || secs > 3600) {
+        showToast('El timeout debe estar entre 5 y 3600 segundos', 'warning');
+        return;
+      }
+      sendCmd({ action: 'setWifiTimeout', seconds: secs });
+      SML.wifiTimeout = secs;
+      showToast('Timeout de apagado: ' + secs + ' s', 'success');
+    });
+  }
+  const wifiTimeoutInput = document.getElementById('wifiTimeoutInput');
+  if (wifiTimeoutInput) {
+    wifiTimeoutInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('wifiTimeoutSaveBtn')?.click();
+    });
+  }
 
   // Reboot
   const rebootBtn = document.getElementById('rebootBtn');
