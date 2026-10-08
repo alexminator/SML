@@ -110,12 +110,12 @@ void notifyWSClientList() {
         // ── MENSAJE 1: Client list ──────────────────────────────────────────────
         //   Se envía solo si _wsClChangesGeneration cambió (nuevo cliente / desconexión)
         if (_wsClChangesGeneration != _lastSentClGen) {
-            JsonDocument clJson;
+            StaticJsonDocument<512> clJson;
             clJson["wsSlaves"] = (_wsClientCount > 0) ? _wsClientCount - 1 : 0;
             clJson["wsMax"] = WS_MAX_CLIENTS;
             JsonArray arr = clJson["wsClientList"].to<JsonArray>();
             for (uint8_t i = 0; i < _wsClientCount; i++) {
-                JsonObject c = arr.add<JsonObject>();
+                JsonObject c = arr.add().to<JsonObject>();
                 c["id"] = _wsClientIds[i];
                 c["ip"] = _wsClientIps[i];
                 c["master"] = (_wsClientIds[i] == _wsMasterId);
@@ -129,18 +129,21 @@ void notifyWSClientList() {
             }
         }
 
-        // ── MENSAJE 2: Action log (solo si hay cambios Y hay entradas) ──────────
-        if (_lastSentLogGen == 0xFE && _wsLogCount > 0) {   // dirty flag + data to send
+        // ── MENSAJE 2: Action log (solo si hay cambios) ─────────────────────────
+        if (_lastSentLogGen == 0xFE) {   // dirty flag → hay cambios sin enviar
             // Capacidad calculada con las macros oficiales de ArduinoJson.
             //   JSON_ARRAY_SIZE(N)  → slots del array
             //   JSON_OBJECT_SIZE(6) → slots para cada entrada (6 campos)
             //   +64                 → margen para claves y wrapper
-            JsonDocument logJson;
+            size_t capacity = JSON_ARRAY_SIZE(_wsLogCount)
+                           + _wsLogCount * JSON_OBJECT_SIZE(6)
+                           + 64;
+            DynamicJsonDocument logJson(capacity);
             JsonArray logArr = logJson["wsActionLog"].to<JsonArray>();
             uint8_t idx = (_wsLogHead + WS_LOG_SIZE - _wsLogCount) % WS_LOG_SIZE;
             for (uint8_t i = 0; i < _wsLogCount; i++) {
                 WsLogEntry* e = &_wsActionLog[idx];
-                JsonObject le = logArr.add<JsonObject>();
+                JsonObject le = logArr.add().to<JsonObject>();
                 le["t"]  = e->timestamp;
                 le["c"]  = e->clientId;
                 le["ty"] = e->type;
@@ -153,17 +156,14 @@ void notifyWSClientList() {
             // Buffer exacto para serializar: medimos primero, asignamos después.
             size_t jsonLen = measureJson(logJson) + 1;  // +1 para null byte
             char* logBuf = (char*)malloc(jsonLen);
-            if (!logBuf) {
-#ifdef DEBUG_WEBSOCKET
-                debuglnW("⚠ malloc failed for action log JSON");
-#endif
-            }
             if (logBuf) {
                 size_t written = serializeJson(logJson, logBuf, jsonLen);
 #ifdef DEBUG_WEBSOCKET
                 debugD("📋 Log JSON: ");
                 debugD_NUM(_wsLogCount, "%u");
-                debugD(" entries, jsonLen=");
+                debugD(" entries, capacity=");
+                debugD_NUM(capacity, "%u");
+                debugD(", jsonLen=");
                 debugD_NUM(jsonLen, "%u");
                 debugD(", written=");
                 debugD_NUM(written, "%u");
@@ -254,7 +254,7 @@ void notifyClients(bool includeParams)
 {
     // Take mutex for reading shared data
     if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
-        JsonDocument json;
+        StaticJsonDocument<2048> json;
 
         // Usar valores numéricos directamente en JSON
         json["battVoltage"] = batt.battVolts;
@@ -273,6 +273,11 @@ void notifyClients(bool includeParams)
         json["ip"] = WiFi.localIP();
         json["mac"] = WiFi.macAddress();
         json["rssi"] = WiFi.RSSI();
+        // Diagnóstico visible en la consola del navegador: [SML ← ESP32]
+        json["wifiOk"] = (WiFi.status() == WL_CONNECTED);
+        json["stripSuspend"] = wifiStripSuspended;
+        json["wifiLostEvents"] = wifiLostEvents;
+        json["wifiTimeout"] = wifiLostStripTimeoutMs / 1000UL;
 
         // System info (for Config tab)
         json["uptime"] = millis() / 1000;
@@ -310,9 +315,6 @@ void notifyClients(bool includeParams)
             JsonArray cats = json["randomFXCategories"].to<JsonArray>();
             for (int c : randomFXCategories) cats.add(c);
         }
-
-        // Random VU config (broadcast for multi-client sync)
-        json["randomVUDuration"] = randomVUDuration;
 
         // Direct effectId (for random FX cycling and general sync)
         json["effectId"] = stripLed.effectId;
@@ -358,27 +360,25 @@ void notifyClients(bool includeParams)
             return;
         }
 
-        // Usar heap en vez de stack para evitar overflow (mismo patrón que
-        // notifyWSClientList). El buffer se mide primero y se asigna exacto.
-        size_t jsonLen = measureJson(json) + 1;  // +1 para null byte
-        char* buffer = (char*)malloc(jsonLen);
-        if (!buffer) {
+        // Fixed-size buffer (static — NOT on task stack, TaskWebSocket solo tiene 4KB)
+        static char buffer[2048];
+        size_t len = serializeJson(json, buffer, sizeof(buffer));
+
+        if (len >= sizeof(buffer)) {
 #ifdef DEBUG_WEBSOCKET
-            debuglnW("⚠ malloc failed for notifyClients JSON");
+            debuglnE("JSON serialization failed - buffer too small");
 #endif
+            xSemaphoreGive(dataMutex);
+            return;
         }
-        if (buffer) {
-            size_t len = serializeJson(json, buffer, jsonLen);
+
 #ifdef DEBUG_WEBSOCKET
-            debugD("WebSocket payload size: ");
-            debuglnD_NUM(len, "%u");
-            debuglnD(" bytes");
+        debugD("WebSocket payload size: ");
+        debuglnD_NUM(len, "%u");
+        debuglnD(" bytes");
 #endif
-            if (len > 0 && len < jsonLen) {
-                ws.textAll(buffer, len);
-            }
-            free(buffer);
-        }
+
+        ws.textAll(buffer, len);
 
         xSemaphoreGive(dataMutex);
     } else {
@@ -405,7 +405,7 @@ void notifySensorData()
         lastGen = stateGeneration;
 
         // Small document — only real-time sensor/status fields (~180 bytes)
-        JsonDocument json;
+        StaticJsonDocument<512> json;
 
         json["level"] = batt.battLvl;
         json["battVoltage"] = batt.battVolts;
@@ -417,14 +417,19 @@ void notifySensorData()
         json["ip"] = WiFi.localIP();
         json["mac"] = WiFi.macAddress();
         json["rssi"] = WiFi.RSSI();
+        // Diagnóstico visible en la consola del navegador: [SML ← ESP32]
+        json["wifiOk"] = (WiFi.status() == WL_CONNECTED);
+        json["stripSuspend"] = wifiStripSuspended;
+        json["wifiLostEvents"] = wifiLostEvents;
+        json["wifiTimeout"] = wifiLostStripTimeoutMs / 1000UL;
 
         // System info (for Config tab)
         json["uptime"] = millis() / 1000;
         json["heap"] = ESP.getFreeHeap() / 1024;
         json["ver"] = SML_VERSION;
 
-        // Buffer local (512 bytes en stack es seguro — TaskWebSocket tiene 4KB)
-        char buffer[512];
+        // Static buffer (not on task stack — TaskWebSocket solo tiene 4KB)
+        static char buffer[512];
         size_t len = serializeJson(json, buffer, sizeof(buffer));
 
         if (len > 0 && len < sizeof(buffer)) {
@@ -460,11 +465,12 @@ static void sendBatteryHistory() {
     // Build { "battHistory": [{"t":...,"v":...,"l":...}, ...] }
     // Use the same buffer+mutex pattern as notifyClients (proven to work)
     int count = min(batt.battLogCount, BATT_LOG_SIZE);
-    JsonDocument doc;
+    size_t cap = JSON_ARRAY_SIZE(count) + count * JSON_OBJECT_SIZE(3) + 64;
+    DynamicJsonDocument doc(cap);
     JsonArray arr = doc["battHistory"].to<JsonArray>();
     int idx = (batt.battLogHead + BATT_LOG_SIZE - count) % BATT_LOG_SIZE;
     for (int i = 0; i < count; i++) {
-        JsonObject e = arr.add<JsonObject>();
+        JsonObject e = arr.add().to<JsonObject>();
         e["t"] = batt.battLog[idx].uptime;
         e["v"] = batt.battLog[idx].voltage;
         e["l"] = batt.battLog[idx].level;
@@ -473,25 +479,18 @@ static void sendBatteryHistory() {
 
     xSemaphoreGive(dataMutex);
 
-    // Serialize to heap buffer (evita 2KB en stack cuando se llama desde handleWebSocketMessage)
-    size_t jsonLen = measureJson(doc) + 1;
-    char* outBuf = (char*)malloc(jsonLen);
-    if (!outBuf) {
+    // Serialize to static buffer and send via textAll (same as notifyClients)
+    static char outBuf[2048];
+    size_t jsonLen = serializeJson(doc, outBuf, sizeof(outBuf));
+    if (jsonLen >= sizeof(outBuf)) return;
+
 #ifdef DEBUG_BATTERY
-        debuglnW("[BATT] ⚠ malloc failed for battery history");
+    debugD("[BATT] sendBatteryHistory — sending ");
+    debugD_NUM(count, "%d");
+    debugD(" entries, jsonLen=");
+    debuglnD_NUM(jsonLen, "%u");
 #endif
-    }
-    if (outBuf) {
-        jsonLen = serializeJson(doc, outBuf, jsonLen);
-#ifdef DEBUG_BATTERY
-        debugD("[BATT] sendBatteryHistory — sending ");
-        debugD_NUM(count, "%d");
-        debugD(" entries, jsonLen=");
-        debuglnD_NUM(jsonLen, "%u");
-#endif
-        ws.textAll(outBuf, jsonLen);
-        free(outBuf);
-    }
+    ws.textAll(outBuf, jsonLen);
 }
 
 // ── Overload: send battery history to a SINGLE client (no ws.textAll) ────
@@ -509,11 +508,12 @@ static void sendBatteryHistory(AsyncWebSocketClient* client) {
     }
 
     int count = min(batt.battLogCount, BATT_LOG_SIZE);
-    JsonDocument doc;
+    size_t cap = JSON_ARRAY_SIZE(count) + count * JSON_OBJECT_SIZE(3) + 64;
+    DynamicJsonDocument doc(cap);
     JsonArray arr = doc["battHistory"].to<JsonArray>();
     int idx = (batt.battLogHead + BATT_LOG_SIZE - count) % BATT_LOG_SIZE;
     for (int i = 0; i < count; i++) {
-        JsonObject e = arr.add<JsonObject>();
+        JsonObject e = arr.add().to<JsonObject>();
         e["t"] = batt.battLog[idx].uptime;
         e["v"] = batt.battLog[idx].voltage;
         e["l"] = batt.battLog[idx].level;
@@ -522,16 +522,9 @@ static void sendBatteryHistory(AsyncWebSocketClient* client) {
 
     xSemaphoreGive(dataMutex);
 
-    // Serialize to heap buffer (evita 2KB en stack)
-    size_t jsonLen = measureJson(doc) + 1;
-    char* outBuf = (char*)malloc(jsonLen);
-    if (!outBuf) {
-#ifdef DEBUG_BATTERY
-        debuglnW("[BATT] ⚠ malloc failed for battery history (single client)");
-#endif
-    }
-    if (outBuf) {
-        jsonLen = serializeJson(doc, outBuf, jsonLen);
+    static char outBuf[2048];
+    size_t jsonLen = serializeJson(doc, outBuf, sizeof(outBuf));
+    if (jsonLen >= sizeof(outBuf)) return;
 
 #ifdef DEBUG_BATTERY
     debugD("[BATT] sendBatteryHistory → client #");
@@ -542,8 +535,6 @@ static void sendBatteryHistory(AsyncWebSocketClient* client) {
     debuglnD_NUM(jsonLen, "%u");
 #endif
     client->text(outBuf, jsonLen);
-    free(outBuf);
-    }
 }
 
 // ============================================================================
@@ -555,7 +546,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
     if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
     {
-        JsonDocument json;
+        StaticJsonDocument<1024> json;
         DeserializationError err = deserializeJson(json, data);
         if (err)
         {
@@ -596,6 +587,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
                 stripLed.effectId = effectId;
                 if (stripLed.powerState) stripLed.update();
+                saveGlobalState();
                 xSemaphoreGive(dataMutex);
             }
             _wsLogAction(clientId, 0, effectId, 0, 0);
@@ -614,6 +606,18 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             _lastSentClGen = 0xFE;   // Force re-send client list
             _lastSentLogGen = 0xFE;   // Force re-send action log
             notifyWSClientList();
+            return;
+        }
+
+        // ── CONFIG: tiempo de apagado de la tira al caer el WiFi (modo AC) ──
+        if (strcmp(action, "setWifiTimeout") == 0) {
+            int secs = json["seconds"] | -1;
+            if (secs >= 5 && secs <= 3600) {
+                wifiLostStripTimeoutMs = (uint32_t)secs * 1000UL;
+                saveGlobalState();  // persiste en /state.json
+            }
+            stateGeneration++;
+            notifyClients(true);
             return;
         }
 
@@ -710,7 +714,6 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
         // ── SHARED-STATE ACTIONS (todo bajo dataMutex) ───────────────────────
         else
         {
-            bool needsSaveParams = false;  // flag for setParams → save after release
             if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
 
         if (strcmp(action, "toggle") == 0)
@@ -718,6 +721,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             stripLed.powerState = !stripLed.powerState;
             stripLed.powerState ? stripLed.update() : stripLed.clear();
             if (!stripLed.powerState) randomMode = 0;
+            saveGlobalState();
             _wsLogAction(clientId, 4, stripLed.powerState ? 1 : 0, 0, 0);
         }
         else if (strcmp(action, "lamp") == 0)
@@ -743,7 +747,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             debugD("Brillo ");
             debuglnD_NUM(brightness, "%d");
 #endif
-            stripLed.brightness = brightness;
+            stripLed.brightness = brightness; saveGlobalState();
             _wsLogAction(clientId, 2, brightness, 0, 0);
         }
         else if (strcmp(action, "toggleBatt") == 0) {
@@ -755,6 +759,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             }
             if (stripLed.powerState) stripLed.update();
             // Log battery toggle as type 8
+            saveGlobalState();
             _wsLogAction(clientId, 8, stripLed.effectId == EFFECT_BATTERY ? 1 : 0, 0, 0);
         }
         else if (strcmp(action, "toggleTemp") == 0) {
@@ -766,6 +771,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             }
             if (stripLed.powerState) stripLed.update();
             // Log temperature toggle as type 9
+            saveGlobalState();
             _wsLogAction(clientId, 9, stripLed.effectId == EFFECT_TEMP ? 1 : 0, 0, 0);
         }
         else if (strcmp(action, "picker") == 0)
@@ -777,6 +783,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             if (!json["brightness"].isNull()) {
                 stripLed.brightness = json["brightness"].as<int>();
             }
+            saveGlobalState();
 #ifdef DEBUG_LED
             debugD("RGB: ");
             debugD_NUM(stripLed.R, "%d");
@@ -811,34 +818,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
         }
         else if (strcmp(action, "randomVU") == 0)
         {
-            if (json["state"].as<bool>()) {
-                randomMode = 2;
-                randomVUDuration = json["duration"] | 8;
-                if (!json["effectPool"].isNull()) {
-                    randomVUPool.clear();
-                    for (JsonVariant v : json["effectPool"].as<JsonArray>())
-                        randomVUPool.push_back(v.as<int>());
-                }
-                if (randomVUPool.empty()) {
-                    // Fallback: built-in VU IDs (12-17, 47-48)
-                    int defaultPool[] = {12, 13, 14, 15, 16, 17, 47, 48};
-                    randomVUPool.assign(defaultPool, defaultPool + 8);
-                }
-                lastRandomSwitch = millis();
-                // Pick first VU effect immediately
-                int firstId = randomVUPool[random(0, randomVUPool.size())];
-                stripLed.effectId = firstId;
-                if (stripLed.powerState) stripLed.update();
-            } else {
-                randomMode = 0;
-            }
+            randomMode = json["state"].as<bool>() ? 2 : 0;
             _wsLogAction(clientId, 7, 2, 0, 0);
-        }
-        else if (strcmp(action, "randomVUConfig") == 0)
-        {
-            if (!json["duration"].isNull())
-                randomVUDuration = json["duration"].as<int>();
-            _wsLogAction(clientId, 7, 3, 0, 0);
         }
         else if (strcmp(action, "randomConfig") == 0)
         {
@@ -876,10 +857,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             }
             _wsLogAction(clientId, 7, 3, 0, 0);
         }
-        // ── setParams: fx setters bajo mutex, saveEffectParams después ──
-        // ⚠ FIX:原来的release/re-take causaba fragilidad y riesgo de deadlock.
-        //   Ahora solo seteamos un flag y llamamos saveEffectParams después
-        //   de liberar el mutex, evitando el patrón peligroso.
+        // ── setParams: fx setters bajo mutex, saveEffectParams sin mutex ──
         else if (strcmp(action, "setParams") == 0)
         {
             uint8_t id = json["effectId"].as<uint8_t>();
@@ -904,20 +882,22 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
                 debugD_NUM(fx->getCheck1(), "%d");
                 debugD("\n");
 #endif
-                needsSaveParams = true;  // save after mutex release — no risk
+                // ⚠ Liberar mutex ANTES de saveEffectParams (lo toma internamente)
+                xSemaphoreGive(dataMutex);
+                saveEffectParams();
+                // Volver a tomar (se libera al final del bloque else)
+                if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) != pdTRUE) {
+                    // Si falla, no podemos seguir — notificar y salir
+                    stateGeneration++;
+                    notifyClients(false);
+                    notifyWSClientList();
+                    return;
+                }
             }
         }
 
                 xSemaphoreGive(dataMutex);
             } // end if dataMutex acquired
-
-            // ⚠ saveEffectParams toma dataMutex internamente — se llama
-            //   DESPUÉS de liberar el bloque compartido para evitar
-            //   el patrón release/re-take que causaba fragilidad.
-            if (needsSaveParams) {
-                saveEffectParams();
-            }
-
         } // end else (shared-state actions)
         stateGeneration++;
         notifyClients(false);
@@ -972,7 +952,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
 
         // 1. yourClientId PRIMERO — mensaje pequeño, crítico para identidad
         {
-            JsonDocument privMsg;
+            StaticJsonDocument<64> privMsg;
             privMsg["yourClientId"] = client->id();
             char privBuf[96];
             size_t privLen = serializeJson(privMsg, privBuf, sizeof(privBuf));
@@ -1014,21 +994,13 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
         // Notify remaining clients about the updated list
         notifyWSClientList();
 
-        // When no clients remain: turn off the LED strip and wait for reconnect
-        if (_wsClientCount == 0) {
-            stripLed.powerState = false;
-            stripLed.clear();
-            FastLED.show();
-
-            stateGeneration++;  // Notify all clients of the new neostatus
-
-            // If in battery active mode, go back to connecting (wait 30s)
-            if (currentPowerState == POWER_BATTERY_ACTIVE) {
+        // If in battery active mode, go back to connecting (wait 30s)
+        if (currentPowerState == POWER_BATTERY_ACTIVE &&
+            _wsClientCount == 0) {
 #ifdef DEBUG_POWER_MANAGEMENT
-                debuglnD("💤 No clients left - waiting 30s for reconnect");
+            debuglnD("💤 No clients left - waiting 30s for reconnect");
 #endif
-                transitionToState(POWER_BATTERY_CONNECTING);
-            }
+            transitionToState(POWER_BATTERY_CONNECTING);
         }
         break;
     }

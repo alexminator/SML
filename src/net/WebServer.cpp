@@ -26,6 +26,7 @@
 // ============================================================================
 
 AsyncWebServer server(HTTP_PORT);
+Status status = COLOR;
 
 // ============================================================================
 // LittleFS initialization
@@ -186,13 +187,62 @@ void initWiFi()
 // Template processor (for server-side HTML variable replacement)
 // ============================================================================
 
+const char* processor(const String &var)
+{
+    static char buffer[64];
+    switch (status)
+    {
+    case COLOR:
+    {
+        StaticJsonDocument<128> doc;
+        doc["color"]["r"] = stripLed.R;
+        doc["color"]["g"] = stripLed.G;
+        doc["color"]["b"] = stripLed.B;
+        serializeJson(doc, buffer, sizeof(buffer));
+        return buffer;
+    }
+    case BRIGHTNESS:
+        itoa(stripLed.brightness, buffer, 10);
+        return buffer;
+    case STRIPLED:
+        return stripLed.powerState ? "on" : "off";
+    case BLUETOOTH:
+        return bt_powerState ? "on" : "off";
+    case FIRE_STATE:
+    case MOVINGDOT_STATE:
+    case RAINBOWBEAT_STATE:
+    case RWB_STATE:
+    case RIPPLE_STATE:
+    case TWINKLE_STATE:
+    case BALLS_STATE:
+    case JUGGLE_STATE:
+    case SINELON_STATE:
+    case COMET_STATE:
+    case BREATH_STATE:
+    case COLORSWEEP_STATE:
+    case VU1:
+    case VU2:
+    case VU3:
+    case VU4:
+    case VU5:
+    case VU6:
+    case LAMP:
+        return lampState ? "on" : "off";
+    case TEMPNEO:
+    case BATTNEO:
+    default:
+        buffer[0] = '\0';
+        return buffer;
+    }
+}
+
 // ============================================================================
 // Root request handler
 // ============================================================================
 
 void onRootRequest(AsyncWebServerRequest *request)
 {
-    request->send(LittleFS, "/index.html", "text/html");
+    request->send(LittleFS, "/index.html", "text/html", false, processor);
 }
 
 // ============================================================================
@@ -226,7 +276,7 @@ void initWebServer()
     server.on("/wifi-info", HTTP_GET, [](AsyncWebServerRequest *request)
     {
       AsyncResponseStream *response = request->beginResponseStream("application/json");
-      JsonDocument json;
+      StaticJsonDocument<256> json;
       json["status"] = "ok";
       json["ssid"] = WiFi.SSID();
       json["ip"] = WiFi.localIP();
@@ -309,7 +359,7 @@ void initWebServer()
 
     // Endpoint: metadata de todos los efectos (estilo WLED /json/fxda)
     server.on("/fxdata", HTTP_GET, [](AsyncWebServerRequest *request) {
-      JsonDocument fxJson;
+      StaticJsonDocument<8192> fxJson;
       JsonObject metas = fxJson.to<JsonObject>();
       for (uint8_t i = 0; i < EFFECT_COUNT; i++) {
         Effect* fx = effectRegistry[i].instance;
@@ -324,7 +374,7 @@ void initWebServer()
 
     // Endpoint: lista de paletas con nombres y colores representativos
     server.on("/palettes", HTTP_GET, [](AsyncWebServerRequest *request) {
-      JsonDocument pDoc;
+      StaticJsonDocument<8192> pDoc;
       uint8_t cnt = PaletteManager::count();
       // Nombres
       JsonArray names = pDoc["names"].to<JsonArray>();
@@ -336,7 +386,7 @@ void initWebServer()
       JsonArray allSwatches = pDoc["swatches"].to<JsonArray>();
       for (uint8_t i = 0; i < cnt; i++) {
         PaletteManager::getSwatch(i, swatch, 6);
-        JsonArray sw = allSwatches.add<JsonArray>();
+        JsonArray sw = allSwatches.add().to<JsonArray>();
         for (uint8_t j = 0; j < 6; j++) {
           sw.add(swatch[j].r);
           sw.add(swatch[j].g);
