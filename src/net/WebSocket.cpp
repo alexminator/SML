@@ -974,6 +974,11 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
         //    (los clientes existentes ya lo tienen, y si no pueden pedirlo
         //     con action: 'requestBattHistory')
         sendBatteryHistory(client);
+
+        // Nota: notifyClients(true) ya se envió arriba como broadcast a todos.
+        // Al ser el primer cliente nuevo, recibe el estado completo del master
+        // y lo refleja al entrar. Si el master también está conectado, recibe
+        // este mismo broadcast (estado de todos al entrar el slave).
         break;
     }
     case WS_EVT_DISCONNECT:
@@ -993,6 +998,13 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
 
         // Notify remaining clients about the updated list
         notifyWSClientList();
+
+        // Refresh completo (estado + efectos + params) para los clientes que
+        // quedan conectados, incluido el master.
+        // Esto es importante cuando el slave que se fue fue quien realizó la
+        // última acción: el master debe reflejar ese efecto/color “ahora” y no
+        // quedarse con un estado desactualizado hasta el próximo cambio. El log
+        // histórico no se altera — solo se actualiza lo que consume la web.
 
         // If in battery active mode, go back to connecting (wait 30s)
         if (currentPowerState == POWER_BATTERY_ACTIVE &&
