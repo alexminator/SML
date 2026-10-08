@@ -135,6 +135,8 @@ extern SemaphoreHandle_t wifiMutex;
 
 /// Initialize RTOS mutexes (dataMutex, wifiMutex)
 void initMutexes();
+void loadGlobalState();
+void saveGlobalState();
 
 // ============================================================================
 // DIRTY FLAG — evita notificaciones innecesarias
@@ -162,10 +164,6 @@ extern std::vector<int> randomFXCategories; // category indices (0-4), only for 
 extern unsigned long lastRandomSwitch;     // millis() of last switch during cycling
 extern int randomPlaylistIndex;            // current index in playlist mode
 
-// ── Random VU config (shared across all clients) ──
-extern int randomVUDuration;               // seconds between VU cycles
-extern std::vector<int> randomVUPool;      // VU effect ID pool for cycling
-
 extern PowerState currentPowerState;
 extern PowerState previousPowerState;
 extern unsigned long lastStateChange;
@@ -173,4 +171,7 @@ extern unsigned long sleepCycleStart;
 extern bool webSocketClientConnected;
 extern bool onBatteryPower;
 extern bool powerManagementControllingWiFi;
+extern bool wifiStripSuspended;   // true = tira suspendida por enlace WiFi caído
+extern uint32_t wifiLostEvents;   // nº de veces que se perdió el enlace WiFi
+extern uint32_t wifiLostStripTimeoutMs;  // timeout configurable (ms) para apagar la tira sin WiFi
 

@@ -4,6 +4,7 @@
 #include "tasks.h"
 #include "../state/AppState.h"
 #include "net/WebSocket.h"
+#include "net/WebServer.h"
 #include "power/PowerMgr.h"
 #include "config/debug_config.h"
 #include <WiFi.h>
@@ -57,28 +58,6 @@ void TaskWebSocket(void *pvParameters) {
             if (didSwitch) {
                 stateGeneration++;
                 notifyClients(false);  // Broadcast new effectId to all clients
-            }
-        }
-
-        // ── Random VU cycling (ESP32-side timer — unificado con FX) ──
-        if (randomMode == 2) {
-            bool didSwitch = false;
-            if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
-                if (!randomVUPool.empty()) {
-                    unsigned long now = millis();
-                    if (now - lastRandomSwitch >= (unsigned long)randomVUDuration * 1000) {
-                        int nextId = randomVUPool[random(0, randomVUPool.size())];
-                        stripLed.effectId = nextId;
-                        if (stripLed.powerState) stripLed.update();
-                        lastRandomSwitch = now;
-                        didSwitch = true;
-                    }
-                }
-                xSemaphoreGive(dataMutex);
-            }
-            if (didSwitch) {
-                stateGeneration++;
-                notifyClients(false);
             }
         }
 
@@ -159,7 +138,11 @@ void TaskLEDControl(void *pvParameters) {
         // ⚠ dataMutex protege leds[], stripLed y wsLiveActive del race con
         //   handleWebSocketMessage (que corre en el task del WebSocket).
         if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
-            if (stripLed.powerState) {
+            // Si el enlace WiFi lleva demasiado tiempo caído (AP apagado o fuera
+            // de rango), apagamos la tira. Si solo se fue el cliente WebSocket
+            // (móvil en reposo / otra app) el WiFi sigue asociado → el efecto
+            // continúa. Lo fija TaskWiFiMonitor.
+            if (stripLed.powerState && !wifiStripSuspended) {
                 stripLed.update();
                 sendPeekData();  // Live preview via WebSocket binary frame
             } else {
@@ -167,6 +150,7 @@ void TaskLEDControl(void *pvParameters) {
             }
             xSemaphoreGive(dataMutex);
         }
+
         vTaskDelay(pdMS_TO_TICKS(20));
     }
 }
@@ -176,33 +160,58 @@ void TaskLEDControl(void *pvParameters) {
 // ============================================================================
 
 void TaskWiFiMonitor(void *pvParameters) {
+    // Detecta transiciones del enlace WiFi para re-registrar mDNS tras un
+    // reconnect() y para suspender la tira si el enlace se pierde demasiado
+    // tiempo. Arranca ya "conectado" si initWiFi() conectó en setup().
+    bool wifiWasConnected = (WiFi.status() == WL_CONNECTED);
+    unsigned long wifiLostSince = 0;
     while (true) {
         if (xSemaphoreTake(wifiMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+            bool wifiNowConnected = (WiFi.status() == WL_CONNECTED);
+
+            // ── Suspensión por pérdida prolongada del enlace WiFi ──────────────
+            //   Se evalúa SIEMPRE (sin depender del modo de energía) para que
+            //   funcione aunque powerManagementControllingWiFi esté activo.
+            if (wifiNowConnected) {
+                wifiStripSuspended = false;
+                wifiLostSince = 0;
+            } else {
+                if (wifiWasConnected) wifiLostEvents++;   // diagnóstico
+                if (wifiLostSince == 0) wifiLostSince = millis();
+                if (!wifiStripSuspended &&
+                    (millis() - wifiLostSince > wifiLostStripTimeoutMs)) {
+#ifdef DEBUG_LED
+                    debuglnD("📴 WiFi caído demasiado tiempo — apagando tira");
+#endif
+                    wifiStripSuspended = true;
+                }
+            }
+
             // ── AC mode: maintain WiFi ourselves ────────────────────────────
             if (!powerManagementControllingWiFi) {
-                if (WiFi.status() != WL_CONNECTED) {
+                if (wifiNowConnected) {
+                    if (!wifiWasConnected) {
+                        // Re-init mDNS tras un reconnect() propio: sin esto el
+                        // responder queda muerto y sml.local no resuelve hasta
+                        // un ciclo de energía (bug de Bonjour).
+#ifdef DEBUG_NETWORK
+                        debuglnD("📡 WiFi reconectado — re-inicializando mDNS");
+#endif
+                        initMDNS();
+                    }
+                } else {
                     static unsigned long lastAttempt = 0;
                     if (millis() - lastAttempt > 10000) {   // retry every 10s
 #ifdef DEBUG_WIFI
-                        debuglnD("WiFi — reconnecting (fresh begin)...");
+                        debuglnD("WiFi — reconnecting...");
 #endif
-                        // ⚠ WiFi.reconnect() solo funciona si WiFi fue conectado
-                        //   exitosamente antes en esta sesión. Si initWiFi() falló
-                        //   en setup (batería muerta, router lento, etc.),
-                        //   reconnect() es un no-op silencioso. Usamos WiFi.begin()
-                        //   con credenciales guardadas para forzar conexión fresca.
-                        if (strlen(savedSSID) > 0) {
-                            WiFi.disconnect(true);  // Limpiar estado previo
-                            WiFi.begin(savedSSID, savedPass);
-                        } else {
-                            WiFi.reconnect();  // Fallback si no hay credenciales guardadas
-                        }
+                        WiFi.reconnect();
                         lastAttempt = millis();
                     }
                 }
             }
 #ifdef DEBUG_POWER_MANAGEMENT
-            // ── Battery mode: power management handles it ───────────────────
+            // ── Battery mode: power management handles WiFi reconnection ─────
             else {
                 static unsigned long lastMsg = 0;
                 if (millis() - lastMsg > 10000) {
@@ -211,6 +220,7 @@ void TaskWiFiMonitor(void *pvParameters) {
                 }
             }
 #endif
+            wifiWasConnected = wifiNowConnected;
             xSemaphoreGive(wifiMutex);
         }
         vTaskDelay(pdMS_TO_TICKS(WIFI_MONITOR_INTERVAL));
@@ -281,6 +291,7 @@ void readSensor() {
         dht.temperature().getEvent(&event);
         if (!isnan(event.temperature)) {
             temp = event.temperature;
+            stateGeneration++;  // Signal new temp data
 #ifdef DEBUG_TEMPERATURE
             debugD("Temperature: ");
             debugD_FLOAT1(temp);
@@ -301,6 +312,7 @@ void readSensor() {
         dht.humidity().getEvent(&event);
         if (!isnan(event.relative_humidity)) {
             hum = event.relative_humidity;
+            stateGeneration++;  // Signal new humidity data
 #ifdef DEBUG_TEMPERATURE
             debugD("Humidity: ");
             debugD_FLOAT1(hum);
@@ -315,9 +327,6 @@ void readSensor() {
             vTaskDelay(pdMS_TO_TICKS(retryDelay));
         }
     }
-
-    // Single dirty flag increment after reading both sensors
-    stateGeneration++;
 }
 
 // ============================================================================
@@ -328,7 +337,7 @@ void initTasks() {
     xTaskCreatePinnedToCore(TaskWebSocket,       "WebSocketTask",      4096, NULL, 1, &TaskWebSocketHandle,      0);
     xTaskCreatePinnedToCore(TaskBatteryMonitor,  "BatteryMonitorTask", 4096, NULL, 1, &TaskBatteryMonitorHandle, 1);
     xTaskCreatePinnedToCore(TaskLEDControl,      "LEDControlTask",     2048, NULL, 1, &TaskLEDControlHandle,     0);
-    xTaskCreatePinnedToCore(TaskWiFiMonitor,     "WiFiMonitorTask",    2048, NULL, 1, &TaskWiFiMonitorHandle,    1);
+    xTaskCreatePinnedToCore(TaskWiFiMonitor,     "WiFiMonitorTask",    4096, NULL, 1, &TaskWiFiMonitorHandle,    1);
     xTaskCreatePinnedToCore(TaskSensor,          "SensorTask",         2048, NULL, 1, &TaskSensorHandle,         0);
     xTaskCreatePinnedToCore(TaskOnboardLED,      "LEDOnboardTask",     2048, NULL, 1, &TaskOnboardLEDHandle,     1);
 }

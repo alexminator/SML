@@ -63,6 +63,10 @@ constexpr uint32_t STACK_CRITICAL_THRESHOLD = 128;
 constexpr int           WIFI_MAX_ATTEMPTS    = 40;
 constexpr unsigned long WIFI_RETRY_DELAY     = 500;
 constexpr unsigned long WIFI_MONITOR_INTERVAL = 2000;
+// Tiempo por defecto (ms) que el enlace WiFi puede estar caído antes de apagar
+// la tira en modo AC. Es configurable en runtime desde la web (acción
+// setWifiTimeout) y se persiste en /state.json; este es solo el valor inicial.
+constexpr unsigned long WIFI_LOST_STRIP_TIMEOUT_DEFAULT = 30000;  // 30 s
 
 // ============================================================================
 // TIMING
@@ -102,4 +106,4 @@ constexpr int BATT_LOG_TIMEOUT       = 60;     // Force entry every 60s even if 
 // ============================================================================
 // VERSION STRING (mostrado en Config tab)
 // ============================================================================
-#define SML_VERSION "2.0.0"
+#define SML_VERSION "2.0.1"

@@ -9,6 +9,7 @@
 
 #include <Arduino.h>
 #include <FastLED.h>
+#include <ElegantOTA.h>
 #include "state/AppState.h"
 #include "effects/EffectRegistry.h"
 #include "net/WebSocket.h"
@@ -104,6 +105,7 @@ void setup()
     FastLED.show();
 
     initLittleFS();
+    loadGlobalState();
     loadEffectParams();
     initWiFi();
     initWebSocket();
@@ -117,6 +119,10 @@ void setup()
 
 void loop()
 {
-    // ⚠ loop() vacío sin yield → watchdog timeout (WDT) en ESP32
+    // ElegantOTA difiere el reinicio tras una actualización; sin esta llamada
+    // la OTA se escribe pero el ESP32 NO reinicia solo, y seguiría ejecutando
+    // el firmware anterior hasta un corte de energía.
+    ElegantOTA.loop();
+    // ⚠ loop() sin yield → watchdog timeout (WDT) en ESP32
     vTaskDelay(pdMS_TO_TICKS(10));
 }

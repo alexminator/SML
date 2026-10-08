@@ -21,7 +21,7 @@ SemaphoreHandle_t dataMutex = NULL;
 SemaphoreHandle_t wifiMutex = NULL;
 
 void initMutexes() {
-    dataMutex = xSemaphoreCreateMutex();
+    dataMutex = xSemaphoreCreateRecursiveMutex();
     wifiMutex = xSemaphoreCreateMutex();
 
     if (dataMutex == NULL || wifiMutex == NULL) {
@@ -84,10 +84,6 @@ std::vector<int> randomFXCategories;
 unsigned long lastRandomSwitch = 0;
 int randomPlaylistIndex = 0;
 
-// Random VU config
-int randomVUDuration = 8;
-std::vector<int> randomVUPool;
-
 PowerState currentPowerState = POWER_AC_MODE;
 PowerState previousPowerState = POWER_AC_MODE;
 unsigned long lastStateChange = 0;
@@ -95,6 +91,9 @@ unsigned long sleepCycleStart = 0;
 bool webSocketClientConnected = false;
 bool onBatteryPower = false;
 bool powerManagementControllingWiFi = false;
+bool wifiStripSuspended = false;
+uint32_t wifiLostEvents = 0;
+uint32_t wifiLostStripTimeoutMs = WIFI_LOST_STRIP_TIMEOUT_DEFAULT;
 
 // ============================================================================
 // BATTERY METHODS
@@ -162,19 +161,19 @@ void Battery::logBatteryReading() {
             lastLoggedVoltage = filteredVolts;
         }
 #ifdef DEBUG_BATTERY
-        {
-            int _v_int = (int)(lastLoggedVoltage);
-            int _v_frac = (int)((lastLoggedVoltage - _v_int) * 1000);
-            if (_v_frac < 0) _v_frac = -_v_frac;
-            debugD("[BATT] log loaded, count=");
-            debugD_NUM(battLogCount, "%d");
-            debugD(", lastV=");
-            debugD_NUM(_v_int, "%d");
-            debugD(".");
-            debugD_NUM03(_v_frac);
-            debugD(", lastT=");
-            debuglnD_NUM(lastLogUptime, "%u");
-        }
+    {
+        int _v_int = (int)(lastLoggedVoltage);
+        int _v_frac = (int)((lastLoggedVoltage - _v_int) * 1000);
+        if (_v_frac < 0) _v_frac = -_v_frac;
+        debugD("[BATT] log loaded, count=");
+        debugD_NUM(battLogCount, "%d");
+        debugD(", lastV=");
+        debugD_NUM(_v_int, "%d");
+        debugD(".");
+        debugD_NUM03(_v_frac);
+        debugD(", lastT=");
+        debuglnD_NUM(lastLogUptime, "%u");
+    }
 #endif
     }
 
@@ -234,12 +233,15 @@ void Battery::saveBatteryLog() {
 
     // Build JSON document: {"battLog":[{"t":12345,"v":3.85,"l":65},...]}
     // Capacity: JSON_ARRAY_SIZE(N) + N*JSON_OBJECT_SIZE(3) + overhead
-    JsonDocument doc;
+    size_t cap = JSON_ARRAY_SIZE(battLogCount)
+               + battLogCount * JSON_OBJECT_SIZE(3)
+               + 64;
+    DynamicJsonDocument doc(cap);
 
     JsonArray arr = doc["battLog"].to<JsonArray>();
     int idx = (battLogHead + BATT_LOG_SIZE - battLogCount) % BATT_LOG_SIZE;
     for (int i = 0; i < battLogCount; i++) {
-        JsonObject e = arr.add<JsonObject>();
+        JsonObject e = arr.add().to<JsonObject>();
         e["t"] = battLog[idx].uptime;
         e["v"] = battLog[idx].voltage;
         e["l"] = battLog[idx].level;
@@ -277,7 +279,7 @@ void Battery::loadBatteryLog() {
 
     // Estimate capacity: file size + 20% margin
     size_t fileSize = f.size();
-    JsonDocument doc;
+    DynamicJsonDocument doc(fileSize + 256);
     DeserializationError err = deserializeJson(doc, f);
     f.close();
 
@@ -387,4 +389,54 @@ void StripLed::update() {
         lastEffectId = effectId;
     }
     runEffectById(effectId);
+}
+
+void loadGlobalState() {
+    if (!LittleFS.exists("/state.json")) return;
+    File f = LittleFS.open("/state.json", "r");
+    if (!f) return;
+    DynamicJsonDocument doc(1024);
+    DeserializationError err = deserializeJson(doc, f);
+    if (err) {
+        f.close();
+        return;
+    }
+    if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+        stripLed.R = doc["R"] | 255;
+        stripLed.G = doc["G"] | 255;
+        stripLed.B = doc["B"] | 255;
+        stripLed.brightness = doc["brightness"] | 130;
+        stripLed.effectId = doc["effectId"] | 0;
+        stripLed.powerState = doc["powerState"] | false;
+        // Timeout configurable (segundos → ms). Validado a un rango sensato.
+        uint32_t secs = doc["wifiTimeout"] | 30;
+        if (secs < 5) secs = 5;
+        if (secs > 3600) secs = 3600;
+        wifiLostStripTimeoutMs = secs * 1000UL;
+        xSemaphoreGive(dataMutex);
+    }
+    f.close();
+}
+
+void saveGlobalState() {
+    if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) != pdTRUE) {
+#ifdef DEBUG_SYSTEM
+        debuglnW("saveGlobalState: could not acquire mutex");
+#endif
+        return;
+    }
+    DynamicJsonDocument doc(1024);
+    doc["R"] = stripLed.R;
+    doc["G"] = stripLed.G;
+    doc["B"] = stripLed.B;
+    doc["brightness"] = stripLed.brightness;
+    doc["effectId"] = stripLed.effectId;
+    doc["powerState"] = stripLed.powerState;
+    doc["wifiTimeout"] = wifiLostStripTimeoutMs / 1000UL;
+    File f = LittleFS.open("/state.json", "w");
+    if (f) {
+        serializeJson(doc, f);
+        f.close();
+    }
+    xSemaphoreGive(dataMutex);
 }

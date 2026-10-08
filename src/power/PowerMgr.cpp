@@ -56,7 +56,10 @@ void applyStateConfiguration(PowerState state) {
             WiFi.setSleep(false);
             setCpuFrequencyMhz(240);
             powerManagementControllingWiFi = true;  // Power management controls WiFi
-            // Neopixel: strip not powered on battery — no FastLED commands needed
+            // Neopixel: la tira la gobierna TaskLEDControl según stripLed.powerState.
+            // ⚠ NO forzamos FastLED.clear() aquí: en batería la tira ya está sin 5V
+            //   (apagado físico) y debemos CONSERVAR el efecto seleccionado para
+            //   reanudarlo cuando vuelva la red.
             // ESP32 LEDs: ON (built-in, always on)
             break;
 
@@ -67,10 +70,6 @@ void applyStateConfiguration(PowerState state) {
             powerManagementControllingWiFi = true;  // Power management controls WiFi
             // Neopixel: OFF
             // ESP32 LEDs: ON (built-in, always on)
-            // ⚠ sleepCycleStart se inicializa en 0 en AppState.cpp. Si no se
-            //   resetea aquí, el primer ciclo usa millis()-0 = uptime completo,
-            //   truncando o saltando la primera fase de sueño.
-            sleepCycleStart = millis();
             break;
 
         case POWER_BATTERY_CONNECTING:
@@ -243,7 +242,8 @@ void handleBatterySleepState() {
             setCpuFrequencyMhz(80);
         }
 
-        // Neopixel: strip not powered on battery — no FastLED commands needed
+        // Nota: la tira no se toca aquí (sin 5V en batería). Se conserva el
+        // efecto seleccionado para reanudarlo al recuperar la alimentación.
 
     } else if (elapsedInCycle < SLEEP_DURATION + AWAKE_DURATION) {
         // === PHASE 2: AWAKE (60-70 seconds) ===
@@ -319,14 +319,16 @@ void updatePowerStateMachine() {
 
         case POWER_BATTERY_ACTIVE:
             // Battery with active WebSocket user
-            // Full WiFi/CPU for responsiveness
-            // Neopixel: strip not powered on battery — no FastLED commands needed
+            // Full WiFi/CPU for responsiveness, Neopixel OFF
             if (WiFi.getSleep() == true) {
                 WiFi.setSleep(false);
             }
             if (getCpuFrequencyMhz() != 240) {
                 setCpuFrequencyMhz(240);
             }
+
+            // Nota: NO apagamos la tira aquí. El efecto debe seguir seleccionado
+            // aunque no haya clientes; TaskLEDControl lo mantiene/reanuda.
 
             // If client disconnects, go back to CONNECTING (wait 30s)
             if (!webSocketClientConnected) {
@@ -354,34 +356,27 @@ void updatePowerStateMachine() {
 
 void checkWebSocketClients() {
     static unsigned long lastCheck = 0;
-    static uint8_t disconnectConsecutive = 0;  // debounce counter
 
     if (millis() - lastCheck > 5000) {  // Every 5 seconds
         bool actuallyConnected = (ws.count() > 0);
 
-        if (actuallyConnected) {
-            // Connected → reset debounce, immediate transition to ACTIVE
-            disconnectConsecutive = 0;
-            if (!webSocketClientConnected) {
-                #ifdef DEBUG_POWER_MANAGEMENT
-                debugD("WebSocket status changed: disconnected → connected\n");
-                #endif
-                webSocketClientConnected = true;
+        if (actuallyConnected != webSocketClientConnected) {
+            #ifdef DEBUG_POWER_MANAGEMENT
+            debugD("WebSocket status changed: ");
+            debugD(webSocketClientConnected ? "connected" : "disconnected");
+            debugD(" → ");
+            debuglnD(actuallyConnected ? "connected" : "disconnected");
+            #endif
+
+            webSocketClientConnected = actuallyConnected;
+
+            // Trigger state transition
+            if (actuallyConnected) {
                 if (currentPowerState == POWER_BATTERY_SLEEP ||
                     currentPowerState == POWER_BATTERY_CONNECTING) {
                     transitionToState(POWER_BATTERY_ACTIVE);
                 }
-            }
-        } else {
-            // Not connected → require 2 consecutive checks (10s) to avoid
-            // false positives from transient ws.count() == 0 during cleanup.
-            disconnectConsecutive++;
-            if (disconnectConsecutive >= 2 && webSocketClientConnected) {
-                #ifdef DEBUG_POWER_MANAGEMENT
-                debugD("WebSocket status changed: connected → disconnected (debounced)\n");
-                #endif
-                webSocketClientConnected = false;
-                disconnectConsecutive = 0;
+            } else {
                 if (currentPowerState == POWER_BATTERY_ACTIVE) {
                     transitionToState(POWER_BATTERY_CONNECTING);
                 }
