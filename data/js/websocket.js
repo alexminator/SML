@@ -55,9 +55,15 @@ function connectWS() {
     SML.connected = false;
     updateConnectionStatus(false);
     // Toast + cuenta atrás on unexpected disconnect (not clean close)
+    // El banner de countdown solo aplica para el MASTER en modo AC: solo el master
+    // puede apagar la tira. Los slaves solo ven el toast de desconexión.
+    // Nota: si el ESP32 ya perdió WiFi (wifiOk:false), el banner ya debería estar
+    // activo desde el manejador de wifiOk — no activarlo de nuevo.
     if (hadConnection && evt.code !== 1000 && evt.code !== 1001) {
       showToast('Conexión WebSocket perdida — reconectando...', 'error');
-      startWifiCountdown();
+      if (SML.isMaster && isACPower() && !_wifiCountdownTimer) {
+        startWifiCountdown();
+      }
     }
     // Re-add skeleton to data elements when disconnected
     document.querySelectorAll('.stat-value, .info-value, #weatherHumVal, #sysUptime, #sysHeap, #sysRSSI, #sysVersion, #battPercentDetail, #battVoltageDetail, #battStatus, #battChargeDetail')
@@ -126,9 +132,23 @@ function isACPower() {
   return !!(SML.charging || SML.fullBatt);
 }
 
+// Solo el master puede apagar la tira. En modo AC, si el master pierde la
+// conexión, empieza la cuenta atrás del timeout configurado.
+// Los slaves no ven este banner (la tira sigue viva porque el master sigue
+// conectado, o porque otro cliente se convirtió en master).
+function _canShowCountdown() {
+  // Debe ser master y estar en modo AC (la tira tiene alimentación)
+  if (!SML.isMaster || !isACPower()) return false;
+  // El timeout debe estar configurado (recibido del ESP32)
+  if (typeof SML.wifiTimeout !== 'number' || SML.wifiTimeout <= 0) return false;
+  return true;
+}
+
 function startWifiCountdown() {
-  // Aviso de apagado SOLO en modo AC. En batería basta el toast de desconexión.
-  if (!isACPower()) return;
+  // Solo el master en modo AC puede ver el banner de countdown.
+  // Los slaves no apagan la tira — el master (o el nuevo master tras handover)
+  // sigue vivo y controla el dispositivo.
+  if (!_canShowCountdown()) return;
   const total = (typeof SML !== 'undefined' && SML.wifiTimeout > 0) ? SML.wifiTimeout : 30;
   let remaining = total;
   const el = _wifiCountdownEl();
@@ -157,8 +177,10 @@ function stopWifiCountdown(restored) {
   const el = document.getElementById('wifiCountdownBanner');
   const hadBanner = !!el;
   if (el) el.remove();
-  // Aviso de reactivación solo si veníamos avisando del apagado (modo AC).
-  if (restored && hadBanner) showToast('Conexión restaurada — tira reactivada', 'success');
+  // Aviso de reactivación cuando se reconectó tras una desconexión del master.
+  // No asumimos que la tira se reactivó — eso depende de si el ESP32 perdió WiFi
+  // o solo se fue un cliente. El estado de la tira se refleja en la UI normal.
+  if (restored && hadBanner) showToast('Conexión restaurada', 'success');
 }
 
 function scheduleReconnect() {
@@ -704,9 +726,21 @@ function handleMessage(data) {
     if (myEntry) {
       const wasMaster = SML.isMaster;
       SML.isMaster = !!myEntry.master;
-      // Handover on subsequent updates: slave → master, start timer if random active
-      if (SML._hasReceivedClientList && !wasMaster && SML.isMaster) {
-        // Random FX and VU are ESP32-driven — no frontend timer needed
+      // Handover on subsequent updates: slave → master or master → slave
+      // Cuando un cliente deja de ser master (el backend promovió a otro), este
+      // cliente ya no controla la tira — debe quitar su banner de countdown si
+      // lo tenía activo. Cuando un cliente pasa a ser master, el banner NO se
+      // activa aquí porque el enlace WiFi del ESP32 sigue vivo.
+      if (SML._hasReceivedClientList && wasMaster && !SML.isMaster) {
+        // Ya no soy master — quitar banner si lo tenía activo (no puedo
+        // controlar la tira ahora)
+        if (_wifiCountdownTimer) {
+          stopWifiCountdown(false);
+        }
+      } else if (SML._hasReceivedClientList && !wasMaster && SML.isMaster) {
+        // Nuevo master (handover desde slave) — el banner NO se activa aquí
+        // porque el enlace WiFi del ESP32 sigue vivo. Se activa solo cuando
+        // el ESP32 pierde WiFi (wifiOk:false) o cuando el WebSocket se cierra.
       }
       SML._hasReceivedClientList = true;
     }
@@ -715,6 +749,25 @@ function handleMessage(data) {
   else if (data.wsActionLog !== undefined && Array.isArray(data.wsActionLog)) {
     if (typeof updateWSClientList === 'function') {
       updateWSClientList(null, data.wsActionLog);
+    }
+  }
+
+  // ── WIFI LINK STATUS (master-only countdown banner) ──
+  // El ESP32 envía wifiOk:false cuando pierde el enlace WiFi (AP se fue,
+  // fuera de rango). El master debería ver el banner de countdown porque
+  // la tira se apagará tras el timeout configurado.
+  // Los slaves no ven este banner — el master sigue vivo y controla la tira.
+  if (data.wifiOk !== undefined) {
+    const isWifiLost = data.wifiOk === false;
+    if (isWifiLost && SML.isMaster && isACPower()) {
+      // El ESP32 perdió WiFi → activar banner de countdown (si no está activo)
+      if (!_wifiCountdownTimer) {
+        startWifiCountdown();
+      }
+    } else if (!isWifiLost && SML.isMaster && _wifiCountdownTimer) {
+      // El ESP32 recuperó WiFi → quitar banner + aviso
+      stopWifiCountdown(true);
+      showToast('WiFi restaurado — tira reactivada', 'success');
     }
   }
 
