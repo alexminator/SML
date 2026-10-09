@@ -90,6 +90,8 @@ I implemented a dual power supply system *(mains and battery)* that allows you t
 - **_Monitor temperature and humidity._**
 - **_Web-based control of the Bluetooth speaker's physical buttons._**
 - **_Embedded web interface for real-time control from any mobile device._**
+- **_Multi-device control: multiple phones connected at the same time, one as master and the rest as slaves._**
+- **_Defined behavior on power loss, WiFi disconnection, and low battery._**
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 
@@ -516,6 +518,48 @@ The ESP32 implements an automatic power management system with a state machine t
 
 ### Power Source Detection
 Uses the TP4056 pins: if charging or battery is full, it assumes AC power is present. Includes 3-second debounce to prevent rapid state changes from power flickers.
+
+### What Happens During a Power Outage
+When mains power is lost, the load-sharing circuit automatically disconnects the battery from the mains path and the ESP32 runs from the battery through the DC-DC boost converter. In that situation:
+
+- The **Neopixel strip turns off** because it is powered only from the mains supply and not from the battery (the Neopixels consume too much for battery operation).
+- The **main LED lamp, the Bluetooth speaker, and the ESP32 itself keep running** on battery power, so music continues playing and the web interface remains controllable.
+- The device automatically enters battery mode: first it tries to reconnect WiFi for 10 s, then waits up to 30 s for a WebSocket client to connect, and if nobody connects it falls back to power-saving cycles (WiFi 10 s on / 60 s off, CPU at 80 MHz).
+- Consumption in battery drops from ~120 mA (battery + connected client) to ~25 mA (battery, no client).
+
+### What Happens When the Battery Is Low / Discharging
+- Below 15% the state machine forces maximum power savings.
+- The voltage history is automatically saved to **/battlog.json** every N readings and at least once per minute, so when mains returns you can see how the battery behaved during the outage.
+
+### What Happens When WiFi Is Lost
+There are two situations that are not the same:
+
+1. **The device loses the WiFi link (the ESP32 loses WiFi).** This happens if the router goes down, the device goes out of range, or the router reboots. The ESP32 reports `wifiOk:false` to all clients, and if you are in AC mode the **master** client sees a countdown on the web interface before the strip is turned off. The strip does not turn off immediately; it waits for the configured WiFi-loss timeout (default 30 s, configurable in the Config tab) and only turns off if the link is not restored.
+2. **A client disconnects (for example, your phone goes to sleep or you leave the network).** If the device still has WiFi, the strip **does NOT turn off**, because the ESP32 is still connected. Only the clients that are actually connected to the device see and control the strip.
+
+### Master / Slave Mode (Multi-Device Control)
+The web interface supports up to **8 simultaneous clients** connected to the same ESP32 at once, but there is one important concept: among all those clients there is only **one master**.
+
+- The **first device that connects** becomes the master.
+- The master is the only one that can turn the strip off when mains power is lost (the WiFi-loss countdown is shown only to the master).
+- All clients see changes in real time (color, effect, brightness, music, battery), but the strip's critical power-level actions (turn off on mains loss, turn off on WiFi-loss timeout) are controlled only by the master.
+- When the master disconnects, the **next client in the list becomes master automatically** (handover). A new client does not need to be "chosen": the ESP32 decides.
+
+### What You CAN Do From a Slave Device
+- Turn the main LED lamp on/off.
+- Turn the Bluetooth speaker on/off and control it (play/pause, skip forward/backward, volume).
+- Change the strip color, brightness, and effect (the master reflects these too).
+- Activate/deactivate the status effects (battery, temperature).
+- View all real-time state: battery, temperature, WiFi, connected clients, activity log.
+- View the client list and who is master.
+
+### What You CANNOT Do From a Slave Device
+- Turn the strip off on mains loss or on WiFi-loss timeout: that decision is made by the master. If you are a slave and mains is lost, the strip turns off because the master orders it (or because the device switches to battery and the strip no longer has 5V).
+- Turn the strip off if you are a slave and the ESP32 still has WiFi: the strip keeps running because the master is still controlling it.
+- Force a reboot or a factory reset: those actions are reserved for the master.
+- See the WiFi-loss countdown banner: that banner appears only on the master.
+
+In practice this means several family members can control the lamp at the same time without conflicting, but the "turn off on power loss" or "turn off on WiFi loss" behavior is always decided by whichever device is currently the master.
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 

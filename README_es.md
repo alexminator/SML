@@ -82,6 +82,8 @@ Implementé un sistema de alimentación dual *(fuente y batería)* que permite s
 - **_Monitoreo de la temperatura y humedad._**
 - **_Control vía web de los botones físicos del altavoz bluetooth._**
 - **_Implementación de una web embebida para el control en tiempo real desde el móvil._**
+- **_Control multi-dispositivo: varios móviles conectados al mismo tiempo, uno como master y el resto como slaves._**
+- **_Comportamiento definido ante pérdidas de corriente, desconexión WiFi y bajo nivel de batería._**
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 
@@ -501,6 +503,48 @@ El ESP32 implementa un sistema automático de gestión de energía con máquina 
 
 ### Detección de fuente
 Usa los pines del TP4056: si está cargando o la batería está llena, asume que hay corriente AC. Incluye debounce de 3 segundos para evitar cambios bruscos por flickers.
+
+### Qué pasa cuando se va la luz
+Cuando se corta la corriente del vector, el circuito de "load sharing" desconecta automáticamente la batería del vector y el ESP32 pasa a funcionar con batería a través del convertidor DC-DC step-up. En ese momento:
+
+- La **tira Neopixel se apaga**, porque solo se alimenta desde el vector y no desde la batería (los Neopixels consumen demasiado para funcionar con batería).
+- La **lámpara LED principal, el altavoz Bluetooth y el propio ESP32 siguen funcionando** con la batería, por lo que la música sigue sonando y la web sigue controlable.
+- El dispositivo pasa automáticamente a modo batería:primero intenta reconectar el WiFi 10 s, espera hasta 30 s a que algún cliente se conecte, y si nadie se conecta pasa a ciclos de ahorro (WiFi 10 s encendido / 60 s apagado, CPU a 80 MHz).
+- El consumo en batería baja de ~120 mA (batería + cliente conectado) a ~25 mA (batería sin cliente).
+
+### Qué pasa cuando el dispositivo se va la batería / se descarga
+- A partir del 15% la máquina de estados fuerza el máximo ahorro de energía.
+- El historial de voltaje se guarda automáticamente en **/battlog.json** cada cierto número de lecturas y cada minuto como mínimo, para que al volver el vector puedas ver cómo se comportó la batería durante el corte.
+
+### Qué pasa cuando pierde la conexión WiFi
+Existen dos situaciones que no son lo mismo:
+
+1. **Pierde el vector (el ESP32 pierde el enlace WiFi).** Esto pasa si el router se apaga, se va de rango o se reinicia. El ESP32 avisa a todos los clientes con `wifiOk:false`, y si estás en modo AC el cliente **master** ve una cuenta regresiva en la web antes de que la tira se apague. La tira no se apaga al instante; espera el tiempo configurado como timeout de pérdida de WiFi (por defecto 30 s, configurable en la pestaña Config) y solo se apaga si el enlace no se recupera.
+2. **Se va un cliente (por ejemplo, el móvil se bloquea o sales de la red).** Si el vector sigue vivo, la tira **NO se apaga**, porque el ESP32 sigue conectado. Solo los clientes que se conectan al dispositivo ven y controlan la tira.
+
+### Modo master/slave (control multi-dispositivo)
+La web soporta hasta **8 clientes simultáneos** conectados al mismo ESP32 a la vez, pero hay un concepto importante: entre todos esos clientes solo hay **un master**.
+
+- El **primer dispositivo que se conecta** es el master.
+- El master es el único que puede apagar la tira cuando el vector se va (la cuenta regresiva por pérdida de WiFi solo la ve el master).
+- Todos los clientes ven los cambios en tiempo real (color, efecto, brillo, música, batería), pero las acciones físicas críticas de la tira (apagado por pérdida de vector, apagado por timeout de WiFi) las controla solo el master.
+- Cuando el master se desconecta, el **siguiente cliente en la lista se convierte en master automáticamente** (handover). Ningún cliente nuevo necesita "ser elegido": el ESP32 lo decide.
+
+### Qué SÍ puedes hacer desde un dispositivo slave
+- Encender/apagar la lámpara LED principal.
+- Encender/apagar y controlar el altavoz Bluetooth (play/pause, avance, retroceso, volumen).
+- Cambiar color, brillo y efecto de la tira (el master los refleja también).
+- Activar/desactivar los efectos de estado (batería, temperatura).
+- Ver todo el estado en tiempo real: batería, temperatura, WiFi, clientes conectados, logs de actividad.
+- Ver la lista de clientes y quién es master.
+
+### Qué NO puedes hacer desde un dispositivo slave
+- Apagar la tira por pérdida de vector o por timeout de WiFi: esa decisión la toma el master. Si eres slave y el vector se va, la tira se apaga porque el master lo ordena (o el dispositivo pasa a batería y la tira ya no tiene 5V).
+- Apagar la tira si eres slave y el WiFi del ESP32 sigue vivo: la tira sigue encendida porque el master sigue controlándola.
+- Forzar un reboot o un factory reset: esas acciones están reservadas al master.
+- Ver el banner de cuenta regresiva de pérdida de WiFi: ese banner solo aparece en el master.
+
+En la práctica esto quiere decir que varios miembros de la familia pueden controlar la lámpara al mismo tiempo sin chocar, pero el comportamiento de "apagado por corriente" o "apagado por pérdida de WiFi" siempre lo decide el dispositivo que está siendo el master en ese momento.
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 
