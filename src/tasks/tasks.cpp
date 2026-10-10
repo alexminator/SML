@@ -32,33 +32,31 @@ void TaskWebSocket(void *pvParameters) {
         notifySensorData();    // Solo sensores — ~180 bytes vs ~940
 
         // ── Random FX cycling (ESP32-side timer) ──
-        // ⚠ Accede a randomFXPool (std::vector) y randomFXMode bajo dataMutex
-        //   para evitar race conditions con handleWebSocketMessage.
-        if (randomMode == 1) {
-            bool didSwitch = false;
-            if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
-                if (!randomFXPool.empty()) {
-                    unsigned long now = millis();
-                    if (now - lastRandomSwitch >= (unsigned long)randomFXDuration * 1000) {
-                        int nextId;
-                        if (randomFXMode == "playlist") {
-                            nextId = randomFXPool[randomPlaylistIndex];
-                            randomPlaylistIndex = (randomPlaylistIndex + 1) % randomFXPool.size();
-                        } else {
-                            nextId = randomFXPool[random(0, randomFXPool.size())];
-                        }
-                        stripLed.effectId = nextId;
-                        if (stripLed.powerState) stripLed.update();
-                        lastRandomSwitch = now;
-                        didSwitch = true;
+        // Random VU cycles in TaskLEDControl at the LED cadence (~20 ms).
+        bool didSwitchRandomFX = false;
+        if (randomMode == 1 && xSemaphoreTake(dataMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
+            if (randomMode == 1 && !randomFXPool.empty() && randomFXDuration > 0) {
+                const unsigned long now = millis();
+                if (now - lastRandomSwitch >= (unsigned long)randomFXDuration * 1000UL) {
+                    int nextId;
+                    if (randomFXMode == "playlist") {
+                        randomPlaylistIndex %= randomFXPool.size();
+                        nextId = randomFXPool[randomPlaylistIndex];
+                        randomPlaylistIndex = (randomPlaylistIndex + 1) % randomFXPool.size();
+                    } else {
+                        nextId = randomFXPool[random(randomFXPool.size())];
                     }
+                    stripLed.effectId = nextId;
+                    if (stripLed.powerState) stripLed.update();
+                    lastRandomSwitch = now;
+                    didSwitchRandomFX = true;
                 }
-                xSemaphoreGive(dataMutex);
             }
-            if (didSwitch) {
-                stateGeneration++;
-                notifyClients(false);  // Broadcast new effectId to all clients
-            }
+            xSemaphoreGive(dataMutex);
+        }
+        if (didSwitchRandomFX) {
+            stateGeneration++;
+            notifyClients(false);  // Broadcast new FX ID to all clients
         }
 
         // Periodic broadcast of client list + action log (cada ~15s)
@@ -134,22 +132,58 @@ void TaskBatteryMonitor(void *pvParameters) {
 // ============================================================================
 
 void TaskLEDControl(void *pvParameters) {
+    // La tira se apaga SÓLO en la transición a apagado (power off o WiFi
+    // suspendido). Antes se llamaba clear() (clear + show) en cada iteración, lo
+    // que enviaba un frame negro cada 20 ms — 50 shows/s ocupando el RMT y la CPU
+    // para nada mientras la lámpara estaba apagada.
+    bool wasActive = false;
     while (true) {
-        // ⚠ dataMutex protege leds[], stripLed y wsLiveActive del race con
+        // Buffer del peek declarado fuera del mutex: el snapshot de leds[] se hace
+        // dentro y el envío por red después de soltarlo.
+        uint8_t peekBuf[4 + N_PIXELS * 3];
+        size_t  peekLen = 0;
+        uint32_t peekClientId = 0;
+
+        // ⚠ dataMutex protege leds[], stripLed y el suscriptor Peek del race con
         //   handleWebSocketMessage (que corre en el task del WebSocket).
+        bool didSwitchRandomVU = false;
         if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(10)) == pdTRUE) {
             // Si el enlace WiFi lleva demasiado tiempo caído (AP apagado o fuera
             // de rango), apagamos la tira. Si solo se fue el cliente WebSocket
             // (móvil en reposo / otra app) el WiFi sigue asociado → el efecto
             // continúa. Lo fija TaskWiFiMonitor.
-            if (stripLed.powerState && !wifiStripSuspended) {
+            const bool active = stripLed.powerState && !wifiStripSuspended;
+            const unsigned long now = millis();
+            if (!active && randomMode == 2) {
+                randomMode = 0;
+            }
+            if (active && randomMode == 2 && !randomVUPool.empty() && randomVUDuration > 0 &&
+                now - lastRandomSwitch >= (unsigned long)randomVUDuration * 1000UL) {
+                const int previousId = stripLed.effectId;
+                const int nextId = chooseNextRandomVUEffect(previousId);
+                lastRandomSwitch = now;
+                if (nextId >= 0 && nextId != previousId) {
+                    stripLed.effectId = nextId;
+                    didSwitchRandomVU = true;
+                }
+            }
+            if (active) {
                 stripLed.update();
-                sendPeekData();  // Live preview via WebSocket binary frame
-            } else {
+                buildPeekFrame(peekBuf, sizeof(peekBuf), &peekLen, &peekClientId);  // snapshot
+            } else if (wasActive) {
                 stripLed.clear();
             }
+            wasActive = active;
             xSemaphoreGive(dataMutex);
         }
+        if (didSwitchRandomVU) {
+            stateGeneration++;
+            notifyClients(false);  // Broadcast new VU ID to master and slaves
+        }
+
+        // ⚠ Fuera del mutex: el envío unicast no retiene estado compartido.
+        //   Frames sin hueco en la cola del cliente se omiten para evitar backlog.
+        sendPeekFrame(peekClientId, peekBuf, peekLen);
 
         vTaskDelay(pdMS_TO_TICKS(20));
     }

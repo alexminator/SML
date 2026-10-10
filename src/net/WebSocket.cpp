@@ -12,6 +12,7 @@
 #include <WiFi.h>
 #include <Preferences.h>
 #include <LittleFS.h>
+#include <algorithm>
 
 #include "power/PowerMgr.h"
 
@@ -60,6 +61,14 @@ static void _wsRemoveClient(uint32_t id) {
             break;
         }
     }
+}
+
+// ¿El cliente es el master actual? El master es el primer cliente conectado y
+// pasa al siguiente al desconectarse (_wsRemoveClient).
+// Lo usan las acciones terminales (reboot / factory reset), que el README
+// documenta como "reserved for the master".
+static bool _wsIsMaster(uint32_t clientId) {
+    return _wsClientCount > 0 && clientId != 0 && clientId == _wsMasterId;
 }
 
 // ── WebSocket action log (circular buffer) ──────────────────────────────────────
@@ -184,7 +193,7 @@ void notifyWSClientList() {
 }
 
 // ============================================================================
-// sendPeekData — Broadcast current LED colors as binary frame (WLED-compatible)
+// Peek live view — current LED colors as binary frame (WLED-compatible)
 // ============================================================================
 // Binary format:
 //   [0] = 0x4C (magic 'L')
@@ -192,28 +201,30 @@ void notifyWSClientList() {
 //   [2] = N_PIXELS (width in LEDs)
 //   [3] = 1 (height, single row)
 //   [4..] = RGB data (R,G,B per pixel)
-// Sends to ALL clients that opted in via {"lv": true}. Uses binaryAll()
-// which copies data internally — safe for local buffer.
-// Called from TaskLEDControl after stripLed.update().
+//
+// El snapshot se arma bajo dataMutex; la cola de red se toca después y sólo
+// para el cliente que pidió Peek. El intervalo de 40 ms limita nominalmente a 25 fps,
+// alineado con el render del canvas. Si el cliente va atrasado no se encolan frames.
 // ============================================================================
 
-static bool wsLiveActive = false; // any client wants live preview
+static uint32_t wsPeekClientId = 0;
+static constexpr uint32_t PEEK_FRAME_INTERVAL_MS = 40; // máximo nominal de 25 fps
 
-void sendPeekData() {
-    // ⚠ MUST be called with dataMutex held  (by TaskLEDControl).
-    //   Lee leds[], wsLiveActive y llama ws.binaryAll() — todo bajo mutex.
-    if (!wsLiveActive) return; // no client opted in
+bool buildPeekFrame(uint8_t *buf, size_t bufSize, size_t *len, uint32_t *clientId) {
+    // ⚠ Llamar con dataMutex tomado (lo hace TaskLEDControl).
+    *len = 0;
+    *clientId = wsPeekClientId;
+    if (wsPeekClientId == 0) return false;  // nadie pidió el stream
+    const size_t frameSize = 4 + (size_t)N_PIXELS * 3;
+    if (bufSize < frameSize) return false;
 
-    // Rate limit to ~20fps (50ms)
+    // Hasta 25 fps, sin acelerar el loop LED existente (20 ms).
+    // Se omite el envío si no toca, no se acumulan frames de preview.
     static uint32_t lastPeek = 0;
-    uint32_t now = millis();
-    if (now - lastPeek < 50) return;
+    const uint32_t now = millis();
+    if (now - lastPeek < PEEK_FRAME_INTERVAL_MS) return false;
     lastPeek = now;
 
-    // Build binary frame and broadcast to all clients
-    // WARNING: buf es stack-local (76 bytes para 24 LEDs) — seguro para TaskLEDControl
-    // que tiene 2048 bytes de stack.
-    uint8_t buf[4 + N_PIXELS * 3];
     buf[0] = 0x4C;  // magic 'L'
     buf[1] = 0x01;  // version 1 (single strip)
     buf[2] = N_PIXELS;
@@ -229,11 +240,11 @@ void sendPeekData() {
     static uint32_t lastPeekLog = 0;
     if (now - lastPeekLog > 5000) {  // log cada 5s para no saturar
         lastPeekLog = now;
-        debugD("📤 sendPeekData: ");
-        debugD_NUM(sizeof(buf), "%u");
-        debugD(" bytes to ");
-        debugD_NUM(ws.count(), "%u");
-        debugD(" clients  |  sample pixel[0]: RGB(");
+        debugD("📤 peek frame: ");
+        debugD_NUM((unsigned)frameSize, "%u");
+        debugD(" bytes para client #");
+        debugD_NUM(wsPeekClientId, "%u");
+        debugD(" | pixel[0]: RGB(");
         debugD_NUM(leds[0].r, "%d");
         debugD(",");
         debugD_NUM(leds[0].g, "%d");
@@ -243,7 +254,17 @@ void sendPeekData() {
     }
 #endif
 
-    ws.binaryAll(buf, sizeof(buf));
+    *len = frameSize;
+    return true;
+}
+
+void sendPeekFrame(uint32_t clientId, const uint8_t *buf, size_t len) {
+    // ⚠ Llamar SIN dataMutex tomado. Limitar a una trama pendiente evita
+    // latencia en cascada; desactivar close-on-full hace el stream best-effort.
+    if (!len || clientId == 0) return;
+    AsyncWebSocketClient *client = ws.client(clientId);
+    if (!client || client->queueLen() != 0 || !ws.availableForWrite(clientId)) return;
+    ws.binary(clientId, buf, len);
 }
 
 // ============================================================================
@@ -253,8 +274,15 @@ void sendPeekData() {
 void notifyClients(bool includeParams)
 {
     // Take mutex for reading shared data
+    // Capacidad única para el documento y el buffer de estado. Antes había tres
+    // números distintos (doc 2048, guard 2048−256, buffer 2048): el guard
+    // rechazaba payloads que sí cabían en el buffer y descartaba el mensaje
+    // ENTERO, dejando al cliente sin ninguna actualización de estado. El estado
+    // real ronda los ~1,9 KB (50 campos *Status + params + meta), así que el
+    // margen de 256 era el que decidía el envío.
+    static const size_t WS_STATE_CAPACITY = 3072;
     if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
-        DynamicJsonDocument json(2048);
+        DynamicJsonDocument json(WS_STATE_CAPACITY);
 
         // Usar valores numéricos directamente en JSON
         json["battVoltage"] = batt.battVolts;
@@ -316,6 +344,13 @@ void notifyClients(bool includeParams)
             for (int c : randomFXCategories) cats.add(c);
         }
 
+        // Random VU config is server-authoritative and sent to all clients.
+        json["randomVUDuration"] = randomVUDuration;
+        {
+            JsonArray pool = json["randomVUPool"].to<JsonArray>();
+            for (int id : randomVUPool) pool.add(id);
+        }
+
         // Direct effectId (for random FX cycling and general sync)
         json["effectId"] = stripLed.effectId;
 
@@ -351,8 +386,10 @@ void notifyClients(bool includeParams)
             }
         }
 
-        // Quick sanity check — reject unusually large payloads
-        if (measureJson(json) + 256 > 2048) {
+        // Sanity check contra la capacidad real del buffer (+1 por el NUL que
+        // escribe serializeJson). No se usa un margen arbitrario: si cabe en el
+        // buffer, se envía.
+        if (measureJson(json) + 1 >= WS_STATE_CAPACITY) {
 #ifdef DEBUG_WEBSOCKET
             debuglnE("JSON payload too large for WebSocket");
 #endif
@@ -361,7 +398,7 @@ void notifyClients(bool includeParams)
         }
 
         // Fixed-size buffer (static — NOT on task stack, TaskWebSocket solo tiene 4KB)
-        static char buffer[2048];
+        static char buffer[WS_STATE_CAPACITY];
         size_t len = serializeJson(json, buffer, sizeof(buffer));
 
         if (len >= sizeof(buffer)) {
@@ -541,6 +578,30 @@ static void sendBatteryHistory(AsyncWebSocketClient* client) {
 // Handle incoming WebSocket messages
 // ============================================================================
 
+// Opt-in/opt-out del preview, registrado por clientId para que sólo el dueño
+// del Peek reciba el stream y otro cliente no pueda desuscribirlo accidentalmente.
+static bool setPeekLiveState(uint32_t clientId, bool enabled) {
+    if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) != pdTRUE) return false;
+    if (enabled) {
+        if (wsPeekClientId != 0 && wsPeekClientId != clientId) {
+            xSemaphoreGive(dataMutex);
+            return false;
+        }
+        wsPeekClientId = clientId;
+    } else if (wsPeekClientId == clientId) {
+        wsPeekClientId = 0;
+    }
+    xSemaphoreGive(dataMutex);
+    return true;
+}
+
+static void clearPeekLiveState(uint32_t clientId) {
+    if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+        if (wsPeekClientId == clientId) wsPeekClientId = 0;
+        xSemaphoreGive(dataMutex);
+    }
+}
+
 void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clientId, IPAddress clientIp)
 {
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
@@ -558,28 +619,39 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             return;
         }
 
-        // ▸ WLED-style peek live view opt-in (multi-client) — procesar ANTES
-        //   del early return de action==nullptr, porque {"lv":true} no lleva action.
+        // Peek opt-in procesado antes del early return de action==nullptr.
+        // Sólo el cliente que inicia Peek es suscriptor del stream.
         if (!json["lv"].isNull()) {
-            // ⚠ wsLiveActive es leído por sendPeekData() en TaskLEDControl
-            //   bajo dataMutex — escribir aquí también bajo mutex.
-            if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
-                wsLiveActive = json["lv"].as<bool>();
-                xSemaphoreGive(dataMutex);
+            const bool lvOn = json["lv"].as<bool>();
+            AsyncWebSocketClient *peekClient = ws.client(clientId);
+            if (lvOn && peekClient) peekClient->setCloseClientOnQueueFull(false);
+            const bool peekStateUpdated = setPeekLiveState(clientId, lvOn);
+            if (!peekStateUpdated && lvOn && peekClient) {
+                peekClient->setCloseClientOnQueueFull(true);
+            } else if (peekStateUpdated && !lvOn && peekClient) {
+                peekClient->setCloseClientOnQueueFull(true);
             }
 #ifdef DEBUG_WEBSOCKET
+            // Se usa la copia local: leer wsPeekClientId aquí fuera del mutex sería
+            // una carrera (aunque sólo alimente un mensaje de debug).
             debugD("🔴 Peek live view: ");
-            debuglnD(wsLiveActive ? "ENABLED" : "DISABLED");
+            debuglnD(lvOn ? "ENABLED" : "DISABLED");
 #endif
-            // Si solo venía lv, responder con el estado completo + retornar
-            // notifyClients toma su propio dataMutex — no retenerlo aquí.
-            stateGeneration++;
-            notifyClients(false);
+            // El stream es binario unicast; no hace falta broadcast del estado
+            // completo para habilitar/deshabilitarlo.
+            if (!peekStateUpdated) {
+                static const char PEEK_BUSY_RESPONSE[] = "{\"peekBusy\":true}";
+                ws.text(clientId, PEEK_BUSY_RESPONSE, sizeof(PEEK_BUSY_RESPONSE) - 1);
+#ifdef DEBUG_WEBSOCKET
+                debuglnW("Peek request rejected — another client owns the stream");
+#endif
+            }
             return;
         }
 
         const char *action = json["action"];
         const int effectId = json["effectId"] | -1;
+        bool shouldSaveGlobalState = false;
 
         // ⚠ Solo asignar effectId si el campo existe. effectId 0 = Solid (color simple)
         // ⚠ Proteger stripLed y leds[] con dataMutex (TaskLEDControl los lee/escribe).
@@ -587,7 +659,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
                 stripLed.effectId = effectId;
                 if (stripLed.powerState) stripLed.update();
-                saveGlobalState();
+                shouldSaveGlobalState = true;
                 xSemaphoreGive(dataMutex);
             }
             _wsLogAction(clientId, 0, effectId, 0, 0);
@@ -595,6 +667,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
 
         // ⚠ action puede ser NULL si el mensaje solo trae effectId
         if (action == nullptr) {
+            if (shouldSaveGlobalState) saveGlobalState();
             stateGeneration++;
             notifyClients(false);  // notifyClients toma su propio dataMutex
             notifyWSClientList();  // Broadcast updated action log
@@ -612,9 +685,11 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
         // ── CONFIG: tiempo de apagado de la tira al caer el WiFi (modo AC) ──
         if (strcmp(action, "setWifiTimeout") == 0) {
             int secs = json["seconds"] | -1;
-            if (secs >= 5 && secs <= 3600) {
+            if (secs >= 5 && secs <= 3600 &&
+                xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
                 wifiLostStripTimeoutMs = (uint32_t)secs * 1000UL;
-                saveGlobalState();  // persiste en /state.json
+                xSemaphoreGive(dataMutex);
+                saveGlobalState();  // snapshot protegido; escritura fuera del mutex
             }
             stateGeneration++;
             notifyClients(true);
@@ -639,7 +714,17 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
         }
 
         // ── REBOOT / FACTORY RESET (terminal actions — no mutex needed) ──────
+        //   Master-only: el README lo documenta como "reserved for the master",
+        //   pero hasta ahora sólo lo aplicaba la UI (client-side). Aquí se aplica
+        //   de verdad: un slave que envíe el comando crudo por WebSocket no puede
+        //   reiniciar ni borrar la configuración del dispositivo.
         if (strcmp(action, "reboot") == 0) {
+            if (!_wsIsMaster(clientId)) {
+#ifdef DEBUG_WEBSOCKET
+                debuglnW("⛔ reboot ignorado — el cliente no es el master");
+#endif
+                return;
+            }
 #ifdef DEBUG_WEBSOCKET
             debuglnD("🔄 Rebooting ESP32...");
 #endif
@@ -649,6 +734,12 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             return; // never reached
         }
         if (strcmp(action, "factoryReset") == 0) {
+            if (!_wsIsMaster(clientId)) {
+#ifdef DEBUG_WEBSOCKET
+                debuglnW("⛔ factoryReset ignorado — el cliente no es el master");
+#endif
+                return;
+            }
 #ifdef DEBUG_WEBSOCKET
             debuglnD("🗑 Factory reset — clearing all settings...");
 #endif
@@ -721,7 +812,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             stripLed.powerState = !stripLed.powerState;
             stripLed.powerState ? stripLed.update() : stripLed.clear();
             if (!stripLed.powerState) randomMode = 0;
-            saveGlobalState();
+            shouldSaveGlobalState = true;
             _wsLogAction(clientId, 4, stripLed.powerState ? 1 : 0, 0, 0);
         }
         else if (strcmp(action, "lamp") == 0)
@@ -747,7 +838,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             debugD("Brillo ");
             debuglnD_NUM(brightness, "%d");
 #endif
-            stripLed.brightness = brightness; saveGlobalState();
+            stripLed.brightness = brightness;
+            shouldSaveGlobalState = true;
             _wsLogAction(clientId, 2, brightness, 0, 0);
         }
         else if (strcmp(action, "toggleBatt") == 0) {
@@ -759,7 +851,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             }
             if (stripLed.powerState) stripLed.update();
             // Log battery toggle as type 8
-            saveGlobalState();
+            shouldSaveGlobalState = true;
             _wsLogAction(clientId, 8, stripLed.effectId == EFFECT_BATTERY ? 1 : 0, 0, 0);
         }
         else if (strcmp(action, "toggleTemp") == 0) {
@@ -771,7 +863,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             }
             if (stripLed.powerState) stripLed.update();
             // Log temperature toggle as type 9
-            saveGlobalState();
+            shouldSaveGlobalState = true;
             _wsLogAction(clientId, 9, stripLed.effectId == EFFECT_TEMP ? 1 : 0, 0, 0);
         }
         else if (strcmp(action, "picker") == 0)
@@ -783,7 +875,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             if (!json["brightness"].isNull()) {
                 stripLed.brightness = json["brightness"].as<int>();
             }
-            saveGlobalState();
+            shouldSaveGlobalState = true;
 #ifdef DEBUG_LED
             debugD("RGB: ");
             debugD_NUM(stripLed.R, "%d");
@@ -809,17 +901,70 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
         }
         else if (strcmp(action, "randomFX") == 0)
         {
-            randomMode = json["state"].as<bool>() ? 1 : 0;
-            if (randomMode == 1) {
+            if (json["state"].as<bool>()) {
+                randomMode = 1;
                 lastRandomSwitch = millis();
                 randomPlaylistIndex = 0;
+            } else if (randomMode == 1) {
+                randomMode = 0;
             }
             _wsLogAction(clientId, 7, 1, 0, 0);
         }
-        else if (strcmp(action, "randomVU") == 0)
+        else if (strcmp(action, "randomVU") == 0 || strcmp(action, "randomVUConfig") == 0)
         {
-            randomMode = json["state"].as<bool>() ? 2 : 0;
-            _wsLogAction(clientId, 7, 2, 0, 0);
+            const bool configOnly = strcmp(action, "randomVUConfig") == 0;
+            if (configOnly && !json["duration"].isNull()) {
+                randomVUDuration = constrain(json["duration"].as<int>(), 3, 30);
+            }
+            if (!configOnly && !json["effectPool"].isNull() && json["effectPool"].is<JsonArray>()) {
+                randomVUPool.clear();
+                for (JsonVariant value : json["effectPool"].as<JsonArray>()) {
+                    const int id = value.as<int>();
+                    // Only real, active VU effects are eligible; removed registry
+                    // placeholders (IDs 49-51) are deliberately excluded.
+                    if (id >= 12 && id <= 17) randomVUPool.push_back(id);
+                    else if (id == 47 || id == 48) randomVUPool.push_back(id);
+                }
+                std::sort(randomVUPool.begin(), randomVUPool.end());
+                randomVUPool.erase(std::unique(randomVUPool.begin(), randomVUPool.end()), randomVUPool.end());
+                if (randomVUPool.empty()) randomVUPool = {12, 13, 14, 15, 16, 17, 47, 48};
+            }
+            if (!configOnly) {
+                const bool shouldStart = json["state"].as<bool>();
+                if (shouldStart && !json["duration"].isNull()) {
+                    randomVUDuration = constrain(json["duration"].as<int>(), 3, 30);
+                }
+                if (shouldStart && !json["effectPool"].isNull() && !json["effectPool"].is<JsonArray>()) {
+                    randomVUPool.clear();
+                }
+                if (shouldStart && randomVUPool.empty()) {
+                    randomVUPool = {12, 13, 14, 15, 16, 17, 47, 48};
+                }
+                if (shouldStart && !randomVUPool.empty()) {
+                    randomMode = 2;
+                    const int nextId = chooseNextRandomVUEffect(stripLed.effectId);
+                    if (nextId >= 0) {
+                        stripLed.effectId = nextId;
+                        if (stripLed.powerState) stripLed.update();
+                    }
+                    lastRandomSwitch = millis();
+                } else if (shouldStart) {
+                    randomMode = 0;
+                } else if (!shouldStart) {
+                    if (randomMode == 2) randomMode = 0;
+                    if (json["effectId"].is<int>()) {
+                        stripLed.effectId = json["effectId"].as<int>();
+                        if (stripLed.powerState) stripLed.update();
+                    }
+                }
+            } else if (randomMode == 2 && !json["duration"].isNull()) {
+                // Restart the interval from the moment the user changes it.
+                lastRandomSwitch = millis();
+            }
+            if (randomMode == 2 && !configOnly && !json["duration"].isNull()) {
+                lastRandomSwitch = millis();
+            }
+            if (!configOnly) _wsLogAction(clientId, 7, 2, 0, 0);
         }
         else if (strcmp(action, "randomConfig") == 0)
         {
@@ -857,7 +1002,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             }
             _wsLogAction(clientId, 7, 3, 0, 0);
         }
-        // ── setParams: fx setters bajo mutex, saveEffectParams sin mutex ──
+        // ── setParams: setters + marca dirty bajo mutex (write al final) ──
         else if (strcmp(action, "setParams") == 0)
         {
             uint8_t id = json["effectId"].as<uint8_t>();
@@ -882,27 +1027,25 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
                 debugD_NUM(fx->getCheck1(), "%d");
                 debugD("\n");
 #endif
-                // ⚠ Liberar mutex ANTES de saveEffectParams (lo toma internamente)
-                xSemaphoreGive(dataMutex);
-                saveEffectParams();
-                // Volver a tomar (se libera al final del bloque else)
-                if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) != pdTRUE) {
-                    // Si falla, no podemos seguir — notificar y salir
-                    stateGeneration++;
-                    notifyClients(false);
-                    notifyWSClientList();
-                    return;
-                }
+                // ⚠ Sólo marca el efecto como pendiente de persistir (no toca el
+                // filesystem), así que es seguro con dataMutex tomado. El write
+                // real ocurre en saveEffectParamsFlush() al final del handler.
+                saveEffectParams(id);
             }
         }
 
                 xSemaphoreGive(dataMutex);
             } // end if dataMutex acquired
         } // end else (shared-state actions)
+        if (shouldSaveGlobalState) saveGlobalState();
         stateGeneration++;
         notifyClients(false);
         notifyWSClientList();  // Broadcast updated action log
     }
+
+    // Persistencia diferida de params de efectos. dataMutex ya está libre en este
+    // punto y saveEffectParamsFlush() lo toma internamente, con debounce.
+    saveEffectParamsFlush();
 }
 
 // ============================================================================
@@ -990,6 +1133,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
 #endif
         // Remove from tracking BEFORE setting webSocketClientConnected
         _wsRemoveClient(client->id());
+        clearPeekLiveState(client->id());
 
         webSocketClientConnected = (_wsClientCount > 0);
 #ifdef DEBUG_POWER_MANAGEMENT

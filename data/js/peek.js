@@ -6,7 +6,9 @@
    ────────────────────────────────────────────────────────────────────────────── */
 
 const VISUAL_LEDS = 33;      // Cuantos LEDs visuales mostramos (strip y círculo)
-const DRAW_FPS = 30;          // Target FPS del render loop
+const PEEK_FPS = 25;          // Mantener en sync con PEEK_FRAME_INTERVAL_MS del ESP32
+const PEEK_FRAME_MS = Math.round(1000 / PEEK_FPS); // 40 ms (~25 FPS nominales)
+const DRAW_FPS = PEEK_FPS;
 
 let peek = null;
 
@@ -28,8 +30,10 @@ class PeekRenderer {
 
     // FPS tracking
     this._fpsHistory = [];
-    this._lastFrameTime = 0;
+    this._lastDataTime = 0;
+    this._lastRenderTime = 0;
     this.fps = 0;
+    this._renderTimer = null;
   }
 
   /* ── Resize canvas to fit container ── */
@@ -79,13 +83,21 @@ class PeekRenderer {
     this.sweepProgress = 0;
     this._fpsHistory = [];
     this.fps = 0;
-    this._lastFrameTime = 0;
+    this._lastDataTime = 0;
+    this._lastRenderTime = 0;
     this.tick();
   }
 
   stop() {
     this.running = false;
     this.sweeping = false;
+    clearTimeout(this._renderTimer);
+    this._renderTimer = null;
+    this.ready = false;
+    this._lastDataTime = 0;
+    this._lastRenderTime = 0;
+    this._fpsHistory = [];
+    this.fps = 0;
     this.drawIdle();
   }
 
@@ -107,6 +119,7 @@ class PeekRenderer {
     }
     this.ledData = colors;
     this.displayData = this.interpolateLEDs(colors, VISUAL_LEDS);
+    this._lastDataTime = performance.now();
 
     if (!this.ready) {
       this.ready = true;
@@ -116,7 +129,7 @@ class PeekRenderer {
     }
   }
 
-  /* ── Render loop (~30fps) ── */
+  /* ── Render only when new LED data is available ── */
   tick() {
     if (!this.running) return;
 
@@ -128,17 +141,7 @@ class PeekRenderer {
     }
 
     try {
-      // Update FPS
       const now = performance.now();
-      if (this._lastFrameTime > 0) {
-        const dt = now - this._lastFrameTime;
-        this._fpsHistory.push(1000 / dt);
-        if (this._fpsHistory.length > 20) this._fpsHistory.shift();
-        this.fps = Math.round(
-          this._fpsHistory.reduce((a, b) => a + b, 0) / this._fpsHistory.length
-        );
-      }
-      this._lastFrameTime = now;
 
       // Update sweep progress
       if (this.sweeping && this.ready) {
@@ -147,7 +150,9 @@ class PeekRenderer {
       }
 
       if (this.ready && this.displayData.length > 0) {
-        this.render();
+        const hasNewData = this._lastDataTime > this._lastRenderTime;
+        const frameIsFresh = now - this._lastDataTime <= PEEK_FRAME_MS * 2;
+        if (hasNewData && frameIsFresh) this.render();
       } else {
         this.drawWaiting();
       }
@@ -155,7 +160,7 @@ class PeekRenderer {
       console.warn('Peek render error:', e);
     }
 
-    setTimeout(() => this.tick(), Math.round(1000 / DRAW_FPS));
+    this._renderTimer = setTimeout(() => this.tick(), PEEK_FRAME_MS);
   }
 
   /* ── Waiting state ── */
@@ -232,6 +237,18 @@ class PeekRenderer {
       this.renderCircle(ctx, data, w, h, pad);
     }
 
+    const now = performance.now();
+    if (this._lastRenderTime > 0) {
+      const dt = now - this._lastRenderTime;
+      if (dt > 0) {
+        this._fpsHistory.push(1000 / dt);
+        if (this._fpsHistory.length > 20) this._fpsHistory.shift();
+        this.fps = Math.round(
+          this._fpsHistory.reduce((sum, value) => sum + value, 0) / this._fpsHistory.length
+        );
+      }
+    }
+    this._lastRenderTime = now;
     this.updateUI();
   }
 
@@ -406,6 +423,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Page visibility
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden && peek) peek.stop();
+    if (document.hidden && peek && peek.running) {
+      peek.stop();
+      if (typeof sendCmd === 'function') sendCmd({ lv: false });
+      if (peekToggle) {
+        peekToggle.textContent = '▶ Start';
+        peekToggle.classList.remove('active');
+      }
+    }
   });
 });
+
+/* ── Firmware says another client currently owns the single Peek stream ── */
+function handlePeekBusy() {
+  if (peek) peek.stop();
+  const peekToggle = document.getElementById('peekToggle');
+  if (peekToggle) {
+    peekToggle.textContent = '▶ Start';
+    peekToggle.classList.remove('active');
+  }
+  if (typeof showToast === 'function') {
+    showToast('Live preview is already running on another device', 'info');
+  }
+}

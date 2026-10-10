@@ -20,7 +20,7 @@ public:
             ripple3(true);
         }
 
-        FastLED.setBrightness(stripLed.brightness);
+        // Brillo: lo aplica StripLed::update() una vez por frame (única fuente de verdad).
         FastLED.show();
     }
 

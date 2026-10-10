@@ -83,7 +83,7 @@ struct StripLed {
     bool powerState;
 
     StripLed();
-    void simpleColor(int ar, int ag, int ab, int brightness);
+    void simpleColor(int ar, int ag, int ab);
     void update();
     void clear();
 };
@@ -136,6 +136,7 @@ extern SemaphoreHandle_t wifiMutex;
 /// Initialize RTOS mutexes (dataMutex, wifiMutex)
 void initMutexes();
 void loadGlobalState();
+/// Persists a consistent snapshot of the global state; call without dataMutex held.
 void saveGlobalState();
 
 // ============================================================================
@@ -163,6 +164,12 @@ extern std::vector<int> randomFXPool;      // flat effect ID pool for cycling
 extern std::vector<int> randomFXCategories; // category indices (0-4), only for category mode
 extern unsigned long lastRandomSwitch;     // millis() of last switch during cycling
 extern int randomPlaylistIndex;            // current index in playlist mode
+
+// ── Random VU config (shared across all clients) ──
+extern int randomVUDuration;               // seconds between VU effect changes
+extern std::vector<int> randomVUPool;      // validated VU effect IDs
+/// Select a random VU ID different from current when possible; call with dataMutex held.
+int chooseNextRandomVUEffect(int currentEffectId);
 
 extern PowerState currentPowerState;
 extern PowerState previousPowerState;

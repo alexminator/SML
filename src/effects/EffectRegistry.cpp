@@ -62,11 +62,22 @@
 #include "../vu/vu8.h"
 #include "../vu/vu9.h"
 
-// ── No-op placeholder for removed VU effects (Gravimeter, PS1DGEQ, Palette Blend) ──
+// ── Placeholder de efectos VU retirados (Gravimeter, PS1DGEQ, Palette Blend) ──
+// DECISIÓN (Fase 5.1): se MANTIENEN las entradas en el registry aunque el efecto
+// ya no exista. Motivo: el effectId es un índice, así que borrarlas desplazaría
+// todos los efectos siguientes y invalidaría el `effectId` persistido en
+// /state.json y el mapeo de IDs del frontend (data/js/websocket.js).
+// La UI no ofrece estos IDs; si un cliente crudo los pide, la tira debe quedar
+// APAGADA. Ojo: un render() totalmente vacío dejaba la tira congelada con el
+// último frame del efecto anterior, porque StripLed::update() ya no hace show()
+// por su cuenta al cambiar de efecto (Fase 2).
 class RemovedEffect : public Effect {
 public:
     RemovedEffect(CRGB* l, uint16_t n) : Effect(l, n) {}
-    void render() override { /* no-op — effect removed */ }
+    void render() override {
+        FastLED.clear();
+        FastLED.show();
+    }
 };
 
 // ============================================================================
@@ -131,6 +142,9 @@ const EffectEntry effectRegistry[] = {
     { "halloweenEyesStatus",    new HalloweenEyesEffect(leds, N_PIXELS) },
 
     // ── Nuevos efectos VU (46-50) ───────────────────────────────────────────
+    // Efectos VU removidos: se mantienen como compatibilidad del registry para
+    // que los IDs históricos no se reusen accidentalmente. No se muestran en la UI.
+    // Si en el futuro no se necesitan, eliminar también su referencia en el frontend.
     { "gravimeterVUStatus",     new RemovedEffect(leds, N_PIXELS) },
     { "noisemeterVUStatus",     new NoisemeterVUEffect(leds, N_PIXELS) },
     { "djlightVUStatus",        new DJLightVUEffect(leds, N_PIXELS) },
@@ -145,15 +159,38 @@ constexpr uint8_t EFFECT_COUNT =
 // PERSISTENCIA DE PARÁMETROS
 // ============================================================================
 
-void saveEffectParams() {
-    if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(500)) != pdTRUE) {
+static uint8_t  _paramsDirty[EFFECT_COUNT];   // 1 = params cambiados, sin persistir
+static uint32_t _paramsLastWriteMs = 0;       // millis() del último write real
+static const uint32_t PARAMS_MIN_WRITE_INTERVAL_MS = 1000;  // debounce entre writes
+
+void saveEffectParams(uint8_t effectId) {
+    // Los IDs del frontend/registry son 1-based; los flags internos son 0-based.
+    if (effectId == 0 || effectId > EFFECT_COUNT) return;
+    _paramsDirty[effectId - 1] = 1;
+}
+
+void saveEffectParamsFlush() {
+    if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) != pdTRUE) {
 #ifdef DEBUG_SYSTEM
-        debuglnW("saveEffectParams: could not acquire mutex");
+        debuglnW("saveEffectParamsFlush: could not acquire mutex");
 #endif
         return;
     }
 
-    DynamicJsonDocument doc(12288);
+    // ¿Hay algo pendiente y ya pasó el debounce mínimo? Si no, soltar y salir.
+    bool anyDirty = false;
+    for (uint8_t i = 0; i < EFFECT_COUNT; i++) {
+        if (_paramsDirty[i]) { anyDirty = true; break; }
+    }
+    const uint32_t now = millis();
+    if (!anyDirty || (now - _paramsLastWriteMs) < PARAMS_MIN_WRITE_INTERVAL_MS) {
+        xSemaphoreGive(dataMutex);
+        return;
+    }
+
+    // Capacidad ajustada al contenido real: ~140 B por efecto (nombre + 9 campos
+    // numéricos/bool). Para 50 efectos reserva ~8,5 KB (antes eran 12 KB fijos).
+    DynamicJsonDocument doc((size_t)EFFECT_COUNT * 160 + 512);
     for (uint8_t i = 0; i < EFFECT_COUNT; i++) {
         Effect* fx = effectRegistry[i].instance;
         if (!fx) continue;
@@ -173,6 +210,10 @@ void saveEffectParams() {
     if (f) {
         serializeJson(doc, f);
         f.close();
+        // Persistido: limpiar flags y anotar el timestamp. Se hace dentro del
+        // mutex para no perder un cambio que llegue en paralelo desde el handler.
+        for (uint8_t i = 0; i < EFFECT_COUNT; i++) _paramsDirty[i] = 0;
+        _paramsLastWriteMs = now;
     }
     xSemaphoreGive(dataMutex);
 }
@@ -181,7 +222,9 @@ void loadEffectParams() {
     if (!LittleFS.exists("/params.json")) return;
     File f = LittleFS.open("/params.json", "r");
     if (!f) return;
-    DynamicJsonDocument doc(12288);
+    // Capacidad derivada del tamaño real del archivo (patrón ya usado en
+    // AppState.cpp::loadBatteryLog). Antes 12288 fijos para un JSON de ~7,2 KB.
+    DynamicJsonDocument doc(f.size() + 256);
     DeserializationError err = deserializeJson(doc, f);
     if (err) {
         f.close();

@@ -233,6 +233,12 @@ function handleMessage(data) {
     return;  // No hay otros campos en este mensaje
   }
 
+  // ── PEEK stream back-pressure/ownership response ──
+  if (data.peekBusy === true) {
+    if (typeof handlePeekBusy === 'function') handlePeekBusy();
+    return;
+  }
+
   // ── TEMPERATURE / HUMIDITY ──
   if (data.temperature !== undefined) {
     SML.temp = data.temperature;
@@ -497,7 +503,7 @@ function handleMessage(data) {
 
   // ── RANDOM VU CONFIG SYNC (from ESP32 broadcast) ──
   if (data.randomVUDuration !== undefined) {
-    localStorage.setItem('sml-random-duration', String(data.randomVUDuration));
+    localStorage.setItem('sml-random-vu-duration', String(data.randomVUDuration));
   }
 
   // ── EFFECT ──

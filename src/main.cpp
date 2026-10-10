@@ -123,6 +123,16 @@ void loop()
     // la OTA se escribe pero el ESP32 NO reinicia solo, y seguiría ejecutando
     // el firmware anterior hasta un corte de energía.
     ElegantOTA.loop();
+
+    // Persistencia diferida de params de efectos: repaso periódico con debounce.
+    // Sin esto, el último cambio tras soltar un slider podría quedarse sólo en RAM
+    // hasta el siguiente mensaje WebSocket.
+    static uint32_t lastParamsFlushCheck = 0;
+    if (millis() - lastParamsFlushCheck >= 500) {
+        lastParamsFlushCheck = millis();
+        saveEffectParamsFlush();
+    }
+
     // ⚠ loop() sin yield → watchdog timeout (WDT) en ESP32
     vTaskDelay(pdMS_TO_TICKS(10));
 }

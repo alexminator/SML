@@ -19,12 +19,14 @@
 
 SemaphoreHandle_t dataMutex = NULL;
 SemaphoreHandle_t wifiMutex = NULL;
+static SemaphoreHandle_t globalStateSaveMutex = NULL;
 
 void initMutexes() {
     dataMutex = xSemaphoreCreateRecursiveMutex();
     wifiMutex = xSemaphoreCreateMutex();
+    globalStateSaveMutex = xSemaphoreCreateMutex();
 
-    if (dataMutex == NULL || wifiMutex == NULL) {
+    if (dataMutex == NULL || wifiMutex == NULL || globalStateSaveMutex == NULL) {
 #ifdef DEBUG_SYSTEM
         debuglnE("Failed to create mutexes!");
         debuglnE("System may experience race conditions");
@@ -83,6 +85,20 @@ std::vector<int> randomFXPool;
 std::vector<int> randomFXCategories;
 unsigned long lastRandomSwitch = 0;
 int randomPlaylistIndex = 0;
+int randomVUDuration = 8;
+std::vector<int> randomVUPool = {12, 13, 14, 15, 16, 17, 47, 48};
+
+int chooseNextRandomVUEffect(int currentEffectId) {
+    if (randomVUPool.empty()) return -1;
+    if (randomVUPool.size() == 1) return randomVUPool.front();
+
+    const size_t start = (size_t)random(0, (long)randomVUPool.size());
+    for (size_t offset = 0; offset < randomVUPool.size(); ++offset) {
+        const int candidate = randomVUPool[(start + offset) % randomVUPool.size()];
+        if (candidate != currentEffectId) return candidate;
+    }
+    return randomVUPool.front();
+}
 
 PowerState currentPowerState = POWER_AC_MODE;
 PowerState previousPowerState = POWER_AC_MODE;
@@ -357,11 +373,12 @@ void Battery::getBatteryLog(BattLogEntry* outBuf, int* outCount) {
 
 StripLed::StripLed() : R(255), G(255), B(255), brightness(130), effectId(0), powerState(false) {}
 
-void StripLed::simpleColor(int ar, int ag, int ab, int brightness) {
+void StripLed::simpleColor(int ar, int ag, int ab) {
     for (int i = 0; i < N_PIXELS; i++) {
         leds[i] = CRGB(ar, ag, ab);
     }
-    FastLED.setBrightness(brightness);
+    // Sin FastLED.setBrightness() aquí: el brillo lo aplica update() una vez por
+    // frame y FastLED lo mantiene hasta que cambie (única fuente de verdad).
     FastLED.show();
 }
 
@@ -375,8 +392,20 @@ void StripLed::update() {
         clear();
         return;
     }
+
+    // ── Brillo: única fuente de verdad ─────────────────────────────────────
+    // FastLED guarda el brillo global y lo aplica en el siguiente show(), así que
+    // basta con setearlo cuando cambia. Antes sólo lo aplicaban el color sólido
+    // (simpleColor) y los efectos VU: con cualquier otro efecto (Fire, Comet,
+    // Meteor…) mover el slider de brillo no tenía efecto hasta cambiar de efecto.
+    static int lastBrightness = -1;
+    if (brightness != lastBrightness) {
+        FastLED.setBrightness(brightness);
+        lastBrightness = brightness;
+    }
+
     if (effectId == 0) {
-        simpleColor(R, G, B, brightness);
+        simpleColor(R, G, B);
         return;
     }
     // Clear buffer solo al CAMBIAR de efecto (evita superposición entre efectos
@@ -385,7 +414,10 @@ void StripLed::update() {
     // entre frames para el trail.
     static int lastEffectId = -1;
     if (effectId != lastEffectId) {
-        clear();
+        // Sólo el buffer: el show() lo hace el propio efecto al pintar el frame.
+        // Antes se llamaba clear() (clear + show), lo que enviaba un frame negro
+        // extra en cada cambio de efecto.
+        FastLED.clear();
         lastEffectId = effectId;
     }
     runEffectById(effectId);
@@ -419,24 +451,46 @@ void loadGlobalState() {
 }
 
 void saveGlobalState() {
-    if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) != pdTRUE) {
+    // Serializar los guardados, pero tomar el mutex de estado sólo para el snapshot:
+    // el I/O LittleFS no debe bloquear tareas consumidoras de dataMutex.
+    if (xSemaphoreTake(globalStateSaveMutex, pdMS_TO_TICKS(100)) != pdTRUE) {
 #ifdef DEBUG_SYSTEM
-        debuglnW("saveGlobalState: could not acquire mutex");
+        debuglnW("saveGlobalState: could not acquire persistence mutex");
 #endif
         return;
     }
+
+    int colorR, colorG, colorB, brightness, effectId;
+    bool powerState;
+    uint32_t wifiTimeoutSecs;
+    if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) != pdTRUE) {
+#ifdef DEBUG_SYSTEM
+        debuglnW("saveGlobalState: could not acquire data mutex");
+#endif
+        xSemaphoreGive(globalStateSaveMutex);
+        return;
+    }
+    colorR = stripLed.R;
+    colorG = stripLed.G;
+    colorB = stripLed.B;
+    brightness = stripLed.brightness;
+    effectId = stripLed.effectId;
+    powerState = stripLed.powerState;
+    wifiTimeoutSecs = wifiLostStripTimeoutMs / 1000UL;
+    xSemaphoreGive(dataMutex);
+
     DynamicJsonDocument doc(1024);
-    doc["R"] = stripLed.R;
-    doc["G"] = stripLed.G;
-    doc["B"] = stripLed.B;
-    doc["brightness"] = stripLed.brightness;
-    doc["effectId"] = stripLed.effectId;
-    doc["powerState"] = stripLed.powerState;
-    doc["wifiTimeout"] = wifiLostStripTimeoutMs / 1000UL;
+    doc["R"] = colorR;
+    doc["G"] = colorG;
+    doc["B"] = colorB;
+    doc["brightness"] = brightness;
+    doc["effectId"] = effectId;
+    doc["powerState"] = powerState;
+    doc["wifiTimeout"] = wifiTimeoutSecs;
     File f = LittleFS.open("/state.json", "w");
     if (f) {
         serializeJson(doc, f);
         f.close();
     }
-    xSemaphoreGive(dataMutex);
+    xSemaphoreGive(globalStateSaveMutex);
 }

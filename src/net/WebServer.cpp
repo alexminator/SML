@@ -26,7 +26,6 @@
 // ============================================================================
 
 AsyncWebServer server(HTTP_PORT);
-Status status = COLOR;
 
 // ============================================================================
 // LittleFS initialization
@@ -184,57 +183,18 @@ void initWiFi()
 }
 
 // ============================================================================
-// Template processor (for server-side HTML variable replacement)
 // ============================================================================
-
-const char* processor(const String &var)
-{
-    static char buffer[64];
-    switch (status)
-    {
-    case COLOR:
-    {
-        DynamicJsonDocument doc(128);
-        doc["color"]["r"] = stripLed.R;
-        doc["color"]["g"] = stripLed.G;
-        doc["color"]["b"] = stripLed.B;
-        serializeJson(doc, buffer, sizeof(buffer));
-        return buffer;
-    }
-    case BRIGHTNESS:
-        itoa(stripLed.brightness, buffer, 10);
-        return buffer;
-    case STRIPLED:
-        return stripLed.powerState ? "on" : "off";
-    case BLUETOOTH:
-        return bt_powerState ? "on" : "off";
-    case FIRE_STATE:
-    case MOVINGDOT_STATE:
-    case RAINBOWBEAT_STATE:
-    case RWB_STATE:
-    case RIPPLE_STATE:
-    case TWINKLE_STATE:
-    case BALLS_STATE:
-    case JUGGLE_STATE:
-    case SINELON_STATE:
-    case COMET_STATE:
-    case BREATH_STATE:
-    case COLORSWEEP_STATE:
-    case VU1:
-    case VU2:
-    case VU3:
-    case VU4:
-    case VU5:
-    case VU6:
-    case LAMP:
-        return lampState ? "on" : "off";
-    case TEMPNEO:
-    case BATTNEO:
-    default:
-        buffer[0] = '\0';
-        return buffer;
-    }
-}
+// Template processor — ELIMINADO (era código muerto)
+// ============================================================================
+// `processor()` se pasaba a request->send() para sustituir variables %VAR% en
+// index.html, pero el HTML no contiene ningún placeholder (los únicos "%" del
+// archivo son porcentajes CSS), así que nunca se invocaba.
+// Además tenía dos problemas: leía stripLed.R/G/B, lampState y bt_powerState SIN
+// tomar dataMutex, y devolvía un `static char buffer[64]` compartido.
+// Se elimina junto con el enum `Status`, que sólo se leía aquí y nunca se
+// asignaba (quedaba siempre en COLOR).
+// Si algún día se usan placeholders en el HTML, reintroducir un processor que
+// haga el snapshot del estado bajo dataMutex.
 
 // ============================================================================
 // Root request handler
@@ -242,7 +202,8 @@ const char* processor(const String &var)
 
 void onRootRequest(AsyncWebServerRequest *request)
 {
-    request->send(LittleFS, "/index.html", "text/html", false, processor);
+    // Sin template processor: index.html es estático (no tiene placeholders %VAR%).
+    request->send(LittleFS, "/index.html", "text/html");
 }
 
 // ============================================================================
@@ -359,7 +320,8 @@ void initWebServer()
 
     // Endpoint: metadata de todos los efectos (estilo WLED /json/fxda)
     server.on("/fxdata", HTTP_GET, [](AsyncWebServerRequest *request) {
-      DynamicJsonDocument fxJson(8192);
+      // Medido: 39 metas, ~2,1 KB en total. Con 8192 sobraba casi 4x.
+      DynamicJsonDocument fxJson(4096);
       JsonObject metas = fxJson.to<JsonObject>();
       for (uint8_t i = 0; i < EFFECT_COUNT; i++) {
         Effect* fx = effectRegistry[i].instance;
@@ -374,7 +336,9 @@ void initWebServer()
 
     // Endpoint: lista de paletas con nombres y colores representativos
     server.on("/palettes", HTTP_GET, [](AsyncWebServerRequest *request) {
-      DynamicJsonDocument pDoc(8192);
+      // Medido: 27 paletas → nombres + 6 swatches × 3 canales ≈ 2,4 KB. Con 8192
+      // sobraba más de 3x.
+      DynamicJsonDocument pDoc(4096);
       uint8_t cnt = PaletteManager::count();
       // Nombres
       JsonArray names = pDoc["names"].to<JsonArray>();

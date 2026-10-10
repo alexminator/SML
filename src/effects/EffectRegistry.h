@@ -75,9 +75,18 @@ inline Effect* getEffect(uint8_t id) {
 // ============================================================================
 // PERSISTENCIA DE PARÁMETROS (definiciones en EffectRegistry.cpp)
 // ============================================================================
+// Nota: el estado global (color, brillo, powerState, wifiTimeout) se persiste
+// aparte en /state.json vía saveGlobalState()/loadGlobalState() (AppState.cpp).
 
-/// Guarda todos los params de efectos a LittleFS (/params.json)
-void saveEffectParams();
+/// Marca los params de un efecto como pendientes de persistir (/params.json).
+/// No toca el filesystem: sólo setea un flag, así que es seguro de llamar con
+/// dataMutex tomado (el handler WS lo hace así).
+void saveEffectParams(uint8_t effectId);
+
+/// Persiste en un único write todos los efectos pendientes.
+/// Debounce interno: no reescribe el JSON completo en cada slider/click.
+/// Llamar SIN dataMutex tomado: lo toma internamente.
+void saveEffectParamsFlush();
 
 /// Carga todos los params de efectos desde LittleFS (/params.json)
 void loadEffectParams();

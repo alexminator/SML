@@ -36,7 +36,9 @@ public:
         static unsigned long lastMove = 0;
         uint32_t now = millis();
         if (now - lastMove < stepMs) {
-            FastLED.show();
+            // Aún no toca avanzar y el buffer no ha cambiado: reenviar el mismo
+            // frame sólo gasta CPU/RMT. Los LEDs conservan su último estado sin
+            // necesidad de refresco.
             return;
         }
         lastMove = now;

@@ -1226,6 +1226,11 @@
               <h3>Client Logs</h3>
               <p>The Config tab shows connected WebSocket clients and a log of their actions. Useful for debugging and knowing who or what is controlling the lamp in real time.</p>
             </div>
+            <div class="help-card">
+              <span class="help-icon fas fa-users"></span>
+              <h3>Master &amp; Slave Clients</h3>
+              <p>The first connected WebSocket client is the <strong>master</strong>; up to 7 more clients can join as <strong>slaves</strong>. Everyone can control the shared lamp and see changes in sync. The master can configure effect parameters and Random mode settings, reboot the ESP32, or factory-reset it. Slaves can use the regular controls, select effects, and start or stop Random mode with its current settings, but cannot edit effect parameters or Random settings. If the master disconnects, the first remaining client automatically becomes the new master.</p>
+            </div>
           </div>
         </div>
       </section>

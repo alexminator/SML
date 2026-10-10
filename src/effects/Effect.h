@@ -142,6 +142,9 @@ public:
     }
 
     // ========== Setter Methods ==========
+    // Estos métodos son stateless: solo escriben en params[], sin mutex ni filesystem.
+    // El handler WS los delega porque el efecto se accede bajo dataMutex, pero los
+    // métodos en sí no bloquean ni hacen I/O.
 
     /**
      * Set effect speed

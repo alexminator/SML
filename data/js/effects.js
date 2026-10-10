@@ -361,6 +361,13 @@ function getRandomDuration() {
   return Math.max(3000, val * 1000);
 }
 
+function getRandomVUDurationSeconds() {
+  const stored = localStorage.getItem('sml-random-vu-duration');
+  const legacy = localStorage.getItem('sml-random-duration');
+  const value = parseInt(stored || legacy || '8', 10);
+  return Number.isFinite(value) ? Math.min(30, Math.max(3, value)) : 8;
+}
+
 function getRandomCategories() {
   try {
     const val = JSON.parse(localStorage.getItem('sml-random-categories'));
@@ -466,7 +473,12 @@ function handleRandomVUClick(card, wasActive) {
       sendCmd({ effectId: 0 });
       cards.forEach(c => c.classList.remove('active'));
     } else {
-      sendCmd({ action: 'randomVU', state: true, duration: parseInt(localStorage.getItem('sml-random-duration') || '8') });
+      sendCmd({
+        action: 'randomVU',
+        state: true,
+        duration: getRandomVUDurationSeconds(),
+        effectPool: RANDOM_VU_POOL
+      });
       SML.randomVUMode = true;
       cards.forEach(c => c.classList.remove('active'));
       card.classList.add('active');
@@ -503,7 +515,7 @@ function handleRandomVUClick(card, wasActive) {
     sendCmd({
       action: 'randomVU',
       state: true,
-      duration: parseInt(localStorage.getItem('sml-random-duration') || '8'),
+      duration: getRandomVUDurationSeconds(),
       effectPool: RANDOM_VU_POOL
     });
     SML.randomVUMode = true;
@@ -666,7 +678,7 @@ function showRandomDurationConfig(cardEl) {
 
   if (!body || !title || !container) return;
   title.textContent = 'Random VU';
-  const curVal = localStorage.getItem('sml-random-duration') || '8';
+  const curVal = String(getRandomVUDurationSeconds());
   body.innerHTML = `
     <div class="param-row">
       <label>Duration (seconds)</label>
@@ -683,10 +695,14 @@ function showRandomDurationConfig(cardEl) {
   if (slider && valEl) {
     slider.addEventListener('input', () => {
       valEl.textContent = slider.value + 's';
-      localStorage.setItem('sml-random-duration', slider.value);
+      localStorage.setItem('sml-random-vu-duration', slider.value);
     });
     slider.addEventListener('change', () => {
-      sendCmd({ action: 'randomVUConfig', duration: parseInt(slider.value) });
+      const duration = parseInt(slider.value, 10);
+      localStorage.setItem('sml-random-vu-duration', String(duration));
+      if (SML.randomVUMode) {
+        sendCmd({ action: 'randomVUConfig', duration });
+      }
     });
   }
   container.classList.add('open');
