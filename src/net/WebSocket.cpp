@@ -908,6 +908,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             } else if (randomMode == 1) {
                 randomMode = 0;
             }
+            // Persistir: el modo Random también debe sobrevivir a un reinicio.
+            shouldSaveGlobalState = true;
             _wsLogAction(clientId, 7, 1, 0, 0);
         }
         else if (strcmp(action, "randomVU") == 0 || strcmp(action, "randomVUConfig") == 0)
@@ -964,6 +966,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             if (randomMode == 2 && !configOnly && !json["duration"].isNull()) {
                 lastRandomSwitch = millis();
             }
+            // Persistir: activar/desactivar o reconfigurar el modo Random VU
+            // debe sobrevivir a un reinicio.
+            shouldSaveGlobalState = true;
             if (!configOnly) _wsLogAction(clientId, 7, 2, 0, 0);
         }
         else if (strcmp(action, "randomConfig") == 0)
@@ -1000,6 +1005,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
                     if (stripLed.powerState) stripLed.update();
                 }
             }
+            // Persistir: el pool/modo/duración es lo que permite reanudar el
+            // ciclado tal cual estaba tras un corte de corriente.
+            shouldSaveGlobalState = true;
             _wsLogAction(clientId, 7, 3, 0, 0);
         }
         // ── setParams: setters + marca dirty bajo mutex (write al final) ──

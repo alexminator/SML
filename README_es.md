@@ -441,14 +441,28 @@ Además de los efectos visuales tradicionales, hay **efectos VU** que reaccionan
 
 ![VU Effect](https://github.com/alexminator/SML/blob/master/img/Vu%20effect.png)
 
-### Cómo configurar un efecto
+### Cómo activar, apagar y configurar un efecto
 
-1. **Un clic/tap** — selecciona y activa el efecto
-2. **Segundo clic/tap** (en el mismo efecto ya activo) — abre el panel de configuración donde puedes ajustar:
-   - **Speed** — velocidad del efecto
-   - **Color** — paleta o color primario
-   - **Intensity** — brillo o intensidad del efecto
-   - Parámetros específicos según el efecto
+Las tarjetas de efecto funcionan como un **interruptor de encendido/apagado**, y la configuración vive detrás de un botón **⚙ engranaje** aparte.
+
+| Acción | Escritorio | Móvil |
+|--------|------------|-------|
+| **Encender el efecto** | Clic en la tarjeta | Tap en la tarjeta |
+| **Apagar el efecto** | Clic otra vez en la tarjeta activa | Tap otra vez en la tarjeta activa |
+| **Abrir la configuración** | Clic en el **⚙ engranaje** de la esquina superior izquierda de la tarjeta, o en el engranaje del panel **Peek** | Tap en el **⚙ engranaje** de la tarjeta, o **mantén pulsada** la tarjeta (~0,5 s) |
+
+Apagar un efecto devuelve la tira a **Solid**: el Neopixel sigue encendido, así que el color y el brillo siguen aplicándose. Para cortar la tira entera, usa la tarjeta de encendido de la pestaña **Lamp**.
+
+El panel de configuración permite ajustar:
+
+- **Speed** — velocidad del efecto
+- **Color** — paleta o color primario
+- **Intensity** — brillo o intensidad del efecto
+- Parámetros específicos según el efecto
+
+Las tarjetas **Random FX** y **Random VU** funcionan igual: tap/clic para arrancar o parar el ciclado, y el engranaje (o el long-press) para abrir la configuración del ciclo.
+
+Cualquier cliente puede encender y apagar efectos, pero solo el **master** puede abrir el panel de configuración (ver la sección *Modo master/slave*). La tira tiene que estar encendida para que las tarjetas respondan.
 
 ![Effect Config](https://github.com/alexminator/SML/blob/master/img/effect%20config.png)
 
@@ -473,8 +487,9 @@ Cicla entre efectos visuales de la tira Neopixel con una duración configurable 
 Similar al anterior pero con los efectos VU (visualización de música). Ideal para dejar la lámpara en modo ambientación musical.
 
 ### Controles
+- **Encender/apagar** — tap/clic en la tarjeta Random FX o Random VU (mismo comportamiento on/off que las tarjetas de efecto)
+- **Configuración** — el **⚙ engranaje** de la tarjeta (o long-press en móvil): duración del ciclo y, en Random FX, el modo de selección y los selectores de categoría / playlist
 - **Duración por efecto** — tiempo que cada efecto permanece activo (configurable)
-- **Encender/apagar** desde la tarjeta Random FX o Random VU en la lista de efectos
 - Vista previa del efecto actual en el panel Peek
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>

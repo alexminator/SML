@@ -120,10 +120,62 @@ async function fetchFxdata() {
 // EFFECT CARDS
 // ============================================================================
 
+// Marca que el click que sigue a un long-press ya se consumió (abrió ajustes).
+// Sin esto, soltar el dedo tras mantener pulsado dispararía además el on/off.
+let _suppressCardClick = false;
+const LONG_PRESS_MS = 550;
+
+// ── Ajustes de la tarjeta (engranaje / long-press) ───────────────────────────
+// Antes esto era el SEGUNDO click en la tarjeta; ahora la tarjeta sólo enciende
+// y apaga, y los ajustes tienen su propio gesto.
+function showCardConfig(effId, card) {
+  if (!card || isNaN(effId)) return;
+  if (!SML.powerOn) {
+    showToast('Turn on the NeoPixel strip first', 'warning');
+    return;
+  }
+  // Los modos Random los configura sólo el master (showEffectConfig lo vuelve a
+  // comprobar; aquí se filtra para no abrir el panel a los slaves).
+  if (effId !== 99 && effId !== 100 && !SML.isMaster) {
+    showToast('Only the master can configure effect parameters', 'info');
+    return;
+  }
+  closeEffectConfig();
+  showEffectConfig(effId, card);
+}
+
+// ── Apagar el efecto activo: vuelve a Solid (la tira sigue encendida) ─────────
+function deactivateEffect() {
+  closeEffectConfig();
+  SML.effectId = 0;
+  sendCmd({ effectId: 0 });
+  highlightActiveCard(0);
+  updateSolidIcon(SML.r, SML.g, SML.b);
+  updatePeekEffectInfo();
+}
+
+// ── Engranaje de ajustes en cada tarjeta ─────────────────────────────────────
+// Se inyecta por JS (no en los ~46 bloques de index.html) para que también
+// viaje en las copias clonadas de Favoritos y Playlist.
+function injectCardGears() {
+  $$('.effect-card').forEach(card => {
+    if (card.querySelector('.effect-gear')) return;
+    const gear = document.createElement('span');
+    gear.className = 'effect-gear fas fa-gear';
+    gear.setAttribute('role', 'button');
+    gear.setAttribute('tabindex', '0');
+    gear.setAttribute('aria-label', 'Effect settings');
+    gear.title = 'Settings';
+    card.appendChild(gear);
+  });
+}
+
 function initEffectCards() {
   const container = document.querySelector('.effects-scroll-container');
   if (!container) return;
   let activeEffId = null;
+
+  injectCardGears();
 
   // ── Shared effect activation logic (used by both normal & VU handlers) ──
   function activateEffect(effId, wasActive, card) {
@@ -138,14 +190,18 @@ function initEffectCards() {
       return;
     }
 
-    // Normal effect cards — show config on re-click
+    // Tarjeta activa → apagar la tira completamente (no volver a Solid).
+    // Los ajustes van por el engranaje o long-press, no por un segundo click.
+    // Con un modo Random en marcha la tarjeta activa es la que está sonando en
+    // ese instante: ahí el click significa “quiero este efecto”, no “apágalo”.
     if (wasActive && !SML.randomFXMode && !SML.randomVUMode) {
-      if (!SML.isMaster) {
-        showToast('Only the master can configure effect parameters', 'info');
-        return;
-      }
-      closeEffectConfig();
-      showEffectConfig(effId, card);
+      // Apagar completamente: enviar cmd de apagado, quitar estado activo
+      // La tira se apaga y se mantiene apagada, no vuelve a Solid.
+      sendCmd({ effectId: 0 });
+      SML.effectId = 0;
+      // Quitar active de todas las tarjetas (la tira se apaga, no vuelve a Solid)
+      $$('.effect-card').forEach(c => c.classList.remove('active'));
+      activeEffId = 0;
       return;
     }
 
@@ -167,24 +223,25 @@ function initEffectCards() {
 
     // Update visual state on ALL effect-card instances
     SML.effectId = effId;
-    $$('.effect-card').forEach(c => c.classList.remove('active'));
-    $$('.effect-card').forEach(c => {
-      if (parseInt(c.dataset.effectId) === effId) {
-        c.classList.add('active');
-      }
-    });
+    highlightActiveCard(effId);
     activeEffId = effId;
     updateSolidIcon(SML.r, SML.g, SML.b);
     updatePeekEffectInfo();
-
-    // Second click → show config
-    if (wasActive) {
-      showEffectConfig(effId, card);
-    }
   }
 
   // ── Handler #1: Normal effects (Effects tab inside .effects-scroll-container) ──
   container.addEventListener('click', e => {
+    // Click ya consumido por un long-press (abrió el panel de ajustes)
+    if (_suppressCardClick) { _suppressCardClick = false; return; }
+
+    // Settings gear — abre el panel sin tocar el estado on/off
+    const gear = e.target.closest('.effect-gear');
+    if (gear) {
+      const gearCard = gear.closest('.effect-card');
+      if (gearCard) showCardConfig(parseInt(gearCard.dataset.effectId), gearCard);
+      return;
+    }
+
     // Star click — toggle favorite
     const star = e.target.closest('.fav-star');
     if (star) {
@@ -224,6 +281,16 @@ function initEffectCards() {
   const vuGrid = document.querySelector('#tabMusic .effects-grid');
   if (vuGrid) {
     vuGrid.addEventListener('click', e => {
+      if (_suppressCardClick) { _suppressCardClick = false; return; }
+
+      // Settings gear — abre el panel sin tocar el estado on/off
+      const gear = e.target.closest('.effect-gear');
+      if (gear) {
+        const gearCard = gear.closest('.effect-card');
+        if (gearCard) showCardConfig(parseInt(gearCard.dataset.effectId), gearCard);
+        return;
+      }
+
       const card = e.target.closest('.effect-card');
       if (!card) return;
       const effId = parseInt(card.dataset.effectId);
@@ -239,6 +306,49 @@ function initEffectCards() {
       activateEffect(effId, wasActive, card);
     });
   }
+
+  // ── Long-press (táctil) → ajustes ──
+  // En móvil el engranaje es pequeño: mantener pulsada la tarjeta abre el mismo
+  // panel. El click posterior al long-press se descarta (_suppressCardClick).
+  attachCardLongPress(container);
+  if (vuGrid) attachCardLongPress(vuGrid);
+}
+
+/**
+ * Mantener pulsada una tarjeta (~550 ms) abre sus ajustes. Sólo táctil: el
+ * ratón ya tiene hover + engranaje. Un desplazamiento de la fila cancela el
+ * temporizador para no abrir el panel mientras se hace scroll.
+ */
+function attachCardLongPress(el) {
+  let timer = null, startX = 0, startY = 0;
+
+  const cancel = () => {
+    if (timer) { clearTimeout(timer); timer = null; }
+  };
+
+  el.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse') return;
+    const card = e.target.closest('.effect-card');
+    if (!card) return;
+    if (e.target.closest('.fav-star') || e.target.closest('.effect-gear')) return;
+    startX = e.clientX;
+    startY = e.clientY;
+    cancel();
+    timer = setTimeout(() => {
+      timer = null;
+      _suppressCardClick = true;
+      showCardConfig(parseInt(card.dataset.effectId), card);
+    }, LONG_PRESS_MS);
+  });
+
+  el.addEventListener('pointermove', e => {
+    if (!timer) return;
+    if (Math.abs(e.clientX - startX) > 12 || Math.abs(e.clientY - startY) > 12) cancel();
+  });
+
+  el.addEventListener('pointerup', cancel);
+  el.addEventListener('pointercancel', cancel);
+  el.addEventListener('pointerleave', cancel);
 }
 
 // ============================================================================
@@ -391,12 +501,23 @@ function saveRandomPlaylist(list) {
 function handleRandomFXClick(card, wasActive) {
   const cards = $$('.effect-card');
 
+  // ── OFF ── Cualquier cliente puede parar el ciclado. Igual que las tarjetas
+  // de efecto: click sobre la tarjeta activa = apagar (vuelve a Solid) y la
+  // configuración del modo vive en el engranaje.
+  if (wasActive) {
+    stopRandomFX();
+    sendCmd({ action: 'randomFX', state: false });
+    SML.effectId = 0;
+    sendCmd({ effectId: 0 });
+    cards.forEach(c => c.classList.remove('active'));
+    highlightActiveCard(0);
+    updateSolidIcon(SML.r, SML.g, SML.b);
+    updatePeekEffectInfo();
+    return;
+  }
+
   // SLAVE: toggle simple, sin config ni timer
   if (!SML.isMaster) {
-    if (wasActive) {
-      showToast('Only the master can configure random mode', 'info');
-      return;
-    }
     if (SML.randomFXMode) {
       stopRandomFX();
       sendCmd({ action: 'randomFX', state: false });
@@ -411,13 +532,6 @@ function handleRandomFXClick(card, wasActive) {
       card.classList.add('active');
     }
     updatePeekEffectInfo();
-    return;
-  }
-
-  if (wasActive) {
-    // Segundo click → mostrar config de duración
-    closeEffectConfig();
-    showEffectConfig(99, card);
     return;
   }
 
@@ -460,12 +574,22 @@ function handleRandomFXClick(card, wasActive) {
 function handleRandomVUClick(card, wasActive) {
   const cards = $$('.effect-card');
 
+  // ── OFF ── Igual que Random FX: click sobre la tarjeta activa apaga el modo
+  // (vuelve a Solid); la config está en el engranaje.
+  if (wasActive) {
+    stopRandomVU();
+    sendCmd({ action: 'randomVU', state: false });
+    SML.effectId = 0;
+    sendCmd({ effectId: 0 });
+    cards.forEach(c => c.classList.remove('active'));
+    highlightActiveCard(0);
+    updateSolidIcon(SML.r, SML.g, SML.b);
+    updatePeekEffectInfo();
+    return;
+  }
+
   // SLAVE: toggle simple, sin config ni timer
   if (!SML.isMaster) {
-    if (wasActive) {
-      showToast('Only the master can configure random mode', 'info');
-      return;
-    }
     if (SML.randomVUMode) {
       stopRandomVU();
       sendCmd({ action: 'randomVU', state: false });
@@ -484,13 +608,6 @@ function handleRandomVUClick(card, wasActive) {
       card.classList.add('active');
     }
     updatePeekEffectInfo();
-    return;
-  }
-
-  if (wasActive) {
-    // Segundo click → mostrar config de duración
-    closeEffectConfig();
-    showEffectConfig(100, card);
     return;
   }
 

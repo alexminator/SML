@@ -456,14 +456,28 @@ In addition to traditional visual effects, there are **VU effects** that react t
 
 ![VU Effect](https://github.com/alexminator/SML/blob/master/img/Vu%20effect.png)
 
-### How to Configure an Effect
+### How to Activate, Turn Off and Configure an Effect
 
-1. **Single click/tap** — selects and activates the effect
-2. **Second click/tap** (on the same active effect) — opens the configuration panel where you can adjust:
-   - **Speed** — effect speed
-   - **Color** — palette or primary color
-   - **Intensity** — brightness or effect intensity
-   - Effect-specific parameters
+The effect cards work as an **on/off switch**, and the settings live behind a separate **⚙ gear** button.
+
+| Action | Desktop | Mobile |
+|--------|---------|--------|
+| **Turn the effect on** | Click the card | Tap the card |
+| **Turn the effect off** | Click the card again (the active one) | Tap the card again (the active one) |
+| **Open the effect settings** | Click the **⚙ gear** in the card's top-left corner, or the gear in the **Peek** panel | Tap the **⚙ gear** on the card, or **long-press** the card (~0.5 s) |
+
+Turning an effect off returns the strip to **Solid**: the Neopixel keeps running, so color and brightness still apply. To cut the strip itself, use the power card in the **Lamp** tab.
+
+The configuration panel lets you adjust:
+
+- **Speed** — effect speed
+- **Color** — palette or primary color
+- **Intensity** — brightness or effect intensity
+- Effect-specific parameters
+
+The **Random FX** and **Random VU** cards behave the same way: tap/click to start or stop the cycling, gear (or long-press) to open the cycle settings.
+
+Any client can turn effects on and off, but only the **master** client can open the settings panel (see the *Master / Slave Mode* section below). The strip has to be on for the cards to respond.
 
 ![Effect Config](https://github.com/alexminator/SML/blob/master/img/effect%20config.png)
 
@@ -488,8 +502,9 @@ Cycles through visual effects on the Neopixel strip with configurable duration p
 Similar to above but with VU effects (music visualization). Ideal for leaving the lamp in ambient music mode.
 
 ### Controls
+- **On/Off** — tap/click the Random FX or Random VU card (same on/off behaviour as the effect cards)
+- **Settings** — the card's **⚙ gear** (or long-press on mobile): cycle duration and, for Random FX, the selection mode and the category / playlist pickers
 - **Duration per effect** — how long each effect stays active (configurable)
-- **On/Off** from the Random FX or Random VU card in the effects list
 - Preview of the current effect in the Peek panel
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>

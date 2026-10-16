@@ -427,12 +427,49 @@ void loadGlobalState() {
     if (!LittleFS.exists("/state.json")) return;
     File f = LittleFS.open("/state.json", "r");
     if (!f) return;
-    DynamicJsonDocument doc(1024);
+    // 2048 (no 1024): el archivo incluye la config del modo Random (pool de FX,
+    // categorías, pool de VU). Con 1024 deserializeJson devolvía NoMemory y se
+    // perdía TODO el estado, no sólo el random.
+    DynamicJsonDocument doc(2048);
     DeserializationError err = deserializeJson(doc, f);
     if (err) {
         f.close();
         return;
     }
+
+    // ── Modo Random: parsear y validar ANTES de tomar el mutex ──────────────
+    // Restaurar el ciclado es lo que hace que, tras un corte de batería, la
+    // tira siga con lo último que estaba haciendo (Random FX / Random VU).
+    int rMode = doc["randomMode"] | 0;
+    if (rMode != 1 && rMode != 2) rMode = 0;
+    String rFXMode = doc["randomFXMode"] | "all";
+    if (rFXMode != "all" && rFXMode != "category" && rFXMode != "playlist") rFXMode = "all";
+    const int rFXDuration = constrain((int)(doc["randomFXDuration"] | 8), 3, 30);
+    const int rVUDuration = constrain((int)(doc["randomVUDuration"] | 8), 3, 30);
+    int rPlaylistIndex = doc["randomPlaylistIndex"] | 0;
+    if (rPlaylistIndex < 0) rPlaylistIndex = 0;
+
+    std::vector<int> rFXPool;
+    std::vector<int> rFXCats;
+    std::vector<int> rVUPool;
+    for (JsonVariant v : doc["randomFXPool"].as<JsonArray>()) {
+        const int id = v.as<int>();
+        if (id >= 1 && id <= EFFECT_COUNT) rFXPool.push_back(id);
+    }
+    for (JsonVariant v : doc["randomFXCategories"].as<JsonArray>()) {
+        const int c = v.as<int>();
+        if (c >= 0 && c < 5) rFXCats.push_back(c);
+    }
+    for (JsonVariant v : doc["randomVUPool"].as<JsonArray>()) {
+        const int id = v.as<int>();
+        // Mismas reglas que el handler de randomVU: sólo VU reales (las
+        // placeholders eliminadas 49-51 quedan fuera).
+        if ((id >= 12 && id <= 17) || id == 47 || id == 48) rVUPool.push_back(id);
+    }
+    // Sin pool no hay ciclo posible: no restaurar un modo que no puede avanzar.
+    if (rMode == 1 && rFXPool.empty()) rMode = 0;
+    if (rMode == 2 && rVUPool.empty()) rMode = 0;
+
     if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
         stripLed.R = doc["R"] | 255;
         stripLed.G = doc["G"] | 255;
@@ -445,6 +482,20 @@ void loadGlobalState() {
         if (secs < 5) secs = 5;
         if (secs > 3600) secs = 3600;
         wifiLostStripTimeoutMs = secs * 1000UL;
+
+        randomMode = (uint8_t)rMode;
+        if (rMode != 0) {
+            randomFXMode = rFXMode;
+            randomFXDuration = rFXDuration;
+            randomVUDuration = rVUDuration;
+            randomPlaylistIndex = rPlaylistIndex;
+            randomFXPool = rFXPool;
+            randomFXCategories = rFXCats;
+            randomVUPool = rVUPool;
+            // Arrancar el intervalo desde cero: sin esto el primer cambio
+            // ocurriría de inmediato porque millis() ya supera el guardado.
+            lastRandomSwitch = millis();
+        }
         xSemaphoreGive(dataMutex);
     }
     f.close();
@@ -463,6 +514,14 @@ void saveGlobalState() {
     int colorR, colorG, colorB, brightness, effectId;
     bool powerState;
     uint32_t wifiTimeoutSecs;
+    // Snapshot del modo Random (se serializa sólo si está activo, para no
+    // engordar la escritura en cada cambio de brillo/color).
+    uint8_t randMode = 0;
+    int randPlaylistIndex = 0;
+    int randFXDuration = 8;
+    int randVUDuration = 8;
+    String randFXMode = "all";
+    std::vector<int> randFXPool, randFXCats, randVUPool;
     if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) != pdTRUE) {
 #ifdef DEBUG_SYSTEM
         debuglnW("saveGlobalState: could not acquire data mutex");
@@ -477,9 +536,19 @@ void saveGlobalState() {
     effectId = stripLed.effectId;
     powerState = stripLed.powerState;
     wifiTimeoutSecs = wifiLostStripTimeoutMs / 1000UL;
+    randMode = randomMode;
+    if (randMode != 0) {
+        randFXMode = randomFXMode;
+        randFXDuration = randomFXDuration;
+        randVUDuration = randomVUDuration;
+        randPlaylistIndex = randomPlaylistIndex;
+        randFXPool = randomFXPool;
+        randFXCats = randomFXCategories;
+        randVUPool = randomVUPool;
+    }
     xSemaphoreGive(dataMutex);
 
-    DynamicJsonDocument doc(1024);
+    DynamicJsonDocument doc(2048);
     doc["R"] = colorR;
     doc["G"] = colorG;
     doc["B"] = colorB;
@@ -487,6 +556,22 @@ void saveGlobalState() {
     doc["effectId"] = effectId;
     doc["powerState"] = powerState;
     doc["wifiTimeout"] = wifiTimeoutSecs;
+    // ── Modo Random (0=off, 1=Random FX, 2=Random VU) ──────────────────────
+    // Sólo se guarda cuando está activo: así el arranque reanuda el ciclado con
+    // lo último que estaba sonando, sin penalizar la escritura habitual.
+    doc["randomMode"] = randMode;
+    if (randMode != 0) {
+        doc["randomFXMode"] = randFXMode;
+        doc["randomFXDuration"] = randFXDuration;
+        doc["randomVUDuration"] = randVUDuration;
+        doc["randomPlaylistIndex"] = randPlaylistIndex;
+        JsonArray fxPool = doc["randomFXPool"].to<JsonArray>();
+        for (int id : randFXPool) fxPool.add(id);
+        JsonArray cats = doc["randomFXCategories"].to<JsonArray>();
+        for (int c : randFXCats) cats.add(c);
+        JsonArray vuPool = doc["randomVUPool"].to<JsonArray>();
+        for (int id : randVUPool) vuPool.add(id);
+    }
     File f = LittleFS.open("/state.json", "w");
     if (f) {
         serializeJson(doc, f);

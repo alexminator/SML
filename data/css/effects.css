@@ -72,7 +72,7 @@
 /* ── Favorite star ── */
 .fav-star {
   position: absolute;
-  top: 4px;
+  top: 3px;
   right: 4px;
   width: 28px;
   height: 28px;
@@ -84,6 +84,7 @@
   color: var(--text-muted);
   opacity: 0.3;
   font-size: 0.75rem;
+  vertical-align: middle;
   transition: opacity 0.2s, transform 0.2s, color 0.2s;
   border: none;
   background: none;
@@ -99,6 +100,42 @@
 
 .fav-star.active {
   opacity: 1;
+  color: var(--accent);
+}
+
+/* ── Settings gear ── */
+/* El click en la tarjeta enciende/apaga el efecto; los ajustes viven aquí.
+   Espejo del fav-star (esquina opuesta) para no chocar con la estrella. */
+.effect-gear {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  color: var(--text-muted);
+  opacity: 0.3;
+  font-size: 0.7rem;
+  vertical-align: middle;
+  transition: opacity 0.2s, transform 0.2s, color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.effect-gear:hover,
+.effect-gear:focus-visible {
+  opacity: 1;
+  transform: rotate(45deg);
+  color: var(--accent);
+  outline: none;
+}
+
+/* En la tarjeta activa es donde se usa: siempre visible */
+.effect-card.active .effect-gear {
+  opacity: 0.75;
   color: var(--accent);
 }
 
@@ -285,6 +322,10 @@
   transition: transform var(--t-fast), background var(--t-fast), border-color var(--t-fast), box-shadow var(--t-fast);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  /* Sin selección ni “callout” al hacer long-press (abre los ajustes) */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   backdrop-filter: var(--glass-blur-sm);
   -webkit-backdrop-filter: var(--glass-blur-sm);
 }
