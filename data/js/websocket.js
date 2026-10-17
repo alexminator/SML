@@ -390,20 +390,22 @@ function handleMessage(data) {
     }
   }
 
-  // ── LAMP / NEOPIXEL ──
+  // ── LÁMPARA (relé) → FAB de la lámpara ──
   if (data.lampstatus !== undefined) {
-    const lt = document.getElementById('lampToggle');
-    if (lt) togglePowerCard(lt, data.lampstatus === 'on');
+    setLampFabState(data.lampstatus === 'on');
   }
+  // ── TIRA LED: encendida = hay un efecto activo ──
+  //   Ya no existe botón de encendido: la enciende el efecto que el usuario toca
+  //   y la apaga un segundo toque sobre esa misma tarjeta.
   if (data.neostatus !== undefined) {
     SML.powerOn = data.neostatus === 'on';
-    const neo = document.getElementById('neoToggle');
-    if (neo) togglePowerCard(neo, SML.powerOn);
     updatePeekEffectInfo();
-    // Si apagan el NeoPixel remotamente, detener random
+    // Apagada (local o remote): ninguna tarjeta activa y fuera los modos Random,
+    // que son quienes la encienden por sí mismos.
     if (!SML.powerOn) {
       if (SML.randomFXMode) stopRandomFX();
       if (SML.randomVUMode) stopRandomVU();
+      $$('.effect-card').forEach(c => c.classList.remove('active'));
     }
   }
 

@@ -96,6 +96,79 @@ function parseEffectMeta(metaStr) {
 }
 
 // ============================================================================
+// QUÉ SE PUEDE AJUSTAR EN CADA EFECTO
+// ============================================================================
+// No todas las paletas lucen en todos los efectos: cada uno muestrea la paleta de
+// una forma distinta. Estas listas son curadas a mano leyendo el render() de cada
+// efecto y midiendo la luminancia / los colores de las 27 paletas del firmware:
+//   · índice fijo (Sparkle, Scanner, Heartbeat, Hallow Eyes = 0; ICU = 120;
+//     Drip = 160): si en ese punto la paleta es casi negro, el efecto desaparece.
+//     Sólo quedan las que tienen un color vivo ahí.
+//   · rampa de calor (Fire, Sunrise, Candle): sólo paletas cálidas; una azul las
+//     convierte en hielo.
+//   · recorrido por posición/hue: se quitan las que tienen >18% de negro y los
+//     duplicados visuales (Ice≈Aurora, C9≈Sunset…), que lucían igual.
+//   · RWB toma 3 colores fijos (0/85/170): sólo paletas con 3 tonos distintos.
+// Menos es más: nunca más de 6 para el mismo efecto (2-4 en los de índice fijo).
+// La paleta 27 ("Lamp color") no se ofrece aquí: es el color de la lámpara y la
+// usan los VU (ver VU_COLOR_EFFECTS).
+// ============================================================================
+const EFFECT_PALETTES = {
+  1:  [18, 2, 8, 3],              // Fire — rampas de calor
+  2:  [0, 1, 11, 13, 12],         // Moving Dot
+  3:  [0, 7, 12, 11, 1],          // Rainbow Beat
+  4:  [21, 12, 11],               // RWB — 3 colores en 0/85/170
+  5:  [0, 1, 11, 13, 16, 15],     // Ripple
+  6:  [0, 1, 11, 12, 13],         // Bouncing Balls
+  7:  [0, 1, 11, 13, 17],         // Juggle
+  8:  [0, 1, 11, 13, 17, 12],     // Sinelon
+  9:  [0, 1, 11, 13, 16, 17],     // Comet
+  10: [0, 1, 11, 13, 17],         // Breath
+  11: [0, 1, 11, 13, 15],         // Color Sweep
+  20: [0, 1, 11, 12, 13],         // Color Wipe
+  21: [0, 1, 11, 13, 17, 12],     // Theater Chase
+  22: [0, 1, 11, 13, 15],         // Running Lights
+  23: [0, 1, 11, 12, 13, 14],     // Dissolve
+  24: [0, 1, 11, 13, 17],         // Dual Scan
+  25: [0, 1, 11, 13, 15, 14],     // Fade
+  26: [0, 1, 11, 13, 17],         // Meteor — sin Smooth usa el índice 64 fijo
+  27: [0, 26, 11, 4],             // Sparkle — índice fijo 0 (rojo/blanco/rosa/verde)
+  28: [0, 1, 11, 13, 17],         // BPM
+  29: [0, 10, 11, 16, 12],        // Plasma
+  30: [0, 1, 11, 12, 13],         // Fireworks
+  31: [16, 25, 10],               // Lightning — base fija en 32, todo frío
+  32: [0, 7, 11, 12, 1],          // Pride 2015
+  33: [0, 5, 13, 11, 12],         // Colorwaves
+  34: [5, 16, 13],                // Pacifica — olas
+  35: [0, 14, 15, 12, 11, 7],     // TwinkleFOX
+  36: [10, 4, 5, 16, 0],          // Aurora — verdes/azules
+  37: [0, 1, 11, 12, 13],         // Popcorn
+  38: [26, 0, 4, 11],             // Scanner — índice fijo 0 (KITT rojo, verde, rosa)
+  39: [19, 25, 11],               // Heartbeat — índice fijo 0 (casi todas son rojo igual)
+  40: [20, 4, 10],                // ICU — índice fijo 120 (verde brillante/oscuro/menta)
+  41: [24, 2, 18, 3],             // Sunrise — rampa de calor
+  42: [22, 5, 20],                // Drip — índice fijo 160 (agua)
+  43: [23, 2, 8, 3],              // Candle — rampa de calor
+  44: [14, 15, 11, 0, 12],        // Chunchun
+  45: [25, 4, 15, 0, 11]          // Hallow Eyes — índice fijo 0 (ojos: blanco/verde/ambar/rojo/rosa)
+};
+
+// Efectos VU cuyo ÚNICO ajuste es el color: no eligen paleta, usan la 27
+// ("Lamp color"), que sigue a la rueda de color como hace Solid.
+const VU_COLOR_EFFECTS = new Set([12, 14, 15, 16, 17, 48]);
+
+// Efectos con colores fijos y sin parámetros: no hay nada que configurar, así
+// que no llevan engranaje (Old Skool: verde/rojo semánticos).
+const NO_SETTINGS_EFFECTS = new Set([13]);
+
+// Efectos con colores fijos pero con sliders (Noisemeter: verde/amarillo/rojo
+// semánticos). Llevan engranaje, pero no selector de paleta.
+const NO_PALETTE_EFFECTS = new Set([47]);
+
+// Índice de la paleta "Lamp color" del firmware (sigue al color global).
+const PALETTE_LAMP_COLOR = 27;
+
+// ============================================================================
 // FETCH FX DATA (metadata de efectos vía HTTP)
 // ============================================================================
 // Carga la metadata de todos los efectos desde el ESP32 via HTTP GET /fxdata.
@@ -128,10 +201,27 @@ const LONG_PRESS_MS = 550;
 // ── Ajustes de la tarjeta (engranaje / long-press) ───────────────────────────
 // Antes esto era el SEGUNDO click en la tarjeta; ahora la tarjeta sólo enciende
 // y apaga, y los ajustes tienen su propio gesto.
+// ── Sólo el efecto ACTIVO tiene configuración abrible ────────────────────────
+// Antes se podía abrir el panel de cualquier tarjeta (engranaje o long-press),
+// incluso con otro efecto encendido: te dejaba tocando parámetros de un efecto
+// apagado. La marca de "activo" es la clase .active de la tarjeta, que mantienen
+// sincronizada activateEffect/highlightActiveCard y el broadcast de estado (y se
+// limpia al apagar la tira), así que cubre también Favoritos/Playlist clonados y
+// los modos Random (que marcan la tarjeta 99/100).
+function isActiveEffectCard(effId, card) {
+  if (card && card.classList.contains('active')) return true;
+  return document.querySelector(`.effect-card.active[data-effect-id="${effId}"]`) !== null;
+}
+
 function showCardConfig(effId, card) {
   if (!card || isNaN(effId)) return;
-  if (!SML.powerOn) {
-    showToast('Turn on the NeoPixel strip first', 'warning');
+  // Colores fijos y sin parámetros: no hay panel que abrir (tampoco hay engranaje)
+  if (NO_SETTINGS_EFFECTS.has(effId)) {
+    showToast('This effect has fixed colors and no settings', 'info');
+    return;
+  }
+  if (!isActiveEffectCard(effId, card)) {
+    showToast('Turn this effect on first to see its settings', 'warning');
     return;
   }
   // Los modos Random los configura sólo el master (showEffectConfig lo vuelve a
@@ -144,12 +234,12 @@ function showCardConfig(effId, card) {
   showEffectConfig(effId, card);
 }
 
-// ── Apagar el efecto activo: vuelve a Solid (la tira sigue encendida) ─────────
+// ── Apagar: la tira se apaga del todo (ya no vuelve a Solid) ───────────────────
 function deactivateEffect() {
   closeEffectConfig();
-  SML.effectId = 0;
-  sendCmd({ effectId: 0 });
-  highlightActiveCard(0);
+  SML.powerOn = false;
+  sendCmd({ action: 'power', state: false });
+  highlightActiveCard(-1);
   updateSolidIcon(SML.r, SML.g, SML.b);
   updatePeekEffectInfo();
 }
@@ -159,9 +249,23 @@ function deactivateEffect() {
 // viaje en las copias clonadas de Favoritos y Playlist.
 function injectCardGears() {
   $$('.effect-card').forEach(card => {
+    // Los efectos sin nada configurable no llevan engranaje (y si la tarjeta ya
+    // traía uno, p.ej. venía clonada de Favoritos, se retira).
+    const effId = parseInt(card.dataset.effectId);
+    if (NO_SETTINGS_EFFECTS.has(effId)) {
+      const stale = card.querySelector('.effect-gear');
+      if (stale) stale.remove();
+      return;
+    }
     if (card.querySelector('.effect-gear')) return;
     const gear = document.createElement('span');
-    gear.className = 'effect-gear fas fa-gear';
+    gear.className = 'effect-gear';
+    // Misma estructura que la estrella (glifo en un span interno) para que el icono
+    // quede exactamente a la misma altura y con la misma caja.
+    const gearIcon = document.createElement('span');
+    gearIcon.className = 'fas fa-gear';
+    gearIcon.setAttribute('aria-hidden', 'true');
+    gear.appendChild(gearIcon);
     gear.setAttribute('role', 'button');
     gear.setAttribute('tabindex', '0');
     gear.setAttribute('aria-label', 'Effect settings');
@@ -195,13 +299,15 @@ function initEffectCards() {
     // Con un modo Random en marcha la tarjeta activa es la que está sonando en
     // ese instante: ahí el click significa “quiero este efecto”, no “apágalo”.
     if (wasActive && !SML.randomFXMode && !SML.randomVUMode) {
-      // Apagar completamente: enviar cmd de apagado, quitar estado activo
-      // La tira se apaga y se mantiene apagada, no vuelve a Solid.
-      sendCmd({ effectId: 0 });
-      SML.effectId = 0;
-      // Quitar active de todas las tarjetas (la tira se apaga, no vuelve a Solid)
+      // Segundo toque sobre la tarjeta activa = apagar la tira. Ya no hay efecto
+      // por defecto: se apaga y se queda apagada (no vuelve a Solid). El firmware
+      // conserva el effectId, así que volver a tocarla reactiva el mismo efecto.
+      sendCmd({ action: 'power', state: false });
+      SML.powerOn = false;
+      // Ninguna tarjeta activa (todas en gris)
       $$('.effect-card').forEach(c => c.classList.remove('active'));
-      activeEffId = 0;
+      activeEffId = null;
+      updatePeekEffectInfo();
       return;
     }
 
@@ -234,7 +340,7 @@ function initEffectCards() {
     // Click ya consumido por un long-press (abrió el panel de ajustes)
     if (_suppressCardClick) { _suppressCardClick = false; return; }
 
-    // Settings gear — abre el panel sin tocar el estado on/off
+    // Settings gear — sólo abre el panel del efecto ACTIVO (ver showCardConfig)
     const gear = e.target.closest('.effect-gear');
     if (gear) {
       const gearCard = gear.closest('.effect-card');
@@ -267,12 +373,6 @@ function initEffectCards() {
       }
     }
 
-    // Toast warning if NeoPixel is off
-    if (!SML.powerOn) {
-      showToast('Turn on the NeoPixel strip first', 'warning');
-      return;
-    }
-
     const wasActive = document.querySelector(`.effect-card[data-effect-id="${effId}"].active`) !== null;
     activateEffect(effId, wasActive, card);
   });
@@ -283,7 +383,7 @@ function initEffectCards() {
     vuGrid.addEventListener('click', e => {
       if (_suppressCardClick) { _suppressCardClick = false; return; }
 
-      // Settings gear — abre el panel sin tocar el estado on/off
+      // Settings gear — sólo abre el panel del efecto ACTIVO (ver showCardConfig)
       const gear = e.target.closest('.effect-gear');
       if (gear) {
         const gearCard = gear.closest('.effect-card');
@@ -296,12 +396,8 @@ function initEffectCards() {
       const effId = parseInt(card.dataset.effectId);
       if (isNaN(effId)) return;
 
-      // Toast warning if NeoPixel is off
-      if (!SML.powerOn) {
-        showToast('Turn on the NeoPixel strip first', 'warning');
-        return;
-      }
-
+      // Sin gate de encendido: tocar la tarjeta enciende la tira (el firmware lo
+      // hace al fijar el effectId). Ya no hay efecto por defecto.
       const wasActive = document.querySelector(`.effect-card[data-effect-id="${effId}"].active`) !== null;
       activateEffect(effId, wasActive, card);
     });
@@ -315,9 +411,10 @@ function initEffectCards() {
 }
 
 /**
- * Mantener pulsada una tarjeta (~550 ms) abre sus ajustes. Sólo táctil: el
- * ratón ya tiene hover + engranaje. Un desplazamiento de la fila cancela el
- * temporizador para no abrir el panel mientras se hace scroll.
+ * Mantener pulsada una tarjeta (~550 ms) abre sus ajustes, siempre que sea el
+ * efecto activo (showCardConfig lo comprueba y avisa con un toast si no lo es).
+ * Sólo táctil: el ratón ya tiene hover + engranaje. Un desplazamiento de la fila
+ * cancela el temporizador para no abrir el panel mientras se hace scroll.
  */
 function attachCardLongPress(el) {
   let timer = null, startX = 0, startY = 0;
@@ -502,15 +599,15 @@ function handleRandomFXClick(card, wasActive) {
   const cards = $$('.effect-card');
 
   // ── OFF ── Cualquier cliente puede parar el ciclado. Igual que las tarjetas
-  // de efecto: click sobre la tarjeta activa = apagar (vuelve a Solid) y la
-  // configuración del modo vive en el engranaje.
+  // de efecto: click sobre la tarjeta activa = apagar la tira y la configuración
+  // del modo vive en el engranaje.
   if (wasActive) {
     stopRandomFX();
     sendCmd({ action: 'randomFX', state: false });
-    SML.effectId = 0;
-    sendCmd({ effectId: 0 });
+    SML.powerOn = false;
+    sendCmd({ action: 'power', state: false });
     cards.forEach(c => c.classList.remove('active'));
-    highlightActiveCard(0);
+    highlightActiveCard(-1);
     updateSolidIcon(SML.r, SML.g, SML.b);
     updatePeekEffectInfo();
     return;
@@ -521,8 +618,8 @@ function handleRandomFXClick(card, wasActive) {
     if (SML.randomFXMode) {
       stopRandomFX();
       sendCmd({ action: 'randomFX', state: false });
-      SML.effectId = 0;
-      sendCmd({ effectId: 0 });
+      SML.powerOn = false;
+      sendCmd({ action: 'power', state: false });
       cards.forEach(c => c.classList.remove('active'));
     } else {
       sendCmd({ action: 'randomConfig', mode: 'all', duration: 8, effectPool: RANDOM_FX_POOL, start: true });
@@ -540,8 +637,8 @@ function handleRandomFXClick(card, wasActive) {
     stopRandomFX();
     sendCmd({ action: 'randomFX', state: false });
     // Volver a Solid
-    SML.effectId = 0;
-    sendCmd({ effectId: 0 });
+    SML.powerOn = false;
+    sendCmd({ action: 'power', state: false });
     cards.forEach(c => c.classList.remove('active'));
     updateSolidIcon(SML.r, SML.g, SML.b);
     updatePeekEffectInfo();
@@ -574,15 +671,15 @@ function handleRandomFXClick(card, wasActive) {
 function handleRandomVUClick(card, wasActive) {
   const cards = $$('.effect-card');
 
-  // ── OFF ── Igual que Random FX: click sobre la tarjeta activa apaga el modo
-  // (vuelve a Solid); la config está en el engranaje.
+  // ── OFF ── Igual que Random FX: click sobre la tarjeta activa apaga el modo y
+  // la tira; la config está en el engranaje.
   if (wasActive) {
     stopRandomVU();
     sendCmd({ action: 'randomVU', state: false });
-    SML.effectId = 0;
-    sendCmd({ effectId: 0 });
+    SML.powerOn = false;
+    sendCmd({ action: 'power', state: false });
     cards.forEach(c => c.classList.remove('active'));
-    highlightActiveCard(0);
+    highlightActiveCard(-1);
     updateSolidIcon(SML.r, SML.g, SML.b);
     updatePeekEffectInfo();
     return;
@@ -593,8 +690,8 @@ function handleRandomVUClick(card, wasActive) {
     if (SML.randomVUMode) {
       stopRandomVU();
       sendCmd({ action: 'randomVU', state: false });
-      SML.effectId = 0;
-      sendCmd({ effectId: 0 });
+      SML.powerOn = false;
+      sendCmd({ action: 'power', state: false });
       cards.forEach(c => c.classList.remove('active'));
     } else {
       sendCmd({
@@ -616,8 +713,8 @@ function handleRandomVUClick(card, wasActive) {
     stopRandomVU();
     sendCmd({ action: 'randomVU', state: false });
     // Volver a Solid
-    SML.effectId = 0;
-    sendCmd({ effectId: 0 });
+    SML.powerOn = false;
+    sendCmd({ action: 'power', state: false });
     cards.forEach(c => c.classList.remove('active'));
     updateSolidIcon(SML.r, SML.g, SML.b);
     updatePeekEffectInfo();
@@ -714,6 +811,8 @@ function closeEffectConfig() {
   if (sheet) sheet.classList.remove('open');
   if (ocOverlay) ocOverlay.classList.remove('open');
   if (modOv) modOv.classList.remove('open');
+  // La rueda de color, si estaba montada en este panel, vuelve a su sitio.
+  detachColorWheel();
 }
 
 /**
@@ -735,7 +834,7 @@ function updatePeekEffectInfo() {
   } else {
     nameEl.textContent = '—';
     nameEl.classList.remove('has-effect');
-    btn.title = 'Turn on NeoPixel to configure';
+    btn.title = 'Touch an effect to turn the strip on';
     btn.style.display = 'none';
   }
 }
@@ -1077,10 +1176,47 @@ function removeFromPlaylist(effId) {
 // ============================================================================
 
 function renderEffectParams(effId, container) {
+  // Cualquier render reemplaza el innerHTML del panel: saca antes la rueda.
+  detachColorWheel();
+
+  // ── Solid (0) ────────────────────────────────────────────────────────────
+  // No está en el registro de efectos: no tiene meta ni parámetros, su único
+  // ajuste es la RUEDA DE COLOR. Antes caía en el selector de paletas, que en
+  // Solid no hace nada (el color sólido es el color global de la tira).
+  if (effId === 0) {
+    renderSolidColorConfig(container);
+    return;
+  }
+
+  // ── VU de color (12, 14, 15, 16, 17, 48) ──────────────────────────────────
+  // Estos medidores no usan paletas: el firmware les da la paleta 27, que se
+  // reconstruye con el color global. Su panel es la rueda, igual que Solid.
+  if (VU_COLOR_EFFECTS.has(effId)) {
+    renderVuColorConfig(effId, container);
+    return;
+  }
+
+  // ── Efectos con colores fijos y sin parámetros (13) ────────────────────────
+  if (NO_SETTINGS_EFFECTS.has(effId)) {
+    container.innerHTML = '<p class="text-muted" style="font-size:0.8rem;padding:8px 0">This effect uses fixed colors and has no settings.</p>';
+    return;
+  }
+
   const config = effectMetaCache[effId];
   const paletteData = window._paletteData || { names: [], swatches: [] };
   const live = liveEffectParams[effId] || {};
-  const currentPalette = live.palette !== undefined ? live.palette : 0;
+  // Hasta que el ESP32 no manda el estado del efecto, la paleta activa es su
+  // defecto (el pa= de _meta): así al abrir los ajustes ya aparece marcada la
+  // paleta con la que el efecto arranca, sin tener que pulsar «Reset».
+  // Si ese defecto no está en la lista curada (efectos sin pa=, que caen en
+  // Rainbow), se marca la primera de la lista, que es la que lucimos como
+  // defecto para ese efecto.
+  const metaDefault = config && config.defaultPalette !== undefined ? config.defaultPalette : 0;
+  const curated = EFFECT_PALETTES[effId] || [];
+  const fallbackDefault = (curated.length && curated.indexOf(metaDefault) < 0)
+    ? curated[0]
+    : metaDefault;
+  const currentPalette = live.palette !== undefined ? live.palette : fallbackDefault;
 
   // Sin parámetros sliders, solo mostrar el selector de paletas
   if (!config || !config.params || config.params.length === 0) {
@@ -1184,26 +1320,38 @@ function renderEffectParams(effId, container) {
 
 // ── Palette section HTML ──────────────────────────────────────────────────────
 function renderPaletteSection(effId, paletteData, currentPalette) {
+  // Efectos de colores fijos: no hay paleta que elegir (aunque tengan sliders)
+  if (NO_PALETTE_EFFECTS.has(effId)) return '';
+
   if (!paletteData.names || paletteData.names.length === 0) {
     return '<div class="palette-section"><p class="text-muted" style="font-size:0.75rem;padding:8px 0">Loading palettes...</p></div>';
   }
 
-  // Get this effect's default palette index from meta cache
-  const cfg = effectMetaCache[effId];
-  const effectDefPal = cfg ? cfg.defaultPalette : 0;
-
-  // Build display order: effect's own default first (if special > 17),
-  // then regular palettes (0-17). No mostrar defaults de otros efectos.
-  const displayIndices = [];
-  if (effectDefPal > 17) {
-    displayIndices.push(effectDefPal);
-  }
-  for (let i = 0; i <= 17; i++) {
-    displayIndices.push(i);
+  // Lista curada por efecto: sólo las paletas que realmente lo hacen lucir
+  // (ver EFFECT_PALETTES). Si un efecto no está en la tabla, se mantiene el
+  // comportamiento anterior (0-17) para no dejarlo sin selector.
+  const curated = EFFECT_PALETTES[effId];
+  let displayIndices;
+  if (curated) {
+    displayIndices = curated.slice();
+    // Si la paleta guardada en el ESP32 no está en la lista curada (estado de
+    // una versión anterior), se añade para que la UI no oculte cuál está activa.
+    if (Number.isInteger(currentPalette) && displayIndices.indexOf(currentPalette) < 0) {
+      displayIndices.push(currentPalette);
+    }
+  } else {
+    const cfg = effectMetaCache[effId];
+    const effectDefPal = cfg ? cfg.defaultPalette : 0;
+    displayIndices = [];
+    if (effectDefPal > 17) displayIndices.push(effectDefPal);
+    for (let i = 0; i <= 17; i++) displayIndices.push(i);
   }
 
   let html = '<div class="palette-section">';
   html += '<div class="palette-section-title"><span class="fas fa-palette"></span> Color Palette</div>';
+  if (curated) {
+    html += '<p class="palette-hint">Only the palettes that work with this effect.</p>';
+  }
   html += '<div class="palette-grid">';
 
   displayIndices.forEach(i => {
@@ -1236,6 +1384,9 @@ function attachPaletteHandlers(effId, container) {
       const msg = { action: 'setParams', effectId: effId };
       msg.palette = idx;
       sendCmd(msg);
+      // Reflejar la elección en la cache: si el broadcast tarda (o no trae la
+      // paleta), al reabrir el panel sigue marcada la que acabas de elegir.
+      liveEffectParams[effId] = Object.assign({}, liveEffectParams[effId], { palette: idx });
       // Update visual selection
       container.querySelectorAll('.palette-swatch').forEach(s => s.classList.remove('selected'));
       el.classList.add('selected');
@@ -1245,6 +1396,108 @@ function attachPaletteHandlers(effId, container) {
 }
 
 // ── Fetch palette data ────────────────────────────────────────────────────────
+// ── El FAB de brillo se aparta mientras hay un panel de efecto abierto ───────
+// La clase la pone/quita esta función, que main.js dispara observando la clase
+// 'open' de los dos paneles: así el FAB vuelve siempre a su sitio, incluso si
+// mañana se añade otra vía de apertura o de cierre.
+function syncEffectPanelState() {
+  // Los paneles de efecto (offcanvas de escritorio + bottom sheet móvil) y también
+  // los modales de Help/About: los FABs tienen que apartarse igual debajo de todos
+  // ellos, o quedan flotando encima de la hoja.
+  const panels = ['effectOffcanvas', 'paramBottomSheet', 'helpModal', 'aboutModal']
+    .map(id => document.getElementById(id));
+  const anyOpen = panels.some(el => el && el.classList.contains('open'));
+  document.body.classList.toggle('effect-modal-open', anyOpen);
+  // El slider del FAB se cierra al abrir: si no, quedaría abierto (oculto) y al
+  // volver el FAB aparecería con el slider desplegado.
+  if (anyOpen && typeof SML._hideFabSlider === 'function') SML._hideFabSlider();
+}
+
+// Engancha el observador que mantiene el estado del FAB al día. Lo llama main.js
+// al inicializar la UI; los paneles se buscan por id (offcanvas y bottom sheet).
+function initEffectPanelObserver() {
+  ['effectOffcanvas', 'paramBottomSheet', 'helpModal', 'aboutModal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) new MutationObserver(syncEffectPanelState).observe(el, { attributes: true, attributeFilter: ['class'] });
+  });
+  // Estado inicial (si algún panel ya vieniera abierto al cargar).
+  syncEffectPanelState();
+}
+
+// ============================================================================
+// SOLID (0): RUEDA DE COLOR DENTRO DEL PANEL DE AJUSTES
+// ============================================================================
+// La app tiene UNA sola instancia de iro (la del panel de color, creada en
+// controls.js): aquí se MUEVE su host al panel en vez de crear otra rueda, así se
+// edita el mismo estado (SML.r/g/b) y no hay que sincronizar dos pickers. El host
+// es un nodo normal: moverlo conserva el canvas y sus listeners.
+// ============================================================================
+
+function mountColorPicker(container) {
+  const host = document.getElementById('colorPicker');
+  if (!host || !SML.colorPicker) return null;
+  container.appendChild(host);
+  return SML.colorPicker;
+}
+
+// Devuelve la rueda a su contenedor. Obligatorio antes de reemplazar el innerHTML
+// de cualquier panel y al cerrar la configuración.
+function detachColorWheel() {
+  const host = document.getElementById('colorPicker');
+  const home = document.querySelector('.color-picker-container');
+  if (!host || !home) return;
+  if (host.parentElement !== home) home.appendChild(host);
+}
+
+function renderSolidColorConfig(container) {
+  container.innerHTML = '';
+
+  const title = document.createElement('div');
+  title.className = 'palette-section-title';
+  title.innerHTML = '<span class="fas fa-palette"></span> Color';
+  container.appendChild(title);
+
+  if (!mountColorPicker(container)) {
+    container.innerHTML = '<p class="text-muted" style="font-size:0.8rem;padding:8px 0">Color picker unavailable</p>';
+    return;
+  }
+
+  const hint = document.createElement('p');
+  hint.className = 'solid-color-hint';
+  hint.textContent = 'Pick any color you want: Solid paints the whole strip with it. Brightness has its own control.';
+  container.appendChild(hint);
+}
+
+// ── VU de color: su único ajuste es el color ──────────────────────────────────
+// Los VU no tienen paletas: el firmware los pinta con la paleta 27, que se
+// reconstruye a partir del color global (el mismo que edita la rueda). Así que
+// el panel es la rueda, sin selector de paletas, y el cambio se ve en vivo.
+function renderVuColorConfig(effId, container) {
+  container.innerHTML = '';
+
+  const live = liveEffectParams[effId] || {};
+  if (live.palette !== PALETTE_LAMP_COLOR) {
+    sendCmd({ action: 'setParams', effectId: effId, palette: PALETTE_LAMP_COLOR });
+    liveEffectParams[effId] = Object.assign({}, live, { palette: PALETTE_LAMP_COLOR });
+  }
+
+  const title = document.createElement('div');
+  title.className = 'palette-section-title';
+  title.innerHTML = '<span class="fas fa-palette"></span> Color';
+  container.appendChild(title);
+
+  if (!mountColorPicker(container)) {
+    container.innerHTML = '<p class="text-muted" style="font-size:0.8rem;padding:8px 0">Color picker unavailable</p>';
+    return;
+  }
+
+  const hint = document.createElement('p');
+  hint.className = 'solid-color-hint';
+  const cfg = effectMetaCache[effId];
+  hint.textContent = `${cfg ? cfg.name : 'This VU meter'} uses the lamp color: pick it here and the bars follow. It has no palettes.`;
+  container.appendChild(hint);
+}
+
 async function fetchPalettes() {
   try {
     const resp = await fetch('/palettes');

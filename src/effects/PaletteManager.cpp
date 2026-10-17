@@ -188,6 +188,13 @@ void PaletteManager::ensureInit() {
         CRGB::Black,       CRGB::Black,      CRGB::Black,      CRGB::Black
     );
 
+    // ── 27. Lamp color (rampa del color global; la usan los efectos VU) ────
+    //   Se rellena en setBaseColor(); arranca en blanco para no quedar en negro.
+    for (uint8_t i = 0; i < 16; i++) {
+        uint8_t s = 96 + (i * 160) / 15;   // 96..255
+        _palettes[27][i] = CRGB(s, s, s);
+    }
+
     // ── Nombres ────────────────────────────────────────────────────────────
     _names[0]  = "Rainbow";
     _names[1]  = "Party";
@@ -216,6 +223,7 @@ void PaletteManager::ensureInit() {
     _names[24] = "Sunrise Default";
     _names[25] = "Halloween Def.";
     _names[26] = "Scanner Default";
+    _names[27] = "Lamp color";
 
     _initialized = true;
 }
@@ -232,6 +240,20 @@ const char* PaletteManager::getName(uint8_t index) {
     ensureInit();
     if (index >= PALETTE_COUNT) index = 0;
     return _names[index];
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// La paleta 27 sigue al color global de la tira: es la que usan los efectos VU,
+// cuyo único ajuste es el color. Se guarda una rampa del mismo tono (96..255 de
+// escala) para que las barras conserven su degradado sin apagarse.
+void PaletteManager::setBaseColor(const CRGB& color) {
+    ensureInit();
+    for (uint8_t i = 0; i < 16; i++) {
+        uint8_t s = 96 + (i * 160) / 15;
+        _palettes[PALETTE_LAMP_COLOR][i] = CRGB(scale8(color.r, s),
+                                                scale8(color.g, s),
+                                                scale8(color.b, s));
+    }
 }
 
 // ──────────────────────────────────────────────────────────────────────────────

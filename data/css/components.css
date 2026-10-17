@@ -554,23 +554,35 @@
   padding: var(--space-xs) var(--space-md) var(--space-sm);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
+  min-width: 0;   /* deja que las filas largas recorten en vez de desbordar */
 }
 
+/* Una línea por evento: hora | icono | texto. El texto recorta con ellipsis
+   (y se lee entero en el tooltip) para que nada ocupe dos filas. */
 .ws-client-action {
   font-size: 0.75rem;
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.45;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  min-width: 0;
 }
 
-.ws-client-action .fas,
-.ws-client-action .fab {
+.ws-client-action .ws-action-icon {
+  flex: 0 0 14px;
   width: 14px;
   text-align: center;
   font-size: 0.7rem;
+}
+
+.ws-action-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ws-client-action strong {
@@ -579,10 +591,13 @@
 }
 
 .ws-action-time {
+  flex: 0 0 auto;
   font-family: 'SF Mono', 'Fira Code', monospace;
   font-size: 0.65rem;
   color: var(--text-tertiary);
-  min-width: 52px;
+  min-width: 58px;      /* "12:34 PM" */
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .ws-color-swatch {

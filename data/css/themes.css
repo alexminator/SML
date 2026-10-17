@@ -3,6 +3,9 @@
    ──────────────────────────────────────────────────────────────────────────────
    Usage: <html data-theme="sml-classic|wled-dark|midnight-amoled">
    Persisted in localStorage key "sml-theme".
+   Todos los temas son oscuros pero ninguno es negro puro: los paneles tienen que
+   leerse por encima del fondo y los colores de los efectos (que salen del LED)
+   tienen que destacar. AMOLED usa un índigo muy oscuro en vez de #000.
    ────────────────────────────────────────────────────────────────────────────── */
 
 /* ===== Theme Common (shared across all themes) ===== */
@@ -73,20 +76,22 @@
 }
 
 /* ===== THEME 1: SML Classic (default) ===== */
-/* Warm gold accent (#fbbf24) + Sky (#38bdf8) on deep navy with richer saturation */
+/* Warm gold accent (#fbbf24) + Sky (#38bdf8) on deep navy.
+   Navy aclarado: el fondo ya no es casi negro, así los paneles y los efectos
+   resaltan sin perder el aire nocturno. */
 :root[data-theme="sml-classic"] {
-  --bg-primary: #060b14;
-  --bg-secondary: #0c1425;
-  --bg-tertiary: #121d35;
-  --bg-card: #182640;
-  --bg-card-hover: #1f2f50;
-  --bg-elevated: #1c2d48;
-  --bg-input: #080e1e;
+  --bg-primary: #0b1222;
+  --bg-secondary: #121c33;
+  --bg-tertiary: #192744;
+  --bg-card: #213253;
+  --bg-card-hover: #293d63;
+  --bg-elevated: #243757;
+  --bg-input: #0e1626;
 
-  --text-primary: #edf2f7;
-  --text-secondary: #a0aec0;
-  --text-muted: #5a6a7e;
-  --text-inverse: #080c14;
+  --text-primary: #eef3f9;
+  --text-secondary: #aab8c9;
+  --text-muted: #6b7c93;
+  --text-inverse: #0b1222;
 
   --accent: #fbbf24;
   --accent-hover: #fde68a;
@@ -103,25 +108,25 @@
   --accent-gradient-4: #38bdf8;
   --accent-gradient-5: #818cf8;
 
-  --nav-bg: rgba(6, 10, 18, 0.97);
+  --nav-bg: rgba(11, 18, 34, 0.97);
   --nav-active: #fbbf24;
-  --nav-inactive: #3a4a5e;
-  --nav-hover: #7a8a9e;
+  --nav-inactive: #44576e;
+  --nav-hover: #8797ab;
 
-  --status-bar-bg: rgba(4, 6, 12, 0.97);
-  --status-bar-text: #a0aec0;
+  --status-bar-bg: rgba(9, 14, 26, 0.97);
+  --status-bar-text: #aab8c9;
 
-  --border: #2a3a5a;
-  --border-light: #1a2a3a;
+  --border: #33466b;
+  --border-light: #22304a;
   --border-glow: color-mix(in srgb, var(--accent) 15%, transparent);
 
-  --scrollbar-thumb: #4a6a9a;
-  --scrollbar-track: #060b14;
+  --scrollbar-thumb: #52709f;
+  --scrollbar-track: #0b1222;
 
-  --toggle-bg: #2a3a5a;
+  --toggle-bg: #33466b;
   --toggle-active: #fbbf24;
 
-  --slider-track: #2a3a5a;
+  --slider-track: #33466b;
   --slider-fill: #fbbf24;
   --slider-thumb: #fbbf24;
 
@@ -130,20 +135,21 @@
 }
 
 /* ===== THEME 2: WLED Dark ===== */
-/* Blue accent (#60a5fa) + Emerald (#34d399) on deeper charcoal */
+/* Blue accent (#60a5fa) + Emerald (#34d399) on charcoal.
+   Carbón un paso más claro: fondo y tarjetas separados de forma visible. */
 :root[data-theme="wled-dark"] {
-  --bg-primary: #080c14;
-  --bg-secondary: #0e1420;
-  --bg-tertiary: #141c2a;
-  --bg-card: #1a2336;
-  --bg-card-hover: #212c42;
-  --bg-elevated: #1e2840;
-  --bg-input: #0a0e18;
+  --bg-primary: #10161f;
+  --bg-secondary: #171f2b;
+  --bg-tertiary: #1d2734;
+  --bg-card: #232e3f;
+  --bg-card-hover: #2a384b;
+  --bg-elevated: #273345;
+  --bg-input: #121a24;
 
-  --text-primary: #e6edf3;
-  --text-secondary: #8b949e;
-  --text-muted: #4a5268;
-  --text-inverse: #080c14;
+  --text-primary: #e9eff6;
+  --text-secondary: #98a4b6;
+  --text-muted: #62708a;
+  --text-inverse: #10161f;
 
   --accent: #60a5fa;
   --accent-hover: #93c5fd;
@@ -159,25 +165,25 @@
   --accent-gradient-4: #34d399;
   --accent-gradient-5: #2dd4bf;
 
-  --nav-bg: rgba(8, 12, 20, 0.97);
+  --nav-bg: rgba(16, 22, 31, 0.97);
   --nav-active: #60a5fa;
-  --nav-inactive: #3a4258;
-  --nav-hover: #7a8290;
+  --nav-inactive: #46536a;
+  --nav-hover: #8a96a8;
 
-  --status-bar-bg: rgba(4, 6, 12, 0.97);
-  --status-bar-text: #8b949e;
+  --status-bar-bg: rgba(13, 18, 26, 0.97);
+  --status-bar-text: #98a4b6;
 
-  --border: #2a3040;
-  --border-light: #1a202e;
+  --border: #313c4d;
+  --border-light: #232c38;
   --border-glow: color-mix(in srgb, var(--accent) 15%, transparent);
 
-  --scrollbar-thumb: #4a6078;
-  --scrollbar-track: #080c14;
+  --scrollbar-thumb: #4e647c;
+  --scrollbar-track: #10161f;
 
-  --toggle-bg: #2a3040;
+  --toggle-bg: #313c4d;
   --toggle-active: #60a5fa;
 
-  --slider-track: #2a3040;
+  --slider-track: #313c4d;
   --slider-fill: #60a5fa;
   --slider-thumb: #60a5fa;
 
@@ -186,21 +192,24 @@
 }
 
 /* ===== THEME 3: Midnight AMOLED ===== */
-/* Purple accent (#a78bfa) + Teal (#2dd4bf) on pure black */
-/* Saves battery on OLED screens — deeper, more saturated */
+/* Purple accent (#a78bfa) + Teal (#2dd4bf) on a very dark indigo.
+   Antes era negro puro (#000): en OLED ahorraba batería pero los paneles
+   desaparecían y los efectos quedaban flotando en el vacío. Ahora el fondo es un
+   índigo profundo (sigue siendo casi negro para OLED) y las superficies suben lo
+   justo para separarse. */
 :root[data-theme="midnight-amoled"] {
-  --bg-primary: #000000;
-  --bg-secondary: #050508;
-  --bg-tertiary: #0a0a12;
-  --bg-card: #0f0f1e;
-  --bg-card-hover: #161628;
-  --bg-elevated: #14142a;
-  --bg-input: #000000;
+  --bg-primary: #0b0b14;
+  --bg-secondary: #14141f;
+  --bg-tertiary: #1b1b2b;
+  --bg-card: #26263e;
+  --bg-card-hover: #2e2e48;
+  --bg-elevated: #28283f;
+  --bg-input: #0f0f19;
 
-  --text-primary: #f5f5f5;
-  --text-secondary: #a0a0b0;
-  --text-muted: #4a4a5a;
-  --text-inverse: #000000;
+  --text-primary: #f3f3f7;
+  --text-secondary: #a9a9bd;
+  --text-muted: #66667e;
+  --text-inverse: #0b0b14;
 
   --accent: #a78bfa;
   --accent-hover: #c4b5fd;
@@ -216,25 +225,25 @@
   --accent-gradient-4: #2dd4bf;
   --accent-gradient-5: #818cf8;
 
-  --nav-bg: rgba(0, 0, 0, 0.97);
+  --nav-bg: rgba(11, 11, 20, 0.97);
   --nav-active: #a78bfa;
-  --nav-inactive: #3a3a48;
-  --nav-hover: #63636e;
+  --nav-inactive: #45455e;
+  --nav-hover: #82829a;
 
-  --status-bar-bg: rgba(0, 0, 0, 0.97);
-  --status-bar-text: #a0a0b0;
+  --status-bar-bg: rgba(8, 8, 14, 0.97);
+  --status-bar-text: #a9a9bd;
 
-  --border: #1a1a2a;
-  --border-light: #0e0e18;
+  --border: #33334d;
+  --border-light: #24243a;
   --border-glow: color-mix(in srgb, var(--accent) 15%, transparent);
 
-  --scrollbar-thumb: #3a3a5a;
-  --scrollbar-track: #000000;
+  --scrollbar-thumb: #4a4a6e;
+  --scrollbar-track: #0b0b14;
 
-  --toggle-bg: #1a1a2a;
+  --toggle-bg: #33334d;
   --toggle-active: #a78bfa;
 
-  --slider-track: #1a1a2a;
+  --slider-track: #33334d;
   --slider-fill: #a78bfa;
   --slider-thumb: #a78bfa;
 

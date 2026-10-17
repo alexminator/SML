@@ -192,6 +192,16 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   gap: 6px;
   font-size: 0.8rem;
   font-variant-numeric: tabular-nums;
+  /* Es un botón (lleva al tab de Battery): el cursor tiene que cambiarlo el hover */
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: color var(--t-fast), background var(--t-fast);
+}
+
+.batt-indicator:hover,
+.batt-indicator:focus-visible {
+  color: var(--accent);
+  outline: none;
 }
 
 .batt-icon {
@@ -326,13 +336,14 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   z-index: 80;
   text-align: center;
   padding: var(--space-lg) var(--space-md) var(--space-md);
+  /* Degradado desde el fondo del tema hasta ese MISMO color con alfa 0: el
+     header queda translúcido por arriba y totalmente transparente abajo. */
   background: linear-gradient(180deg,
     color-mix(in srgb, var(--bg-primary) 92%, transparent) 0%,
-    color-mix(in srgb, var(--bg-primary) 70%, transparent) 50%,
-    transparent 100%);
-  backdrop-filter: var(--glass-blur-md);
-  -webkit-backdrop-filter: var(--glass-blur-md);
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
+    color-mix(in srgb, var(--bg-primary) 70%, transparent) 55%,
+    color-mix(in srgb, var(--bg-primary) 0%, transparent) 100%);
+  /* Sin línea inferior ni sombra: cualquier borde aquí se ve al hacer scroll. */
+  border-bottom: none;
   overflow: visible;
 }
 

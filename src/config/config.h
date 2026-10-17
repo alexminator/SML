@@ -106,4 +106,4 @@ constexpr int BATT_LOG_TIMEOUT       = 60;     // Force entry every 60s even if 
 // ============================================================================
 // VERSION STRING (mostrado en Config tab)
 // ============================================================================
-#define SML_VERSION "2.0.1"
+#define SML_VERSION "2.0.3"

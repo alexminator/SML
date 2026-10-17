@@ -59,7 +59,7 @@ const SML = {
   powerOn: false,
   brightness: 130,
   r: 255, g: 255, b: 255,
-  effectId: 0,
+  effectId: null,   // ningún efecto activo por defecto: lo fija el efecto que se toca
   temp: 0,
   hum: 0,
   battery: 0,
@@ -272,9 +272,19 @@ function updateBatteryBar(level, charging) {
 
 function initTheme() {
   document.documentElement.setAttribute('data-theme', SML.theme);
+  syncThemeColorMeta();
   $$('.theme-option').forEach(opt => {
     opt.classList.toggle('active', opt.dataset.theme === SML.theme);
   });
+}
+
+// El color de la barra del navegador (meta theme-color) sigue al tema activo,
+// para que no quede un borde negro que no pega con el fondo nuevo.
+function syncThemeColorMeta() {
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (!meta) return;
+  const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim();
+  if (bg) meta.setAttribute('content', bg);
 }
 
 function setTheme(themeName) {
@@ -285,6 +295,7 @@ function setTheme(themeName) {
   document.documentElement.classList.add('theme-transitioning');
   requestAnimationFrame(() => {
     document.documentElement.setAttribute('data-theme', themeName);
+    syncThemeColorMeta();
     $$('.theme-option').forEach(opt => {
       opt.classList.toggle('active', opt.dataset.theme === themeName);
     });
@@ -317,7 +328,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const battToggle = document.getElementById('batteryToggle');
   if (battToggle) {
     battToggle.addEventListener('click', () => {
-      if (!SML.powerOn) { showToast('Turn on the NeoPixel strip first', 'warning'); return; }
       if (SML.randomFXMode) stopRandomFX();
       if (SML.randomVUMode) stopRandomVU();
       sendCmd({ action: 'toggleBatt' });
@@ -328,10 +338,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const tempToggle = document.getElementById('tempToggle');
   if (tempToggle) {
     tempToggle.addEventListener('click', () => {
-      if (!SML.powerOn) { showToast('Turn on the NeoPixel strip first', 'warning'); return; }
       if (SML.randomFXMode) stopRandomFX();
       if (SML.randomVUMode) stopRandomVU();
       sendCmd({ action: 'toggleTemp' });
+    });
+  }
+
+  // La batería del status bar lleva al tab de Battery
+  const battIndicator = document.getElementById('battIndicator');
+  if (battIndicator) {
+    const goBatteryTab = () => switchTab('tabBattery');
+    battIndicator.addEventListener('click', goBatteryTab);
+    battIndicator.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goBatteryTab(); }
     });
   }
 
@@ -349,6 +368,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   const modOv = document.getElementById('paramModalOverlay');
   if (modOv) modOv.addEventListener('click', closeEffectConfig);
+
+  // ── El FAB de brillo se aparta mientras hay un panel de efecto abierto ──
+  // Se observa la clase 'open' de los dos paneles (offcanvas de escritorio y
+  // bottom sheet móvil) en vez de tocar cada camino de apertura/cierre: así el FAB
+  // vuelve siempre a su sitio, incluso si mañana se añade otra vía de apertura.
+  // syncEffectPanelState()/initEffectPanelObserver() viven en effects.js (es quien
+  // conoce los paneles).
+  initEffectPanelObserver();
 
   /* ── Modal helpers: About & Help on mobile ── */
   let modalTouchStartY = 0;
@@ -440,12 +467,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
   }
 
-  // Peek canvas config gear — abre el panel del efecto actual
+  // Peek canvas config gear — abre el panel del efecto actual (pasa por el mismo
+  // guardián que el engranaje de las tarjetas: sólo el efecto activo se configura).
   document.getElementById('peekCanvasConfigBtn')?.addEventListener('click', () => {
     const activeCard = document.querySelector('.effect-card.active');
     if (!activeCard) return;
-    const effId = parseInt(activeCard.dataset.effectId);
-    showEffectConfig(effId, activeCard);
+    showCardConfig(parseInt(activeCard.dataset.effectId), activeCard);
   });
 
   // Theme options — click to commit, hover to preview

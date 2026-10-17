@@ -70,12 +70,15 @@
 }
 
 /* ── Favorite star ── */
-.fav-star {
+/* Estrella (arriba-derecha) y engranaje (arriba-izquierda) comparten caja: mismo
+   tamaño, mismo inset y mismo font-size, así los dos iconos quedan a la misma
+   altura y alineados con el borde de la tarjeta. */
+.fav-star,
+.effect-gear {
   position: absolute;
-  top: 3px;
-  right: 4px;
-  width: 28px;
-  height: 28px;
+  top: 0;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -83,19 +86,26 @@
   z-index: 5;
   color: var(--text-muted);
   opacity: 0.3;
-  font-size: 0.75rem;
-  vertical-align: middle;
+  font-size: 0.95rem;
+  line-height: 1;
   transition: opacity 0.2s, transform 0.2s, color 0.2s;
   border: none;
   background: none;
   padding: 0;
-  line-height: 1;
   -webkit-tap-highlight-color: transparent;
 }
 
-.fav-star:hover {
-  opacity: 0.7;
-  transform: scale(1.2);
+.fav-star {
+  right: 0;
+}
+
+/* Mismo feedback que el engranaje: color de acento + crecer */
+.fav-star:hover,
+.fav-star:focus-visible {
+  opacity: 1;
+  color: var(--accent);
+  transform: scale(1.15);
+  outline: none;
 }
 
 .fav-star.active {
@@ -105,24 +115,9 @@
 
 /* ── Settings gear ── */
 /* El click en la tarjeta enciende/apaga el efecto; los ajustes viven aquí.
-   Espejo del fav-star (esquina opuesta) para no chocar con la estrella. */
+   La caja compartida con .fav-star está arriba: aquí sólo la esquina opuesta. */
 .effect-gear {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  width: 26px;
-  height: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 5;
-  color: var(--text-muted);
-  opacity: 0.3;
-  font-size: 0.7rem;
-  vertical-align: middle;
-  transition: opacity 0.2s, transform 0.2s, color 0.2s;
-  -webkit-tap-highlight-color: transparent;
+  left: 0;
 }
 
 .effect-gear:hover,
@@ -1196,6 +1191,15 @@
   letter-spacing: 0.02em;
 }
 
+/* Nota bajo el título: en los efectos con lista curada se avisa de que sólo se
+   ofrecen las paletas que funcionan con ese efecto. */
+.palette-hint {
+  margin: -2px 0 var(--space-sm);
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: var(--text-tertiary);
+}
+
 .palette-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
@@ -1316,6 +1320,27 @@
 }
 
 /* Desktop: 3 paletas por fila, más grandes */
+/* ── Panel de ajustes: rueda de color de Solid ── */
+.solid-color-hint {
+  margin-top: var(--space-md);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* ── Escritorio: la reja de paletas no scrollea por dentro ── */
+/* El offcanvas ya scrollea solo cuando hace falta (100vh + body con overflow-y:
+   auto), así que capar la reja a 260/380px metía un segundo scroll anidado
+   incluso cuando todo cabía en pantalla. En móvil se mantiene el tope para que el
+   bottom sheet no crezca sin límite. */
+@media (min-width: 768px) {
+  .offcanvas-body .palette-grid {
+    max-height: none;
+    overflow: visible;
+  }
+}
+
 @media (min-width: 900px) {
   .palette-grid {
     grid-template-columns: repeat(3, 1fr);

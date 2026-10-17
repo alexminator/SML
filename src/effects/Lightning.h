@@ -94,5 +94,7 @@ public:
     }
 };
 
+// pa=16 (Blue-Cyan): su base fija está en el índice 32 de la paleta y con
+// Rainbow ese punto sale naranja; la tormenta debe arrancar fría.
 const char LightningEffect::_meta[] =
-    "Lightning@Speed,Flashing,,,,,Overlay;;;;sx=128,ix=128";
+    "Lightning@Speed,Flashing,,,,,Overlay;;;;sx=128,ix=128,pa=16";

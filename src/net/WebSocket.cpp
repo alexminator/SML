@@ -4,6 +4,7 @@
 #include "WebSocket.h"
 #include "state/AppState.h"
 #include "effects/EffectRegistry.h"
+#include "effects/PaletteManager.h"
 #include "net/WebServer.h"
 #include "net/data.h"
 
@@ -210,6 +211,23 @@ void notifyWSClientList() {
 static uint32_t wsPeekClientId = 0;
 static constexpr uint32_t PEEK_FRAME_INTERVAL_MS = 40; // máximo nominal de 25 fps
 
+// Modo de color del Peek (toggle de la web):
+//   true  = colores verdaderos: cada píxel se escala con el brillo, la corrección
+//           de color y la temperatura del driver, justo como sale a la tira.
+//   false = colores del efecto sin corrección ni temperatura. El brillo global se
+//           aplica también aquí: el slider tiene que atenuar el preview siempre.
+static bool peekTrueColors = true;
+
+// ── VU de color ───────────────────────────────────────────────────────────────
+// Los VU no eligen paleta: cambian de COLOR. Su render muestrea la paleta 27
+// ("Lamp color"), que PaletteManager reconstruye con el color global de la tira,
+// así que se les fija esa paleta al activarse (12 rainbowVU, 14 rainbowHueVU,
+// 15 rippleVU, 16 threebarsVU, 17 oceanVU, 48 djlightVU). Old Skool (13) y
+// Noisemeter (47) tienen colores fijos y no entran aquí.
+static bool isVuColorEffect(uint8_t id) {
+    return id == 12 || id == 14 || id == 15 || id == 16 || id == 17 || id == 48;
+}
+
 bool buildPeekFrame(uint8_t *buf, size_t bufSize, size_t *len, uint32_t *clientId) {
     // ⚠ Llamar con dataMutex tomado (lo hace TaskLEDControl).
     *len = 0;
@@ -230,10 +248,29 @@ bool buildPeekFrame(uint8_t *buf, size_t bufSize, size_t *len, uint32_t *clientI
     buf[2] = N_PIXELS;
     buf[3] = 1;     // height = 1 row
 
+    // El brillo global NO está en leds[]: FastLED.setBrightness() lo aplica en
+    // show(), sobre la copia que sale hacia la tira. Hay que escalarlo aquí o el
+    // Peek ignora el slider (con brillo 0 la tira queda negra y el canvas seguía
+    // pintando a tope). El slider afecta a LOS DOS modos:
+    //   true  = ajuste completo del driver (brillo x corrección de color x
+    //           temperatura), o sea lo que sale a la tira.
+    //   false = sólo el brillo global: los colores del efecto sin corrección ni
+    //           temperatura, pero igual de atenuados por el slider.
+    // CRGB::nscale8 es el scale8 "plain math" del driver, no la variante video.
+    const uint8_t peekBrightness = stripLed.brightness;
+    const CRGB peekAdjust = peekTrueColors
+        ? FastLED[0].getAdjustment(peekBrightness)
+        : CRGB(peekBrightness, peekBrightness, peekBrightness);
+    const bool peekNeedsScale =
+        (peekAdjust.r != 255 || peekAdjust.g != 255 || peekAdjust.b != 255);
     for (uint16_t i = 0; i < N_PIXELS; i++) {
-        buf[4 + i * 3]     = leds[i].r;
-        buf[4 + i * 3 + 1] = leds[i].g;
-        buf[4 + i * 3 + 2] = leds[i].b;
+        CRGB px = leds[i];
+        if (peekNeedsScale) {
+            px.nscale8(peekAdjust);
+        }
+        buf[4 + i * 3]     = px.r;
+        buf[4 + i * 3 + 1] = px.g;
+        buf[4 + i * 3 + 2] = px.b;
     }
 
 #ifdef DEBUG_WEBSOCKET
@@ -245,11 +282,11 @@ bool buildPeekFrame(uint8_t *buf, size_t bufSize, size_t *len, uint32_t *clientI
         debugD(" bytes para client #");
         debugD_NUM(wsPeekClientId, "%u");
         debugD(" | pixel[0]: RGB(");
-        debugD_NUM(leds[0].r, "%d");
+        debugD_NUM(buf[4], "%d");  // primer pixel ya escalado por el brillo
         debugD(",");
-        debugD_NUM(leds[0].g, "%d");
+        debugD_NUM(buf[5], "%d");
         debugD(",");
-        debugD_NUM(leds[0].b, "%d");
+        debugD_NUM(buf[6], "%d");
         debugD(")\n");
     }
 #endif
@@ -623,6 +660,8 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
         // Sólo el cliente que inicia Peek es suscriptor del stream.
         if (!json["lv"].isNull()) {
             const bool lvOn = json["lv"].as<bool>();
+            // El cliente puede pedir el modo de color al arrancar el stream
+            if (!json["real"].isNull()) peekTrueColors = json["real"].as<bool>();
             AsyncWebSocketClient *peekClient = ws.client(clientId);
             if (lvOn && peekClient) peekClient->setCloseClientOnQueueFull(false);
             const bool peekStateUpdated = setPeekLiveState(clientId, lvOn);
@@ -658,6 +697,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
         if (effectId >= 0) {
             if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(100)) == pdTRUE) {
                 stripLed.effectId = effectId;
+                // ⚠ Cada efecto enciende la tira por sí mismo: ya no hay botón de
+                // encendido ni efecto por defecto. Fijar un effectId = activarlo.
+                stripLed.powerState = true;
                 if (stripLed.powerState) stripLed.update();
                 shouldSaveGlobalState = true;
                 xSemaphoreGive(dataMutex);
@@ -815,6 +857,27 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             shouldSaveGlobalState = true;
             _wsLogAction(clientId, 4, stripLed.powerState ? 1 : 0, 0, 0);
         }
+        else if (strcmp(action, "power") == 0)
+        {
+            // Encendido/apagado EXPLÍCITO de la tira (state:true/false). Los efectos
+            // la encienden al activarse y un segundo toque sobre la tarjeta activa la
+            // apaga. 'toggle' se mantiene por compatibilidad.
+            const bool powerOn = json["state"].as<bool>();
+            stripLed.powerState = powerOn;
+            powerOn ? stripLed.update() : stripLed.clear();
+            if (!powerOn) randomMode = 0;
+            shouldSaveGlobalState = true;
+            _wsLogAction(clientId, 4, powerOn ? 1 : 0, 0, 0);
+        }
+        else if (strcmp(action, "peekColorMode") == 0)
+        {
+            // Toggle del Peek: colores verdaderos (escalados por el brillo real) o
+            // leds[] en crudo. No persiste: es una preferencia de vista del cliente.
+            peekTrueColors = json["real"].as<bool>();
+#ifdef DEBUG_WEBSOCKET
+            debuglnD(peekTrueColors ? "Peek: colores verdaderos" : "Peek: colores crudos");
+#endif
+        }
         else if (strcmp(action, "lamp") == 0)
         {
             lampState = !lampState;
@@ -844,27 +907,34 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
         }
         else if (strcmp(action, "toggleBatt") == 0) {
             randomMode = 0;  // Exit random mode
-            if (stripLed.effectId == EFFECT_BATTERY) {
-                stripLed.effectId = EFFECT_SOLID;
+            // Igual que cualquier efecto: primer toque enciende el efecto, segundo
+            // toque APAGA la tira (antes volvía a Solid, que ya no es el destino).
+            if (stripLed.effectId == EFFECT_BATTERY && stripLed.powerState) {
+                stripLed.powerState = false;
+                stripLed.clear();
             } else {
                 stripLed.effectId = EFFECT_BATTERY;
+                stripLed.powerState = true;
+                stripLed.update();
             }
-            if (stripLed.powerState) stripLed.update();
             // Log battery toggle as type 8
             shouldSaveGlobalState = true;
-            _wsLogAction(clientId, 8, stripLed.effectId == EFFECT_BATTERY ? 1 : 0, 0, 0);
+            _wsLogAction(clientId, 8, stripLed.powerState ? 1 : 0, 0, 0);
         }
         else if (strcmp(action, "toggleTemp") == 0) {
             randomMode = 0;  // Exit random mode
-            if (stripLed.effectId == EFFECT_TEMP) {
-                stripLed.effectId = EFFECT_SOLID;
+            // Mismo criterio que la batería: segundo toque apaga la tira.
+            if (stripLed.effectId == EFFECT_TEMP && stripLed.powerState) {
+                stripLed.powerState = false;
+                stripLed.clear();
             } else {
                 stripLed.effectId = EFFECT_TEMP;
+                stripLed.powerState = true;
+                stripLed.update();
             }
-            if (stripLed.powerState) stripLed.update();
             // Log temperature toggle as type 9
             shouldSaveGlobalState = true;
-            _wsLogAction(clientId, 9, stripLed.effectId == EFFECT_TEMP ? 1 : 0, 0, 0);
+            _wsLogAction(clientId, 9, stripLed.powerState ? 1 : 0, 0, 0);
         }
         else if (strcmp(action, "picker") == 0)
         {
@@ -872,6 +942,9 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             stripLed.R = color["r"].as<int>();
             stripLed.G = color["g"].as<int>();
             stripLed.B = color["b"].as<int>();
+            // El color global también alimenta la paleta 27: los efectos VU (que
+            // no usan paletas, sólo color) se recolorean en vivo con la rueda.
+            PaletteManager::setBaseColor(CRGB(stripLed.R, stripLed.G, stripLed.B));
             if (!json["brightness"].isNull()) {
                 stripLed.brightness = json["brightness"].as<int>();
             }
@@ -905,8 +978,16 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
                 randomMode = 1;
                 lastRandomSwitch = millis();
                 randomPlaylistIndex = 0;
+                stripLed.powerState = true;   // arrancar Random FX enciende la tira
+                stripLed.update();
             } else if (randomMode == 1) {
                 randomMode = 0;
+                // state:false SIN effectId = apagar la tira; con effectId, el handler
+                // de effectId ya la dejó encendida con ese efecto.
+                if (!json["effectId"].is<int>()) {
+                    stripLed.powerState = false;
+                    stripLed.clear();
+                }
             }
             // Persistir: el modo Random también debe sobrevivir a un reinicio.
             shouldSaveGlobalState = true;
@@ -944,6 +1025,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
                 }
                 if (shouldStart && !randomVUPool.empty()) {
                     randomMode = 2;
+                    stripLed.powerState = true;   // arrancar Random VU enciende la tira
                     const int nextId = chooseNextRandomVUEffect(stripLed.effectId);
                     if (nextId >= 0) {
                         stripLed.effectId = nextId;
@@ -956,7 +1038,12 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
                     if (randomMode == 2) randomMode = 0;
                     if (json["effectId"].is<int>()) {
                         stripLed.effectId = json["effectId"].as<int>();
-                        if (stripLed.powerState) stripLed.update();
+                        stripLed.powerState = true;
+                        stripLed.update();
+                    } else {
+                        // Parar Random VU sin efecto destino = apagar la tira
+                        stripLed.powerState = false;
+                        stripLed.clear();
                     }
                 }
             } else if (randomMode == 2 && !json["duration"].isNull()) {
@@ -991,6 +1078,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
                 randomMode = 1;
                 randomPlaylistIndex = 0;
                 lastRandomSwitch = millis();
+                stripLed.powerState = true;   // arrancar Random FX enciende la tira
                 // Pick the FIRST random effect immediately — no esperar
                 // randomFXDuration segundos para que el usuario vea algo.
                 if (!randomFXPool.empty()) {
@@ -1041,6 +1129,14 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
                 saveEffectParams(id);
             }
         }
+
+                // Un VU de color siempre va con la paleta del color de la lámpara,
+                // venga de una tarjeta, de Random VU o de un setParams viejo.
+                if (isVuColorEffect(stripLed.effectId)) {
+                    if (Effect* fx = getEffect(stripLed.effectId)) {
+                        fx->setPaletteIndex(PALETTE_LAMP_COLOR);
+                    }
+                }
 
                 xSemaphoreGive(dataMutex);
             } // end if dataMutex acquired

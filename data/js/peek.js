@@ -10,6 +10,18 @@ const PEEK_FPS = 25;          // Mantener en sync con PEEK_FRAME_INTERVAL_MS del
 const PEEK_FRAME_MS = Math.round(1000 / PEEK_FPS); // 40 ms (~25 FPS nominales)
 const DRAW_FPS = PEEK_FPS;
 
+// El firmware manda el píxel YA escalado por el brillo global del driver (colores
+// reales de la tira). En un canvas eso se ve apagado, porque un LED encendido emite
+// mucha más luz que su valor RGB pintado de forma plana. Se aplica un lift
+// perceptual (gamma) + un halo aditivo proporcional al brillo: el canvas se parece
+// a la tira de verdad y el slider de brillo se nota.
+const PEEK_GAMMA = 0.78;
+const PEEK_LIFT = (() => {
+  const t = new Uint8Array(256);
+  for (let i = 0; i < 256; i++) t[i] = Math.round(255 * Math.pow(i / 255, PEEK_GAMMA));
+  return t;
+})();
+
 let peek = null;
 
 class PeekRenderer {
@@ -180,7 +192,7 @@ class PeekRenderer {
 
     ctx.font = `${Math.max(10, w / 30)}px sans-serif`;
     ctx.fillStyle = 'rgba(255,255,255,0.25)';
-    ctx.fillText('Turn on the NeoPixel strip to start streaming', w / 2, h / 2 + 20);
+    ctx.fillText('Touch an effect to turn the strip on', w / 2, h / 2 + 20);
   }
 
   /* ── Idle state ── */
@@ -272,23 +284,56 @@ class PeekRenderer {
 
       const x = pad + spacing * i + spacing / 2;
 
-      // Glow
-      const glow = ctx.createRadialGradient(x, cy, 0, x, cy, r * 3);
-      glow.addColorStop(0, `rgba(${led.r},${led.g},${led.b},0.35)`);
-      glow.addColorStop(1, `rgba(${led.r},${led.g},${led.b},0)`);
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(x, cy, r * 3, 0, Math.PI * 2);
-      ctx.fill();
+      // Color real del LED con lift perceptual (ver PEEK_LIFT)
+      const cr = PEEK_LIFT[led.r], cg = PEEK_LIFT[led.g], cb = PEEK_LIFT[led.b];
+      const lum = Math.max(cr, cg, cb) / 255;
+
+      // Halo aditivo en dos capas: núcleo cercano (brillo del LED) + bloom ancho.
+      // Se acumula entre LEDs vecinos, así que la tira se lee como luz continua.
+      // El halo arranca en el borde del punto (r*0.9), no en su centro: si empieza
+      // en el centro se suma encima del propio LED y satura el color a blanco.
+      // Alfas contenidas: con 33 LEDs los halos se solapan y un alpha alto lavaba
+      // el punto a blanco (el brillo dejaba de distinguirse).
+      if (lum > 0.02) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        const halo = ctx.createRadialGradient(x, cy, r * 0.9, x, cy, r * 3.4);
+        halo.addColorStop(0, `rgba(${cr},${cg},${cb},${(0.09 + 0.14 * lum).toFixed(3)})`);
+        halo.addColorStop(0.45, `rgba(${cr},${cg},${cb},${(0.03 + 0.06 * lum).toFixed(3)})`);
+        halo.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
+        ctx.fillStyle = halo;
+        ctx.beginPath();
+        ctx.arc(x, cy, r * 3.4, 0, Math.PI * 2);
+        ctx.fill();
+        const bloom = ctx.createRadialGradient(x, cy, r * 1.1, x, cy, r * 6.5);
+        bloom.addColorStop(0, `rgba(${cr},${cg},${cb},${(0.03 + 0.05 * lum).toFixed(3)})`);
+        bloom.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
+        ctx.fillStyle = bloom;
+        ctx.beginPath();
+        ctx.arc(x, cy, r * 6.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
 
       // LED dot
       ctx.beginPath();
       ctx.arc(x, cy, r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgb(${led.r},${led.g},${led.b})`;
+      ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
       ctx.fill();
 
+      // Núcleo brillante: aspecto de LED encendido (no un disco plano), sin lavar el color
+      if (lum > 0.12) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.beginPath();
+        ctx.arc(x, cy, r * 0.55, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${(0.02 + 0.05 * lum).toFixed(3)})`;
+        ctx.fill();
+        ctx.restore();
+      }
+
       // Subtle border
-      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.strokeStyle = `rgba(255,255,255,${(0.05 + 0.10 * lum).toFixed(3)})`;
       ctx.lineWidth = 0.5;
       ctx.stroke();
     });
@@ -321,21 +366,49 @@ class PeekRenderer {
       const y = cy + Math.sin(angle) * radius;
       const dotR = Math.max(3, radius * 0.07);
 
-      // Glow
-      const glow = ctx.createRadialGradient(x, y, 0, x, y, dotR * 3);
-      glow.addColorStop(0, `rgba(${led.r},${led.g},${led.b},0.35)`);
-      glow.addColorStop(1, `rgba(${led.r},${led.g},${led.b},0)`);
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(x, y, dotR * 3, 0, Math.PI * 2);
-      ctx.fill();
+      // Mismo lift + halo aditivo que la vista de tira
+      const cr = PEEK_LIFT[led.r], cg = PEEK_LIFT[led.g], cb = PEEK_LIFT[led.b];
+      const lum = Math.max(cr, cg, cb) / 255;
+
+      if (lum > 0.02) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        const halo = ctx.createRadialGradient(x, y, dotR * 0.9, x, y, dotR * 3.6);
+        halo.addColorStop(0, `rgba(${cr},${cg},${cb},${(0.09 + 0.14 * lum).toFixed(3)})`);
+        halo.addColorStop(0.45, `rgba(${cr},${cg},${cb},${(0.03 + 0.06 * lum).toFixed(3)})`);
+        halo.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
+        ctx.fillStyle = halo;
+        ctx.beginPath();
+        ctx.arc(x, y, dotR * 3.6, 0, Math.PI * 2);
+        ctx.fill();
+        const bloom = ctx.createRadialGradient(x, y, dotR * 1.1, x, y, dotR * 6.5);
+        bloom.addColorStop(0, `rgba(${cr},${cg},${cb},${(0.03 + 0.05 * lum).toFixed(3)})`);
+        bloom.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
+        ctx.fillStyle = bloom;
+        ctx.beginPath();
+        ctx.arc(x, y, dotR * 6.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
 
       // LED dot
       ctx.beginPath();
       ctx.arc(x, y, dotR, 0, Math.PI * 2);
-      ctx.fillStyle = `rgb(${led.r},${led.g},${led.b})`;
+      ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
       ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+
+      // Núcleo brillante
+      if (lum > 0.12) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.beginPath();
+        ctx.arc(x, y, dotR * 0.55, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${(0.02 + 0.05 * lum).toFixed(3)})`;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      ctx.strokeStyle = `rgba(255,255,255,${(0.06 + 0.10 * lum).toFixed(3)})`;
       ctx.lineWidth = 0.5;
       ctx.stroke();
 
@@ -391,6 +464,38 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // ── Modo de color del Peek ──────────────────────────────────────────────
+  // ON  = colores verdaderos: el firmware escala cada píxel con el brillo y la
+  //       corrección del driver, así que el canvas refleja la tira real.
+  // OFF = colores del efecto sin corrección de color ni temperatura. El brillo
+  //       global SÍ se aplica en los dos modos (si no, al bajar el slider el
+  //       preview seguía a tope).
+  const TRUE_COLORS_KEY = 'sml-peek-true-colors';
+  let trueColors = localStorage.getItem(TRUE_COLORS_KEY) !== '0';
+  const colorModeBtn = document.getElementById('peekColorMode');
+
+  function applyColorMode(notify) {
+    if (colorModeBtn) {
+      colorModeBtn.classList.toggle('active', trueColors);
+      colorModeBtn.title = trueColors
+        ? 'True colors: exact strip output — brightness, color correction and temperature (tap to see the effect colors without correction)'
+        : 'Effect colors without correction: brightness still applies, no color correction or temperature (tap for true colors)';
+      colorModeBtn.setAttribute('aria-pressed', trueColors ? 'true' : 'false');
+    }
+    if (notify && typeof sendCmd === 'function') {
+      sendCmd({ action: 'peekColorMode', real: trueColors });
+    }
+  }
+
+  if (colorModeBtn) {
+    colorModeBtn.addEventListener('click', () => {
+      trueColors = !trueColors;
+      localStorage.setItem(TRUE_COLORS_KEY, trueColors ? '1' : '0');
+      applyColorMode(true);
+    });
+    applyColorMode(false);   // pinta el estado guardado; el valor se manda al arrancar
+  }
+
   // Start / Stop toggle
   const peekToggle = document.getElementById('peekToggle');
   if (peekToggle) {
@@ -401,17 +506,14 @@ document.addEventListener('DOMContentLoaded', () => {
         peekToggle.classList.remove('active');
         if (typeof sendCmd === 'function') sendCmd({ lv: false });
       } else {
-        if (typeof SML !== 'undefined' && !SML.powerOn) {
-          if (typeof showToast === 'function') {
-            showToast('Turn on the NeoPixel strip first', 'warning');
-          }
-          return;
-        }
+        // Sin gate de encendido: el Peek se puede abrir con la tira apagada
+        // (mientras no haya efecto activo el frame llega negro).
         if (!peek) peek = new PeekRenderer('peekCanvas');
         peek.start();
         peekToggle.textContent = '⏸ Stop';
         peekToggle.classList.add('active');
-        if (typeof sendCmd === 'function') sendCmd({ lv: true });
+        // real = modo de color elegido, para que el stream arranque ya con él
+        if (typeof sendCmd === 'function') sendCmd({ lv: true, real: trueColors });
       }
     });
   }

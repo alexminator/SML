@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#080c14">
+  <meta name="theme-color" content="#0b1222">
   <meta name="color-scheme" content="dark">
   <meta name="author" content="Alexminator">
   <meta name="description" content="Smart Music Lamp — WiFi-controlled ESP32 lamp with RGB LEDs, Bluetooth audio, and environmental sensing">
@@ -388,7 +388,7 @@
           <span class="fas fa-eye" id="wsEyeIcon" aria-hidden="true"></span>
           <span class="ws-count" id="wsCount">0</span>
         </div>
-        <div class="batt-indicator">
+        <div class="batt-indicator" id="battIndicator" role="button" tabindex="0" title="Battery — open Battery tab">
           <span class="batt-percent" aria-label="Battery level">--</span>
           <div class="batt-icon">
             <div class="batt-fill high" style="width:50%"></div>
@@ -450,32 +450,6 @@
 
       <!-- ===== TAB: LAMP ===== -->
       <section id="tabLamp" class="tab-content active">
-        <div class="card">
-          <!-- Power toggles: Lamp & Neopixel (FA power-off cards) -->
-          <div class="power-section">
-            <h2 class="card-title">Power</h2>
-            <div class="power-row">
-              <div class="power-control">
-                <div class="power-card on" id="lampToggle">
-                  <div class="power-card-icon"><span class="fas fa-power-off" aria-hidden="true"></span></div>
-                </div>
-                <span class="power-card-label">Lamp</span>
-              </div>
-              <div class="power-control">
-                <div class="power-card on" id="neoToggle">
-                  <div class="power-card-icon"><span class="fas fa-power-off" aria-hidden="true"></span></div>
-                </div>
-                <span class="power-card-label">Neopixel</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Color picker (wheel-only, brightness slider separado) -->
-          <div class="color-picker-container">
-            <div id="colorPicker"></div>
-          </div>
-        </div>
-
         <!-- Visual Effects (IDs 0-37) -->
         <div class="card">
           <h2 class="card-title"><span class="fas fa-star"></span> Effects</h2>
@@ -739,6 +713,7 @@
   </div>
 </div>
         </div>
+        </div>
       </section>
 
       <!-- ===== TAB: MUSIC ===== -->
@@ -899,6 +874,9 @@
               <button class="active" data-peek-mode="strip">━━━ Strip</button>
               <button data-peek-mode="circle">◉ Circle</button>
               <button id="peekToggle">▶ Start</button>
+              <button id="peekColorMode" class="active" title="True colors: exactly what the strip emits — brightness, color correction and temperature">
+                <span class="fas fa-palette" aria-hidden="true"></span> True colors
+              </button>
             </div>
             <div class="peek-canvas-wrapper">
               <div class="peek-canvas-header">
@@ -1184,12 +1162,17 @@
             <div class="help-card">
               <span class="help-icon fas fa-paint-brush"></span>
               <h3>LED Effects</h3>
-              <p>Browse and select effects in the Effects tab. Tap or click an effect a second time to tweak parameters like speed, color, and intensity.</p>
+              <p><strong>One tap</strong> on a card turns the strip on with that effect; <strong>tap it again</strong> to turn the strip off. There is no default effect: nothing is running until you tap one. Among effects, the last one you tap wins (the previous one turns off). The <strong>gear</strong> on each card — or a <strong>long press</strong> on touch screens — opens its settings, but only for the effect that is currently on: on any other card it just reminds you to turn it on first. Changing settings does not turn the strip on or off. Each effect lists only the palettes that actually suit it (a dark palette used to make effects like Hallow Eyes vanish), so fixed-color effects such as Old Skool show no palette list. <strong>VU meters</strong> have a single setting: the lamp color.</p>
             </div>
             <div class="help-card">
               <span class="help-icon fas fa-random"></span>
               <h3>Random Mode</h3>
               <p>Let the lamp cycle through effects automatically. Choose from All, Favorites, Categories, or create a custom playlist.</p>
+            </div>
+            <div class="help-card">
+              <span class="help-icon fas fa-lightbulb"></span>
+              <h3>Lamp &amp; Brightness (side buttons)</h3>
+              <p>The <strong>left floating button</strong> switches the lamp relay on and off (white bulb = on); it does not touch the LED strip. The <strong>right floating button</strong> opens the strip brightness slider, which also follows the theme accent color.</p>
             </div>
             <div class="help-card">
               <span class="help-icon fas fa-music"></span>
@@ -1199,7 +1182,7 @@
             <div class="help-card">
               <span class="help-icon fas fa-eye"></span>
               <h3>Live Preview (Peek)</h3>
-              <p>Watch a real-time preview of the LED strip in the Peek tab. The canvas streams live colors from the ESP32 at ~30 FPS, interpolated to 33 virtual LEDs. Switch between strip and circle layout.</p>
+              <p>Watch a real-time preview of the LED strip in the Peek tab. The canvas streams live colors from the ESP32 at ~25 FPS, interpolated to 33 virtual LEDs. Switch between strip and circle layout. The brightness slider affects the preview in both modes. <strong>True colors</strong> shows the exact strip output (brightness + color correction + temperature); turned off you see the effect's own colors, without correction, still dimmed by the slider.</p>
             </div>
             <div class="help-card">
               <span class="help-icon fas fa-battery-three-quarters"></span>
@@ -1453,6 +1436,20 @@
     <!-- ============================================================
          BRIGHTNESS FAB + PILL SLIDER (global overlay)
          ============================================================ -->
+    <!-- LAMP FAB — espejo del FAB de brillo, abajo a la izquierda. Enciende/apaga el
+         relé de la lámpara (la tira LED ya no tiene botón: la enciende cada efecto). -->
+    <div class="lamp-fab" id="lampFab">
+      <button class="fab-btn" id="lampFabBtn" aria-label="Lamp" aria-pressed="false" title="Lamp">
+        <span class="fab-icon fas fa-lightbulb"></span>
+      </button>
+    </div>
+
+    <!-- Muelle de la rueda de color: ya no vive en el panel (se monta en el modal de
+         cada efecto y vuelve aquí al cerrar). Ver mountColorPicker() en effects.js. -->
+    <div class="color-picker-container" id="colorPickerHome">
+      <div id="colorPicker"></div>
+    </div>
+
     <div class="brightness-fab" id="brightnessFab">
       <button class="fab-btn" id="fabBtn" aria-label="Brightness">
         <span class="fab-icon fas fa-sun" id="fabIcon"></span>

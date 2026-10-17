@@ -113,5 +113,6 @@ static CRGB pacifica_one_layer(uint16_t i, uint8_t cistart, uint16_t wavescale,
     return ColorFromPalette(pal, hue, bri, LINEARBLEND);
 }
 
+// pa=5 (Ocean): es una ola marina; arranca en azules, no en Rainbow.
 const char PacificaEffect::_meta[] =
-    "Pacifica@Speed,Angle,,,,,,,,;;;;sx=128,ix=128";
+    "Pacifica@Speed,Angle,,,,,,,,;;;;sx=128,ix=128,pa=5";

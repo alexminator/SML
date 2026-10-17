@@ -1,4 +1,27 @@
 /* ===== BRIGHTNESS FAB + PILL SLIDER ===== */
+
+/* ── FAB apartado mientras hay un panel de efecto abierto ── */
+/* El offcanvas (escritorio) y el bottom sheet (móvil) pasan por encima del FAB:
+   se desliza a la derecha y vuelve al cerrarse. La clase la pone main.js
+   observando la clase 'open' de los paneles. */
+body.effect-modal-open .brightness-fab,
+body.effect-modal-open .lamp-fab {
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.effect-modal-open .brightness-fab {
+  transform: translateX(calc(100% + var(--space-xl)));
+}
+
+body.effect-modal-open .lamp-fab {
+  transform: translateX(calc(-100% - var(--space-xl)));
+}
+
+body.effect-modal-open .brightness-fab .fab-btn,
+body.effect-modal-open .lamp-fab .fab-btn {
+  pointer-events: none;
+}
 .brightness-fab {
   position: fixed;
   z-index: 900;
@@ -6,8 +29,45 @@
   flex-direction: column;
   align-items: center;
   bottom: calc(var(--nav-h) + var(--space-lg));
+  transition: transform var(--t-normal), opacity var(--t-normal);
   right: var(--space-md);
   pointer-events: none;
+}
+
+/* ── LAMP FAB (relé de la lámpara) ── */
+/* Espejo del FAB de brillo. Es el ÚNICO control de encendido de la lámpara: la
+   tira LED ya no tiene botón propio, la enciende el efecto que el usuario toca
+   (ver activateEffect en effects.js).
+   Mismo color de tema, mismo tamaño y misma fuente de icono que el FAB de brillo:
+   la diferencia está en el glow (encendida) y en el filtro (apagada), no en el
+   tamaño ni en el color. */
+.lamp-fab {
+  position: fixed;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  bottom: calc(var(--nav-h) + var(--space-lg));
+  transition: transform var(--t-normal), opacity var(--t-normal);
+  left: var(--space-md);
+  pointer-events: none;
+}
+
+/* El botón hereda el color de acento de .fab-btn (igual que el de brillo): el
+   color por defecto es el del tema, sin filtros. La bombilla es un glifo más fino
+   que el sol: sube un punto el tamaño para pesar lo mismo.
+   OFF: icono oscuro (text-inverse) sobre el acento y sin glow, como el FAB de
+   brillo. ON: la bombilla se pinta en BLANCO y el botón gana el glow → se lee como
+   "luz encendida" sin cambiar el color del botón. */
+.lamp-fab .fab-btn {
+  font-size: 1.42rem;
+  box-shadow: var(--shadow-lg);
+}
+
+.lamp-fab.on .fab-btn {
+  color: #fff;
+  box-shadow: var(--shadow-lg), 0 0 24px color-mix(in srgb, var(--accent) 45%, transparent);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.9);
 }
 
 .fab-btn {
@@ -128,6 +188,16 @@
     bottom: var(--space-xl);
     right: var(--space-xl);
   }
+  /* Mismos márgenes que el FAB de brillo, en espejo (altura alineada), pero
+     dentro del área de contenido: se coloca a la derecha del sidebar en vez de
+     encima del menú. */
+  .lamp-fab {
+    bottom: var(--space-xl);
+    left: calc(var(--sidebar-collapsed-w) + var(--space-md));
+  }
+  .lamp-fab .fab-btn {
+    font-size: 1.64rem;
+  }
   .fab-btn {
     width: 60px;
     height: 60px;
@@ -193,6 +263,11 @@
 @media (min-width: 1024px) {
   .sidebar {
     width: var(--sidebar-w);
+  }
+
+  /* Con el sidebar ya desplegado, el FAB de la lámpara se corre a su derecha */
+  .lamp-fab {
+    left: calc(var(--sidebar-w) + var(--space-md));
   }
 
   .sidebar .nav-label {

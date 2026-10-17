@@ -8,32 +8,27 @@
 // LAMP CONTROLS
 // ============================================================================
 
-function togglePowerCard(el, isOn) {
-  el.classList.toggle('on', isOn);
+// Estado visual del FAB de la lámpara (relé). Lo sincroniza websocket.js desde
+// 'lampstatus'; el clic lo cambia de forma optimista.
+function setLampFabState(on) {
+  const fab = document.getElementById('lampFab');
+  if (fab) fab.classList.toggle('on', !!on);
+  const btn = document.getElementById('lampFabBtn');
+  if (btn) btn.setAttribute('aria-pressed', on ? 'true' : 'false');
 }
 
 function initLampControls() {
-  // Lamp toggle
-  const lampToggle = document.getElementById('lampToggle');
-  if (lampToggle) {
-    lampToggle.addEventListener('click', () => {
+  // ── Lamp FAB: enciende/apaga SÓLO el relé de la lámpara ───────────────────
+  // La tira LED ya no tiene botón propio: cada efecto la enciende y la apaga con
+  // un toque sobre su tarjeta (ver activateEffect en effects.js).
+  const lampFabBtn = document.getElementById('lampFabBtn');
+  if (lampFabBtn) {
+    lampFabBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const fab = document.getElementById('lampFab');
+      const next = !(fab && fab.classList.contains('on'));
       sendCmd({ action: 'lamp' });
-      togglePowerCard(lampToggle, !lampToggle.classList.contains('on'));
-    });
-  }
-
-  // Neopixel toggle
-  const neoToggle = document.getElementById('neoToggle');
-  if (neoToggle) {
-    neoToggle.addEventListener('click', () => {
-      sendCmd({ action: 'toggle' });
-      SML.powerOn = !SML.powerOn;
-      togglePowerCard(neoToggle, SML.powerOn);
-      updatePeekEffectInfo();
-      if (!SML.powerOn) {
-        if (SML.randomFXMode) { stopRandomFX(); sendCmd({ action: 'randomFX', state: false }); }
-        if (SML.randomVUMode) { stopRandomVU(); sendCmd({ action: 'randomVU', state: false }); }
-      }
+      setLampFabState(next);   // optimista; el próximo broadcast lo confirma
     });
   }
 
@@ -170,6 +165,10 @@ function initLampControls() {
   }
 
   // Init fill from current brightness value
+  // Expuesto para que el panel de efectos cierre el slider al abrirse: el FAB se
+  // aparta a la derecha mientras hay panel abierto (regla body.effect-modal-open).
+  SML._hideFabSlider = hideFabSlider;
+
   SML._initFabBrightness = function (v) {
     updateFabSliderFill(v);
   };

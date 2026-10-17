@@ -138,6 +138,10 @@ function updateWSClientList(clients, actionLog) {
         const entry = document.createElement('div');
         entry.className = 'ws-client-action';
         entry.innerHTML = _formatActionEntry(e);
+        // Texto completo como tooltip (sin la hora): si la entrada se corta, al
+        // pasar el ratón se lee entera sin ocupar dos filas.
+        const textEl = entry.querySelector('.ws-action-text');
+        entry.title = (textEl ? textEl.textContent : entry.textContent).replace(/\s+/g, ' ').trim();
         logContainer.appendChild(entry);
       });
       wrapper.appendChild(logContainer);
@@ -164,40 +168,46 @@ function _actionLogKey(e) {
  */
 function _formatActionEntry(e) {
   const timeStr = _formatWsTime(e.t);
+  // Cada entrada: hora | icono | texto. El texto va en un span propio con
+  // ellipsis para que una accion larga (params, efecto) no rompa en dos filas.
+  const row = (icon, text, color) =>
+    `<span class="ws-action-time">${timeStr}</span>` +
+    `<span class="ws-action-icon ${icon}"${color ? ` style="color:${color}"` : ''}></span>` +
+    `<span class="ws-action-text">${text}</span>`;
+
   switch (e.ty) {
     case 0: // effect change
-      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-star" style="color:var(--accent)"></span> Effect → <strong>${effectIdToName[e.v1] || 'ID ' + e.v1}</strong>`;
+      return row('fas fa-star', `Effect → <strong>${effectIdToName[e.v1] || 'ID ' + e.v1}</strong>`, 'var(--accent)');
     case 1: // color
-      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-palette" style="color:var(--accent)"></span> Color <span class="ws-color-swatch" style="background:rgb(${e.v1},${e.v2},${e.v3})"></span> RGB(${e.v1}, ${e.v2}, ${e.v3})`;
+      return row('fas fa-palette', `<span class="ws-color-swatch" style="background:rgb(${e.v1},${e.v2},${e.v3})"></span> RGB ${e.v1},${e.v2},${e.v3}`, 'var(--accent)');
     case 2: // brightness
-      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-sun" style="color:var(--accent-warning)"></span> Brightness → ${e.v1}`;
+      return row('fas fa-sun', `Bright ${e.v1}`, 'var(--accent-warning)');
     case 3: // params
-      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-sliders-h" style="color:var(--accent-secondary)"></span> Params (speed=${e.v2}, intensity=${e.v3})`;
+      return row('fas fa-sliders-h', `Params · speed ${e.v2} · int ${e.v3}`, 'var(--accent-secondary)');
     case 4: // power toggle
-      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-power-off" style="color:${e.v1 ? 'var(--accent-success)' : 'var(--accent-danger)'}"></span> ${e.v1 ? 'ON' : 'OFF'}`;
+      return row('fas fa-power-off', e.v1 ? 'ON' : 'OFF', e.v1 ? 'var(--accent-success)' : 'var(--accent-danger)');
     case 5: // lamp
-      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-lightbulb" style="color:${e.v1 ? 'var(--accent-warning)' : 'var(--text-secondary)'}"></span> Lamp ${e.v1 ? 'ON' : 'OFF'}`;
+      return row('fas fa-lightbulb', `Lamp ${e.v1 ? 'ON' : 'OFF'}`, e.v1 ? 'var(--accent-warning)' : 'var(--text-secondary)');
     case 6: // bt
-      const btSvg = '<svg viewBox="0 0 24 24" width="14" height="14" style="vertical-align:middle;display:inline-block"><path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" fill="currentColor"/></svg>';
-      return `<span class="ws-action-time">${timeStr}</span> ${btSvg} BT ${e.v1 ? 'ON' : 'OFF'}`;
+      return row('fab fa-bluetooth-b', `BT ${e.v1 ? 'ON' : 'OFF'}`, 'var(--accent)');
     case 7: // random (v1=1 randomFX, v1=2 randomVU, v1=3 randomConfig)
-      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-shuffle" style="color:var(--accent)"></span> Random ${e.v1 === 2 ? 'VU' : 'FX'} ON`;
+      return row('fas fa-shuffle', `Random ${e.v1 === 2 ? 'VU' : 'FX'} ON`, 'var(--accent)');
     case 8: // batería (visualización de carga)
-    return `<span class="ws-action-time">${timeStr}</span><span class="fas fa-battery-full" style="color:${e.v1 ? '#5cb85c' : 'var(--text-secondary)'}"></span> Battery ${e.v1 ? 'ON' : 'OFF'}`;
+      return row('fas fa-battery-full', `Battery ${e.v1 ? 'ON' : 'OFF'}`, e.v1 ? '#5cb85c' : 'var(--text-secondary)');
     case 9: // temperatura (visualización de sensor)
-    return `<span class="ws-action-time">${timeStr}</span><span class="fas fa-thermometer-half" style="color:${e.v1 ? '#ff7f0e' : 'var(--text-secondary)'}"></span> Temp ${e.v1 ? 'ON' : 'OFF'}`;
+      return row('fas fa-thermometer-half', `Temp ${e.v1 ? 'ON' : 'OFF'}`, e.v1 ? '#ff7f0e' : 'var(--text-secondary)');
     case 10: // volume up
-      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-volume-up" style="color:var(--accent)"></span> Volumen +`;
+      return row('fas fa-volume-up', 'Volume +', 'var(--accent)');
     case 11: // volume down
-      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-volume-down" style="color:var(--accent)"></span> Volumen −`;
+      return row('fas fa-volume-down', 'Volume −', 'var(--accent)');
     case 12: // skip left (previous track)
-      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-step-backward" style="color:var(--accent)"></span> Previous track`;
+      return row('fas fa-step-backward', 'Previous', 'var(--accent)');
     case 13: // skip right (next track)
-      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-step-forward" style="color:var(--accent)"></span> Next track`;
+      return row('fas fa-step-forward', 'Next', 'var(--accent)');
     case 14: // play/pause
-      return `<span class="ws-action-time">${timeStr}</span> <span class="fas fa-play" style="color:var(--accent)"></span> Play / Pause`;
+      return row('fas fa-play', 'Play / Pause', 'var(--accent)');
     default:
-      return `<span class="ws-action-time">${timeStr}</span> Action #${e.ty}`;
+      return row('fas fa-circle-info', `Action #${e.ty}`, 'var(--text-secondary)');
   }
 }
 
@@ -221,14 +231,22 @@ function syncWsTime(espUptime) {
 
 /** Formatea un timestamp del ESP32 como hora local del navegador */
 function _formatWsTime(espUptime) {
-  if (!_wsTimeRef) return _fmtUptime(espUptime);
+  // Hora corta: h:mm AM/PM, sin segundos (en el log no aportan nada y ensucian
+  // la columna). Si la entrada no es de hoy, se antepone la fecha corta.
+  const timeOpts = { hour: 'numeric', minute: '2-digit', hour12: true };
+  if (!_wsTimeRef) {
+    // Sin sincronía: uptime en formato HH:MM (no hay AM/PM que aplicar).
+    const h = String(Math.floor(espUptime / 3600)).padStart(2, '0');
+    const m = String(Math.floor((espUptime % 3600) / 60)).padStart(2, '0');
+    return `${h}:${m}`;
+  }
   const msAgo = (_wsTimeRef.espUptime - espUptime) * 1000;
   const t = new Date(_wsTimeRef.browserMs - msAgo);
   const now = new Date();
-  // Misma fecha → solo hora; distinta fecha → fecha completa
-  return t.toDateString() === now.toDateString()
-    ? t.toLocaleTimeString()
-    : t.toLocaleString();
+  const hm = t.toLocaleTimeString('en-US', timeOpts);
+  if (t.toDateString() === now.toDateString()) return hm;
+  const day = t.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return `${day}, ${hm}`;
 }
 
 /**
