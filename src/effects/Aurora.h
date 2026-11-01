@@ -157,4 +157,7 @@ public:
 };
 
 const char AuroraEffect::_meta[] =
-    "Aurora@Speed,Waves;;;;sx=24";
+    // pa=21 (Aurora Green): las auroras boreales son verdes; las olas toman un hue
+// aleatorio de la paleta, así que arranca en verde→turquesa y el usuario puede
+// cambiarla por la violeta, la turquesa o el arcoíris.
+"Aurora@Speed,Waves;;;;sx=24,pa=21";

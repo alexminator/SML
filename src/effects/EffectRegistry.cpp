@@ -8,59 +8,11 @@
 #include <LittleFS.h>
 #include <ArduinoJson.h>
 
-// Effect headers (all subclass Effect)
-#include "Fire.h"
-#include "MovingDot.h"
-#include "RainbowBeat.h"
-#include "RedWhiteBlue.h"
-#include "Ripple.h"
-#include "Balls.h"
-#include "Juggle.h"
-#include "Sinelon.h"
-#include "Comet.h"
-#include "Breath.h"
-#include "ColorSweep.h"
-
-// ── Nuevos efectos WLED ──
-#include "ColorWipe.h"
-#include "TheaterChase.h"
-#include "RunningLights.h"
-#include "Dissolve.h"
-#include "DualScan.h"
-#include "Fade.h"
-#include "Meteor.h"
-#include "Sparkle.h"
-#include "BPM.h"
-#include "Plasma.h"
-#include "Fireworks.h"
-#include "Lightning.h"
-#include "Pride2015.h"
-#include "Colorwaves.h"
-#include "Pacifica.h"
-#include "TwinkleFOX.h"
-#include "Aurora.h"
-#include "Popcorn.h"
-
-// ── Nuevos efectos prioritarios ─────────────────────────────────────────────
-#include "LarsonScanner.h"
-#include "Heartbeat.h"
-#include "ICU.h"
-#include "Sunrise.h"
-#include "Drip.h"
-#include "Candle.h"
-#include "Chunchun.h"
-#include "HalloweenEyes.h"
-
-#include "Temp.h"
-#include "Battery.h"
-#include "../vu/vu1.h"
-#include "../vu/vu2.h"
-#include "../vu/vu3.h"
-#include "../vu/vu4.h"
-#include "../vu/vu5.h"
-#include "../vu/vu6.h"
-#include "../vu/vu8.h"
-#include "../vu/vu9.h"
+// Efectos y VU por sus agregadores (src/effects/effects.h y src/vu/vu.h):
+// añadir un efecto nuevo es tocar sólo su agregador, no esta tabla.
+#include "effects.h"
+#include "../vu/vu.h"
+#include "PaletteManager.h"
 
 // ── Placeholder de efectos VU retirados (Gravimeter, PS1DGEQ, Palette Blend) ──
 // DECISIÓN (Fase 5.1): se MANTIENEN las entradas en el registry aunque el efecto
@@ -246,7 +198,13 @@ void loadEffectParams() {
         if (!e["check1"].isNull()) fx->setCheck1(e["check1"].as<int>() != 0);
         if (!e["check2"].isNull()) fx->setCheck2(e["check2"].as<int>() != 0);
         if (!e["check3"].isNull()) fx->setCheck3(e["check3"].as<int>() != 0);
-        if (!e["palette"].isNull()) fx->setPaletteIndex(e["palette"].as<uint8_t>());
+        // Una paleta guardada que ya no existe (la 27 "Lamp color" de las
+        // versiones que pintaban los VU de un solo color) se ignora: el efecto se
+        // queda con la suya por defecto.
+        if (!e["palette"].isNull()) {
+            const uint8_t pal = e["palette"].as<uint8_t>();
+            if (pal < PALETTE_COUNT) fx->setPaletteIndex(pal);
+        }
     }
     f.close();
 }

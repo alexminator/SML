@@ -1,7 +1,6 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
-#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // SparkleEffect — WLED mode_sparkle (port completo)
@@ -34,11 +33,17 @@ public:
     void render() override {
         if (numLeds <= 1) return;
 
+        // ── Color: el de la tira, no una paleta ──────────────────────────────
+        // Sparkle usa UN color (fondo tenue y destello son el mismo), así que de
+        // una paleta sólo se veía su primer color: eran decorativas. Ahora usa el
+        // color global y la rueda de la web lo recolorea en vivo.
+        const CRGB base = CRGB(stripLed.R, stripLed.G, stripLed.B);
+
         // ── Background: si no overlay, pintar tenue ──────────────────────────
         if (!params.check2) {
-            for (unsigned i = 0; i < numLeds; i++) {
-                leds[i] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), 0, stripLed.brightness >> 3, LINEARBLEND);
-            }
+            CRGB bg = base;
+            bg.nscale8(stripLed.brightness >> 3);
+            for (unsigned i = 0; i < numLeds; i++) leds[i] = bg;
         }
 
         // ── Timing ───────────────────────────────────────────────────────────
@@ -52,7 +57,8 @@ public:
         }
 
         // ── Sparkle ──────────────────────────────────────────────────────────
-        leds[_sparkleIndex] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), 0, stripLed.brightness, LINEARBLEND);
+        leds[_sparkleIndex] = base;
+        leds[_sparkleIndex].nscale8(stripLed.brightness);
 
         FastLED.show();
     }

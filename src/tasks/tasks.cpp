@@ -215,9 +215,13 @@ void TaskWiFiMonitor(void *pvParameters) {
                 if (!wifiStripSuspended &&
                     (millis() - wifiLostSince > wifiLostStripTimeoutMs)) {
 #ifdef DEBUG_LED
-                    debuglnD("📴 WiFi caído demasiado tiempo — apagando tira");
+                    debuglnD("📴 WiFi caído demasiado tiempo — apagando lámpara");
 #endif
                     wifiStripSuspended = true;
+                    // La lámpara se apaga ENTERA: la tira (vía wifiStripSuspended)
+                    // y el módulo BT, para que el altavoz no siga enlazado al móvil
+                    // reproduciendo música de un aparato que ya no responde.
+                    setBtPower(false);
                 }
             }
 

@@ -11,19 +11,14 @@
 
 #include <FastLED.h>
 
-// 27 paletas fijas + 1 (índice 27) que se construye con el color de la lámpara:
-// la usan los efectos VU, que sólo cambian de color (no de paleta).
-#define PALETTE_COUNT 28
-#define PALETTE_LAMP_COLOR 27
+// 27 paletas fijas (0 = "Rainbow", la de defecto). Todos los efectos, incluidos
+// los VU, eligen entre ellas: ninguna sigue al color de la lámpara.
+#define PALETTE_COUNT 27
 
 class PaletteManager {
 public:
     /// Retorna la paleta CRGBPalette16 para el índice dado (0 = Rainbow default)
     static const CRGBPalette16& getPalette(uint8_t index);
-
-    /// Reconstruye la paleta 27 ("Lamp color") a partir de un color: rampa del
-    /// mismo tono, sin negros, para que los VU mantengan su degradado.
-    static void setBaseColor(const CRGB& color);
 
     /// Retorna el nombre legible de la paleta
     static const char* getName(uint8_t index);

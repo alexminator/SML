@@ -1159,60 +1159,86 @@
           <h2 class="card-title"><span class="fas fa-question-circle"></span> Help & Tips</h2>
           <p class="card-subtitle">Quick reference for SML features</p>
           <div class="help-grid">
+            <div class="help-card wide">
+              <span class="help-icon fas fa-rocket"></span>
+              <h3>Quick start</h3>
+              <p>Open <code>http://sml.local</code> — or the IP address shown in <strong>Config → System Info</strong> — from any phone, tablet or PC connected to the <strong>same network</strong> as the lamp. There is no app to install and nothing to pair: the page is served by the ESP32 itself, so it also works offline from the internet.</p>
+              <ol class="help-steps">
+                <li><strong>Turn the strip on:</strong> go to <strong>Lamp</strong> and tap an effect card. At boot nothing is running — the strip stays off until you tap something.</li>
+                <li><strong>Adjust it:</strong> the <strong>⚙ gear</strong> on the card (or a <strong>long press</strong> on touch screens) opens that effect's settings: speed, intensity, palette and effect-specific options.</li>
+                <li><strong>Leave it running by itself:</strong> switch on <strong>Random FX</strong> or <strong>Random VU</strong> to let the lamp cycle effects on its own.</li>
+              </ol>
+              <p>The tabs are <strong>Lamp</strong> (strip, color, effects), <strong>Music</strong> (Bluetooth speaker and VU meters), <strong>Peek</strong> (live preview), <strong>Weather</strong>, <strong>Battery</strong>, <strong>Config</strong>, <strong>Help</strong> and <strong>About</strong>. On a phone the same tabs sit in the bottom bar, and Help/About also open as a sheet from the Config tab.</p>
+            </div>
             <div class="help-card">
               <span class="help-icon fas fa-paint-brush"></span>
-              <h3>LED Effects</h3>
-              <p><strong>One tap</strong> on a card turns the strip on with that effect; <strong>tap it again</strong> to turn the strip off. There is no default effect: nothing is running until you tap one. Among effects, the last one you tap wins (the previous one turns off). The <strong>gear</strong> on each card — or a <strong>long press</strong> on touch screens — opens its settings, but only for the effect that is currently on: on any other card it just reminds you to turn it on first. Changing settings does not turn the strip on or off. Each effect lists only the palettes that actually suit it (a dark palette used to make effects like Hallow Eyes vanish), so fixed-color effects such as Old Skool show no palette list. <strong>VU meters</strong> have a single setting: the lamp color.</p>
+              <h3>Effects &amp; Solid color</h3>
+              <p><strong>One tap</strong> on a card turns the strip on with that effect; <strong>tap it again</strong> to turn the strip off. There is no default effect. Among effects, the last one you tap wins. The <strong>Solid color</strong> card at the top does the same but with a plain color: pick it with the color wheel and set the strip brightness with the slider.</p>
+            </div>
+            <div class="help-card">
+              <span class="help-icon fas fa-sliders"></span>
+              <h3>Effect settings</h3>
+              <p>The <strong>gear</strong> — or a <strong>long press</strong> — opens the panel of the effect that is <em>currently on</em>; on any other card it only reminds you to turn that effect on first. Changing settings never turns the strip on or off. Each effect lists only the palettes that suit it (a dark palette used to make effects like Halloween Eyes vanish), so fixed-color effects such as Old Skool show no palette list. The <strong>VU meters</strong> pick a palette too, from the ones that really change colour as the meter samples it: the rainbow family plus Party, Candy and C9. Each effect lists its own palettes — the fires offer <em>Fire Blue</em>, <em>Fire Green</em> and <em>Fire Violet</em> for Fire, <em>Fire Blue</em> and <em>Fire Green</em> for Candle, the auroras offer green, violet and turquoise, and Pacifica offers seas in blue, emerald and violet. No palette carries white — a white step washes out the rest of the gradient — and two palettes that look the same are never listed together. Effects that paint with a <em>single</em> colour (Sparkle, Lightning, Scanner, Heartbeat, ICU, Drip, Halloween Eyes) show the <strong>colour wheel</strong> instead of a palette list: they use the LED colour, the same one Solid paints with. <strong>RWB</strong> keeps its fixed red/white/blue, <strong>Old Skool</strong> is fixed green/red and <strong>Noisemeter</strong> is green/yellow/red with its own sliders, so those three show no palette. <strong>Reset to Defaults</strong> is at the bottom of every panel — sliders, palette or wheel alike.</p>
             </div>
             <div class="help-card">
               <span class="help-icon fas fa-random"></span>
-              <h3>Random Mode</h3>
-              <p>Let the lamp cycle through effects automatically. Choose from All, Favorites, Categories, or create a custom playlist.</p>
+              <h3>Random mode</h3>
+              <p>Tap the <strong>Random FX</strong> or <strong>Random VU</strong> card to start or stop the cycling; the gear (or long press) opens its settings: duration per effect and, for Random FX, the selection mode — <strong>All</strong>, <strong>Favorites</strong>, <strong>Categories</strong> or a custom <strong>Playlist</strong> you order yourself. Changes made from the panel take effect immediately.</p>
             </div>
             <div class="help-card">
               <span class="help-icon fas fa-lightbulb"></span>
-              <h3>Lamp &amp; Brightness (side buttons)</h3>
+              <h3>Lamp &amp; brightness (side buttons)</h3>
               <p>The <strong>left floating button</strong> switches the lamp relay on and off (white bulb = on); it does not touch the LED strip. The <strong>right floating button</strong> opens the strip brightness slider, which also follows the theme accent color.</p>
             </div>
             <div class="help-card">
               <span class="help-icon fas fa-music"></span>
-              <h3>Bluetooth Audio</h3>
-              <p>Pair your device to "SML Speaker" via Bluetooth. Use play/pause and volume controls in the Music tab. The VU meters in Effects tab react to audio in real time.</p>
+              <h3>Bluetooth audio</h3>
+              <p>Pair your device to <strong>"SML Speaker"</strong> and use play/pause, volume and skip from the <strong>Music</strong> tab — those buttons emulate the speaker's physical keys. The <strong>VU meters</strong> react to whatever the speaker is playing in real time.</p>
             </div>
             <div class="help-card">
               <span class="help-icon fas fa-eye"></span>
-              <h3>Live Preview (Peek)</h3>
-              <p>Watch a real-time preview of the LED strip in the Peek tab. The canvas streams live colors from the ESP32 at ~25 FPS, interpolated to 33 virtual LEDs. Switch between strip and circle layout. The brightness slider affects the preview in both modes. <strong>True colors</strong> shows the exact strip output (brightness + color correction + temperature); turned off you see the effect's own colors, without correction, still dimmed by the slider.</p>
+              <h3>Live preview (Peek)</h3>
+              <p>Press <strong>Start</strong> to stream the strip to the canvas at ~25 FPS, interpolated to 33 virtual LEDs. Switch between <strong>Strip</strong> and <strong>Circle</strong> layouts. <strong>True colors</strong> shows the exact strip output (brightness + color correction + temperature); turned off you see the effect's own colors, still dimmed by the slider. The gear button opens the settings of the running effect. Only one device can stream the preview at a time — a second one is told the preview is busy.</p>
             </div>
             <div class="help-card">
               <span class="help-icon fas fa-battery-three-quarters"></span>
-              <h3>Battery Mode</h3>
-              <p>If mains power goes out, the lamp switches to battery automatically. You can still play music via Bluetooth, but LED effects are disabled to save power. The ESP32 cycles WiFi to conserve energy until a client reconnects.</p>
-            </div>
-            <div class="help-card">
-              <span class="help-icon fas fa-cloud-upload-alt"></span>
-              <h3>OTA Updates</h3>
-              <p>Upload new firmware over WiFi at <code>http://&lt;esp32-ip&gt;/update</code>. No USB cable needed. The ESP32 will reboot with the new firmware.</p>
+              <h3>Battery tab</h3>
+              <p>Shows level, voltage, charging status and the power source. <strong>Tap the battery</strong> to toggle the battery indicator effect on the strip, and the <strong>chart button</strong> to open the voltage history — it is logged to flash and survives reboots and power cuts.</p>
             </div>
             <div class="help-card">
               <span class="help-icon fas fa-thermometer-half"></span>
-              <h3>Environmental</h3>
-              <p>The built-in DHT22 sensor reports temperature and humidity in the Weather tab. Data updates every 3 seconds.</p>
+              <h3>Weather tab</h3>
+              <p>The DHT22 sensor reports temperature and humidity, pushed live to every connected device. <strong>Tap the thermometer</strong> to toggle the temperature indicator effect on the strip.</p>
             </div>
             <div class="help-card">
               <span class="help-icon fas fa-cog"></span>
-              <h3>Configuration</h3>
-              <p>In the Config tab you can change the theme, update WiFi SSID and password, reboot the ESP32, or perform a factory reset. <strong>Factory reset</strong> erases all settings — use with caution.</p>
+              <h3>Config tab</h3>
+              <p><strong>Theme</strong> (SML Classic, WLED Dark, Midnight AMOLED), <strong>WiFi</strong> SSID/password — saving reconnects and reboots the ESP32 —, <strong>WiFi loss protection</strong> (how long the link may be down before the strip turns off), <strong>System info</strong>, <strong>firmware update</strong>, <strong>reboot</strong> and <strong>factory reset</strong>. Factory reset erases WiFi credentials and every saved setting: use with caution.</p>
             </div>
             <div class="help-card">
               <span class="help-icon fas fa-list"></span>
-              <h3>Client Logs</h3>
-              <p>The Config tab shows connected WebSocket clients and a log of their actions. Useful for debugging and knowing who or what is controlling the lamp in real time.</p>
+              <h3>Clients &amp; activity log</h3>
+              <p>Config lists the devices connected right now and a log of their recent actions — useful to see who is controlling the lamp in real time.</p>
             </div>
             <div class="help-card">
               <span class="help-icon fas fa-users"></span>
-              <h3>Master &amp; Slave Clients</h3>
-              <p>The first connected WebSocket client is the <strong>master</strong>; up to 7 more clients can join as <strong>slaves</strong>. Everyone can control the shared lamp and see changes in sync. The master can configure effect parameters and Random mode settings, reboot the ESP32, or factory-reset it. Slaves can use the regular controls, select effects, and start or stop Random mode with its current settings, but cannot edit effect parameters or Random settings. If the master disconnects, the first remaining client automatically becomes the new master.</p>
+              <h3>Master &amp; slave clients</h3>
+              <p>The first connected client is the <strong>master</strong>; up to 7 more join as <strong>slaves</strong>. Everyone can control the shared lamp and sees changes in sync. The master can configure effect parameters and Random settings, reboot or factory-reset. Slaves can select effects and start/stop Random mode with the current settings, but cannot edit parameters or Random config. If the master disconnects, the first remaining client becomes master automatically.</p>
+            </div>
+            <div class="help-card">
+              <span class="help-icon fas fa-floppy-disk"></span>
+              <h3>What is saved</h3>
+              <p>Color, brightness, effect and its parameters, Random configuration and the WiFi-loss timeout live in the ESP32 flash and come back after a power cut. Per-browser preferences — favorites, playlist, Random duration and theme — live in this browser's storage, so they do not travel to another device, and clearing the site data resets them.</p>
+            </div>
+            <div class="help-card">
+              <span class="help-icon fas fa-cloud-upload-alt"></span>
+              <h3>OTA updates</h3>
+              <p>Upload new firmware over WiFi at <code>http://&lt;esp32-ip&gt;/update</code> (or <strong>Config → Firmware Update</strong>). No USB cable needed; the ESP32 reboots by itself when the update finishes.</p>
+            </div>
+            <div class="help-card">
+              <span class="help-icon fas fa-screwdriver-wrench"></span>
+              <h3>If something does not respond</h3>
+              <p>A card that ignores your tap is usually one of four things: the strip is off (tap once to turn it on), you are a <strong>slave</strong> and opened a settings panel that only the master may edit, the ESP32 lost WiFi longer than the configured timeout and suspended the strip (it resumes when the link returns), or another device replaced your state a second later — all clients share one lamp. <code>sml.local</code> is advertised over mDNS: if it does not resolve, use the IP from Config.</p>
             </div>
           </div>
         </div>

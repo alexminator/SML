@@ -29,9 +29,6 @@
 #define READS           30
 #define MAXV            4.00
 #define MINV            3.20
-#define BATT_THRESHOLD  30
-#define MAX_READS       10
-#define FULL_READS      10
 
 // ============================================================================
 // VU METER (AUDIO)
@@ -43,13 +40,6 @@
 #define PEAK_FALL       20
 #define N_PIXELS_HALF   (N_PIXELS / 2)
 #define BIAS            1850
-
-// ============================================================================
-// EFECTO BALLS — constantes físicas
-// ============================================================================
-#define GRAVITY         (-1)
-#define h0              1
-#define NUM_BALLS       3
 
 // ============================================================================
 // STACK MONITORING

@@ -196,20 +196,6 @@ inline void copyToDebugStr(const String& src) {
         debugD(_buf); \
     } while(0)
 
-#define debuglnD_FLOAT1(val) \
-    do { \
-        char _buf[32]; \
-        int _int = (int)(val); \
-        int _frac = (int)(((val) - _int) * 10); \
-        if (_frac < 0) _frac = -_frac; \
-        itoa(_int, _buf, 10); \
-        size_t _flen = strlen(_buf); \
-        _buf[_flen] = '.'; \
-        _buf[_flen + 1] = '0' + _frac; \
-        _buf[_flen + 2] = '\0'; \
-        debuglnD(_buf); \
-    } while(0)
-
 // Zero-padded 3-digit number (e.g. "007")
 #define debugD_NUM03(val) \
     do { \

@@ -108,9 +108,11 @@ static CRGB pacifica_one_layer(uint16_t i, uint8_t cistart, uint16_t wavescale,
     unsigned sindex16 = sin16(ci) + 32768;
     unsigned sindex8 = scale16(sindex16, 240);
 
-    // Mapear a palette: usar sindex8 como hue index en la paleta
-    uint8_t hue = 110 + (sindex8 >> 2);  // ~110-170
-    return ColorFromPalette(pal, hue, bri, LINEARBLEND);
+    // Mapear a palette: sindex8 es el índice de color, como en WLED. Antes se
+    // comprimía a 110-170 (sólo el 23% de la paleta) y por eso todas las paletas
+    // se veían iguales; con el índice completo cada capa toma su tramo y la ola
+    // gana profundidad de color.
+    return ColorFromPalette(pal, sindex8, bri, LINEARBLEND);
 }
 
 // pa=5 (Ocean): es una ola marina; arranca en azules, no en Rainbow.

@@ -1,7 +1,6 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
-#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Drip — Goteo hipnótico
@@ -61,6 +60,9 @@ public:
             }
         }
 
+        // Un solo color (el de la tira): de la paleta sólo se usaba el índice 160.
+        const CRGB color = CRGB(stripLed.R, stripLed.G, stripLed.B);
+
         // Draw trail (gradient)
         for (int16_t i = numLeds - 1; i >= 0; i--) {
             if (i <= _dropPos && _dropPos > 0 && _splash == 0) {
@@ -71,7 +73,8 @@ public:
                 }
             }
             if (_trail[i] > 0) {
-                leds[i] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), 160, _trail[i], LINEARBLEND);
+                leds[i] = color;
+                leds[i].nscale8(_trail[i]);
             } else {
                 leds[i] = CRGB::Black;
             }
@@ -80,9 +83,12 @@ public:
         // Draw splash
         if (_splash > 0) {
             uint8_t splashIntensity = (_splash < 5) ? map(_splash, 1, 5, 255, 100) : map(_splash, 5, 10, 100, 0);
-            CRGBPalette16 pal = PaletteManager::getPalette(_paletteIndex);
-            leds[0] = ColorFromPalette(pal, 160, splashIntensity, LINEARBLEND);
-            if (numLeds > 1) leds[1] = ColorFromPalette(pal, 160, splashIntensity / 2, LINEARBLEND);
+            leds[0] = color;
+            leds[0].nscale8(splashIntensity);
+            if (numLeds > 1) {
+                leds[1] = color;
+                leds[1].nscale8(splashIntensity / 2);
+            }
         }
 
         FastLED.show();
@@ -90,4 +96,4 @@ public:
 };
 
 const char DripEffect::_meta[] =
-    "Drip@Speed,Size;;;;sx=128,ix=128,pa=22";
+    "Drip@Speed,Size;;;;sx=128,ix=128";

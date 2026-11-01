@@ -3,15 +3,8 @@
 #include <FastLED.h>
 
 // ============================================================================
-// UTILITY FUNCTIONS (extraídas de common.h)
+// UTILITY FUNCTIONS — incluido por Temp.h; no añadir aquí sin un usuario real
 // ============================================================================
-
-/// Add glitter to LEDs (from Mark Kriegsman)
-inline void addGlitter(fract8 chanceOfGlitter) {
-    if (random8() < chanceOfGlitter) {
-        leds[random16(N_PIXELS)] += CRGB::White;
-    }
-}
 
 /// Input a value 0 to 255 to get a color value.
 /// The colours are a transition r - g - b - back to r.

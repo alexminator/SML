@@ -12,6 +12,7 @@
 #include "AppState.h"
 #include "../effects/EffectRegistry.h"
 #include "config/debug_config.h"
+#include "config/pins.h"
 
 // ============================================================================
 // RTOS SYNCHRONIZATION
@@ -56,21 +57,17 @@ Battery18650Stats batteryStats(ADC_PIN, CONV_FACTOR, READS, MAXV, MINV);
 float temp = 0.0f;
 float hum = 0.0f;
 bool bt_powerState = false;
+
+// El relé del módulo BT es activo en LOW (main.cpp lo deja en HIGH al arrancar).
+void setBtPower(bool on) {
+    bt_powerState = on;
+    digitalWrite(SWITCH_PIN, on ? LOW : HIGH);
+}
 bool lampState = false;
-int readCount = 0;
 int lvlCharge = 0;
 uint32_t stateGeneration = 0;
 char savedSSID[33] = {0};
 char savedPass[65] = {0};
-uint8_t myhue = 0;
-CRGBPalette16 currentPalette;
-CRGBPalette16 targetPalette;
-
-// ============================================================================
-// VU METER VARIABLES (is_centered shared across vu1/vu2/vu3)
-// ============================================================================
-
-bool is_centered = false;
 
 // ============================================================================
 // POWER MANAGEMENT STATE
@@ -354,16 +351,6 @@ void Battery::loadBatteryLog() {
     debugD_NUM(loaded, "%d");
     debuglnD(" entries");
 #endif
-}
-
-void Battery::getBatteryLog(BattLogEntry* outBuf, int* outCount) {
-    int idx = (battLogHead + BATT_LOG_SIZE - battLogCount) % BATT_LOG_SIZE;
-    int count = battLogCount;
-    for (int i = 0; i < count; i++) {
-        outBuf[i] = battLog[idx];
-        idx = (idx + 1) % BATT_LOG_SIZE;
-    }
-    *outCount = count;
 }
 
 // ============================================================================

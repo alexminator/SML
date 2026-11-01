@@ -6,7 +6,7 @@
 //
 // Uso:
 //   runEffectById(effectId);       // ejecuta el efecto via instance->run()
-//   getEffectJsonName(effectId);   // nombre para el JSON del WebSocket
+//   getEffect(effectId);           // instancia (leer/escribir sus params)
 //
 // Para agregar un efecto nuevo: crear subclase de Effect, añadir línea en
 // effectRegistry[] (y el botón en el frontend).
@@ -43,8 +43,6 @@ extern const uint8_t EFFECT_COUNT;
 // EFFECT ID CONSTANTS — reemplaza números mágicos en todo el código
 // ============================================================================
 
-// Efecto 0 = Solid (color sólido, no usa el registry)
-constexpr uint8_t EFFECT_SOLID     = 0;
 // Indicadores del sistema (mapean a índices fijos en effectRegistry[])
 constexpr uint8_t EFFECT_TEMP      = 18;   // tempNEOStatus
 constexpr uint8_t EFFECT_BATTERY   = 19;   // battNEOStatus
@@ -58,12 +56,6 @@ inline void runEffectById(uint8_t id) {
     if (id < 1 || id > EFFECT_COUNT) return;
     const EffectEntry& entry = effectRegistry[id - 1];
     if (entry.instance) entry.instance->run();
-}
-
-/// Retorna el nombre JSON para un effectId
-inline const char* getEffectJsonName(uint8_t id) {
-    if (id < 1 || id > EFFECT_COUNT) return "unknown";
-    return effectRegistry[id - 1].jsonName;
 }
 
 /// Retorna el puntero a la instancia Effect* para un effectId (1-based)

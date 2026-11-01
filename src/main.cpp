@@ -12,7 +12,6 @@
 #include <ElegantOTA.h>
 #include "state/AppState.h"
 #include "effects/EffectRegistry.h"
-#include "effects/PaletteManager.h"
 #include "net/WebSocket.h"
 #include "net/WebServer.h"
 #include "tasks/tasks.h"
@@ -108,9 +107,6 @@ void setup()
     initLittleFS();
     loadGlobalState();
     loadEffectParams();
-    // La paleta 27 ("Lamp color") sigue al color guardado: es la que usan los VU,
-    // cuyo único ajuste es el color.
-    PaletteManager::setBaseColor(CRGB(stripLed.R, stripLed.G, stripLed.B));
     initWiFi();
     initWebSocket();
     initWebServer();

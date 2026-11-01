@@ -98,75 +98,93 @@ function parseEffectMeta(metaStr) {
 // ============================================================================
 // QUÉ SE PUEDE AJUSTAR EN CADA EFECTO
 // ============================================================================
-// No todas las paletas lucen en todos los efectos: cada uno muestrea la paleta de
-// una forma distinta. Estas listas son curadas a mano leyendo el render() de cada
-// efecto y midiendo la luminancia / los colores de las 27 paletas del firmware:
-//   · índice fijo (Sparkle, Scanner, Heartbeat, Hallow Eyes = 0; ICU = 120;
-//     Drip = 160): si en ese punto la paleta es casi negro, el efecto desaparece.
-//     Sólo quedan las que tienen un color vivo ahí.
-//   · rampa de calor (Fire, Sunrise, Candle): sólo paletas cálidas; una azul las
-//     convierte en hielo.
-//   · recorrido por posición/hue: se quitan las que tienen >18% de negro y los
-//     duplicados visuales (Ice≈Aurora, C9≈Sunset…), que lucían igual.
-//   · RWB toma 3 colores fijos (0/85/170): sólo paletas con 3 tonos distintos.
-// Menos es más: nunca más de 6 para el mismo efecto (2-4 en los de índice fijo).
-// La paleta 27 ("Lamp color") no se ofrece aquí: es el color de la lámpara y la
-// usan los VU (ver VU_COLOR_EFFECTS).
+// PALETAS POR EFECTO
+// ============================================================================
+// Cada efecto muestrea la paleta de una forma distinta, y de eso depende qué
+// paletas tiene sentido ofrecer. Hay tres modos:
+//
+//  1. RECORRIDO — el índice cambia por posición, por tiempo o por nivel (Fire
+//     calienta 0→240, Rainbow Beat reparte 0→255 a lo largo, Comet avanza el
+//     hue, Pacifica lo mueve con las olas). Aquí se ven los 6 colores de la
+//     paleta y la lista importa: sólo paletas con varios tonos.
+//  2. PUNTO FIJO — el render usa SIEMPRE el mismo índice (Sparkle el 0,
+//     Lightning el 32, Heartbeat el 0, ICU el 120, Drip el 160, Scanner el 0,
+//     Halloween Eyes el 0). De la paleta se ve UN color: esos efectos están en
+//     SINGLE_COLOR_EFFECTS y usan la rueda.
+//  3. SIN PALETA — colores fijos por diseño (RWB = rojo/blanco/azul, Old Skool
+//     verde/rojo, Noisemeter verde/amarillo/rojo): van en NO_PALETTE_EFFECTS.
+//
+// Reglas de la curación (todas nacen de cómo se ve la tira, no del nombre):
+//   · NINGUNA paleta lleva blanco: un paso en blanco satura el resto del
+//     degradado y el efecto deja de lucir. Todas están generadas con saturación
+//     plena, así que los rojos son rojos y no rosados pálidos.
+//   · SIN NEGRO, salvo en las rampas de fuego/vela (8, 18-20, 23): un negro en
+//     una paleta que se recorre da un parpadeo/salto al llegar a ese punto.
+//   · Nada de dos paletas que se ven igual en la misma lista: cada rampa de
+//     fuego, de aurora y de mar va sólo con los efectos que piden ese tipo.
+//   · Las parejas complementarias (13 ámbar/azul, 14 rosa/lima, 15 violeta/
+//     amarillo) son bloques puros, sin transición al gris, para dar contraste.
+//   · Máximo 5 por efecto y la de defecto (el pa= del meta) siempre primero.
 // ============================================================================
 const EFFECT_PALETTES = {
-  1:  [18, 2, 8, 3],              // Fire — rampas de calor
-  2:  [0, 1, 11, 13, 12],         // Moving Dot
-  3:  [0, 7, 12, 11, 1],          // Rainbow Beat
-  4:  [21, 12, 11],               // RWB — 3 colores en 0/85/170
-  5:  [0, 1, 11, 13, 16, 15],     // Ripple
-  6:  [0, 1, 11, 12, 13],         // Bouncing Balls
-  7:  [0, 1, 11, 13, 17],         // Juggle
-  8:  [0, 1, 11, 13, 17, 12],     // Sinelon
-  9:  [0, 1, 11, 13, 16, 17],     // Comet
-  10: [0, 1, 11, 13, 17],         // Breath
-  11: [0, 1, 11, 13, 15],         // Color Sweep
-  20: [0, 1, 11, 12, 13],         // Color Wipe
-  21: [0, 1, 11, 13, 17, 12],     // Theater Chase
-  22: [0, 1, 11, 13, 15],         // Running Lights
-  23: [0, 1, 11, 12, 13, 14],     // Dissolve
-  24: [0, 1, 11, 13, 17],         // Dual Scan
-  25: [0, 1, 11, 13, 15, 14],     // Fade
-  26: [0, 1, 11, 13, 17],         // Meteor — sin Smooth usa el índice 64 fijo
-  27: [0, 26, 11, 4],             // Sparkle — índice fijo 0 (rojo/blanco/rosa/verde)
-  28: [0, 1, 11, 13, 17],         // BPM
-  29: [0, 10, 11, 16, 12],        // Plasma
-  30: [0, 1, 11, 12, 13],         // Fireworks
-  31: [16, 25, 10],               // Lightning — base fija en 32, todo frío
-  32: [0, 7, 11, 12, 1],          // Pride 2015
-  33: [0, 5, 13, 11, 12],         // Colorwaves
-  34: [5, 16, 13],                // Pacifica — olas
-  35: [0, 14, 15, 12, 11, 7],     // TwinkleFOX
-  36: [10, 4, 5, 16, 0],          // Aurora — verdes/azules
-  37: [0, 1, 11, 12, 13],         // Popcorn
-  38: [26, 0, 4, 11],             // Scanner — índice fijo 0 (KITT rojo, verde, rosa)
-  39: [19, 25, 11],               // Heartbeat — índice fijo 0 (casi todas son rojo igual)
-  40: [20, 4, 10],                // ICU — índice fijo 120 (verde brillante/oscuro/menta)
-  41: [24, 2, 18, 3],             // Sunrise — rampa de calor
-  42: [22, 5, 20],                // Drip — índice fijo 160 (agua)
-  43: [23, 2, 8, 3],              // Candle — rampa de calor
-  44: [14, 15, 11, 0, 12],        // Chunchun
-  45: [25, 4, 15, 0, 11]          // Hallow Eyes — índice fijo 0 (ojos: blanco/verde/ambar/rojo/rosa)
+  // ── Recorrido completo ────────────────────────────────────────────────────
+  1:  [8, 18, 19, 20],            // Fire — fuego rojo, azul, verde y violeta
+  2:  [0, 7, 13, 14, 15],         // Moving Dot — arcoíris y parejas complementarias
+  3:  [0, 7, 12, 11, 14],         // Rainbow Beat — degradado a lo largo de la tira
+  5:  [0, 1, 13, 11, 15],         // Ripple — un hue al azar por onda
+  6:  [0, 7, 12, 13],             // Bouncing Balls — 4-5 colores, uno por bola
+  7:  [0, 1, 14, 7, 11],          // Juggle — un hue por punto (0, 32, 64…)
+  8:  [0, 7, 13, 11, 15],         // Sinelon — el hue avanza con el rebote
+  9:  [0, 7, 11, 12, 14],         // Comet — el hue avanza con la cola
+  10: [0, 7, 4, 22, 11],          // Breath — respiración (arcoíris, verde, violeta)
+  11: [0, 7, 12, 13, 15],         // Color Sweep — hue + posición
+  20: [0, 7, 12, 11, 14],         // Color Wipe — hue + posición
+  21: [0, 7, 12, 13, 15],         // Theater Chase — hue + tiempo
+  22: [0, 7, 12, 11, 14],         // Running Lights — hue + tiempo
+  23: [0, 1, 13, 11, 15],         // Dissolve — un hue por píxel
+  24: [0, 1, 12, 13],             // Dual Scan — dos hues complementarios
+  25: [0, 7, 11, 12, 4],          // Fade — hue + posición
+  26: [0, 7, 11, 12, 13],         // Meteor — cola por posición (o índice 64 fijo)
+  28: [0, 7, 11, 14, 1],          // BPM — hue + posición
+  29: [0, 11, 13, 12, 15],        // Plasma — campo de color continuo
+  30: [0, 1, 7, 11, 13],          // Fireworks — un hue al azar por chispa
+  32: [0, 7, 12, 14, 1],          // Pride 2015 — recorrido
+  33: [0, 1, 7, 13, 15],          // Colorwaves — recorrido
+  35: [0, 12, 11, 1, 14],         // TwinkleFOX — arcoíris, C9, caramelo, fiesta, rosa/lima
+  37: [0, 1, 11, 13, 7],          // Popcorn — un hue al azar por palomita
+  44: [0, 1, 14, 12, 4],          // Chunchun — un hue por página/pájaro
+  48: [0, 7, 11, 1, 13],          // DJ Light — el hue avanza con la intensidad
+
+  // ── Medidores VU (recorren la paleta por nivel) ───────────────────────────
+  12: [0, 7, 1, 11, 14],          // Rainbow VU — degradado por posición
+  14: [0, 7, 11, 12, 13],         // Rainbow Hue — el hue recorre la paleta
+  15: [0, 1, 11, 13, 15],         // Ripple VU
+  16: [0, 7, 12, 14, 13],         // 3 Bars — un índice que avanza
+  17: [0, 5, 25, 11, 22],         // Ocean VU — arcoíris, mar, esmeralda, caramelo, violeta
+
+  // ── Con identidad de color (rampas del mismo tipo, otro tono) ─────────────
+  34: [5, 25, 26, 11],            // Pacifica — mar azul, esmeralda, violeta y caramelo
+  36: [21, 22, 10, 0],            // Aurora — boreal verde, violeta, turquesa, arcoíris
+  41: [24, 9, 17],                // Sunrise — amanecer, atardecer y cielo rojo-violeta
+  43: [23, 18, 19],               // Candle — vela ámbar, llama azul y llama verde
 };
 
-// Efectos VU cuyo ÚNICO ajuste es el color: no eligen paleta, usan la 27
-// ("Lamp color"), que sigue a la rueda de color como hace Solid.
-const VU_COLOR_EFFECTS = new Set([12, 14, 15, 16, 17, 48]);
+// Efectos de UN SOLO color: su render usa siempre el mismo índice de paleta, así
+// que una lista de paletas no los cambiaba (era lo mismo con otro nombre). Su
+// panel es la rueda de color —la misma instancia de iro que Solid— y pintan con
+// el color de la tira, que la rueda actualiza en vivo.
+//   27 Sparkle · 31 Lightning · 38 Larson Scanner · 39 Heartbeat · 40 ICU
+//   42 Drip · 45 Halloween Eyes
+const SINGLE_COLOR_EFFECTS = new Set([27, 31, 38, 39, 40, 42, 45]);
 
-// Efectos con colores fijos y sin parámetros: no hay nada que configurar, así
-// que no llevan engranaje (Old Skool: verde/rojo semánticos).
+// Efectos sin NADA que configurar: no llevan engranaje ni panel.
+//   · 13 Old Skool: verde/rojo semánticos, su render no muestrea paletas.
 const NO_SETTINGS_EFFECTS = new Set([13]);
 
-// Efectos con colores fijos pero con sliders (Noisemeter: verde/amarillo/rojo
-// semánticos). Llevan engranaje, pero no selector de paleta.
-const NO_PALETTE_EFFECTS = new Set([47]);
-
-// Índice de la paleta "Lamp color" del firmware (sigue al color global).
-const PALETTE_LAMP_COLOR = 27;
+// Efectos con colores fijos pero con sliders: llevan engranaje, pero no paleta.
+//   · 4 RWB: rojo, blanco y azul por diseño.
+//   · 47 Noisemeter: verde/amarillo/rojo semánticos (Decay, Sensitivity).
+const NO_PALETTE_EFFECTS = new Set([4, 47]);
 
 // ============================================================================
 // FETCH FX DATA (metadata de efectos vía HTTP)
@@ -232,16 +250,6 @@ function showCardConfig(effId, card) {
   }
   closeEffectConfig();
   showEffectConfig(effId, card);
-}
-
-// ── Apagar: la tira se apaga del todo (ya no vuelve a Solid) ───────────────────
-function deactivateEffect() {
-  closeEffectConfig();
-  SML.powerOn = false;
-  sendCmd({ action: 'power', state: false });
-  highlightActiveCard(-1);
-  updateSolidIcon(SML.r, SML.g, SML.b);
-  updatePeekEffectInfo();
 }
 
 // ── Engranaje de ajustes en cada tarjeta ─────────────────────────────────────
@@ -562,11 +570,6 @@ const RANDOM_CATEGORIES = [
   { id: 'catPatterns',     name: 'Patterns',     effectIds: [4, 21, 28, 32, 5, 7, 8, 38] },
   { id: 'catStates',       name: 'States',       effectIds: [6, 10, 39, 40, 41, 42, 43, 44, 45] },
 ];
-
-function getRandomDuration() {
-  const val = parseInt(localStorage.getItem('sml-random-duration') || '8');
-  return Math.max(3000, val * 1000);
-}
 
 function getRandomVUDurationSeconds() {
   const stored = localStorage.getItem('sml-random-vu-duration');
@@ -1162,15 +1165,6 @@ function addToPlaylist(effId) {
   refreshPlaylistUI();
 }
 
-function removeFromPlaylist(effId) {
-  const pl = getRandomPlaylist();
-  const idx = pl.indexOf(effId);
-  if (idx < 0) return;
-  pl.splice(idx, 1);
-  saveRandomPlaylist(pl);
-  refreshPlaylistUI();
-}
-
 // ============================================================================
 // EFFECT PARAMS RENDERING
 // ============================================================================
@@ -1188,12 +1182,16 @@ function renderEffectParams(effId, container) {
     return;
   }
 
-  // ── VU de color (12, 14, 15, 16, 17, 48) ──────────────────────────────────
-  // Estos medidores no usan paletas: el firmware les da la paleta 27, que se
-  // reconstruye con el color global. Su panel es la rueda, igual que Solid.
-  if (VU_COLOR_EFFECTS.has(effId)) {
-    renderVuColorConfig(effId, container);
-    return;
+  // ── Efectos de un solo color: la rueda en lugar de paletas ────────────────
+  // Pintan con el color de la tira (mismo índice de paleta siempre), así que su
+  // ajuste de color es la rueda. Si además tienen sliders, se muestran juntos.
+  if (SINGLE_COLOR_EFFECTS.has(effId)) {
+    const cfgSingle = effectMetaCache[effId];
+    if (!cfgSingle || !cfgSingle.params || cfgSingle.params.length === 0) {
+      container.innerHTML = renderStripColorSection(effId);
+      attachStripColorHost(container);
+      return;
+    }
   }
 
   // ── Efectos con colores fijos y sin parámetros (13) ────────────────────────
@@ -1216,12 +1214,23 @@ function renderEffectParams(effId, container) {
   const fallbackDefault = (curated.length && curated.indexOf(metaDefault) < 0)
     ? curated[0]
     : metaDefault;
-  const currentPalette = live.palette !== undefined ? live.palette : fallbackDefault;
+  // Una paleta guardada que ya no se ofrece (la 27 "Lamp color", con la que las
+  // versiones anteriores pintaban los VU) no se marca: se muestra la de defecto
+  // del efecto. El firmware la ignora al cargar (ver loadEffectParams).
+  const currentPalette = (live.palette !== undefined &&
+    (!curated.length || curated.indexOf(live.palette) >= 0))
+    ? live.palette
+    : fallbackDefault;
 
-  // Sin parámetros sliders, solo mostrar el selector de paletas
+  // Sin parámetros sliders el panel es sólo color/paleta — y el Reset hace
+  // falta igual: es justo el caso de los VU y de los efectos de paleta única,
+  // que antes se quedaban sin botón.
   if (!config || !config.params || config.params.length === 0) {
-    container.innerHTML = renderPaletteSection(effId, paletteData, currentPalette);
+    container.innerHTML = renderPaletteSection(effId, paletteData, currentPalette)
+      + renderStripColorSection(effId) + renderResetRow(effId);
     attachPaletteHandlers(effId, container);
+    attachStripColorHost(container);
+    attachResetHandler(effId, container);
     return;
   }
 
@@ -1244,10 +1253,8 @@ function renderEffectParams(effId, container) {
                data-key="${p.key}">
         <span class="param-value">${liveVal}</span>
       </div>`;
-  }).join('') + renderPaletteSection(effId, paletteData, currentPalette) + `
-    <div class="param-reset-row">
-      <button class="btn-reset-params" data-effect-id="${effId}">↺ Reset to Defaults</button>
-    </div>`;
+  }).join('') + renderPaletteSection(effId, paletteData, currentPalette)
+    + renderStripColorSection(effId) + renderResetRow(effId);
 
   // Sliders — envía en change (al soltar) para no saturar al ESP32 con
   // cientos de writes a LittleFS durante el arrastre. El guard
@@ -1274,45 +1281,10 @@ function renderEffectParams(effId, container) {
   });
 
   // Reset to defaults button
-  const resetBtn = container.querySelector('.btn-reset-params');
-  if (resetBtn) {
-    resetBtn.addEventListener('click', () => {
-      // Limpiar cache de valores activos para que al reabrir
-      // se vean los defaults reales, no valores stale
-      delete liveEffectParams[effId];
-      const cfg = effectMetaCache[effId];
-      if (cfg && cfg.params) {
-        const msg = { action: 'setParams', effectId: effId };
-        cfg.params.forEach(p => {
-          msg[p.key] = p.default;
-          const input = container.querySelector(`input[data-key="${p.key}"]`);
-          if (input) {
-            if (input.type === 'checkbox') {
-              input.checked = !!p.default;
-            } else {
-              input.value = p.default;
-              const valSpan = input.nextElementSibling;
-              if (valSpan) valSpan.textContent = p.default;
-            }
-          }
-        });
-        // Include default palette in the same message
-        if (cfg.defaultPalette !== undefined) {
-          msg.palette = cfg.defaultPalette;
-        }
-        sendCmd(msg);
+  attachResetHandler(effId, container);
 
-        // Update palette visual selection
-        if (cfg.defaultPalette !== undefined) {
-          container.querySelectorAll('.palette-swatch').forEach(s => {
-            const idx = parseInt(s.dataset.paletteIndex);
-            s.classList.toggle('selected', idx === cfg.defaultPalette);
-            s.querySelector('.palette-check-mark').textContent = idx === cfg.defaultPalette ? '✓' : '';
-          });
-        }
-      }
-    });
-  }
+  // Color (rueda) de los efectos de un solo color
+  attachStripColorHost(container);
 
   // Palette click handlers
   attachPaletteHandlers(effId, container);
@@ -1320,8 +1292,8 @@ function renderEffectParams(effId, container) {
 
 // ── Palette section HTML ──────────────────────────────────────────────────────
 function renderPaletteSection(effId, paletteData, currentPalette) {
-  // Efectos de colores fijos: no hay paleta que elegir (aunque tengan sliders)
-  if (NO_PALETTE_EFFECTS.has(effId)) return '';
+  // Sin paleta: colores fijos por diseño o efectos de un solo color (rueda).
+  if (NO_PALETTE_EFFECTS.has(effId) || SINGLE_COLOR_EFFECTS.has(effId)) return '';
 
   if (!paletteData.names || paletteData.names.length === 0) {
     return '<div class="palette-section"><p class="text-muted" style="font-size:0.75rem;padding:8px 0">Loading palettes...</p></div>';
@@ -1400,27 +1372,43 @@ function attachPaletteHandlers(effId, container) {
 // La clase la pone/quita esta función, que main.js dispara observando la clase
 // 'open' de los dos paneles: así el FAB vuelve siempre a su sitio, incluso si
 // mañana se añade otra vía de apertura o de cierre.
+// Cualquier capa modal abierta: offcanvas (efecto, historial de batería), bottom
+// sheet (ajustes del efecto, Help, About), diálogo de confirmación o su velo.
+// Se pregunta por CLASE en vez de enumerar ids: la lista fija que había antes
+// (effectOffcanvas, paramBottomSheet, helpModal, aboutModal) dejaba fuera el
+// historial de batería, así que los FABs flotaban encima del gráfico. Con esto
+// cualquier modal que se abra mañana queda cubierto sin tocar nada.
+const MODAL_OPEN_SELECTOR =
+  '.offcanvas.open, .param-bottom-sheet.open, .confirm-modal.open, .modal-overlay.open';
+
 function syncEffectPanelState() {
-  // Los paneles de efecto (offcanvas de escritorio + bottom sheet móvil) y también
-  // los modales de Help/About: los FABs tienen que apartarse igual debajo de todos
-  // ellos, o quedan flotando encima de la hoja.
-  const panels = ['effectOffcanvas', 'paramBottomSheet', 'helpModal', 'aboutModal']
-    .map(id => document.getElementById(id));
-  const anyOpen = panels.some(el => el && el.classList.contains('open'));
+  const anyOpen = document.querySelector(MODAL_OPEN_SELECTOR) !== null;
   document.body.classList.toggle('effect-modal-open', anyOpen);
   // El slider del FAB se cierra al abrir: si no, quedaría abierto (oculto) y al
   // volver el FAB aparecería con el slider desplegado.
   if (anyOpen && typeof SML._hideFabSlider === 'function') SML._hideFabSlider();
 }
 
-// Engancha el observador que mantiene el estado del FAB al día. Lo llama main.js
-// al inicializar la UI; los paneles se buscan por id (offcanvas y bottom sheet).
+// Mantiene el estado del FAB al día observando las clases de TODO el documento,
+// en vez de registrar cada modal uno a uno. Las mutaciones se agrupan en un frame
+// para no recalcular con cada cambio de clase de la interfaz (sliders, tarjetas
+// activas…). Lo llama main.js al inicializar la UI.
 function initEffectPanelObserver() {
-  ['effectOffcanvas', 'paramBottomSheet', 'helpModal', 'aboutModal'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) new MutationObserver(syncEffectPanelState).observe(el, { attributes: true, attributeFilter: ['class'] });
+  let pending = false;
+  const observer = new MutationObserver(() => {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => {
+      pending = false;
+      syncEffectPanelState();
+    });
   });
-  // Estado inicial (si algún panel ya vieniera abierto al cargar).
+  observer.observe(document.body, {
+    attributes: true,
+    attributeFilter: ['class'],
+    subtree: true
+  });
+  // Estado inicial (si algún panel ya viniera abierto al cargar).
   syncEffectPanelState();
 }
 
@@ -1468,34 +1456,72 @@ function renderSolidColorConfig(container) {
   container.appendChild(hint);
 }
 
-// ── VU de color: su único ajuste es el color ──────────────────────────────────
-// Los VU no tienen paletas: el firmware los pinta con la paleta 27, que se
-// reconstruye a partir del color global (el mismo que edita la rueda). Así que
-// el panel es la rueda, sin selector de paletas, y el cambio se ve en vivo.
-function renderVuColorConfig(effId, container) {
-  container.innerHTML = '';
+// ── Reset a los valores por defecto (sliders + paleta) ───────────────────────
+// Vive aparte porque el botón se pinta en los dos tipos de panel: el de sliders
+// y el de sólo color/paleta (VU y efectos de paleta única), que antes no lo tenían.
+function renderResetRow(effId) {
+  return `
+    <div class="param-reset-row">
+      <button class="btn-reset-params" data-effect-id="${effId}">↺ Reset to Defaults</button>
+    </div>`;
+}
 
-  const live = liveEffectParams[effId] || {};
-  if (live.palette !== PALETTE_LAMP_COLOR) {
-    sendCmd({ action: 'setParams', effectId: effId, palette: PALETTE_LAMP_COLOR });
-    liveEffectParams[effId] = Object.assign({}, live, { palette: PALETTE_LAMP_COLOR });
-  }
+function attachResetHandler(effId, container) {
+  const resetBtn = container.querySelector('.btn-reset-params');
+  if (!resetBtn) return;
+  resetBtn.addEventListener('click', () => {
+    // Limpiar cache de valores activos para que al reabrir
+    // se vean los defaults reales, no valores stale
+    delete liveEffectParams[effId];
+    const cfg = effectMetaCache[effId];
+    if (!cfg) return;
+    const msg = { action: 'setParams', effectId: effId };
+    (cfg.params || []).forEach(p => {
+      msg[p.key] = p.default;
+      const input = container.querySelector(`input[data-key="${p.key}"]`);
+      if (!input) return;
+      if (input.type === 'checkbox') {
+        input.checked = !!p.default;
+      } else {
+        input.value = p.default;
+        const valSpan = input.nextElementSibling;
+        if (valSpan) valSpan.textContent = p.default;
+      }
+    });
+    // La paleta por defecto va en el mismo mensaje
+    if (cfg.defaultPalette !== undefined) msg.palette = cfg.defaultPalette;
+    sendCmd(msg);
 
-  const title = document.createElement('div');
-  title.className = 'palette-section-title';
-  title.innerHTML = '<span class="fas fa-palette"></span> Color';
-  container.appendChild(title);
+    // Reflejar la paleta marcada
+    if (cfg.defaultPalette !== undefined) {
+      container.querySelectorAll('.palette-swatch').forEach(s => {
+        const idx = parseInt(s.dataset.paletteIndex);
+        const on = idx === cfg.defaultPalette;
+        s.classList.toggle('selected', on);
+        const mark = s.querySelector('.palette-check-mark');
+        if (mark) mark.textContent = on ? '✓' : '';
+      });
+    }
+  });
+}
 
-  if (!mountColorPicker(container)) {
-    container.innerHTML = '<p class="text-muted" style="font-size:0.8rem;padding:8px 0">Color picker unavailable</p>';
-    return;
-  }
+// ── Efectos de un solo color: la rueda, no una paleta ────────────────────────
+// Pintan con el color de la tira (un único color), así que su panel es la rueda
+// de iro —la misma instancia que Solid— y el cambio se ve en vivo. El aviso deja
+// claro que ese color es el global, compartido con Solid.
+function renderStripColorSection(effId) {
+  if (!SINGLE_COLOR_EFFECTS.has(effId)) return '';
+  return `
+    <div class="palette-section">
+      <div class="palette-section-title"><span class="fas fa-palette"></span> Color</div>
+      <div class="strip-color-host"></div>
+      <p class="solid-color-hint">This effect paints with a single color: the LED color, shared with Solid. Pick it here and the effect follows live — it has no palettes.</p>
+    </div>`;
+}
 
-  const hint = document.createElement('p');
-  hint.className = 'solid-color-hint';
-  const cfg = effectMetaCache[effId];
-  hint.textContent = `${cfg ? cfg.name : 'This VU meter'} uses the lamp color: pick it here and the bars follow. It has no palettes.`;
-  container.appendChild(hint);
+function attachStripColorHost(container) {
+  const host = container.querySelector('.strip-color-host');
+  if (host) mountColorPicker(host);
 }
 
 async function fetchPalettes() {

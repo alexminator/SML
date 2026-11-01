@@ -218,16 +218,6 @@ static constexpr uint32_t PEEK_FRAME_INTERVAL_MS = 40; // máximo nominal de 25 
 //           aplica también aquí: el slider tiene que atenuar el preview siempre.
 static bool peekTrueColors = true;
 
-// ── VU de color ───────────────────────────────────────────────────────────────
-// Los VU no eligen paleta: cambian de COLOR. Su render muestrea la paleta 27
-// ("Lamp color"), que PaletteManager reconstruye con el color global de la tira,
-// así que se les fija esa paleta al activarse (12 rainbowVU, 14 rainbowHueVU,
-// 15 rippleVU, 16 threebarsVU, 17 oceanVU, 48 djlightVU). Old Skool (13) y
-// Noisemeter (47) tienen colores fijos y no entran aquí.
-static bool isVuColorEffect(uint8_t id) {
-    return id == 12 || id == 14 || id == 15 || id == 16 || id == 17 || id == 48;
-}
-
 bool buildPeekFrame(uint8_t *buf, size_t bufSize, size_t *len, uint32_t *clientId) {
     // ⚠ Llamar con dataMutex tomado (lo hace TaskLEDControl).
     *len = 0;
@@ -520,10 +510,20 @@ void notifySensorData()
 }
 
 // ============================================================================
-// sendBatteryHistory — Broadcast current battery log to all clients
+// sendBatteryHistory — Send the battery log to all clients or to one client
 // ============================================================================
+// `onlyClient == nullptr` → broadcast; si no, sólo a ese cliente.
+//
+// ⚠ El payload NO cabe en un buffer fijo. Una entrada ocupa ~30 B
+//   ({"t":4294967295,"v":4.20,"l":100}) y el log guarda BATT_LOG_SIZE (200)
+//   → ~6 KB con el log lleno. Antes había DOS `static char outBuf[2048]` (uno
+//   por sobrecarga, 4 KB de .bss permanentes) y serializeJson() truncaba el
+//   JSON a partir de ~65 entradas: el cliente recibía un documento inválido y
+//   el gráfico de batería se quedaba congelado justo cuando había historial.
+//   Ahora se mide y se reserva lo justo en heap (mismo patrón que el action log
+//   de notifyWSClientList) y desaparecen los dos buffers estáticos.
 
-static void sendBatteryHistory() {
+static void sendBatteryHistory(AsyncWebSocketClient* onlyClient = nullptr) {
     if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(200)) != pdTRUE) {
         return;
     }
@@ -531,15 +531,16 @@ static void sendBatteryHistory() {
     // Ensure log is loaded
     batt.loadBatteryLog();
 
-    if (batt.battLogCount == 0) {
+    const int count = min(batt.battLogCount, BATT_LOG_SIZE);
+    if (count <= 0) {
         xSemaphoreGive(dataMutex);
         return;
     }
 
     // Build { "battHistory": [{"t":...,"v":...,"l":...}, ...] }
-    // Use the same buffer+mutex pattern as notifyClients (proven to work)
-    int count = min(batt.battLogCount, BATT_LOG_SIZE);
-    size_t cap = JSON_ARRAY_SIZE(count) + count * JSON_OBJECT_SIZE(3) + 64;
+    const size_t cap = JSON_ARRAY_SIZE(count)
+                     + (size_t)count * JSON_OBJECT_SIZE(3)
+                     + 64;
     DynamicJsonDocument doc(cap);
     JsonArray arr = doc["battHistory"].to<JsonArray>();
     int idx = (batt.battLogHead + BATT_LOG_SIZE - count) % BATT_LOG_SIZE;
@@ -553,62 +554,32 @@ static void sendBatteryHistory() {
 
     xSemaphoreGive(dataMutex);
 
-    // Serialize to static buffer and send via textAll (same as notifyClients)
-    static char outBuf[2048];
-    size_t jsonLen = serializeJson(doc, outBuf, sizeof(outBuf));
-    if (jsonLen >= sizeof(outBuf)) return;
-
+    // Buffer exacto: +1 por el NUL que escribe serializeJson.
+    const size_t jsonLen = measureJson(doc) + 1;
+    char* outBuf = (char*)malloc(jsonLen);
+    if (!outBuf) {
 #ifdef DEBUG_BATTERY
-    debugD("[BATT] sendBatteryHistory — sending ");
-    debugD_NUM(count, "%d");
-    debugD(" entries, jsonLen=");
-    debuglnD_NUM(jsonLen, "%u");
+        debuglnW("[BATT] sendBatteryHistory — sin heap para el payload");
 #endif
-    ws.textAll(outBuf, jsonLen);
-}
-
-// ── Overload: send battery history to a SINGLE client (no ws.textAll) ────
-static void sendBatteryHistory(AsyncWebSocketClient* client) {
-    if (!client) return;
-    if (xSemaphoreTake(dataMutex, pdMS_TO_TICKS(200)) != pdTRUE) {
         return;
     }
-
-    batt.loadBatteryLog();
-
-    if (batt.battLogCount == 0) {
-        xSemaphoreGive(dataMutex);
-        return;
-    }
-
-    int count = min(batt.battLogCount, BATT_LOG_SIZE);
-    size_t cap = JSON_ARRAY_SIZE(count) + count * JSON_OBJECT_SIZE(3) + 64;
-    DynamicJsonDocument doc(cap);
-    JsonArray arr = doc["battHistory"].to<JsonArray>();
-    int idx = (batt.battLogHead + BATT_LOG_SIZE - count) % BATT_LOG_SIZE;
-    for (int i = 0; i < count; i++) {
-        JsonObject e = arr.add<JsonObject>();
-        e["t"] = batt.battLog[idx].uptime;
-        e["v"] = batt.battLog[idx].voltage;
-        e["l"] = batt.battLog[idx].level;
-        idx = (idx + 1) % BATT_LOG_SIZE;
-    }
-
-    xSemaphoreGive(dataMutex);
-
-    static char outBuf[2048];
-    size_t jsonLen = serializeJson(doc, outBuf, sizeof(outBuf));
-    if (jsonLen >= sizeof(outBuf)) return;
+    const size_t written = serializeJson(doc, outBuf, jsonLen);
 
 #ifdef DEBUG_BATTERY
-    debugD("[BATT] sendBatteryHistory → client #");
-    debugD_NUM(client->id(), "%u");
-    debugD(": ");
+    debugD("[BATT] sendBatteryHistory → ");
+    debugD(onlyClient ? "client #" : "all clients");
+    if (onlyClient) debugD_NUM(onlyClient->id(), "%u");
+    debugD(" | ");
     debugD_NUM(count, "%d");
     debugD(" entries, jsonLen=");
-    debuglnD_NUM(jsonLen, "%u");
+    debuglnD_NUM(written, "%u");
 #endif
-    client->text(outBuf, jsonLen);
+
+    if (written > 0) {
+        if (onlyClient) onlyClient->text(outBuf, written);
+        else            ws.textAll(outBuf, written);
+    }
+    free(outBuf);
 }
 
 // ============================================================================
@@ -800,12 +771,22 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
                 debuglnW("   ⚠ No compiled WiFi defaults — keeping saved credentials");
 #endif
             }
-            // Delete effect params file (safe — will be recreated on next change)
-            if (LittleFS.exists("/params.json")) {
-                LittleFS.remove("/params.json");
+            // Borrar los ficheros de estado que el firmware escribe solo:
+            // todos se recrean con valores por defecto en el siguiente arranque.
+            // Antes sólo se borraba /params.json, así que la UI y el README
+            // prometían "restaurar valores de fábrica" pero el color, el brillo,
+            // el efecto, la configuración de Random, el timeout de WiFi
+            // (/state.json) y el historial de batería (/battlog.json) sobrevivían.
+            static const char* const kStateFiles[] = {
+                "/params.json", "/state.json", "/battlog.json"
+            };
+            for (const char* path : kStateFiles) {
+                if (LittleFS.exists(path) && LittleFS.remove(path)) {
 #ifdef DEBUG_WEBSOCKET
-                debuglnD("   ✓ Effect params cleared");
+                    debugD("   \u2713 Borrado ");
+                    debuglnD(path);
 #endif
+                }
             }
             vTaskDelay(pdMS_TO_TICKS(100));
             ESP.restart();
@@ -942,9 +923,6 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
             stripLed.R = color["r"].as<int>();
             stripLed.G = color["g"].as<int>();
             stripLed.B = color["b"].as<int>();
-            // El color global también alimenta la paleta 27: los efectos VU (que
-            // no usan paletas, sólo color) se recolorean en vivo con la rueda.
-            PaletteManager::setBaseColor(CRGB(stripLed.R, stripLed.G, stripLed.B));
             if (!json["brightness"].isNull()) {
                 stripLed.brightness = json["brightness"].as<int>();
             }
@@ -961,8 +939,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
         }
         else if (strcmp(action, "music") == 0)
         {
-            bt_powerState = !bt_powerState;
-            digitalWrite(SWITCH_PIN, bt_powerState ? LOW : HIGH);
+            setBtPower(!bt_powerState);
 #ifdef DEBUG_BLUETOOTH
             if (bt_powerState) {
                 debuglnD("Encendido del modulo BT");
@@ -1129,14 +1106,6 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len, uint32_t clien
                 saveEffectParams(id);
             }
         }
-
-                // Un VU de color siempre va con la paleta del color de la lámpara,
-                // venga de una tarjeta, de Random VU o de un setParams viejo.
-                if (isVuColorEffect(stripLed.effectId)) {
-                    if (Effect* fx = getEffect(stripLed.effectId)) {
-                        fx->setPaletteIndex(PALETTE_LAMP_COLOR);
-                    }
-                }
 
                 xSemaphoreGive(dataMutex);
             } // end if dataMutex acquired

@@ -131,6 +131,9 @@ void onCriticalBatteryLevel() {
     WiFi.setSleep(true);
     setCpuFrequencyMhz(80);
 
+    // Sin batería para sostenerlo: fuera también el módulo BT.
+    setBtPower(false);
+
     // Ensure Neopixel strip is off
     FastLED.clear();
     FastLED.show();

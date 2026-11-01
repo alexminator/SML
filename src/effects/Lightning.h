@@ -1,7 +1,6 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
-#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // LightningEffect — WLED mode_lightning (port)
@@ -40,6 +39,12 @@ public:
     void render() override {
         if (numLeds <= 1) return;
 
+        // ── Color: el de la tira ─────────────────────────────────────────────
+        // El rayo sólo muestreaba 1-2 puntos de la paleta (índice 32 fijo en el
+        // líder y un tramo corto en el flash), así que elegir paleta no cambiaba
+        // casi nada: usa el color global y la rueda lo recolorea en vivo.
+        const CRGB bolt = CRGB(stripLed.R, stripLed.G, stripLed.B);
+
         // Background: if not overlay, fill with secondary color (black if no color)
         if (!params.check1) {
             fill_solid(leds, numLeds, CRGB::Black);
@@ -54,8 +59,10 @@ public:
 
             // Leader flash (dim)
             uint8_t bri = 52;
+            CRGB leader = bolt;
+            leader.nscale8(scale8(bri, stripLed.brightness));
             for (unsigned i = _ledStart; i < _ledStart + _ledLen && i < numLeds; i++) {
-                leds[i] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), 32, scale8(bri, stripLed.brightness), LINEARBLEND);
+                leds[i] = leader;
             }
             _delay = 200;
             _lastFlash = millis();
@@ -67,9 +74,10 @@ public:
                 if (_flashes > 2 && (_flashes & 0x01)) {
                     // Main flash (bright)
                     uint8_t bri = 255 / random8(1, 3);
+                    CRGB flash = bolt;
+                    flash.nscale8(scale8(bri, stripLed.brightness));
                     for (unsigned i = _ledStart; i < _ledStart + _ledLen && i < numLeds; i++) {
-                        uint8_t hue = (i * 255 / numLeds) + (millis() >> 4);
-                        leds[i] = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), hue, scale8(bri, stripLed.brightness), LINEARBLEND);
+                        leds[i] = flash;
                     }
                     _delay = 50 + random8(100);
                 } else {
@@ -94,7 +102,6 @@ public:
     }
 };
 
-// pa=16 (Blue-Cyan): su base fija está en el índice 32 de la paleta y con
-// Rainbow ese punto sale naranja; la tormenta debe arrancar fría.
+// Sin pa=: el rayo es de un solo color (el de la tira), no de una paleta.
 const char LightningEffect::_meta[] =
-    "Lightning@Speed,Flashing,,,,,Overlay;;;;sx=128,ix=128,pa=16";
+    "Lightning@Speed,Flashing,,,,,Overlay;;;;sx=128,ix=128";

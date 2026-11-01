@@ -93,4 +93,4 @@ public:
 // Metadata: "Name@labels;...;...;...;defaults"
 // Labels: speed, intensity, custom1, custom2, custom3, (reserved), check1, check2, check3
 const char FireEffect::_meta[] =
-    "Fire@Cooling,Sparking,,,Boost,,Reverse,,;;;;sx=64,ix=160,c3=16,m1=0,pa=18";
+    "Fire@Cooling,Sparking,,,Boost,,Reverse,,;;;;sx=64,ix=160,c3=16,m1=0,pa=8";

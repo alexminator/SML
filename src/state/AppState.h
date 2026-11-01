@@ -66,9 +66,7 @@ struct Battery {
     void battMonitor();
     void logBatteryReading();
     void saveBatteryLog();
-    void loadBatteryLog();
-    void getBatteryLog(BattLogEntry* outBuf, int* outCount);
-};
+    void loadBatteryLog();};
 
 // ============================================================================
 // STRUCT: STRIPLED
@@ -118,13 +116,18 @@ extern float temp;
 extern float hum;
 extern bool bt_powerState;
 extern bool lampState;
-extern int readCount;
+
+/// Enciende/apaga el módulo Bluetooth (relé SWITCH_PIN, activo en LOW).
+/// Única vía para tocar el relé: así el estado y el pin nunca se desincronizan.
+/// Se apaga al suspender la tira por pérdida de WiFi y con batería crítica: sin
+/// red no hay control, y la lámpara debe quedar apagada del todo (tira + altavoz).
+void setBtPower(bool on);
 extern int lvlCharge;
 extern char savedSSID[33];
 extern char savedPass[65];
-extern uint8_t myhue;
-extern CRGBPalette16 currentPalette;
-extern CRGBPalette16 targetPalette;
+// Nota: se eliminaron `readCount`, `myhue`, `currentPalette` y `targetPalette`
+// (196 B de .bss + código de init): eran restos de la versión anterior y ningún
+// módulo los leía. Las paletas viven sólo en PaletteManager.
 
 // ============================================================================
 // RTOS SYNCHRONIZATION
@@ -144,12 +147,6 @@ void saveGlobalState();
 // ============================================================================
 
 extern uint32_t stateGeneration;
-
-// ============================================================================
-// VU METER VARIABLES
-// ============================================================================
-
-extern bool is_centered;
 
 // ============================================================================
 // POWER MANAGEMENT STATE

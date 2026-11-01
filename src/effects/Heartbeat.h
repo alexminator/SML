@@ -1,7 +1,6 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
-#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Heartbeat — Latido cardíaco con decaimiento exponencial (WLED port)
@@ -64,13 +63,14 @@ public:
         uint32_t decayed = (uint32_t)_bri * 2042UL / (2048UL + params.intensity);
         _bri = (uint16_t)decayed;
 
-        // ── Render: blend palette color toward secondary (dim/black) ──────────
+        // ── Render: blend the effect color toward the secondary (dim/black) ───
         //   blendAmt = 255 - (_bri >> 8):
-        //     _bri=65535 (just beat) → blendAmt=0     → 100% palette
+        //     _bri=65535 (just beat) → blendAmt=0     → 100% color
         //     _bri=0     (decayed)   → blendAmt=255   → 100% secondary
         uint8_t blendAmt = 255 - (_bri >> 8);
-        CRGBPalette16 pal = PaletteManager::getPalette(_paletteIndex);
-        CRGB palColor = ColorFromPalette(pal, 0, stripLed.brightness, LINEARBLEND);
+        // Un solo color (el de la tira): de la paleta sólo se usaba el índice 0.
+        CRGB palColor = CRGB(stripLed.R, stripLed.G, stripLed.B);
+        palColor.nscale8(stripLed.brightness);
         CRGB secColor = CRGB::Black;  // same as WLED SEGCOLOR(1) = black default
         CRGB color = blend(palColor, secColor, blendAmt);
         fill_solid(leds, numLeds, color);
@@ -80,4 +80,4 @@ public:
 };
 
 const char HeartbeatEffect::_meta[] =
-    "Heartbeat@BPM,Decay;;;;sx=128,ix=128,pa=19";
+    "Heartbeat@BPM,Decay;;;;sx=128,ix=128";

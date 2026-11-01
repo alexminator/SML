@@ -1,7 +1,6 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
-#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // LarsonScanner — Clásico KITT / Knight Rider
@@ -30,7 +29,10 @@ public:
         uint8_t trail = map(params.intensity, 0, 255, 1, numLeds / 3);
         uint8_t speed = map(params.speed, 0, 255, 80, 2);
 
-        CRGBPalette16 pal = PaletteManager::getPalette(_paletteIndex);
+        // ── Color: el de la tira (un solo color, no paleta) ──────────────────
+        const CRGB color = CRGB(stripLed.R, stripLed.G, stripLed.B);
+        CRGB glow = color;
+        glow.nscale8(128);
         fadeToBlackBy(leds, numLeds, 200 - trail * 2);
 
         EVERY_N_MILLISECONDS(speed) {
@@ -39,14 +41,14 @@ public:
             if (_pos == 0) { _pos = 0; _dir = 1; }
         }
 
-        // Center glow from palette
-        if (_pos > 0) leds[_pos - 1] = ColorFromPalette(pal, 0, 128, LINEARBLEND);
-        if (_pos < numLeds - 1) leds[_pos + 1] = ColorFromPalette(pal, 0, 128, LINEARBLEND);
-        leds[_pos] = ColorFromPalette(pal, 0, 255, LINEARBLEND);
+        // Center glow
+        if (_pos > 0) leds[_pos - 1] = glow;
+        if (_pos < numLeds - 1) leds[_pos + 1] = glow;
+        leds[_pos] = color;
 
         FastLED.show();
     }
 };
 
 const char LarsonScannerEffect::_meta[] =
-    "Scanner@Speed,Trail;;;;sx=128,ix=128,pa=26";
+    "Scanner@Speed,Trail;;;;sx=128,ix=128";

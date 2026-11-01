@@ -22,180 +22,159 @@ void PaletteManager::ensureInit() {
     _palettes[6]  = CloudColors_p;
     _palettes[7]  = RainbowStripeColors_p;
 
-    // ── 8. Fire (negro → rojo → naranja → amarillo → blanco) ──────────────
-    _palettes[8]  = CRGBPalette16(
-        CRGB::Black,       CRGB::Maroon,    CRGB::Red,       CRGB::Red,
-        CRGB::OrangeRed,   CRGB::Orange,    CRGB::Gold,      CRGB::Gold,
-        CRGB::Yellow,      CRGB::LightYellow, CRGB::White,   CRGB::White,
-        CRGB::White,       CRGB::White,     CRGB::White,     CRGB::White
+    // ── 8. Fire — negro → rojo puro → naranja → amarillo (sin blanco: el blanco apaga el resto)
+    _palettes[8] = CRGBPalette16(
+        CRGB(12,0,0), CRGB(28,2,0), CRGB(44,6,0), CRGB(61,12,0),
+        CRGB(77,20,0), CRGB(93,31,0), CRGB(109,43,0), CRGB(125,58,0),
+        CRGB(142,74,0), CRGB(158,93,0), CRGB(174,114,0), CRGB(190,137,0),
+        CRGB(206,163,0), CRGB(223,190,0), CRGB(239,219,0), CRGB(255,251,0)
     );
 
-    // ── 9. Sunset (negro → rojo oscuro → naranja → dorado) ─────────────────
-    _palettes[9]  = CRGBPalette16(
-        CRGB::Black,       CRGB(60,0,0),    CRGB(120,0,0),  CRGB::DarkRed,
-        CRGB::OrangeRed,   CRGB::Orange,    CRGB::DarkOrange, CRGB::Orange,
-        CRGB::Gold,        CRGB::Gold,      CRGB::Yellow,   CRGB::LightYellow,
-        CRGB(255,240,200), CRGB(255,245,220), CRGB(255,250,240), CRGB::White
+    // ── 9. Sunset — magenta profundo → rojo → naranja (atardecer, sin llegar al blanco)
+    _palettes[9] = CRGBPalette16(
+        CRGB(74,0,80), CRGB(92,0,88), CRGB(103,0,87), CRGB(115,0,83),
+        CRGB(127,0,76), CRGB(138,0,67), CRGB(150,0,55), CRGB(162,0,40),
+        CRGB(173,0,22), CRGB(185,0,2), CRGB(197,22,0), CRGB(208,48,0),
+        CRGB(220,76,0), CRGB(232,108,0), CRGB(243,142,0), CRGB(255,179,0)
     );
 
-    // ── 10. Aurora (oscuro → cian → verde → blanco verdoso) ───────────────
+    // ── 10. Aurora Cyan — turquesa → azul (el remate frío de una aurora, sin blanco)
     _palettes[10] = CRGBPalette16(
-        CRGB(0,5,15),      CRGB(0,20,40),   CRGB(0,50,90),   CRGB(0,80,120),
-        CRGB(0,120,140),   CRGB(20,160,150), CRGB(60,200,160), CRGB(100,220,170),
-        CRGB(140,240,180), CRGB(180,250,200), CRGB(200,255,210), CRGB(220,255,220),
-        CRGB(240,255,240), CRGB(250,255,250), CRGB::White,    CRGB::White
+        CRGB(0,95,100), CRGB(0,97,110), CRGB(0,98,121), CRGB(0,97,131),
+        CRGB(0,95,141), CRGB(0,91,152), CRGB(0,86,162), CRGB(0,79,172),
+        CRGB(0,71,183), CRGB(0,62,193), CRGB(0,51,203), CRGB(0,38,214),
+        CRGB(0,24,224), CRGB(0,9,234), CRGB(8,0,245), CRGB(26,0,255)
     );
 
-    // ── 11. Candy (rosa → magenta → cian → amarillo) ──────────────────────
+    // ── 11. Candy — rosa → magenta → violeta → turquesa → amarillo (todo saturado)
     _palettes[11] = CRGBPalette16(
-        CRGB::DeepPink,    CRGB::HotPink,   CRGB::Magenta,   CRGB::Magenta,
-        CRGB::Purple,      CRGB::MediumPurple, CRGB::Violet, CRGB::Cyan,
-        CRGB::Aqua,        CRGB::Aquamarine, CRGB::YellowGreen, CRGB::Yellow,
-        CRGB::Gold,        CRGB::Orange,    CRGB::HotPink,   CRGB::DeepPink
+        CRGB(255,0,191), CRGB(255,0,143), CRGB(255,0,96), CRGB(255,0,48),
+        CRGB(255,0,0), CRGB(255,48,0), CRGB(255,96,0), CRGB(255,120,0),
+        CRGB(0,255,255), CRGB(0,255,207), CRGB(0,255,159), CRGB(0,255,112),
+        CRGB(128,255,0), CRGB(175,255,0), CRGB(223,255,0), CRGB(255,239,0)
     );
 
-    // ── 12. C9 (navideño clásico: rojo, verde, dorado, azul) ──────────────
+    // ── 12. C9 — rojo, verde, ámbar y azul de bombilla navideña (cuatro puros)
     _palettes[12] = CRGBPalette16(
-        CRGB::Red,         CRGB::Red,       CRGB::Green,     CRGB::Green,
-        CRGB::Gold,        CRGB::Gold,      CRGB::Blue,      CRGB::Blue,
-        CRGB::Red,         CRGB::Red,       CRGB::Green,     CRGB::Green,
-        CRGB::Gold,        CRGB::Gold,      CRGB::Blue,      CRGB::Blue
+        CRGB(255,0,0), CRGB(255,0,0), CRGB(255,0,0), CRGB(255,0,0),
+        CRGB(0,255,0), CRGB(0,255,0), CRGB(0,255,0), CRGB(0,255,0),
+        CRGB(255,160,0), CRGB(255,160,0), CRGB(255,160,0), CRGB(255,160,0),
+        CRGB(0,60,255), CRGB(0,60,255), CRGB(0,60,255), CRGB(0,60,255)
     );
 
-    // ── 13. Ice (azul profundo → azul → blanco) ───────────────────────────
+    // ── 13. Amber/Blue — pareja complementaria en bloques: ámbar y azul puros
     _palettes[13] = CRGBPalette16(
-        CRGB(0,10,30),     CRGB(0,20,60),   CRGB(0,40,100),  CRGB(0,70,140),
-        CRGB(0,100,180),   CRGB(50,140,210), CRGB(100,180,230), CRGB(150,210,240),
-        CRGB(180,230,250), CRGB(210,240,255), CRGB(230,248,255), CRGB::White,
-        CRGB::White,       CRGB::White,     CRGB::White,     CRGB::White
+        CRGB(255,140,0), CRGB(255,140,0), CRGB(255,140,0), CRGB(255,140,0),
+        CRGB(0,90,255), CRGB(0,90,255), CRGB(0,90,255), CRGB(0,90,255),
+        CRGB(255,140,0), CRGB(255,140,0), CRGB(255,140,0), CRGB(255,140,0),
+        CRGB(0,90,255), CRGB(0,90,255), CRGB(0,90,255), CRGB(0,90,255)
     );
 
-    // ── 14. Fairy (pasteles: rosa, lavanda, celeste, menta) ───────────────
+    // ── 14. Pink/Lime — pareja complementaria en bloques: rosa y lima puros
     _palettes[14] = CRGBPalette16(
-        CRGB(255,200,220), CRGB(240,180,230), CRGB(220,160,240), CRGB(200,180,255),
-        CRGB(180,200,255), CRGB(160,220,255), CRGB(180,240,240), CRGB(200,255,220),
-        CRGB(220,255,200), CRGB(255,250,200), CRGB(255,240,210), CRGB(255,220,220),
-        CRGB(255,200,220), CRGB(240,180,230), CRGB(220,160,240), CRGB(200,180,255)
+        CRGB(255,0,130), CRGB(255,0,130), CRGB(255,0,130), CRGB(255,0,130),
+        CRGB(140,255,0), CRGB(140,255,0), CRGB(140,255,0), CRGB(140,255,0),
+        CRGB(255,0,130), CRGB(255,0,130), CRGB(255,0,130), CRGB(255,0,130),
+        CRGB(140,255,0), CRGB(140,255,0), CRGB(140,255,0), CRGB(140,255,0)
     );
 
-    // ── 15. Beach (arena → turquesa → azul cielo) ─────────────────────────
+    // ── 15. Violet/Yellow — pareja complementaria en bloques: violeta y amarillo puros
     _palettes[15] = CRGBPalette16(
-        CRGB(240,220,170), CRGB(230,210,160), CRGB(210,190,140), CRGB(180,200,180),
-        CRGB(120,200,200), CRGB(80,190,210),  CRGB(60,180,220),  CRGB(50,170,220),
-        CRGB(60,180,230),  CRGB(80,200,240),  CRGB(120,210,245), CRGB(160,220,250),
-        CRGB(180,230,250), CRGB(200,240,255), CRGB(220,245,255), CRGB(240,250,255)
+        CRGB(140,0,255), CRGB(140,0,255), CRGB(140,0,255), CRGB(140,0,255),
+        CRGB(255,230,0), CRGB(255,230,0), CRGB(255,230,0), CRGB(255,230,0),
+        CRGB(140,0,255), CRGB(140,0,255), CRGB(140,0,255), CRGB(140,0,255),
+        CRGB(255,230,0), CRGB(255,230,0), CRGB(255,230,0), CRGB(255,230,0)
     );
 
-    // ── 16. Blue-Cyan (azul → cian → blanco) ──────────────────────────────
+    // ── 16. Blue-Cyan — azul → turquesa (sin blanco)
     _palettes[16] = CRGBPalette16(
-        CRGB(0,0,40),      CRGB(0,0,80),     CRGB(0,20,120),  CRGB(0,50,160),
-        CRGB(0,80,200),    CRGB(0,120,220),  CRGB(0,160,240), CRGB(0,200,250),
-        CRGB(40,220,255),  CRGB(80,235,255), CRGB(130,245,255), CRGB(180,250,255),
-        CRGB(210,252,255), CRGB(235,254,255), CRGB(250,255,255), CRGB::White
+        CRGB(0,12,90), CRGB(0,17,101), CRGB(0,24,112), CRGB(0,31,123),
+        CRGB(0,39,134), CRGB(0,48,145), CRGB(0,57,156), CRGB(0,68,167),
+        CRGB(0,79,178), CRGB(0,92,189), CRGB(0,105,200), CRGB(0,119,211),
+        CRGB(0,134,222), CRGB(0,149,233), CRGB(0,166,244), CRGB(0,183,255)
     );
 
-    // ── 17. Red-Purple (rojo → púrpura → rosa) ────────────────────────────
+    // ── 17. Red-Purple — rojo puro → magenta → violeta (sin rosados pálidos)
     _palettes[17] = CRGBPalette16(
-        CRGB(40,0,0),      CRGB(80,0,20),    CRGB(120,0,40),  CRGB(160,0,60),
-        CRGB(200,0,80),    CRGB(220,20,100), CRGB(240,40,120), CRGB(250,60,140),
-        CRGB(255,80,160),  CRGB(255,100,180), CRGB(255,130,200), CRGB(255,160,210),
-        CRGB(255,190,220), CRGB(255,210,235), CRGB(255,230,245), CRGB(255,245,250)
+        CRGB(70,0,0), CRGB(82,0,7), CRGB(95,0,15), CRGB(107,0,26),
+        CRGB(119,0,38), CRGB(132,0,52), CRGB(144,0,69), CRGB(156,0,87),
+        CRGB(169,0,108), CRGB(181,0,130), CRGB(193,0,154), CRGB(206,0,180),
+        CRGB(218,0,208), CRGB(222,0,230), CRGB(215,0,243), CRGB(205,0,255)
     );
 
-    // ════════════════════════════════════════════════════════════════════════════
-    // EFFECT DEFAULT PALETTES — coinciden con los colores originales de cada
-    // efecto. Se usan como paleta por defecto del efecto correspondiente.
-    // ════════════════════════════════════════════════════════════════════════════
-
-    // ── 18. Fire Default (negro → rojo → amarillo → blanco) ──────────────────
-    //   Original Fire.h: CRGBPalette16(Black, Red, Yellow, White)
+    // ── 18. Fire Blue — fuego azul: negro → azul → turquesa
     _palettes[18] = CRGBPalette16(
-        CRGB::Black,       CRGB(40,0,0),     CRGB(80,0,0),     CRGB(130,0,0),
-        CRGB::Red,         CRGB::Red,        CRGB(210,130,0),  CRGB::Gold,
-        CRGB::Yellow,      CRGB::Yellow,     CRGB(255,255,200), CRGB::LightYellow,
-        CRGB::White,       CRGB::White,      CRGB::White,      CRGB::White
+        CRGB(0,0,12), CRGB(0,2,28), CRGB(0,5,44), CRGB(0,9,61),
+        CRGB(0,16,77), CRGB(0,23,93), CRGB(0,32,109), CRGB(0,43,125),
+        CRGB(0,55,142), CRGB(0,69,158), CRGB(0,84,174), CRGB(0,101,190),
+        CRGB(0,119,206), CRGB(0,139,223), CRGB(0,160,239), CRGB(0,183,255)
     );
 
-    // ── 19. Heartbeat Default (rojo pulsante) ─────────────────────────────────
-    //   Original: CHSV(0,255,brightness) → rojo
+    // ── 19. Fire Green — fuego verde: negro → verde → lima
     _palettes[19] = CRGBPalette16(
-        CRGB::Red,         CRGB::Red,        CRGB::Red,        CRGB::Red,
-        CRGB::Red,         CRGB::DarkRed,    CRGB(80,0,0),     CRGB(30,0,0),
-        CRGB::Black,       CRGB::Black,      CRGB::Black,      CRGB::Black,
-        CRGB::Black,       CRGB::Black,      CRGB::Black,      CRGB::Black
+        CRGB(0,12,4), CRGB(0,28,8), CRGB(0,44,10), CRGB(0,61,11),
+        CRGB(0,77,10), CRGB(0,93,7), CRGB(0,109,2), CRGB(5,125,0),
+        CRGB(13,142,0), CRGB(23,158,0), CRGB(35,174,0), CRGB(49,190,0),
+        CRGB(64,206,0), CRGB(82,223,0), CRGB(101,239,0), CRGB(122,255,0)
     );
 
-    // ── 20. ICU Default (verde monitor) ──────────────────────────────────────
-    //   Original: CHSV(120,255,brightness) → verde
+    // ── 20. Fire Violet — fuego violeta: negro → violeta → magenta
     _palettes[20] = CRGBPalette16(
-        CRGB(0,10,0),      CRGB(0,30,0),     CRGB(0,60,0),     CRGB(0,120,0),
-        CRGB(0,200,0),     CRGB(0,255,0),    CRGB(0,255,0),    CRGB(0,200,0),
-        CRGB(0,150,0),     CRGB(0,100,0),    CRGB(0,60,0),     CRGB(0,30,0),
-        CRGB(0,10,0),      CRGB::Black,      CRGB::Black,      CRGB::Black
+        CRGB(8,0,12), CRGB(21,0,28), CRGB(35,0,44), CRGB(50,0,61),
+        CRGB(67,0,77), CRGB(86,0,93), CRGB(106,0,109), CRGB(125,0,123),
+        CRGB(142,0,133), CRGB(158,0,141), CRGB(174,0,147), CRGB(190,0,152),
+        CRGB(206,0,155), CRGB(223,0,157), CRGB(239,0,157), CRGB(255,0,155)
     );
 
-    // ── 21. RWB Default (rojo → blanco → azul) ───────────────────────────────
-    //   Original: Red (hue 0), White (hue 85), Blue (hue 170)
+    // ── 21. Aurora Green — verde → turquesa: la aurora boreal de verdad, sin blancos
     _palettes[21] = CRGBPalette16(
-        CRGB::Red,         CRGB::Red,        CRGB::Red,        CRGB::Red,
-        CRGB::Red,         CRGB::White,      CRGB::White,      CRGB::White,
-        CRGB::White,       CRGB::White,      CRGB::Blue,       CRGB::Blue,
-        CRGB::Blue,        CRGB::Blue,       CRGB::Blue,       CRGB::Blue
+        CRGB(0,90,22), CRGB(0,101,31), CRGB(0,112,42), CRGB(0,123,53),
+        CRGB(0,134,66), CRGB(0,145,80), CRGB(0,156,96), CRGB(0,167,113),
+        CRGB(0,178,131), CRGB(0,189,151), CRGB(0,200,172), CRGB(0,211,194),
+        CRGB(0,222,218), CRGB(0,223,233), CRGB(0,219,244), CRGB(0,213,255)
     );
 
-    // ── 22. Drip Default (azul agua) ─────────────────────────────────────────
-    //   Original: CHSV(160,200,255) → azul/cian
+    // ── 22. Aurora Violet — violeta → rosa: el remate morado de la aurora
     _palettes[22] = CRGBPalette16(
-        CRGB(0,0,30),      CRGB(0,10,60),    CRGB(0,30,100),   CRGB(0,60,150),
-        CRGB(0,100,200),   CRGB(0,150,230),  CRGB(20,180,255), CRGB(60,200,255),
-        CRGB(100,215,255), CRGB(150,230,255),CRGB(200,245,255),CRGB(230,250,255),
-        CRGB(245,255,255), CRGB::White,      CRGB::White,      CRGB::White
+        CRGB(30,0,90), CRGB(40,0,101), CRGB(52,0,112), CRGB(64,0,123),
+        CRGB(79,0,134), CRGB(94,0,145), CRGB(111,0,156), CRGB(129,0,167),
+        CRGB(149,0,178), CRGB(170,0,189), CRGB(192,0,200), CRGB(211,0,206),
+        CRGB(222,0,203), CRGB(233,0,198), CRGB(244,0,193), CRGB(255,0,185)
     );
 
-    // ── 23. Candle Default (llama cálida ámbar) ──────────────────────────────
-    //   Original: HeatColors_p style (negro → rojo → naranja → amarillo → blanco)
+    // ── 23. Candle — llama de vela: negro → ámbar → amarillo cálido
     _palettes[23] = CRGBPalette16(
-        CRGB::Black,       CRGB(40,10,0),    CRGB(80,20,0),    CRGB(130,40,0),
-        CRGB(180,70,0),    CRGB(220,110,0),  CRGB(240,150,0),  CRGB(255,190,30),
-        CRGB(255,220,60),  CRGB(255,240,100),CRGB(255,250,150),CRGB(255,255,200),
-        CRGB::White,       CRGB::White,      CRGB::White,      CRGB::White
+        CRGB(12,7,0), CRGB(28,17,0), CRGB(44,29,0), CRGB(61,41,0),
+        CRGB(77,55,0), CRGB(93,69,0), CRGB(109,84,0), CRGB(125,101,0),
+        CRGB(142,118,0), CRGB(158,137,0), CRGB(174,156,0), CRGB(190,177,0),
+        CRGB(206,198,0), CRGB(223,221,0), CRGB(233,239,0), CRGB(241,255,0)
     );
 
-    // ── 24. Sunrise Default (amanecer rojo → naranja → amarillo → blanco) ───
-    //   Original: Staged CHSV: hue 0→10→30→50, sat 255→0
+    // ── 24. Sunrise — naranja → dorado → amarillo (amanecer, sin blanco)
     _palettes[24] = CRGBPalette16(
-        CRGB(40,0,0),      CRGB(80,0,0),     CRGB(130,20,0),   CRGB(180,50,0),
-        CRGB(220,80,0),    CRGB(255,120,0),  CRGB(255,160,20), CRGB(255,195,50),
-        CRGB(255,215,80),  CRGB(255,230,120),CRGB(255,240,160),CRGB(255,245,200),
-        CRGB(255,250,220), CRGB(255,252,240),CRGB::White,      CRGB::White
+        CRGB(60,28,0), CRGB(73,37,0), CRGB(86,47,0), CRGB(99,58,0),
+        CRGB(112,70,0), CRGB(125,83,0), CRGB(138,97,0), CRGB(151,112,0),
+        CRGB(164,128,0), CRGB(177,145,0), CRGB(190,163,0), CRGB(203,182,0),
+        CRGB(216,202,0), CRGB(229,224,0), CRGB(238,242,0), CRGB(241,255,0)
     );
 
-    // ── 25. Halloween Default (blanco → gris → negro — ojos espeluznantes) ───
-    //   Original: CRGB::White eye color
+    // ── 25. Ocean Emerald — verde mar → turquesa (sin llegar al blanco)
     _palettes[25] = CRGBPalette16(
-        CRGB::White,       CRGB::White,      CRGB::White,      CRGB::White,
-        CRGB::White,       CRGB::White,      CRGB(200,200,200),CRGB(150,150,150),
-        CRGB(100,100,100), CRGB(60,60,60),   CRGB(30,30,30),   CRGB::Black,
-        CRGB::Black,       CRGB::Black,      CRGB::Black,      CRGB::Black
+        CRGB(0,80,28), CRGB(0,92,37), CRGB(0,103,47), CRGB(0,115,58),
+        CRGB(0,127,71), CRGB(0,138,85), CRGB(0,150,101), CRGB(0,162,117),
+        CRGB(0,173,135), CRGB(0,185,155), CRGB(0,197,175), CRGB(0,208,197),
+        CRGB(0,220,220), CRGB(0,219,232), CRGB(0,217,243), CRGB(0,213,255)
     );
 
-    // ── 26. Scanner Default (blanco → gris → negro — barrido KITT) ──────────
-    //   Original: CRGB::White dot → CRGB(128,128,128) trail → black
+    // ── 26. Ocean Violet — azul marino → violeta (mar de noche)
     _palettes[26] = CRGBPalette16(
-        CRGB::White,       CRGB::White,      CRGB(200,200,200),CRGB(140,140,140),
-        CRGB(90,90,90),    CRGB(50,50,50),   CRGB(20,20,20),   CRGB::Black,
-        CRGB::Black,       CRGB::Black,      CRGB::Black,      CRGB::Black,
-        CRGB::Black,       CRGB::Black,      CRGB::Black,      CRGB::Black
+        CRGB(0,29,80), CRGB(0,26,92), CRGB(0,22,103), CRGB(0,15,115),
+        CRGB(0,7,127), CRGB(3,0,138), CRGB(15,0,150), CRGB(29,0,162),
+        CRGB(45,0,173), CRGB(62,0,185), CRGB(81,0,197), CRGB(103,0,208),
+        CRGB(125,0,220), CRGB(150,0,232), CRGB(177,0,243), CRGB(205,0,255)
     );
 
-    // ── 27. Lamp color (rampa del color global; la usan los efectos VU) ────
-    //   Se rellena en setBaseColor(); arranca en blanco para no quedar en negro.
-    for (uint8_t i = 0; i < 16; i++) {
-        uint8_t s = 96 + (i * 160) / 15;   // 96..255
-        _palettes[27][i] = CRGB(s, s, s);
-    }
-
-    // ── Nombres ────────────────────────────────────────────────────────────
+    // ── Nombres ──    // ── Nombres ────────────────────────────────────────────────────────────
     _names[0]  = "Rainbow";
     _names[1]  = "Party";
     _names[2]  = "Heat";
@@ -206,24 +185,23 @@ void PaletteManager::ensureInit() {
     _names[7]  = "Rainbow Stripe";
     _names[8]  = "Fire";
     _names[9]  = "Sunset";
-    _names[10] = "Aurora";
+    _names[10] = "Aurora Cyan";
     _names[11] = "Candy";
     _names[12] = "C9";
-    _names[13] = "Ice";
-    _names[14] = "Fairy";
-    _names[15] = "Beach";
+    _names[13] = "Amber/Blue";
+    _names[14] = "Pink/Lime";
+    _names[15] = "Violet/Yellow";
     _names[16] = "Blue-Cyan";
     _names[17] = "Red-Purple";
-    _names[18] = "Fire Default";
-    _names[19] = "Heartbeat Def.";
-    _names[20] = "ICU Default";
-    _names[21] = "RWB Default";
-    _names[22] = "Drip Default";
-    _names[23] = "Candle Default";
-    _names[24] = "Sunrise Default";
-    _names[25] = "Halloween Def.";
-    _names[26] = "Scanner Default";
-    _names[27] = "Lamp color";
+    _names[18] = "Fire Blue";
+    _names[19] = "Fire Green";
+    _names[20] = "Fire Violet";
+    _names[21] = "Aurora Green";
+    _names[22] = "Aurora Violet";
+    _names[23] = "Candle";
+    _names[24] = "Sunrise";
+    _names[25] = "Ocean Emerald";
+    _names[26] = "Ocean Violet";
 
     _initialized = true;
 }
@@ -243,19 +221,6 @@ const char* PaletteManager::getName(uint8_t index) {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// La paleta 27 sigue al color global de la tira: es la que usan los efectos VU,
-// cuyo único ajuste es el color. Se guarda una rampa del mismo tono (96..255 de
-// escala) para que las barras conserven su degradado sin apagarse.
-void PaletteManager::setBaseColor(const CRGB& color) {
-    ensureInit();
-    for (uint8_t i = 0; i < 16; i++) {
-        uint8_t s = 96 + (i * 160) / 15;
-        _palettes[PALETTE_LAMP_COLOR][i] = CRGB(scale8(color.r, s),
-                                                scale8(color.g, s),
-                                                scale8(color.b, s));
-    }
-}
-
 // ──────────────────────────────────────────────────────────────────────────────
 void PaletteManager::getSwatch(uint8_t paletteIndex, CRGB* swatch, uint8_t len) {
     ensureInit();

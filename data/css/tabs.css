@@ -1122,6 +1122,27 @@
   line-height: 1.5;
 }
 
+.help-card p + p {
+  margin-top: 8px;
+}
+
+/* Tarjeta a todo el ancho (Quick start): la rejilla es de 2 columnas y el
+   arranque rápido necesita leer como una sola pieza. */
+.help-card.wide {
+  grid-column: 1 / -1;
+}
+
+.help-card .help-steps {
+  margin: 8px 0 8px 18px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.help-card .help-steps li {
+  margin-bottom: 4px;
+}
+
 .help-card code {
   font-size: 0.75rem;
   background: color-mix(in srgb, var(--bg-primary) 60%, transparent);

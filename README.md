@@ -45,12 +45,16 @@
         <li><a href="#code">Code</a></li>
       </ul>
     </li>
+    <li><a href="#project-structure">Project Structure</a></li>
     <li><a href="#build-and-flash">Build and Flash</a></li>
     <li><a href="#web-interface">Web Interface</a></li>
+    <li><a href="#http-routes--websocket-protocol">HTTP Routes &amp; WebSocket Protocol</a></li>
     <li><a href="#led-effects">LED Effects</a></li>
     <li><a href="#random-mode">Random Mode</a></li>
     <li><a href="#power-management">Power Management</a></li>
+    <li><a href="#data--persistence">Data &amp; Persistence</a></li>
     <li><a href="#ota-updates">OTA Updates</a></li>
+    <li><a href="#troubleshooting">Troubleshooting</a></li>
     <li><a href="#to-do">To Do</a></li>
     <li><a href="#contributors">Contributors</a></li>
     <li><a href="#license">License</a></li>
@@ -266,7 +270,7 @@ On the web interface, you'll notice Wi-Fi signal strength indicators in the bott
 
 The ESP32 creates an asynchronous server (**[ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer.git)**), meaning it can handle multiple clients simultaneously **(8)** and sends data in JSON format via WebSocket. With this setup, up to 8 devices connected to the lamp receive real-time updates, and changes are reflected on all devices simultaneously.
 
-The ESP32 hosts an embedded website in **SPIFFS** memory; the web content is in the project's ${\color{#ffdd00}data}$ folder. The code is heavily commented, so here's a summary.
+The ESP32 hosts an embedded website in **LittleFS** (the project builds a LittleFS image, not SPIFFS); the web content is in the project's ${\color{#ffdd00}data}$ folder. The code is heavily commented, so here's a summary.
 
 Three objects are created:
   * `StripLed` — Neopixel strip control
@@ -275,13 +279,13 @@ Three objects are created:
 
 The remaining libraries handle lighting effects and music-synchronized effects **(VU)**, along with the web server, battery monitoring, and DHT22 sensor. Below are the most important variables you may need to adjust.
 
-1. Debug variables
-  * `#define DEBUGLEVEL` — set to **DEBUGLEVEL_DEBUGGING** for serial debug output
-  * `#define DHT` — comment out with **(//)** to hide DHT22 messages
-  * `#define BATTERY` — comment out with **(//)** to hide battery monitoring messages
+1. Debug variables — all of them live in `src/config/debug_config.h`
+  * `DEBUGLEVEL` — verbosity: **0** none, **1** errors, **2** +warnings, **3** +debug (current default), **4** +verbose
+  * Category switches, enabled by uncommenting the line: `DEBUG_SYSTEM`, `DEBUG_WIFI`, `DEBUG_WEB`, `DEBUG_WEBSOCKET`, `DEBUG_LED`, `DEBUG_BATTERY`, `DEBUG_TEMPERATURE`, `DEBUG_NETWORK`, `DEBUG_BLUETOOTH`, `DEBUG_POWER_MANAGEMENT`
+  * For a release build you do not need to edit the file either: add `-DDEBUGLEVEL=0` to `build_flags` in `platformio.ini`. Measured on this project that drops flash from 1,085,005 B to 1,058,845 B (−26 KB) and RAM from 58,456 B to 57,648 B.
 
 > **Note**:
-> Some debug messages, such as connection and web service info, are mandatory.
+> At `DEBUGLEVEL` **0** every log line and its string literals are compiled out. That is the cheapest 26 KB you will ever save.
 
 2. Neopixel strip variables
   * `#define N_PIXELS` — number of LEDs in your strip
@@ -294,11 +298,47 @@ The remaining libraries handle lighting effects and music-synchronized effects *
  > **Note**:
  > For accuracy, charge the battery using the TP4056 module. When the full charge LED turns on, measure the battery voltage and use that as the maximum value. For the minimum value, the DC-DC step-up module specifications state that to achieve 5V output, the input must be at least 2V. However, 3.2V is recommended for safety.
 
-4. Web variables
-  * `const unsigned long refresh` — delay for sending information (default 3 seconds)
+4. Web / timing variables — in `src/config/config.h`
+  * `WEBSOCKET_UPDATE_INTERVAL` — full-state broadcast to every client (3 s)
+  * `WEBSOCKET_SENSOR_INTERVAL` / `SENSOR_CHECK_INTERVAL` — battery and sensor broadcasts (3 s / 5 s)
+  * `BATTERY_CHECK_INTERVAL` — how often the battery is sampled (3 s)
+  * `WIFI_LOST_STRIP_TIMEOUT_DEFAULT` — default WiFi-loss timeout before the strip turns off (30 s, overridable from the web)
 
 > **Note**:
 > The project currently uses [PlatformIO](https://platformio.org/) as its development environment. The `platformio.ini` file in the project root contains all build configuration, dependencies, and serial port settings.
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
+## Project Structure
+
+```
+SML/
+├── src/
+│   ├── main.cpp              boot: GPIO, FastLED, LittleFS, state, WiFi, web, tasks
+│   ├── config/               config.h (timings, limits), pins.h, debug.h (log engine),
+│   │                         debug_config.h (verbosity), secrets.h.example
+│   ├── effects/              one header per effect + Effect.h base class,
+│   │                         EffectRegistry.cpp/.h (single table), PaletteManager.*,
+│   │                         effects.h (aggregator)
+│   ├── vu/                   VU effects: VUEffect.h, vu1..vu9, vu.h (aggregator)
+│   ├── net/                  WebServer.cpp (HTTP + WiFi + LittleFS + mDNS),
+│   │                         WebSocket.cpp (protocol), data.cpp/.h (WiFi constants)
+│   ├── power/                PowerMgr.cpp — power state machine
+│   ├── state/                AppState.cpp/.h — global state, mutexes, persistence
+│   └── tasks/                tasks.cpp — the six FreeRTOS tasks
+├── data/                     web app served by the ESP32 (HTML, CSS, JS, fonts, images)
+├── docs/                     design notes and reviews (git-ignored)
+├── test/
+└── platformio.ini            build configuration and pinned dependencies
+```
+
+The six tasks are `TaskWebSocket` (cleanup + broadcasts), `TaskBatteryMonitor` (sampling + power state machine), `TaskLEDControl` (effect render at ~50 Hz and the Peek snapshot), `TaskWiFiMonitor` (link state, mDNS re-registration, strip suspension), `TaskSensor` (DHT22) and `TaskOnboardLED` (status blink pattern).
+
+**Adding an effect.** Create a subclass of `Effect` in `src/effects/`, implement `render()`, add **one line** to `effectRegistry[]` in `src/effects/EffectRegistry.cpp` and add the card in the front-end. The effect ID *is* its position in the table: appending is safe, but inserting or removing a line shifts every later ID and invalidates the `effectId` saved in `/state.json` and the front-end map.
+
+**WiFi credentials are not committed.** Put `WIFI_SSID` and `WIFI_PASS` in a `.env` file in the project root — `platformio.ini` injects them as `-DDEFAULT_WIFI_SSID` / `-DDEFAULT_WIFI_PASS` build flags. `src/config/secrets.h.example` is the template for the header-based variant.
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 
@@ -329,7 +369,7 @@ pio run --target clean
 
 ### Upload Web Interface Files
 
-The HTML, CSS, JS, and image files are in the `data/` folder and are stored in the ESP32's LittleFS (SPIFFS). After modifying any web files:
+The HTML, CSS, JS, fonts and images are in the `data/` folder and are stored in the ESP32's **LittleFS** partition. After modifying any web file:
 
 ```bash
 pio run --target uploadfs
@@ -337,14 +377,49 @@ pio run --target uploadfs
 
 ### Debug Configuration
 
-In `src/config/debug_config.h` you can control which messages appear on the serial port:
+In `src/config/debug_config.h` you control what appears on the serial port. One verbosity level plus one switch per subsystem:
 
 | Macro | Description |
 |-------|-------------|
-| `DEBUGLEVEL_DEBUGGING` | Enables all debugging |
-| `#define DHT` | Shows DHT22 sensor messages |
-| `#define BATTERY` | Shows battery monitoring messages |
-| `#define DEBUG_POWER_MANAGEMENT` | Shows power manager state transitions |
+| `DEBUGLEVEL_NONE` (0) | Nothing |
+| `DEBUGLEVEL_ERRORS` (1) | `debugE` / `debuglnE` |
+| `DEBUGLEVEL_WARNINGS` (2) | Errors + `debugW` / `debuglnW` |
+| `DEBUGLEVEL_DEBUGGING` (3) | Warnings + `debugD` / `debuglnD` — current default |
+| `DEBUGLEVEL_VERBOSE` (4) | Everything, including `debugV` / `debuglnV` |
+| `DEBUG_SYSTEM` | Init, mutexes, persistence errors |
+| `DEBUG_WIFI` | WiFi connection and credentials |
+| `DEBUG_WEB` | HTTP server and LittleFS |
+| `DEBUG_WEBSOCKET` | WebSocket traffic and JSON payloads |
+| `DEBUG_LED` | Strip, effects and brightness |
+| `DEBUG_BATTERY` | Battery monitoring and `/battlog.json` |
+| `DEBUG_TEMPERATURE` | DHT22 sensor |
+| `DEBUG_NETWORK` | mDNS |
+| `DEBUG_BLUETOOTH` | Bluetooth module and button emulation |
+| `DEBUG_POWER_MANAGEMENT` | Power state machine transitions |
+
+To build a release firmware without serial logging you do not need to edit the file — override the level from the build flags:
+
+```bash
+PLATFORMIO_BUILD_FLAGS="-DDEBUGLEVEL=0" pio run    # one-off release build
+```
+
+The persistent alternative is adding `-DDEBUGLEVEL=0` to `build_flags` in `platformio.ini`. Measured on this project: **1,085,005 B → 1,058,845 B** of flash and **58,456 B → 57,648 B** of static RAM.
+
+### Memory & Flash
+
+The build uses the default partition scheme (no `board_build.partitions`), so the app partition is **1,310,720 B** and LittleFS gets the remainder of the 4 MB flash:
+
+| Metric | Used | Share |
+|--------|------|---|
+| RAM | 58,456 B of 327,680 B | 17.8% |
+| Flash (app) | 1,085,005 B of 1,310,720 B | 82.8% |
+
+That leaves roughly **225 KB** of app headroom — enough for new effects, not for a library that weighs hundreds of KB. The web app in `data/` (HTML, CSS, JS, three fonts, images) totals ~1.0 MB of the ~1.4 MB LittleFS partition.
+
+Two things to know before touching versions:
+
+- The toolchain is pinned on purpose: `platform = espressif32@7.1.3` (arduino-esp32 2.0.17) and `fastled/FastLED@3.9.20`. FastLED 3.10.x needs core 3.x / IDF 5 and does not compile here; the comments in `platformio.ini` record the sizes measured for each candidate version.
+- `-DDEBUGLEVEL=0` remains the cheapest flash and RAM saving available (26 KB of flash, ~0.8 KB of RAM).
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 
@@ -379,7 +454,7 @@ Bluetooth speaker control:
 ![Music](https://github.com/alexminator/SML/blob/master/img/music%20tab.png)
 
 ### 👁️ Live Preview (Peek)
-Real-time LED strip preview via a canvas updated over WebSocket (~30 FPS). Displays the 24 LEDs interpolated as 33 virtual LEDs with two view modes:
+Real-time LED strip preview via a canvas updated over WebSocket (~25 FPS: one 40 ms frame at a time). Only one device can stream the preview; a second one is told the preview is busy. Displays the 24 LEDs interpolated as 33 virtual LEDs with two view modes:
 - **Strip** — horizontal linear layout
 - **Circle** — circular layout (simulates the lamp's real shape)
 - **Quick config** button for the active effect
@@ -414,6 +489,7 @@ Advanced configuration panel:
 - **System Info**: uptime, free heap, WiFi RSSI, firmware version, MAC and IP address
 - **Connected clients**: list of active WebSocket connections
 - **Activity logs**: record of actions performed from the web interface
+- **Reboot / Factory Reset**: master-only. A factory reset erases the WiFi credentials, `/params.json`, `/state.json` and `/battlog.json`, then restarts the device
 
 ![System Info](https://github.com/alexminator/SML/blob/master/img/system%20info.png)
 
@@ -429,9 +505,60 @@ Project information, version, and links.
 
 ---
 
+## HTTP Routes & WebSocket Protocol
+
+Besides the static files, the server exposes a handful of endpoints:
+
+| Route | Method | Purpose |
+|-------|--------|---------|
+| `/` | GET | Serves `index.html` from LittleFS |
+| `/<file>` | GET | Static assets (CSS, JS, fonts, images) |
+| `/wifi-info` | GET | JSON: `status`, `ssid`, `ip`, `rssi` |
+| `/save-wifi` | POST | `ssid`, `password` → saved to NVS, then the device reboots |
+| `/fxdata` | GET | Metadata of every effect (WLED-style strings: labels, defaults, limits) |
+| `/palettes` | GET | Palette names plus six representative colors each |
+| `/update` | GET | ElegantOTA upload page |
+| `/ws` | WS | The real-time channel |
+
+mDNS advertises the device as **`sml`**, so `http://sml.local` resolves as long as the phone and the lamp are on the same subnet.
+
+### WebSocket contract
+
+One endpoint (`/ws`), JSON text frames, up to **8 clients** — the first one connected is the master. Unknown actions are ignored.
+
+**Client → server.** A message may carry `effectId` alone (0 = solid color, 1-50 = registry entry), which selects *and* enables that effect. Everything else travels in `action`:
+
+| Action | Payload | Effect |
+|--------|---------|--------|
+| `toggle`, `power` | `state` | Strip on/off |
+| `slider` | `brightness` | Strip brightness |
+| `picker` | `color{r,g,b}`, optional `brightness` | Solid color |
+| `lamp` | — | Main lamp relay |
+| `music` | — | Bluetooth module relay |
+| `animation`, `vu`, `indicator` | — | Re-render the current effect |
+| `toggleBatt`, `toggleTemp` | — | Battery / temperature indicator effect |
+| `randomFX` | `state`, optional `effectId` | Random FX cycling |
+| `randomVU`, `randomVUConfig` | `state`, `duration`, `effectPool` | Random VU cycling |
+| `randomConfig` | `mode`, `duration`, `effectPool`, `categories`, `start` | Random FX configuration |
+| `setParams` | `effectId`, `speed`, `intensity`, `custom1..3`, `check1..3`, `palette` | Effect parameters |
+| `setWifiTimeout` | `seconds` (5-3600) | WiFi-loss timeout |
+| `requestFullState` | — | Full state, including params and metadata |
+| `requestBattHistory` | — | Battery history array |
+| `refreshClientList` | — | Re-send client list and action log |
+| `reboot`, `factoryReset` | — | **Master only** — rejected otherwise |
+| `volup`, `voldown`, `skipL`, `skipR`, `play-pause` | — | Bluetooth button emulation |
+| `lv` | `bool`, optional `real` | Start/stop the Peek stream; `real` picks true colors |
+| `peekColorMode` | `real` | Switch Peek color mode without restarting |
+
+**Server → client.** A full state document — one `<effect>Status` key per effect plus `color`, `neobrightness`, the WiFi fields, `uptime`, `heap`, `ver`, `wsSlaves`, `wsMax`, `randomMode`, `effectId`, and `params`/`meta` when requested — plus lightweight sensor-only updates, `wsClientList`, `wsActionLog` (`t`, `c`, `ty`, `v1..v3`), `battHistory` (`t`, `v`, `l`), `yourClientId`, `peekBusy`, and, only for the Peek subscriber, binary frames: `0x4C`, version `0x01`, width, height `1`, then R,G,B per pixel.
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
 ## LED Effects
 
-The project includes **over 40 visual effects** organized into categories. Access them from the **Lamp** tab → Effects section.
+The project ships **47 selectable effects** organized into categories. Access them from the **Lamp** tab → Effects section. The firmware registry reserves **50 effect IDs**: three retired effects keep their slot so historical IDs stay valid.
 
 ### Categories
 
@@ -448,11 +575,30 @@ The project includes **over 40 visual effects** organized into categories. Acces
 
 ### VU Effects (Music Visualization)
 
-In addition to traditional visual effects, there are **VU effects** that react to audio playing through the Bluetooth speaker. They are located in the **Music** tab and activate automatically when there's audio input. Examples include:
+In addition to the visual effects there are **eight VU meters** that react to whatever the Bluetooth speaker is playing. They live in the **Music** tab and, like every other effect, you turn one on by tapping its card:
 
-- **Rainbow VU** — multi-colored bars in sync with the music
-- **Ripple VU** — concentric waves reacting to the rhythm
-- **Frequency Spectrum** — equalizer-style visualization
+| VU meter | What it shows | Settings |
+|----------|---------------|----------|
+| **Rainbow VU** | Gradient across the strip that fills with the audio level | palette |
+| **Rainbow Hue** | The same gradient with the hue cycling over time | palette |
+| **Old Skool** | Classic green/red bar with a floating peak dot | none — fixed colors |
+| **Ripple VU** | Ripples spreading from a random point on each beat | palette |
+| **3 Bars** | Three segments that bloom and fall with the level | palette |
+| **Ocean VU** | Slow waves rippling out from the center | palette |
+| **Noisemeter** | Green/yellow/red scale with a white peak | Decay, Sensitivity |
+| **DJ Light** | Bright pulse spreading from the center, hue shifting with the beat | Speed, Color Shift, palette |
+
+Every VU meter except **Old Skool** and **Noisemeter** has a **gear**, and its panel is a palette list, exactly like the visual effects. All of them start on **Rainbow**, the palette they were designed around. The list is curated to the palettes that really change colour as the meter samples them — the rainbow family plus Party, Candy and C9 — so single-hue palettes (Ocean, Ice, Aurora…) and the ones that pass through black (Scanner) are not offered, because on a VU they look like one flat colour or flicker off.
+
+### How the palettes are chosen
+
+Every effect samples its palette in a different way, and the list it offers follows that:
+
+- **Full sweep** (Fire, Comet, Rainbow Beat, Plasma, Pacifica, the VU meters…): the colour index moves with position, time or level, so the whole palette shows. These keep a palette list.
+- **Single colour** (Sparkle, Lightning, Scanner, Heartbeat, ICU, Drip, Halloween Eyes): the render always reads the *same* index, so a palette list only ever showed one of its colours. Their panel is the **colour wheel** and they paint with the LED colour, the same one Solid uses.
+- **Fixed colours**: RWB (red/white/blue), Old Skool (green/red) and Noisemeter (green/yellow/red) have no palette at all.
+
+Every palette is generated at **full saturation**: none of them contains white, because a white step washes out the rest of the gradient and the effect stops looking like itself, and the only ones that keep a dark start are the fire ramps (they need the cold end). Palettes that look alike are never listed together: the fire ramps only appear on fire effects, and the seas and the auroras keep to their own family. The fires also come in colours — **Fire Blue**, **Fire Green** and **Fire Violet** — the same ramp with another hue; Candle offers an amber flame plus a blue and a green one; Pacifica offers seas in emerald and violet next to the classic blue; and **Amber/Blue**, **Pink/Lime** and **Violet/Yellow** are hard-edged complementary pairs for effects that want contrast instead of a rainbow. **Reset to Defaults**, at the bottom of every panel, restores the sliders and the default palette.
 
 ![VU Effect](https://github.com/alexminator/SML/blob/master/img/Vu%20effect.png)
 
@@ -466,7 +612,7 @@ The effect cards work as an **on/off switch**, and the settings live behind a se
 | **Turn the effect off** | Click the card again (the active one) | Tap the card again (the active one) |
 | **Open the effect settings** | Click the **⚙ gear** in the card's top-left corner, or the gear in the **Peek** panel | Tap the **⚙ gear** on the card, or **long-press** the card (~0.5 s) |
 
-Turning an effect off returns the strip to **Solid**: the Neopixel keeps running, so color and brightness still apply. To cut the strip itself, use the power card in the **Lamp** tab.
+Tapping the active card again **turns the strip off** — there is no fallback effect. To keep a plain color instead of an effect, use the **Solid color** card at the top of the **Lamp** tab: pick the color with the wheel and set the brightness with the slider.
 
 The configuration panel lets you adjust:
 
@@ -580,6 +726,25 @@ In practice this means several family members can control the lamp at the same t
 
 ---
 
+## Data & Persistence
+
+Everything the device remembers lives in flash, so it survives a power cut:
+
+| Stored where | File / namespace | Contents |
+|--------------|------------------|----------|
+| LittleFS | `/state.json` | Color, brightness, `effectId`, power state, WiFi-loss timeout, Random mode configuration |
+| LittleFS | `/params.json` | Per-effect parameters (speed, intensity, custom1-3, checks, palette). Writes are debounced, so dragging a slider does not wear the flash |
+| LittleFS | `/battlog.json` | Battery history: 200-entry circular buffer, one entry per ≥0.10 V change or every 60 s, flushed every 5 entries |
+| NVS | `Preferences` namespace `wifi` | SSID and password saved from the Config tab |
+
+Some preferences never reach the ESP32 — they belong to the browser (`localStorage`): favorites, the custom playlist, Random duration/mode and the theme. They do not follow you to another device, and clearing the site data resets them.
+
+A **factory reset** (master only, Config tab) erases the WiFi credentials, `/params.json`, `/state.json` and `/battlog.json`, then reboots into the compiled defaults.
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
 ## OTA Updates
 
 You can update the ESP32 firmware without a USB cable, directly from your browser:
@@ -590,6 +755,20 @@ You can update the ESP32 firmware without a USB cable, directly from your browse
 4. Click **Update** and wait for the ESP32 to reboot
 
 Or from the web interface, go to **Config** tab → **Firmware Update** section.
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
+## Troubleshooting
+
+- **`sml.local` does not resolve.** mDNS needs both devices on the same subnet. Use the IP shown in Config → System Info.
+- **A card does nothing.** Either the strip is off (one tap turns it on), or you are a slave opening a settings panel only the master may edit, or another client changed the state a second later — every client shares one lamp.
+- **The strip turned itself off.** The WiFi link was lost for longer than the configured timeout (Config → WiFi loss protection); it resumes when the link returns. A client disconnecting on its own does *not* trigger this.
+- **Peek reports busy.** Only one device can stream the preview at a time; stop it on the other device first.
+- **The web UI looks stale.** Reload the page — a service worker caches the assets, so a hard reload or clearing the site data pulls the new ones.
+- **Upload fails.** Check the serial port configured in `platformio.ini` (or pass `--upload-port`), and keep `upload_speed = 921600` only if your board tolerates it.
+- **`pio run` complains about the build directory.** After an interrupted build, delete `.pio/build` and run it again.
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 

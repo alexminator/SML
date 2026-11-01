@@ -43,8 +43,12 @@
         <li><a href="#instalación">Instalación</a></li>
         <li><a href="#diagrama">Diagrama</a></li>
         <li><a href="#código">Código</a></li>
+        <li><a href="#estructura-del-proyecto">Estructura del proyecto</a></li>
       </ul>
     </li>
+    <li><a href="#rutas-http-y-protocolo-websocket">Rutas HTTP y protocolo WebSocket</a></li>
+    <li><a href="#datos-y-persistencia">Datos y persistencia</a></li>
+    <li><a href="#solución-de-problemas">Solución de problemas</a></li>
     <li><a href="#por-hacer">Por hacer</a></li>
     <li><a href="#colaboradores">Colaboradores</a></li>
     <li><a href="#licencia">Licencia</a></li>
@@ -257,7 +261,7 @@ El proyecto básicamente se resume a controlar la lámpara vía web desde cualqu
 En la web notaran en la parte inferior derecha los niveles de señales Wifi a los cuales se conecta nuestro dispositivo con la lámpara. Esto solo puede ser logrado si el esp32 está en modo estación. 
 El esp32 crea un servidor asíncrono (**[ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer.git)**), es decir, que es capaz de atender a varios clientes de forma simultánea **(8)** y envía datos en formato json mediante websocket. Con esta configuración se logra atender a 8 dispositivos que estén conectados a la lámpara en tiempo real y los cambios se verán reflejados en todos a la vez.
 
-El esp32 contara con una web embebida en la memoria **SPIFFS**, el contenido de dicha web se encuentra en la carpeta ${\color{#ffdd00}data}$ del proyecto. El código está fuertemente comentado así que les hare un resumen del mismo.
+El esp32 contara con una web embebida en la memoria **LittleFS**, el contenido de dicha web se encuentra en la carpeta ${\color{#ffdd00}data}$ del proyecto. El código está fuertemente comentado así que les hare un resumen del mismo.
 
 Son creados 3 objetos:
   * `StripLed` Control de la tira neopixel
@@ -266,9 +270,9 @@ Son creados 3 objetos:
 
 El resto de las librerías son para el manejo de los efectos de luces y efectos al compás de la música **(VU)**. Además de las librerías para la creación de un servidor web, monitoreo de la batería y manejo del sensor DHT22. A continuación les muestro las variables más importantes que pudieran variar para acomodarlo a sus necesidades.
 1. Variables de depuración
-  * `#define DEBUGLEVEL` establecer en **DEBUGLEVEL_DEBUGGING** si desea depurar por consola
-  * `#define DHT` comentar con **(//)** sino desea mostrar mensajes referido al sensor DHT22
-  * `#define BATTERY` comentar con **(//)** sino desea mostrar mensajes referido al monitoreo de la batería
+  * `DEBUGLEVEL` en `src/config/debug_config.h`: `0` ninguna salida, `1` errores, `2` +avisos, `3` +depuración (valor por defecto), `4` +verbose
+  * Interruptores de categoría, se activan descomentando su línea: `DEBUG_SYSTEM`, `DEBUG_WIFI`, `DEBUG_WEB`, `DEBUG_WEBSOCKET`, `DEBUG_LED`, `DEBUG_BATTERY`, `DEBUG_TEMPERATURE`, `DEBUG_NETWORK`, `DEBUG_BLUETOOTH`, `DEBUG_POWER_MANAGEMENT`
+  * Build de release: añada `-DDEBUGLEVEL=0` a `build_flags` en `platformio.ini` y la salida serie desaparece sin editar el archivo. Medido en este proyecto: el flash baja de 1.085.005 B a 1.058.845 B (−26 KB) y la RAM de 58.456 B a 57.648 B.
 
 > **Nota** :
 Existen mensajes de depuración obligatorios como los de conexión y servicios web.  
@@ -285,10 +289,40 @@ Existen mensajes de depuración obligatorios como los de conexión y servicios w
  Para mayor exactitud en estos valores cargue la batería usando el módulo de carga TP4056. Cuando el led de carga completa encienda mida el valor de la batería y tómelo como valor máximo. Para el caso del valor mínimo el módulo DC-DC step up trae en sus especificaciones que para lograr una salida de 5v a la entrada debe de haber un mínimo de 2v. Pero por seguridad se recomienda 3.2v
 
 4. Variables web
-  * `const unsigned long refresh` tiempo de demora para el envío de información, 3 segundos por defecto
+  * Estado completo por WebSocket cada 3 s (`WEBSOCKET_UPDATE_INTERVAL`)
+  * Actualizaciones ligeras de sensores: batería cada 3 s (`BATTERY_CHECK_INTERVAL`) y DHT22 cada 5 s (`SENSOR_CHECK_INTERVAL`)
+  * Muestreo de la batería cada 3 s (`BATTERY_CHECK_INTERVAL`)
 
 > **Nota** :
 > Actualmente el proyecto usa [PlatformIO](https://platformio.org/) como entorno de desarrollo. El archivo `platformio.ini` en la raíz del proyecto contiene toda la configuración de compilación, dependencias y puerto serie.
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
+## Estructura del proyecto
+
+```text
+src/main.cpp                 Secuencia de arranque
+src/config/                  config.h (tiempos y límites), pins.h, debug.h (motor de log),
+                             debug_config.h (verbosidad), secrets.h.example (credenciales)
+src/effects/                 Un archivo por efecto + Effect.h (clase base),
+                             EffectRegistry.cpp/.h (tabla única), PaletteManager.cpp/.h,
+                             effects.h (agregador)
+src/vu/                      Efectos VU: VUEffect.h, vu1..vu9, vu.h (agregador)
+src/net/                     WebServer.cpp (HTTP + WiFi + LittleFS + mDNS),
+                             WebSocket.cpp (protocolo), data.cpp/.h (constantes de WiFi)
+src/power/PowerMgr.cpp       Máquina de estados de energía
+src/state/AppState.cpp/.h    Estado global, mutex y persistencia
+src/tasks/tasks.cpp          Las 6 tareas FreeRTOS
+data/                        La web (index.html, css/, js/, fonts/, img/)
+docs/                        Notas de diseño (ignoradas por git)
+test/                        Pruebas
+```
+
+**Para añadir un efecto:** cree una subclase de `Effect` en `src/effects/`, añada una línea a `effectRegistry[]` en `EffectRegistry.cpp` y la tarjeta correspondiente en el front-end (`data/index.html` y `data/js/`). El orden de la tabla define el `effectId`, así que **añada siempre al final**: insertar o quitar una línea desplaza todos los IDs siguientes e invalida el `effectId` guardado en `/state.json` (por eso los efectos retirados se conservan como marcadores).
+
+Las credenciales WiFi salen de un archivo `.env` en la raíz del proyecto (`WIFI_SSID` y `WIFI_PASS`), que `platformio.ini` convierte en build flags. `src/config/secrets.h.example` es la plantilla de la variante por cabecera.
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 
@@ -319,7 +353,7 @@ pio run --target clean
 
 ### Subir archivos de la interfaz web
 
-Los archivos HTML, CSS, JS e imágenes están en la carpeta `data/` y se almacenan en LittleFS (SPIFFS) del ESP32. Después de modificar cualquier archivo web:
+Los archivos HTML, CSS, JS e imágenes están en la carpeta `data/` y se almacenan en LittleFS del ESP32. Después de modificar cualquier archivo web:
 
 ```bash
 pio run --target uploadfs
@@ -331,9 +365,23 @@ En `src/config/debug_config.h` puedes controlar qué mensajes se muestran por el
 
 | Macro | Descripción |
 |-------|-------------|
-| `DEBUGLEVEL_DEBUGGING` | Habilita toda la depuración |
-| `#define DHT` | Muestra mensajes del sensor DHT22 |
-| `#define BATTERY` | Muestra mensajes del monitoreo de batería |
+| `DEBUGLEVEL` | `0` ninguna · `1` errores · `2` +avisos · `3` +depuración (defecto) · `4` +verbose |
+| `DEBUG_SYSTEM`, `DEBUG_WIFI`, `DEBUG_WEBSOCKET`, `DEBUG_LED`, `DEBUG_BATTERY`, `DEBUG_TEMPERATURE`, `DEBUG_NETWORK`, `DEBUG_BLUETOOTH`, `DEBUG_POWER_MANAGEMENT`, `DEBUG_WEB` | Categorías: cada una se activa descomentando su `#define` |
+| `-DDEBUGLEVEL=0` | En `build_flags`: elimina toda la salida serie y ahorra ~26 KB de flash |
+
+### Memoria y flash
+
+Con la tabla de particiones por defecto (el proyecto no define `board_build.partitions`), la partición de aplicación es de **1.310.720 B** y la de datos (LittleFS) de ~1,4 MB. Huella del firmware actual:
+
+| Recurso | Uso | Total |
+|---------|-----|-------|
+| RAM | 58.456 B (17,8%) | 327.680 B |
+| Flash (partición de app) | 1.085.005 B (82,8%) | 1.310.720 B |
+| Recursos web en LittleFS | ~1,0 MB | ~1,4 MB |
+
+Quedan ~225 KB libres en la partición de app. Para recuperar margen sin tocar código, compile sin salida serie (`-DDEBUGLEVEL=0` en `build_flags`): baja a 1.058.845 B de flash y 57.648 B de RAM.
+
+Las versiones están **fijadas** en `platformio.ini` (plataforma `espressif32@7.1.3`, FastLED `3.9.20`) y los comentarios del archivo explican por qué: las versiones nuevas no compilan con este core o no caben en la partición. No las actualice a la ligera.
 | `#define DEBUG_POWER_MANAGEMENT` | Muestra transiciones del gestor de energía |
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
@@ -368,11 +416,12 @@ Control del altavoz Bluetooth:
 
 ![Music](https://github.com/alexminator/SML/blob/master/img/music%20tab.png)
 ### 👁️ Live Preview (Peek)
-Vista previa en tiempo real de la tira LED mediante un canvas que se actualiza vía WebSocket (~30 FPS). Muestra los 24 LEDs interpolados como 33 LEDs virtuales con dos modos de visualización:
+Vista previa en tiempo real de la tira LED mediante un canvas que se actualiza vía WebSocket (~25 FPS, 40 ms por frame). Muestra los 24 LEDs interpolados como 33 LEDs virtuales con dos modos de visualización:
 - **Strip** — tira lineal horizontal
 - **Circle** — disposición circular (simula la forma real de la lámpara)
 - Botón de **configuración rápida** del efecto activo
 - Indicador de FPS y estado del stream
+- Sólo un dispositivo puede transmitir la vista previa a la vez: el segundo recibe `peekBusy`
 
 ![Live Preview](https://github.com/alexminator/SML/blob/master/img/live%20preview.png)
 ### 🌡️ Weather
@@ -414,9 +463,70 @@ Información del proyecto, versión y enlaces.
 
 ---
 
+## Rutas HTTP y protocolo WebSocket
+
+El ESP32 expone un servidor asíncrono en el puerto 80 y un WebSocket en `/ws`. Las rutas propias son:
+
+| Ruta | Método | Descripción |
+|------|--------|-------------|
+| `/` | GET | `index.html`; el resto de `data/` se sirve como archivos estáticos |
+| `/wifi-info` | GET | JSON con `status`, `ssid`, `ip` y `rssi` |
+| `/save-wifi` | POST | Recibe `ssid` y `password`, los guarda en NVS y reinicia el ESP32 (si el SSID llega vacío se conserva el actual) |
+| `/fxdata` | GET | Metadatos de todos los efectos, formato estilo WLED |
+| `/palettes` | GET | Nombres de paleta y 6 colores representativos de cada una |
+| `/update` | GET | Página de actualización de ElegantOTA |
+| `/ws` | WS | Canal en tiempo real (comandos y estado) |
+
+El dispositivo se anuncia por mDNS como **`sml.local`** además de por IP. Si el navegador no resuelve el nombre, use la IP que muestra la pestaña Config.
+
+### Mensajes cliente → servidor
+
+Son mensajes JSON de texto. Se admiten hasta **8 clientes** y el primero en conectar es el **master**.
+
+- `effectId` — selecciona **y enciende** un efecto. `0` = color sólido.
+- `action` — acción a ejecutar:
+
+| `action` | Campos | Efecto |
+|----------|--------|--------|
+| `toggle` | — | Enciende o apaga la tira |
+| `power` | `state` | Encendido/apagado explícito |
+| `slider` | `brightness` | Brillo de la tira |
+| `picker` | `color{r,g,b}`, `brightness` (opcional) | Color sólido |
+| `setParams` | `effectId`, `speed`, `intensity`, `custom1..3`, `check1..3`, `palette` | Parámetros del efecto |
+| `lamp` | — | Alterna el relé de la lámpara |
+| `music` | — | Alterna el módulo Bluetooth |
+| `volup`, `voldown`, `skipL`, `skipR`, `play-pause` | — | Emula los botones del altavoz |
+| `animation`, `vu`, `indicator` | — | Fuerza un refresco del efecto |
+| `toggleBatt`, `toggleTemp` | — | Indicador de batería / temperatura (el segundo toque apaga la tira) |
+| `randomFX` | `state`, `effectId` (opcional) | Arranca o para Random FX |
+| `randomVU`, `randomVUConfig` | `state`, `duration`, `effectPool` | Arranca o para, o sólo configura, Random VU |
+| `randomConfig` | `mode`, `duration`, `effectPool`, `categories`, `start` | Configuración de Random FX |
+| `setWifiTimeout` | `seconds` (5–3600) | Timeout de apagado por pérdida de WiFi |
+| `requestFullState` | — | Pide el estado completo |
+| `requestBattHistory` | — | Pide el historial de batería |
+| `refreshClientList` | — | Fuerza el reenvío de la lista de clientes y del log |
+| `reboot`, `factoryReset` | — | Reinicia / borra credenciales y datos guardados (**sólo master**) |
+| `peekColorMode` | `real` | Modo de color del Peek |
+| `lv` | `bool`, `real` (opcional) | Abre o cierra el stream del Peek |
+
+`reboot` y `factoryReset` se rechazan si el cliente que los envía no es el master: la comprobación se hace en el firmware, no sólo en la interfaz.
+
+### Mensajes servidor → cliente
+
+- **Estado completo** (al conectar, tras cada acción y cuando se pide): una clave `<nombre>Status` por efecto (`on`/`off`), `color{r,g,b}`, `neobrightness`, `batteryVoltage`, `level`, `charging`, `fullbatt`, `temperature`, `humidity`, `ssid`, `ip`, `mac`, `rssi`, `wifiOk`, `stripSuspend`, `wifiLostEvents`, `wifiTimeout`, `uptime`, `heap`, `ver`, `wsSlaves`, `wsMax`, `randomMode`, `randomFXMode`, `randomFXDuration`, `randomFXPool`, `randomFXCategories`, `randomVUDuration`, `randomVUPool` y `effectId`.
+- **Params y meta**: `params{speed, intensity, custom1..3, check1..3, palette}`, `palette` y `meta` (cadena de metadatos estilo WLED) cuando se piden.
+- **Actualizaciones ligeras** (~180 B) con sólo sensores, batería y WiFi, cada pocos segundos.
+- `wsClientList{wsSlaves, wsMax, wsClientList[{id, ip, master}]}` y `wsActionLog[{t, c, ty, v1, v2, v3}]`.
+- `battHistory[{t, v, l}]`, `yourClientId` y `peekBusy`.
+- **Trama binaria del Peek**: `0x4C` (magic), versión `1`, ancho, alto `1` y a continuación el RGB de cada píxel.
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
 ## Efectos LED
 
-El proyecto incluye **más de 40 efectos visuales** organizados en categorías. Se acceden desde la pestaña **Lamp** → sección Effects.
+El proyecto incluye **47 efectos seleccionables** organizados en categorías; el registro reserva **50 IDs**, porque 3 marcadores retirados mantienen estables los IDs históricos. Se acceden desde la pestaña **Lamp** → sección Effects.
 
 ### Categorías
 
@@ -433,11 +543,30 @@ El proyecto incluye **más de 40 efectos visuales** organizados en categorías. 
 
 ### Efectos VU (Music Visualization)
 
-Además de los efectos visuales tradicionales, hay **efectos VU** que reaccionan al audio que reproduce el altavoz Bluetooth. Se encuentran en la pestaña **Music** y se activan automáticamente cuando hay entrada de audio. Algunos ejemplos:
+Además de los efectos visuales hay **ocho medidores VU** que reaccionan a lo que reproduce el altavoz Bluetooth. Están en la pestaña **Music** y, como cualquier otro efecto, se encienden tocando su tarjeta:
 
-- **Rainbow VU** — barras multicolor al compás
-- **Ripple VU** — ondas concéntricas que reaccionan al ritmo
-- **Frecuency Spectrum** — visualización tipo ecualizador
+| Medidor VU | Qué muestra | Ajustes |
+|------------|----------------|---------|
+| **Rainbow VU** | Degradado a lo largo de la tira que se llena con el nivel de audio | paleta |
+| **Rainbow Hue** | El mismo degradado con el tono girando en el tiempo | paleta |
+| **Old Skool** | Barra clásica verde/roja con punto de pico flotante | ninguno — colores fijos |
+| **Ripple VU** | Ondas que salen de un punto al azar en cada golpe | paleta |
+| **3 Bars** | Tres segmentos que crecen y caen con el nivel | paleta |
+| **Ocean VU** | Olas lentas que se propagan desde el centro | paleta |
+| **Noisemeter** | Escala verde/amarillo/rojo con pico blanco | Decay, Sensitivity |
+| **DJ Light** | Pulso brillante desde el centro, con el tono girando al ritmo | Speed, Color Shift, paleta |
+
+Todos los medidores menos **Old Skool** y **Noisemeter** tienen **engranaje**, y su panel es una lista de paletas, igual que en los efectos visuales. Arrancan en **Rainbow**, la paleta con la que se diseñaron. La lista está curada a las que cambian de color de verdad al recorrerlas el medidor — la familia arcoíris más Party, Candy y C9 —, así que no se ofrecen las de un solo tono (Ocean, Ice, Aurora…) ni las que pasan por negro (Scanner): en un VU se ven como un color plano o parpadean apagadas.
+
+### Cómo se eligen las paletas
+
+Cada efecto muestrea la paleta de una forma distinta y su lista de paletas sigue esa lógica:
+
+- **Recorrido completo** (Fire, Comet, Rainbow Beat, Plasma, Pacifica, los medidores VU…): el índice de color se mueve con la posición, el tiempo o el nivel, así que la paleta se ve entera. Conservan selector de paletas.
+- **Un solo color** (Sparkle, Lightning, Scanner, Heartbeat, ICU, Drip, Halloween Eyes): el render lee *siempre* el mismo índice, así que una lista de paletas sólo enseñaba uno de sus colores. Su panel es la **rueda de color** y pintan con el color de la tira, el mismo que usa Solid.
+- **Colores fijos**: RWB (rojo/blanco/azul), Old Skool (verde/rojo) y Noisemeter (verde/amarillo/rojo) no tienen paleta.
+
+Todas las paletas están generadas a **saturación plena**: ninguna lleva blanco, porque un paso en blanco apaga el resto del degradado y el efecto deja de lucir, y las únicas que conservan un arranque oscuro son las rampas de fuego (necesitan el extremo frío). Nunca se ofrecen juntas dos paletas que se ven igual: las rampas de fuego sólo aparecen en los efectos de fuego, y los mares y las auroras se quedan en su familia. Los fuegos además vienen en colores —**Fire Blue**, **Fire Green** y **Fire Violet**—, la misma rampa con otro tono; Candle ofrece llama ámbar, azul y verde; Pacifica ofrece mares esmeralda y violeta junto al azul clásico; y **Amber/Blue**, **Pink/Lime** y **Violet/Yellow** son parejas complementarias de bloques puros para los efectos que buscan contraste en vez de arcoíris. **Reset to Defaults**, al final de cada panel, devuelve los sliders y la paleta por defecto.
 
 ![VU Effect](https://github.com/alexminator/SML/blob/master/img/Vu%20effect.png)
 
@@ -451,7 +580,7 @@ Las tarjetas de efecto funcionan como un **interruptor de encendido/apagado**, y
 | **Apagar el efecto** | Clic otra vez en la tarjeta activa | Tap otra vez en la tarjeta activa |
 | **Abrir la configuración** | Clic en el **⚙ engranaje** de la esquina superior izquierda de la tarjeta, o en el engranaje del panel **Peek** | Tap en el **⚙ engranaje** de la tarjeta, o **mantén pulsada** la tarjeta (~0,5 s) |
 
-Apagar un efecto devuelve la tira a **Solid**: el Neopixel sigue encendido, así que el color y el brillo siguen aplicándose. Para cortar la tira entera, usa la tarjeta de encendido de la pestaña **Lamp**.
+Volver a tocar la tarjeta activa **apaga la tira**: los efectos se encienden a sí mismos al activarse y el segundo toque la deja en negro. Si lo que quiere es volver a un color fijo, use la tarjeta de **color sólido** de la pestaña **Lamp**.
 
 El panel de configuración permite ajustar:
 
@@ -565,6 +694,25 @@ En la práctica esto quiere decir que varios miembros de la familia pueden contr
 
 ---
 
+## Datos y persistencia
+
+Todo lo que el ESP32 recuerda entre reinicios vive en la memoria flash:
+
+| Archivo / almacenamiento | Contenido | Cuándo se escribe |
+|--------------------------|-----------|-------------------|
+| `/state.json` | Color (`R`, `G`, `B`), brillo, `effectId`, estado de encendido, timeout de pérdida de WiFi y configuración de Random | En cada cambio de estado |
+| `/params.json` | Parámetros de todos los efectos (velocidad, intensidad, custom1..3, checks y paleta) | Con debounce (≥1 s) tras cada ajuste |
+| `/battlog.json` | Historial de batería: buffer circular de 200 entradas `{t, v, l}` | Se añade una entrada con un cambio ≥0,10 V o cada 60 s; se guarda cada 5 escrituras |
+| NVS (`Preferences`, namespace `wifi`) | SSID y contraseña | Al guardar la configuración WiFi |
+
+El **restablecimiento de fábrica** borra las credenciales WiFi guardadas, `/params.json`, `/state.json` y `/battlog.json`, y reinicia el equipo. Las credenciales compiladas desde `.env` se mantienen como red de seguridad, así que el dispositivo sigue siendo accesible tras el reset.
+
+Hay preferencias **por navegador** que no viajan a otro dispositivo y desaparecen al limpiar los datos del sitio: favoritos, playlist, duración y modo de Random, y el tema de la interfaz.
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
 ## Actualizaciones OTA
 
 Puedes actualizar el firmware del ESP32 sin necesidad de cable USB, directamente desde el navegador:
@@ -575,6 +723,19 @@ Puedes actualizar el firmware del ESP32 sin necesidad de cable USB, directamente
 4. Haz clic en **Update** y espera a que el ESP32 se reinicie
 
 O también desde la interfaz web, en la pestaña **Config** → sección **Firmware Update**.
+
+<a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
+
+---
+
+## Solución de problemas
+
+- **`sml.local` no resuelve** — mDNS necesita estar en la misma subred; use la IP que aparece en **Config → System info**.
+- **Una tarjeta no responde** — la tira está apagada (el primer toque la enciende), es un **slave** intentando editar parámetros (sólo el master puede), o el estado lo cambió otro cliente un instante después.
+- **La tira se apagó sola** — el enlace WiFi estuvo caído más tiempo que el timeout configurado (**Config → WiFi loss protection**); se recupera sola cuando vuelve la conexión. Que se desconecte un cliente no la apaga.
+- **El Peek dice que está ocupado** — sólo un dispositivo puede transmitir la vista previa a la vez; cierre el Peek en el otro.
+- **La web se ve desactualizada tras actualizar** — el service worker cachea recursos: recargue la página o vacíe la caché del sitio.
+- **No se puede flashear** — revise el puerto serie (`upload_port`) y que `upload_speed` (921600) coincida con su placa.
 
 <a href="#readme-top"><img align="right" border="0" src="https://github.com/alexminator/SML/blob/master/img/up_arrow.png" width="22" ></a>
 

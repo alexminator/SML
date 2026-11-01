@@ -1,7 +1,6 @@
 #pragma once
 #include "Effect.h"
 #include "../state/AppState.h"
-#include "PaletteManager.h"
 
 // ──────────────────────────────────────────────────────────────────────────────
 // ICUEffect — Monitor de hospital (ICU beep / ECG scan)
@@ -33,11 +32,15 @@ public:
 
         fadeToBlackBy(leds, numLeds, 220);
 
+        // Un solo color (el de la tira): de la paleta sólo se usaba el índice 120.
+        const CRGB color = CRGB(stripLed.R, stripLed.G, stripLed.B);
+
         if (_beeping) {
             // Flash entire strip brighter
             uint8_t flash = (_beepPhase < 3) ? bright : 0;
-            CRGB color = ColorFromPalette(PaletteManager::getPalette(_paletteIndex), 120, flash, LINEARBLEND);
-            fill_solid(leds, numLeds, color);
+            CRGB beepColor = color;
+            beepColor.nscale8(flash);
+            fill_solid(leds, numLeds, beepColor);
             _beepPhase++;
             if (_beepPhase > 6) {
                 _beeping = false;
@@ -45,14 +48,15 @@ public:
                 _pos = 0;
             }
         } else {
-            // Scan dot with green ECG-like trail
-            CRGBPalette16 pal = PaletteManager::getPalette(_paletteIndex);
-            leds[_pos] = ColorFromPalette(pal, 120, bright, LINEARBLEND);
+            // Scan dot with an ECG-like trail
+            leds[_pos] = color;
 
             // Trail behind
             for (uint8_t i = 1; i <= 4; i++) {
                 if (_pos >= i) {
-                    leds[_pos - i] = ColorFromPalette(pal, 120, bright / (i * 3), LINEARBLEND);
+                    CRGB tail = color;
+                    tail.nscale8(bright / (i * 3));
+                    leds[_pos - i] = tail;
                 }
             }
 
@@ -69,4 +73,4 @@ public:
 };
 
 const char ICUEffect::_meta[] =
-    "ICU@Speed;;;;sx=128,ix=128,pa=20";
+    "ICU@Speed;;;;sx=128,ix=128";

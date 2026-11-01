@@ -18,8 +18,16 @@
 //   DEBUGLEVEL_WARNINGS   (2) — + debugW / debuglnW
 //   DEBUGLEVEL_DEBUGGING  (3) — + debugD / debuglnD
 //   DEBUGLEVEL_VERBOSE    (4) — + debugV / debuglnV
+//
+// El valor por defecto se aplica SÓLO si nadie lo define antes: así se puede
+// compilar una build de release sin tocar este archivo, pasando el nivel en
+// platformio.ini:
+//     build_flags = -DDEBUGLEVEL=0
+// Ojo: DEBUGLEVEL_NONE es un #define de debug.h, no un literal, así que desde
+// build_flags hay que usar el número (0), que es lo que comparan los #if.
+#ifndef DEBUGLEVEL
 #define DEBUGLEVEL DEBUGLEVEL_DEBUGGING
-// #define DEBUGLEVEL DEBUGLEVEL_NONE   // ← uncomment for release builds only
+#endif
 
 // ── Debug categories ──────────────────────────────────────────────────────────
 // Uncomment a line to enable that category's messages.

@@ -83,7 +83,6 @@ const SML = {
 
   // Battery history (for chart) — populated from ESP32 LittleFS log on open
   battHistory: [],
-  _battHistoryInitialized: false,
 
   // Client identity (WebSocket master/slave)
   clientId: 0,

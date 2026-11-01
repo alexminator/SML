@@ -241,8 +241,6 @@ function handleMessage(data) {
 
   // ── TEMPERATURE / HUMIDITY ──
   if (data.temperature !== undefined) {
-    SML.temp = data.temperature;
-
     // Update thermometer animation
     const value = parseFloat(data.temperature);
     const tempEl = document.getElementById('temperature');
@@ -258,7 +256,6 @@ function handleMessage(data) {
   }
 
   if (data.humidity !== undefined) {
-    SML.hum = data.humidity;
     setDataValue(document.getElementById('weatherHumVal'), Math.round(data.humidity) + '%');
   }
 
@@ -276,7 +273,6 @@ function handleMessage(data) {
         level: e.l !== undefined ? e.l : 0
       };
     });
-    SML._battHistoryInitialized = true;
     console.log('[BATT] SML.battHistory length = ' + SML.battHistory.length);
     // Re-render chart if modal is open (auto-refresh)
     var chartEl = document.getElementById('battChartOffcanvas');
@@ -305,7 +301,6 @@ function handleMessage(data) {
     updateBatteryBar(displayLevel, isCharging);
   }
   if (data.battVoltage !== undefined) {
-    SML.batteryV = data.battVoltage;
     setDataValue(document.getElementById('battVoltageDetail'), data.battVoltage.toFixed(2), 'V');
   }
   if (data.charging !== undefined) {
@@ -711,12 +706,7 @@ function handleMessage(data) {
 
   // ── WIFI / NETWORK (state + status bar) ──
   if (data.rssi !== undefined) {
-    SML.wifiRSSI = data.rssi;
     updateWiFiBars(data.rssi);
-  }
-
-  if (data.ip !== undefined) {
-    SML.deviceIP = data.ip;
   }
 
   // ── WEBSOCKET CLIENT COUNT (status bar eye icon, slaves only) ──
